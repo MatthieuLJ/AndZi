@@ -60,4 +60,43 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target.checkDatabase());
     }
 
+    public void testMultipleChinese() {
+        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("伟")), new ArrayList<String>(Arrays.asList("wei3")));
+        assertTrue(target.getCTranslations("big").size()==2);
+        assertTrue(target.checkDatabase());
+    }
+
+    public void testSimpleDelete() {
+        target.addVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
+        assertTrue(target.getTranslations("小").contains("small"));
+        target.delVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
+        assertFalse(target.getTranslations("小").contains("small"));
+        assertTrue(target.checkDatabase());
+    }
+
+    public void testMultipleDelete() {
+        target.addVocabulary(new ArrayList<String>(Arrays.asList("bright", "next", "wise")),new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertTrue(target.getTranslations("明").contains("bright"));
+        assertTrue(target.getTranslations("明").contains("wise"));
+        target.delVocabulary(new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertFalse(target.getTranslations("明").contains("bright"));
+        assertFalse(target.getTranslations("明").contains("next"));
+        assertFalse(target.getTranslations("明").contains("wise"));
+    }
+
+    public void testLeftOverFromDelete() {
+        target.addVocabulary("sky",new ArrayList<String>(Arrays.asList("天")), new ArrayList<String>(Arrays.asList("tian1")));
+        target.addVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
+        assertTrue(target.getTranslations("天").contains("sky"));
+        target.delVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
+        assertTrue(target.getTranslations("天").contains("sky"));
+        assertFalse(target.getTranslations("今天").contains("today"));
+    }
+/*
+    public void testDifferentPinyin() {
+        target.addVocabulary("several",new ArrayList<String>(Arrays.asList("几")), new ArrayList<String>(Arrays.asList("ji3")));
+        target.addVocabulary("almost",new ArrayList<String>(Arrays.asList("几")), new ArrayList<String>(Arrays.asList("ji1")));
+    }
+*/
 }

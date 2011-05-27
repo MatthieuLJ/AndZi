@@ -19,7 +19,7 @@ public class HanziDB extends SQLiteOpenHelper {
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     private static final int DATABASE_VERSION = 1;
 
-    private SQLiteDatabase db;
+    protected SQLiteDatabase db;
 
     public HanziDB(Context context) {
         super(context, DEFAULT_DATABASE_NAME, null, DATABASE_VERSION);
@@ -89,6 +89,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix cword_id foreign key
         }
+        c.close();
 
         // check foreign key from cword_segment to char_pinyin_id
         c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin);", null);
@@ -100,6 +101,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix char_pinyin_id foreign key
         }
+        c.close();
 
         // check foreign key from eword to cword_id
         c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword);", null);
@@ -111,6 +113,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix eword foreign key
         }
+        c.close();
 
         // check chinese and pinyin fields in cword
         c= db.rawQuery("SELECT cword_id, chinese, pinyin, GROUP_CONCAT(t1_chinese,'') AS t_chinese, GROUP_CONCAT(t1_pinyin,'') AS t_pinyin FROM " +
@@ -139,6 +142,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix chinese and pinyin content in cword
         }
+        c.close();
 
         // check for unique char/pinyin pairs in char_pinyin
         c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count FROM char_pinyin GROUP BY hanzi, pinyin " +
@@ -152,6 +156,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix duplicate char_pinyin
         }
+        c.close();
 
         // check for unique chinese/pinyin in cword
         c = db.rawQuery("SELECT COUNT(cword_id) AS count FROM cword GROUP BY chinese, pinyin " +
@@ -165,6 +170,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix duplicate cword
         }
+        c.close();
 
         // check for unique cword/translation in eword
         c = db.rawQuery("SELECT COUNT(cword_id) AS count FROM eword GROUP BY cword_id, translation " +
@@ -178,6 +184,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
             // TODO : try to fix duplicate eword
         }
+        c.close();
 
         return res;
     }
@@ -194,6 +201,7 @@ public class HanziDB extends SQLiteOpenHelper {
         else {
             Log.d(TAG, "no record found for word "+chinese);
         }
+        cur.close();
         return res;
     }
 
@@ -202,7 +210,8 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=? AND pinyin=?;", new String[] {chinese, pinyin});
         if (cur.moveToFirst()) {
             do{
-                Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese + "/" + pinyin);
+                Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id"))
+                        + " for word " + chinese + "/" + pinyin);
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
             }while(cur.moveToNext());
         }
@@ -214,6 +223,7 @@ public class HanziDB extends SQLiteOpenHelper {
             Log.w(TAG, "Warning, getWordId("+chinese+","+pinyin+") returns more than one id");
         }
 
+        cur.close();
         return res;
     }
 
@@ -232,7 +242,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("chinese", chinese_str);
         cv.put("pinyin", pinyin_str);
-        db.insert("cword", null, cv);
+        db.insertWithOnConflict("cword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
         
         cword_id_lst = getWordId(chinese_str, pinyin_str);
         cword_id = cword_id_lst.get(0);
@@ -254,7 +264,7 @@ public class HanziDB extends SQLiteOpenHelper {
             cv.put("cword_id", cword_id);
             cv.put("char_pinyin_id", char_pinyin_id);
             cv.put("pos", i);
-            db.insert("cword_segment", null, cv);
+            db.insertWithOnConflict("cword_segment", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
         }
 
         return cword_id;
@@ -265,7 +275,8 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=? AND pinyin=?;", new String[] {hanzi, pinyin});
         if (cur.moveToFirst()) {
             do{
-                Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("char_pinyin_id")) + " for character " + hanzi + "/" + pinyin);
+                Log.d(TAG, "got record "+cur.getInt(cur.getColumnIndex("char_pinyin_id")) +
+                        " for character " + hanzi + "/" + pinyin);
                 res.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
             }while(cur.moveToNext());
         }
@@ -277,6 +288,7 @@ public class HanziDB extends SQLiteOpenHelper {
             Log.w(TAG, "Warning, getCharPinyinId("+hanzi+","+pinyin+") returns more than one id");
         }
 
+        cur.close();
         return res;
     }
 
@@ -293,6 +305,7 @@ public class HanziDB extends SQLiteOpenHelper {
             Log.d(TAG, "no record found for character "+hanzi);
         }
 
+        cur.close();
         return res;
     }
 
@@ -302,7 +315,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("hanzi", hanzi);
         cv.put("pinyin", pinyin);
-        db.insert("char_pinyin", null, cv);
+        db.insertWithOnConflict("char_pinyin", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
 
         res = getCharPinyinId(hanzi, pinyin);
         if (res.size() != 1) {
@@ -321,6 +334,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
 
+        cur.close();
         return res;
     }
 
@@ -340,6 +354,92 @@ public class HanziDB extends SQLiteOpenHelper {
             res.addAll(getTranslations(id));
         }
         return res;
+    }
+
+    public class chinese_pinyin {
+        public String chinese;
+        public String pinyin;
+        public chinese_pinyin(String ch, String en) {
+            chinese = ch;
+            pinyin = en;
+        }
+    }
+
+    public ArrayList<chinese_pinyin> getCTranslations(String english) {
+        ArrayList<chinese_pinyin> res = new ArrayList<chinese_pinyin>();
+        Cursor cur = db.rawQuery("SELECT c.chinese AS chinese,c.pinyin AS pinyin " +
+                "FROM eword " +
+                "JOIN cword AS c ON c.cword_id=eword.cword_id " +
+                "WHERE translation=?;", new String[] {english});
+        if (cur.moveToFirst()) {
+            do{
+                res.add(new chinese_pinyin
+                        (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin"))));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no record found for word "+english);
+        }
+
+        cur.close();
+        return res;
+    }
+
+    protected chinese_pinyin getCword(int cword_id) {
+        Cursor cur = db.rawQuery("SELECT chinese, pinyin " +
+                "FROM cword " +
+                "WHERE cword_id=;", new String[] {Integer.toString(cword_id)});
+        if (cur.moveToFirst()) {
+            chinese_pinyin res = new chinese_pinyin (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")));
+            cur.close();
+            return res;
+        }
+        else {
+            cur.close();
+            return null;
+        }
+    }
+
+    protected ArrayList<Integer> getCwordWithChar(int char_pinyin_id) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        Cursor cur = db.rawQuery("SELECT cword_id " +
+                "FROM cword_segment " +
+                "WHERE char_pinyin_id=?;", new String[] {Integer.toString(char_pinyin_id)});
+        if (cur.moveToFirst()) {
+            do{
+                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
+            }while(cur.moveToNext());
+        }
+        cur.close();
+        return res;
+    }
+
+    /*
+    protected ArrayList<Integer> getCwordWithChar(String hanzi) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        ArrayList<Integer> char_pinyin_id = getCharPinyinId(hanzi);
+
+        for (int id : char_pinyin_id) {
+            res.addAll(getCwordWithChar(id));
+        }
+
+        return res;
+    }
+
+
+    protected ArrayList<Integer> getCwordWithChar(String hanzi, String pinyin) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        ArrayList<Integer> char_pinyin_id = getCharPinyinId(hanzi, pinyin);
+
+        for (int id : char_pinyin_id) {
+            res.addAll(getCwordWithChar(id));
+        }
+        return res;
+    }
+    */
+
+    protected void delete_char_pinyin(int char_pinyin_id) {
+        db.execSQL("DELETE FROM char_pinyin WHERE char_pinyin_id=?", new String[] {Integer.toString(char_pinyin_id)});
     }
 
     protected int addVocabularyReturnId(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
@@ -375,7 +475,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("cword_id", cword_id);
         cv.put("translation", english);
-        db.insert("eword", null, cv);
+        db.insertWithOnConflict("eword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     public void addVocabulary(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
@@ -399,6 +499,88 @@ public class HanziDB extends SQLiteOpenHelper {
         for (String eng : english) {
             addVocabulary(eng, cword_id);
         }
+    }
+
+    public void deleteCword(int cword_id) {
+        ArrayList<Integer> char_pinyin_id = new ArrayList<Integer>();
+
+        Cursor cur = db.rawQuery("SELECT char_pinyin_id FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
+        if (cur.moveToFirst()) {
+            do{
+                char_pinyin_id.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
+            }while(cur.moveToNext());
+        }
+        db.execSQL("DELETE FROM cword WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
+        db.execSQL("DELETE FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
+
+        for (int cpid : char_pinyin_id) {
+            if (getCwordWithChar(cpid).size() == 0) {
+                delete_char_pinyin(cpid);
+            }
+
+        }
+
+        cur.close();
+    }
+
+    public void checkIsolatedCword(int cword_id) {
+        if (getTranslations(cword_id).isEmpty()) {
+            deleteCword(cword_id);
+        }
+    }
+
+
+    public void delVocabulary(ArrayList<String> chinese, ArrayList<String> pinyin) {
+        int i;
+        ArrayList<Integer> cword_id;
+        String chinese_str="", pinyin_str="";
+
+        if (pinyin.size() != chinese.size()) {
+            Log.e(TAG, "delVocabulary : Pinyins and Hanzi tables have different sizes");
+            return;
+        }
+
+        for (i = 0; i < chinese.size(); i++)
+        {
+            chinese_str += chinese.get(i);
+            pinyin_str += pinyin.get(i);
+        }
+        cword_id = getWordId(chinese_str,pinyin_str);
+        
+        for (int cid : cword_id) {
+            db.execSQL("DELETE FROM eword WHERE cword_id=?", new String[] {Integer.toString(cid)} );
+            checkIsolatedCword(cid);
+        }
+    }
+
+    public void delVocabulary(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
+        int eng_id, cword_id, i;
+        String chinese_str="", pinyin_str="";
+
+        if (pinyin.size() != chinese.size()) {
+            Log.e(TAG, "delVocabulary : Pinyins and Hanzi tables have different sizes");
+            return;
+        }
+
+        for (i = 0; i < chinese.size(); i++)
+        {
+            chinese_str += chinese.get(i);
+            pinyin_str += pinyin.get(i);
+        }
+
+        Cursor cur = db.rawQuery("SELECT eng_id, eword.cword_id AS cword_id " +
+                                 "FROM eword " +
+                                 "  JOIN cword ON cword.cword_id=eword.cword_id " +
+                                 "WHERE eword.translation=? AND cword.chinese=? AND cword.pinyin=?",
+                new String[] {english,chinese_str,pinyin_str});
+        if (cur.moveToFirst()) {
+            eng_id = cur.getInt(cur.getColumnIndex("eng_id"));
+            cword_id = cur.getInt(cur.getColumnIndex("cword_id"));
+
+            db.execSQL("DELETE FROM eword WHERE eng_id=?", new String[] {Integer.toString(eng_id)} );
+            checkIsolatedCword(cword_id);
+        }
+        cur.close();
     }
 
 }
