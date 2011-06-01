@@ -15,13 +15,13 @@ import java.util.Arrays;
 public class HanziDBTest extends AndroidTestCase {
 
     private static final String TAG = "HanziDBTest";
-    private static final String DbName = "test_db";
+    protected static final String DbName = "test_db";
     protected HanziDB target;
 
     @Override
     protected void setUp() {
         ContextWrapper cw = new ContextWrapper(this.getContext());
-        //cw.deleteDatabase(DbName);
+        cw.deleteDatabase(DbName);
         target = new HanziDB(this.getContext(),  DbName);
         Log.d(TAG, " is setup");
     }
@@ -83,6 +83,7 @@ public class HanziDBTest extends AndroidTestCase {
         assertFalse(target.getTranslations("明").contains("bright"));
         assertFalse(target.getTranslations("明").contains("next"));
         assertFalse(target.getTranslations("明").contains("wise"));
+        assertTrue(target.checkDatabase());
     }
 
     public void testLeftOverFromDelete() {
@@ -92,6 +93,7 @@ public class HanziDBTest extends AndroidTestCase {
         target.delVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
         assertTrue(target.getTranslations("天").contains("sky"));
         assertFalse(target.getTranslations("今天").contains("today"));
+        assertTrue(target.checkDatabase());
     }
 /*
     public void testDifferentPinyin() {

@@ -9,13 +9,13 @@ import android.test.ActivityInstrumentationTestCase2;
  * <p/>
  * To run this test, you can type:
  * adb shell am instrument -w \
- * -e class com.matthieu.MyDbActivityTest \
+ * -e class com.matthieu.AndZiActivityTest \
  * com.matthieu.tests/android.test.InstrumentationTestRunner
  */
-public class MyDbActivityTest extends ActivityInstrumentationTestCase2<MyDbActivity> {
+public class AndZiActivityTest extends ActivityInstrumentationTestCase2<AndZiActivity> {
 
-    public MyDbActivityTest() {
-        super("com.matthieu", MyDbActivity.class);
+    public AndZiActivityTest() {
+        super("com.matthieu", AndZiActivity.class);
     }
 
 }

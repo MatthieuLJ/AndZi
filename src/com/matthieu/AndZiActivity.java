@@ -3,7 +3,7 @@ package com.matthieu;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class MyDbActivity extends Activity
+public class AndZiActivity extends Activity
 {
     HanziDB hanDB;
     /** Called when the activity is first created. */
