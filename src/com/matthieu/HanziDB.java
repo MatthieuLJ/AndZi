@@ -89,7 +89,6 @@ public class HanziDB extends SQLiteOpenHelper {
             do{
                 Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
             }while(c.moveToNext());
-            // TODO : try to fix cword_id foreign key
         }
         c.close();
 
@@ -101,7 +100,6 @@ public class HanziDB extends SQLiteOpenHelper {
             do{
                 Log.w(TAG, "bad char_pinyin_id " + c.getString(c.getColumnIndex("char_pinyin_id")));
             }while(c.moveToNext());
-            // TODO : try to fix char_pinyin_id foreign key
         }
         c.close();
 
@@ -113,7 +111,6 @@ public class HanziDB extends SQLiteOpenHelper {
             do{
                 Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
             }while(c.moveToNext());
-            // TODO : try to fix eword foreign key
         }
         c.close();
 
@@ -142,7 +139,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id + " : " + chinese + " != " + t_chinese);
                 }
             }while(c.moveToNext());
-            // TODO : try to fix chinese and pinyin content in cword
         }
         c.close();
 
@@ -156,7 +152,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     Log.w(TAG, "hanzi, pinyin not unique in char_pinyin table");
                 }
             }while(c.moveToNext());
-            // TODO : try to fix duplicate char_pinyin
         }
         c.close();
 
@@ -170,7 +165,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     Log.w(TAG, "chinese, pinyin not unique in cword table");
                 }
             }while(c.moveToNext());
-            // TODO : try to fix duplicate cword
         }
         c.close();
 
@@ -184,7 +178,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     Log.w(TAG, "cword_id, translation not unique in eword table");
                 }
             }while(c.moveToNext());
-            // TODO : try to fix duplicate eword
         }
         c.close();
 
@@ -393,8 +386,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void delete_char_pinyin(int char_pinyin_id) {
-        db.delete("char_pinyin", "char_pinyin=?",new String[] {Integer.toString(char_pinyin_id)});
-        //db.execSQL("DELETE FROM char_pinyin WHERE char_pinyin_id=?", new String[] {Integer.toString(char_pinyin_id)});
+        db.delete("char_pinyin", "char_pinyin_id=?",new String[] {Integer.toString(char_pinyin_id)});
     }
 
     protected int addVocabularyReturnId(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
@@ -456,6 +448,22 @@ public class HanziDB extends SQLiteOpenHelper {
         }
     }
 
+    public void addVocabulary(Vocabulary voc) {
+        ArrayList<String> chinese = new ArrayList<String>();
+        ArrayList<String> pinyin;
+        int i, len;
+
+        len = voc.chinese.codePointCount(0, voc.chinese.length());
+        for (i = 0; i< len; i++) {
+            int from = voc.chinese.offsetByCodePoints(0, i);
+            int to = voc.chinese.offsetByCodePoints(0, i + 1);
+
+            chinese.add(voc.chinese.substring(from, to));
+        }
+        // TODO !
+        //addVocabulary(voc.english,chinese,pinyin);
+    }
+
     public void deleteCword(int cword_id) {
         ArrayList<Integer> char_pinyin_id = new ArrayList<Integer>();
 
@@ -466,9 +474,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         db.delete("cword", "cword_id=?", new String[] {Integer.toString(cword_id)});
-        //db.execSQL("DELETE FROM cword WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
         db.delete("cword_segment", "cword_id=?", new String[] {Integer.toString(cword_id)});
-        //db.execSQL("DELETE FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
 
         for (int cpid : char_pinyin_id) {
             if (getCwordWithChar(cpid).size() == 0) {
@@ -505,7 +511,6 @@ public class HanziDB extends SQLiteOpenHelper {
         
         for (int cid : cword_id) {
             db.delete("eword", "cword_id=?", new String[] {Integer.toString(cid)} );
-            //db.execSQL("DELETE FROM eword WHERE cword_id=?", new String[] {Integer.toString(cid)} );
             checkIsolatedCword(cid);
         }
     }
@@ -535,7 +540,6 @@ public class HanziDB extends SQLiteOpenHelper {
             cword_id = cur.getInt(cur.getColumnIndex("cword_id"));
 
             db.delete("eword", "eng_id=?", new String[] {Integer.toString(eng_id)} );
-            //db.execSQL("DELETE FROM eword WHERE eng_id=?", new String[] {Integer.toString(eng_id)} );
             checkIsolatedCword(cword_id);
         }
         cur.close();

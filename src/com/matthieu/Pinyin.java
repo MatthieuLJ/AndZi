@@ -11,29 +11,32 @@ import java.util.Arrays;
  */
 public class Pinyin {
     private String lame="";
+    private String radical="";
     private int tone=-1;
     private String print="";
     private String html_color_print="";
 
     public  Pinyin(String entry) {
-        int i;
+        int i,j;
         String temp;
 
         for (i = 0; i < pinyin_list_notone.length; i++) {
             if (entry.equals(pinyin_list_notone[i])) {
                 this.lame=entry;
+                this.radical=entry;
                 this.tone=0;
                 this.print=entry;
                 this.html_color_print=entry;
                 return;
             }
-            for (i = 0; i < 5; i++)
+            for (j = 0; j < 5; j++)
             {
-                temp = pinyin_list_notone[i] + i;
+                temp = pinyin_list_notone[i] + Integer.toString(j);
                 if (entry.equals(temp))
                 {
                     this.lame=entry;
-                    this.tone=i;
+                    this.radical=pinyin_list_notone[i];
+                    this.tone=j;
                     switch(tone) {
                         case 0 :
                             this.print=entry;
@@ -60,29 +63,33 @@ public class Pinyin {
                 }
             }
             if (entry.equals(pinyin_list_tone1[i])) {
-                this.lame=pinyin_list_notone[i];
+                this.radical=pinyin_list_notone[i];
                 this.tone=1;
+                this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
                 this.html_color_print="<red>"+this.print+"</red>";
                 return;
             }
             if (entry.equals(pinyin_list_tone2[i])) {
-                this.lame=pinyin_list_notone[i];
+                this.radical=pinyin_list_notone[i];
                 this.tone=2;
+                this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
                 this.html_color_print="<orange>"+this.print+"</orange>";
                 return;
             }
             if (entry.equals(pinyin_list_tone3[i])) {
-                this.lame=pinyin_list_notone[i];
+                this.radical=pinyin_list_notone[i];
                 this.tone=3;
+                this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
                 this.html_color_print="<green>"+this.print+"</green>";
                 return;
             }
             if (entry.equals(pinyin_list_tone4[i])) {
-                this.lame=pinyin_list_notone[i];
+                this.radical=pinyin_list_notone[i];
                 this.tone=4;
+                this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
                 this.html_color_print="<blue>"+this.print+"</blue>";
                 return;
@@ -128,8 +135,12 @@ public class Pinyin {
         return tone;
     }
 
-    public String get_radical() {
+    public String get_lame() {
         return lame;
+    }
+
+    public String get_radical() {
+        return radical;
     }
 
     public String get_pretty() {
