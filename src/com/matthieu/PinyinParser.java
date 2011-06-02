@@ -1,8 +1,5 @@
 package com.matthieu;
 
-import android.util.Log;
-
-import java.text.BreakIterator;
 import java.util.ArrayList;
 
 /**
@@ -17,11 +14,11 @@ public class PinyinParser {
     {
     }
 
-    static public ArrayList<Pinyin> parse_string(String pinyin_string)
+    static public ArrayList<String> parse_string(String pinyin_string)
     {
         int split_index;
-        ArrayList<Pinyin> result = new ArrayList<Pinyin>();
-        ArrayList<Pinyin> temp;
+        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> temp;
         int i=0;
 
 
@@ -101,7 +98,7 @@ public class PinyinParser {
                     result = temp;
                 }
 
-                result.add(0, new Pinyin(try_pinyin));
+                result.add(0, new Pinyin(try_pinyin).get_lame());
                 return result;
             }
         }
@@ -110,24 +107,31 @@ public class PinyinParser {
     }
 
 
-    /**
-     *
-     * @param input String of pinyins with tones as numbers
-     * @return String with accents correctly marked
-     */
-    /*
-    public static String convert_to_printed_version(String input)
+    public static String convert_to_pretty_version(String input)
     {
         int i;
         String result = "";
         if (input == "")
             return result;
-        ArrayList<Pinyin> parsed = parse_string(input);
+        ArrayList<String> parsed = parse_string(input);
         for (i = 0; i < parsed.size(); i++)
         {
-            result += parsed.get(i).get_print_version();
+            result += new Pinyin(parsed.get(i)).get_pretty();
         }
         return result;
     }
-    */
+
+    public static String convert_to_html_version(String input)
+    {
+        int i;
+        String result = "";
+        if (input == "")
+            return result;
+        ArrayList<String> parsed = parse_string(input);
+        for (i = 0; i < parsed.size(); i++)
+        {
+            result += new Pinyin(parsed.get(i)).get_color();
+        }
+        return result;
+    }
 }

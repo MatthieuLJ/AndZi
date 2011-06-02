@@ -3,7 +3,6 @@ package com.matthieu;
 import android.content.ContextWrapper;
 import android.test.AndroidTestCase;
 import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -26,6 +25,7 @@ public class HanziDBTest extends AndroidTestCase {
         Log.d(TAG, " is setup");
     }
 
+    @Override
     protected void tearDown() {
         target.close();
     }
@@ -47,6 +47,13 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target.getTranslations("好").contains("good"));
         assertTrue(target.getTranslations("好").contains("well"));
         assertTrue(target.getTranslations("好").contains("perfect"));
+        assertTrue(target.checkDatabase());
+    }
+
+    public void testVocabularyAdd() {
+        target.addVocabulary(new Vocabulary("风", "feng1", new ArrayList<String>(Arrays.asList("wind", "custom"))));
+        assertTrue(target.getTranslations("风").contains("wind"));
+        assertTrue(target.getTranslations("风").contains("custom"));
         assertTrue(target.checkDatabase());
     }
 

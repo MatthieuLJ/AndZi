@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.text.Html;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -46,7 +45,8 @@ public class HanziDBlesson extends HanziDB {
     public void addLesson(String name) {
         ContentValues cv = new ContentValues();
         cv.put("name", name);
-        db.insertWithOnConflict("lessons", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        db.insert("lessons", null, cv);
+        //db.insertWithOnConflict("lessons", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     public void delLesson(String name) {
@@ -98,7 +98,8 @@ public class HanziDBlesson extends HanziDB {
         ContentValues cv = new ContentValues();
         cv.put("lesson_id", lesson_id);
         cv.put("eng_id", Integer.toString(eng_id));
-        db.insertWithOnConflict("lesson_word", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        db.insert("lesson_word", null, cv);
+        //db.insertWithOnConflict("lesson_word", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     public void removeWordLesson(String lesson, String english, String chinese, String pinyin) {
@@ -128,11 +129,14 @@ public class HanziDBlesson extends HanziDB {
         db.delete("lesson_word", "eng_id=? AND lesson_id=?", new String[] {Integer.toString(eng_id), Integer.toString(lesson_id)});
     }
 
+
     /*
     public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
         
     }
+    */
 
+    /*
     public HanziDB createFilterDB() {
 
     }

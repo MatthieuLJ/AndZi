@@ -1,8 +1,5 @@
 package com.matthieu;
 
-import android.content.ContextWrapper;
-import android.util.Log;
-
 /**
  * User: matthieu
  * Date: 5/31/11
