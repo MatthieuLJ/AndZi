@@ -80,7 +80,6 @@ public class PinyinParser {
             return result;
         }
 
-
         for (i = Math.min(6, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 6 characters...
         // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
         {

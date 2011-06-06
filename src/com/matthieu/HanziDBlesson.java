@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.util.Log;
 import java.util.ArrayList;
 
@@ -14,6 +15,7 @@ import java.util.ArrayList;
  */
 public class HanziDBlesson extends HanziDB {
     private static final String TAG = "HanziDBlesson";
+
 
     public HanziDBlesson(Context context) {
         super(context);
@@ -69,6 +71,9 @@ public class HanziDBlesson extends HanziDB {
         return res;
     }
 
+    ////////////////////////////////////////
+    // Manage Lessons
+    ////////////////////////////////////////
     public void addLesson(String name) {
         ContentValues cv = new ContentValues();
         cv.put("name", name);
@@ -110,6 +115,9 @@ public class HanziDBlesson extends HanziDB {
 
     }
 
+    ////////////////////////////////////////
+    // Manage Words in lessons
+    ////////////////////////////////////////
     public void assignWordLesson(String lesson, String english, String chinese, String pinyin) {
         int eng_id=-1;
         int lesson_id;
@@ -219,4 +227,57 @@ public class HanziDBlesson extends HanziDB {
         cur.close();
         return res;
     }
+
+    ////////////////////////////////////////
+    // Manage Filter
+    ////////////////////////////////////////
+    protected boolean filter_enabled=false, need_update=true, filter_ready=false;
+    protected HanziDBlesson filtered_db=null;
+    protected ArrayList<String> lesson_filter=new ArrayList<String>();
+
+    public void enableFilter(boolean enable) {
+        if (enable) {
+            if (filtered_db == null) {
+                filtered_db = new HanziDBlesson(appContext, null);
+                new FilteredDbUpdater().execute();
+                need_update = false;
+            }
+            if (need_update) {
+                new FilteredDbUpdater().execute();
+                need_update = false;
+            }
+        }
+        filter_enabled = enable;
+    }
+
+    public void setLessonsToFilter(ArrayList<String> lessons) {
+        lesson_filter = lessons;
+        if (filter_enabled) {
+            new FilteredDbUpdater().execute();
+            need_update = false;
+        }
+        else
+            need_update = true;
+    }
+
+    private class FilteredDbUpdater extends AsyncTask<Void, Integer, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            int index;
+            filter_ready=false;
+
+            ArrayList<Vocabulary> filtered_vocabulary = getVocabularyInLessons(lesson_filter);
+            for (index=0; index<filtered_vocabulary.size();index++) {
+                filtered_db.addVocabulary(filtered_vocabulary.get(index));
+                publishProgress((int) 100 * index / filtered_vocabulary.size());
+            }
+            filter_ready=true;
+            return null;
+        }
+    }
+
+
+    ////////////////////////////////////////
+    // Use filter
+    ////////////////////////////////////////
 }
