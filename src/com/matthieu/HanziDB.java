@@ -229,6 +229,72 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public ArrayList<Vocabulary> getWordsWithPinyin(String hanzi) {
+        ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
+        ArrayList<Integer> cword_ids = getWordIdWithPinyin(hanzi);
+        for (int id : cword_ids) {
+            res.addAll(getTranslations(id));
+        }
+        return res;
+    }
+
+    public ArrayList<Vocabulary> getWordsWithPinyin(String hanzi, String pinyin) {
+        ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
+        ArrayList<Integer> cword_ids = getWordIdWithPinyin(hanzi, pinyin);
+        for (int id : cword_ids) {
+            res.addAll(getTranslations(id));
+        }
+        return res;
+    }
+
+    public static ArrayList<String> combineListOfTranslations(ArrayList<Vocabulary> vocs) {
+        ArrayList<String> res=new ArrayList<String>();
+        for (Vocabulary voc : vocs) {
+            res.addAll(voc.english);
+        }
+        return res;
+    }
+
+    protected ArrayList<Integer> getWordIdWithPinyin(String hanzi) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        Cursor cur = db.rawQuery("SELECT * " +
+                "FROM cword " +
+                "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
+                "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                "WHERE char_pinyin.hanzi=?;", new String[] {hanzi});
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res.add(cur.getInt(cur.getColumnIndex("cword.cword_id")));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no record found for word with "+hanzi);
+        }
+        cur.close();
+        return res;
+    }
+
+    protected ArrayList<Integer> getWordIdWithPinyin(String hanzi, String pinyin) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        Cursor cur = db.rawQuery("SELECT * " +
+                "FROM cword " +
+                "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
+                "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                "WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?;", new String[] {hanzi, pinyin});
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res.add(cur.getInt(cur.getColumnIndex("cword.cword_id")));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no record found for word with "+hanzi+"/"+pinyin);
+        }
+        cur.close();
+        return res;
+    }
+
     protected ArrayList<Integer> getWordId(String chinese) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=?;", new String[] {chinese});
@@ -290,6 +356,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res.get(0);
     }
 
+    /*
     protected ArrayList<Integer> getCharPinyinId(String hanzi) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?;", new String[] {hanzi});
@@ -306,6 +373,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
         return res;
     }
+    */
 
     protected ArrayList<Vocabulary> getTranslations(int cword_id) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -337,14 +405,6 @@ public class HanziDB extends SQLiteOpenHelper {
         }
 
         cur.close();
-        return res;
-    }
-
-    public static ArrayList<String> combineListOfTranslations(ArrayList<Vocabulary> vocs) {
-        ArrayList<String> res=new ArrayList<String>();
-        for (Vocabulary voc : vocs) {
-            res.addAll(voc.english);
-        }
         return res;
     }
 

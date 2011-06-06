@@ -111,4 +111,27 @@ public class HanziDBTest extends AndroidTestCase {
         assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("今天")).contains("today"));
         assertTrue(target.checkDatabase());
     }
+
+    public void testGetWordsWithPinyin() {
+        target.addVocabulary("everyone",new ArrayList<String>(Arrays.asList("大","家")), new ArrayList<String>(Arrays.asList("da4", "jia1")));
+        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        target.addVocabulary("great",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        target.addVocabulary("not very",new ArrayList<String>(Arrays.asList("不","大")), new ArrayList<String>(Arrays.asList("bu4", "da4")));
+        target.addVocabulary("doctor",new ArrayList<String>(Arrays.asList("大","夫")), new ArrayList<String>(Arrays.asList("dai4", "fu")));
+        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("everyone"));
+        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("great"));
+        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("not very"));
+        assertFalse(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("doctor"));
+        assertTrue(target.checkDatabase());
+    }
+
+    public void testGetWordsWithChar() {
+        target.addVocabulary("to go",new ArrayList<String>(Arrays.asList("去")), new ArrayList<String>(Arrays.asList("qu4")));
+        target.addVocabulary("last year",new ArrayList<String>(Arrays.asList("去","年")), new ArrayList<String>(Arrays.asList("qu4", "nian2")));
+        target.addVocabulary("it seems",new ArrayList<String>(Arrays.asList("看","上","去")), new ArrayList<String>(Arrays.asList("kan4", "shang", "qu")));
+        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("去")).contains("to go"));
+        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("去")).contains("last year"));
+        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("去")).contains("it seems"));
+        assertTrue(target.checkDatabase());
+    }
 }

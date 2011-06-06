@@ -276,8 +276,33 @@ public class HanziDBlesson extends HanziDB {
         }
     }
 
+    public boolean getFilterReady()
+    {
+        return filter_ready;
+    }
 
     ////////////////////////////////////////
     // Use filter
     ////////////////////////////////////////
+
+    public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
+        if ((filter_ready) && (filter_enabled))
+            return filtered_db.getTranslations(chinese);
+        else
+            return getTranslations(chinese);
+    }
+
+    public ArrayList<Vocabulary> getFilteredTranslations(String chinese, String pinyin) {
+        if ((filter_ready) && (filter_enabled))
+            return filtered_db.getTranslations(chinese, pinyin);
+        else
+            return getTranslations(chinese, pinyin);
+    }
+
+    public ArrayList<Vocabulary> getFilteredCTranslations(String english) {
+        if ((filter_ready) && (filter_enabled))
+            return filtered_db.getCTranslations(english);
+        else
+            return getCTranslations(english);
+    }
 }
