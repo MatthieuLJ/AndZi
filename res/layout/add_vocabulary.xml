@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+        >
+    <AutoCompleteTextView
+            android:id="@+id/chinese"
+            android:layout_width="fill_parent"
+            android:layout_height="56dp"
+            android:capitalize="none"
+            android:singleLine="true"
+            android:textSize="32dp"
+            />
+    <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+        <LinearLayout
+                android:id="@+id/pinyin_buttons"
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"/>
+    </ScrollView>
+    <ListView
+            android:id="@+id/vocabulary"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            >
+
+    </ListView>
+</LinearLayout>
+
