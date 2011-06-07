@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.util.Log;
 import java.util.ArrayList;
 
@@ -25,6 +24,7 @@ public class HanziDBlesson extends HanziDB {
         super(context, db_name);
     }
 
+    @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS lesson_word;");
         db.execSQL("DROP TABLE IF EXISTS lessons;");
@@ -43,6 +43,7 @@ public class HanziDBlesson extends HanziDB {
                 "UNIQUE(eng_id,lesson_id));");
     }
 
+    @Override
     public boolean checkDatabase() {
         boolean res = super.checkDatabase();
 
@@ -82,14 +83,14 @@ public class HanziDBlesson extends HanziDB {
     }
 
     public void delLesson(String name) {
-        int lesson_id, res;
+        int lesson_id;
 
         lesson_id = getLessonId(name);
         if (lesson_id == -1)
             return;
 
-        res = db.delete("lesson_word", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
-        res = db.delete("lessons", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
+        db.delete("lesson_word", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
+        db.delete("lessons", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
     }
 
     public ArrayList<String> getLessons() {
@@ -101,6 +102,7 @@ public class HanziDBlesson extends HanziDB {
                 res.add(cur.getString(cur.getColumnIndex("name")));
             }while(cur.moveToNext());
         }
+        cur.close();
         return res;
     }
 
@@ -177,13 +179,47 @@ public class HanziDBlesson extends HanziDB {
     }
 
     public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
-        String whereQuery = "IN (";
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary tmp=null;
+        String whereQuery = buildWhereQuery(lessons);
 
+        Cursor cur = db.rawQuery("SELECT e.translation AS translation, " +
+                                 "c.chinese AS chinese, " +
+                                 "c.pinyin AS pinyin " +
+                                 "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word" +
+                                 " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
+                                 " JOIN cword AS c ON c.cword_id=e.cword_id "
+                                 ,null);
+        
+        if (cur.moveToFirst()) {
+            do{
+                String chinese = cur.getString(cur.getColumnIndex("chinese"));
+                String pinyin = cur.getString(cur.getColumnIndex("pinyin"));
+                if (tmp == null)
+                    tmp = new Vocabulary(chinese, pinyin,
+                            cur.getString(cur.getColumnIndex("translation")));
+                else {
+                    if (tmp.chinese.equals(chinese) && tmp.pinyin.equals(pinyin))
+                        tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
+                    else {
+                        res.add(tmp);
+                        tmp = new Vocabulary(chinese, pinyin,
+                                cur.getString(cur.getColumnIndex("translation")));
+                    }
+                }
+            }while(cur.moveToNext());
+            res.add(tmp);
+        }
+
+        cur.close();
+        return res;
+    }
+
+    protected String buildWhereQuery(ArrayList<String> lessons) {
+        String whereQuery = "WHERE lesson_word.lesson_id IN (";
         int size = lessons.size();
         if (size == 0)
-            return res;
+            return "";
 
         for (String lesson : lessons) {
             int id = getLessonId(lesson);
@@ -197,27 +233,154 @@ public class HanziDBlesson extends HanziDB {
                 whereQuery += "'" + Integer.toString(id) + "',";
         }
         whereQuery += ")";
-        
-        Cursor cur = db.rawQuery("SELECT e.translation, c.chinese, c.pinyin " +
-                                 "FROM eword AS e " +
-                                 " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                                 " JOIN lesson_word AS lw ON lw.eng_id=e.eng_id " +
-                                 "WHERE lw.lesson_id " + whereQuery,null);
+        return whereQuery;
+    }
+
+    ////////////////////////////////////////
+    // Manage content
+    ////////////////////////////////////////
+    @Override
+    protected void delEword(int eng_id) {
+        super.delEword(eng_id);
+        db.delete("lesson_word", "eng_id=?", new String[] {Integer.toString(eng_id)});
+    }
+
+    ////////////////////////////////////////
+    // Manage Filter
+    ////////////////////////////////////////
+    protected boolean filter_enabled=false;
+    protected ArrayList<String> lesson_filter=new ArrayList<String>();
+    protected String where_filter; // TODO implement and use
+
+    public void enableFilter(boolean enable) {
+        filter_enabled = enable;
+    }
+
+    public void setLessonsToFilter(ArrayList<String> lessons) {
+        lesson_filter = lessons;
+        where_filter = buildWhereQuery(lessons);
+    }
+    
+    ////////////////////////////////////////
+    // Use filter
+    ////////////////////////////////////////
+
+    public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
+        if ((lesson_filter.size() > 0) && (filter_enabled)) {
+            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
+            ArrayList<Integer> cword_ids = getFilteredWordId(chinese);
+            for (int id : cword_ids) {
+                res.addAll(getFilteredTranslations(id));
+            }
+            return res;
+        }
+        else
+            return getTranslations(chinese);
+    }
+
+    public ArrayList<Vocabulary> getFilteredTranslations(String chinese, String pinyin) {
+        if ((lesson_filter.size() > 0) && (filter_enabled)) {
+            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
+            ArrayList<Integer> cword_ids = getFilteredWordId(chinese, pinyin);
+            for (int id : cword_ids) {
+                res.addAll(getFilteredTranslations(id));
+            }
+            return res;
+        }
+        else
+            return getTranslations(chinese, pinyin);
+    }
+
+    public ArrayList<Vocabulary> getFilteredCTranslations(String english) {
+        if ((lesson_filter.size() > 0) && (filter_enabled)) {
+            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
+        Cursor cur = db.rawQuery("SELECT cword.chinese AS chinese,cword.pinyin AS pinyin " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN (SELECT * FROM eword WHERE translation=?) AS eword ON eword.eng_id=lesson_word.eng_id " +
+                "JOIN cword ON cword.cword_id=eword.cword_id "
+                , new String[] {english});
+        if (cur.moveToFirst()) {
+            do{
+                res.add(new Vocabulary
+                        (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")),english));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no record found for word "+english);
+        }
+
+        cur.close();
+        return res;
+        }
+        else
+            return getCTranslations(english);
+    }
+
+    protected ArrayList<Integer> getFilteredWordId(String chinese) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "JOIN cword ON cword.cword_id=eword.cword_id " +
+                "WHERE cword.chinese=?;", new String[] {chinese});
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no record found for word "+chinese+" in filtered db");
+        }
+        cur.close();
+        return res;
+    }
+
+    protected ArrayList<Integer> getFilteredWordId(String chinese, String pinyin) {
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        Cursor cur = db.rawQuery("SELECT * " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "JOIN cword ON cword.cword_id=eword.cword_id " +
+                "WHERE cword.chinese=? AND cword.pinyin=?;", new String[] {chinese, pinyin});
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no record found for word "+chinese+" in filtered db");
+        }
+        cur.close();
+        return res;
+    }
+
+    protected ArrayList<Vocabulary> getFilteredTranslations(int cword_id) {
+        ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
+        Vocabulary tmp=null;
+
+        Cursor cur = db.rawQuery("SELECT * " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "JOIN cword ON eword.cword_id=cword.cword_id " +
+                "WHERE cword.cword_id=? ORDER BY cword.cword_id ASC;", new String[] {Integer.toString(cword_id)});
 
         if (cur.moveToFirst()) {
             do{
-                String chinese = cur.getString(cur.getColumnIndex("c.chinese"));
-                String pinyin = cur.getString(cur.getColumnIndex("c.pinyin"));
+                String chinese = cur.getString(cur.getColumnIndex("chinese"));
+                String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
                 if (tmp == null)
-                    tmp = new Vocabulary(chinese, pinyin,
-                            cur.getString(cur.getColumnIndex("e.translation")));
+                    tmp = new Vocabulary(
+                            chinese, pinyin,
+                            cur.getString(cur.getColumnIndex("translation")));
                 else {
                     if (tmp.chinese.equals(chinese) && tmp.pinyin.equals(pinyin))
-                        tmp.english.add(cur.getString(cur.getColumnIndex("e.translation")));
+                        tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
                     else {
                         res.add(tmp);
                         tmp = new Vocabulary(chinese, pinyin,
-                                cur.getString(cur.getColumnIndex("e.translation")));
+                                cur.getString(cur.getColumnIndex("translation")));
                     }
                 }
             }while(cur.moveToNext());
@@ -226,83 +389,5 @@ public class HanziDBlesson extends HanziDB {
 
         cur.close();
         return res;
-    }
-
-    ////////////////////////////////////////
-    // Manage Filter
-    ////////////////////////////////////////
-    protected boolean filter_enabled=false, need_update=true, filter_ready=false;
-    protected HanziDBlesson filtered_db=null;
-    protected ArrayList<String> lesson_filter=new ArrayList<String>();
-
-    public void enableFilter(boolean enable) {
-        if (enable) {
-            if (filtered_db == null) {
-                filtered_db = new HanziDBlesson(appContext, null);
-                new FilteredDbUpdater().execute();
-                need_update = false;
-            }
-            if (need_update) {
-                new FilteredDbUpdater().execute();
-                need_update = false;
-            }
-        }
-        filter_enabled = enable;
-    }
-
-    public void setLessonsToFilter(ArrayList<String> lessons) {
-        lesson_filter = lessons;
-        if (filter_enabled) {
-            new FilteredDbUpdater().execute();
-            need_update = false;
-        }
-        else
-            need_update = true;
-    }
-
-    private class FilteredDbUpdater extends AsyncTask<Void, Integer, Void> {
-        @Override
-        protected Void doInBackground(Void... voids) {
-            int index;
-            filter_ready=false;
-
-            ArrayList<Vocabulary> filtered_vocabulary = getVocabularyInLessons(lesson_filter);
-            for (index=0; index<filtered_vocabulary.size();index++) {
-                filtered_db.addVocabulary(filtered_vocabulary.get(index));
-                publishProgress((int) 100 * index / filtered_vocabulary.size());
-            }
-            filter_ready=true;
-            return null;
-        }
-    }
-
-    public boolean getFilterReady()
-    {
-        return filter_ready;
-    }
-
-    ////////////////////////////////////////
-    // Use filter
-    ////////////////////////////////////////
-
-    public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
-        if ((filter_ready) && (filter_enabled))
-            return filtered_db.getTranslations(chinese);
-        else
-            return getTranslations(chinese);
-    }
-
-    public ArrayList<Vocabulary> getFilteredTranslations(String chinese, String pinyin) {
-        if ((filter_ready) && (filter_enabled))
-            return filtered_db.getTranslations(chinese, pinyin);
-        else
-            return getTranslations(chinese, pinyin);
-    }
-
-    public ArrayList<Vocabulary> getFilteredCTranslations(String english) {
-        if ((filter_ready) && (filter_enabled))
-            return filtered_db.getCTranslations(english);
-        else
-            return getCTranslations(english);
     }
 }

@@ -383,21 +383,22 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FROM eword " +
                 "JOIN cword ON eword.cword_id=cword.cword_id " +
                 "WHERE cword.cword_id=? ORDER BY cword.cword_id ASC;", new String[] {Integer.toString(cword_id)});
+
         if (cur.moveToFirst()) {
             do{
-                String chinese = cur.getString(cur.getColumnIndex("cword.chinese"));
-                String pinyin =  cur.getString(cur.getColumnIndex("cword.pinyin"));
+                String chinese = cur.getString(cur.getColumnIndex("chinese"));
+                String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
                 if (tmp == null)
                     tmp = new Vocabulary(
                             chinese, pinyin,
-                            cur.getString(cur.getColumnIndex("eword.translation")));
+                            cur.getString(cur.getColumnIndex("translation")));
                 else {
                     if (tmp.chinese.equals(chinese) && tmp.pinyin.equals(pinyin))
-                        tmp.english.add(cur.getString(cur.getColumnIndex("eword.translation")));
+                        tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
                     else {
                         res.add(tmp);
                         tmp = new Vocabulary(chinese, pinyin,
-                                cur.getString(cur.getColumnIndex("eword.translation")));
+                                cur.getString(cur.getColumnIndex("translation")));
                     }
                 }
             }while(cur.moveToNext());
@@ -610,17 +611,21 @@ public class HanziDB extends SQLiteOpenHelper {
             eng_id = cur.getInt(cur.getColumnIndex("eng_id"));
             cword_id = cur.getInt(cur.getColumnIndex("cword_id"));
 
-            db.delete("eword", "eng_id=?", new String[] {Integer.toString(eng_id)} );
+            delEword(eng_id);
             checkIsolatedCword(cword_id);
         }
         cur.close();
     }
 
-    protected void delete_char_pinyin(int char_pinyin_id) {
+    protected void delEword(int eng_id) {
+        db.delete("eword", "eng_id=?", new String[] {Integer.toString(eng_id)} );
+    }
+
+    protected void delCharPinyin(int char_pinyin_id) {
         db.delete("char_pinyin", "char_pinyin_id=?",new String[] {Integer.toString(char_pinyin_id)});
     }
 
-    protected void deleteCword(int cword_id) {
+    protected void delCword(int cword_id) {
         ArrayList<Integer> char_pinyin_id = new ArrayList<Integer>();
 
         Cursor cur = db.rawQuery("SELECT char_pinyin_id FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
@@ -634,7 +639,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         for (int cpid : char_pinyin_id) {
             if (getCwordWithChar(cpid).size() == 0) {
-                delete_char_pinyin(cpid);
+                delCharPinyin(cpid);
             }
 
         }
@@ -644,7 +649,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     protected void checkIsolatedCword(int cword_id) {
         if (getTranslations(cword_id).isEmpty()) {
-            deleteCword(cword_id);
+            delCword(cword_id);
         }
     }
 
