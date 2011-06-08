@@ -53,25 +53,25 @@ public class HanziDB extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE char_pinyin (" +
                 "char_pinyin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                "hanzi VARCHAR(2)," +
-                "pinyin VARCHAR(10)," +
+                "hanzi VARCHAR(2) NOT NULL," +
+                "pinyin VARCHAR(10) NOT NULL," +
                 "UNIQUE(hanzi, pinyin));");
         db.execSQL("CREATE TABLE cword (" +
                 "cword_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                "chinese VARCHAR(50)," +
-                "pinyin VARCHAR(150)," +
+                "chinese VARCHAR(50) NOT NULL," +
+                "pinyin VARCHAR(150) NOT NULL," +
                 "UNIQUE(chinese,pinyin));");
         db.execSQL("CREATE TABLE cword_segment (" +
-                "cword_id INTEGER," +
-                "char_pinyin_id INTEGER," +
-                "pos INTEGER," +
+                "cword_id INTEGER NOT NULL," +
+                "char_pinyin_id INTEGER NOT NULL," +
+                "pos INTEGER NOT NULL," +
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "FOREIGN KEY (char_pinyin_id) REFERENCES char_pinyin(char_pinyin_id)," +
                 "UNIQUE(cword_id, pos));");
         db.execSQL("CREATE TABLE eword (" +
                 "eng_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                "cword_id INTEGER," +
-                "translation VARCHAR(250)," +
+                "cword_id INTEGER NOT NULL," +
+                "translation VARCHAR(250) NOT NULL," +
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "UNIQUE(cword_id, translation));");
     }
@@ -356,13 +356,11 @@ public class HanziDB extends SQLiteOpenHelper {
         return res.get(0);
     }
 
-    /*
     protected ArrayList<Integer> getCharPinyinId(String hanzi) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?;", new String[] {hanzi});
         if (cur.moveToFirst()) {
             do{
-                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("char_pinyin_id")) + " for character " + hanzi);
                 res.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
             }while(cur.moveToNext());
         }
@@ -373,7 +371,6 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
         return res;
     }
-    */
 
     protected ArrayList<Vocabulary> getTranslations(int cword_id) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();

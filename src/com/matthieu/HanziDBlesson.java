@@ -33,11 +33,11 @@ public class HanziDBlesson extends HanziDB {
 
         db.execSQL("CREATE TABLE lessons (" +
                 "lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                "name VARCHAR(64)," +
+                "name VARCHAR(64) NOT NULL," +
                 "UNIQUE(name));");
         db.execSQL("CREATE TABLE lesson_word (" +
-                "eng_id INTEGER," +
-                "lesson_id INTEGER," +
+                "eng_id INTEGER NOT NULL," +
+                "lesson_id INTEGER NOT NULL," +
                 "FOREIGN KEY (eng_id) REFERENCES eword(eng_id)," +
                 "FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id)," +
                 "UNIQUE(eng_id,lesson_id));");
