@@ -15,7 +15,7 @@ public class HanziDBTest extends AndroidTestCase {
 
     private static final String TAG = "HanziDBTest";
     protected static final String DbName = "test_db";
-    protected HanziDB target;
+    private HanziDB target;
 
     @Override
     protected void setUp() {
@@ -25,113 +25,118 @@ public class HanziDBTest extends AndroidTestCase {
         Log.d(TAG, " is setup");
     }
 
+    protected HanziDB getDB() {
+        return target;
+    }
+
+
     @Override
     protected void tearDown() {
-        target.close();
+        getDB().close();
     }
 
     public void testSimpleAdd() {
-        target.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("你好")).contains("hello"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("你好")).contains("hello"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testBadSizeAdd() {
-        target.addVocabulary("hello_bad", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3")));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("你好")).contains("hello_bad"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("hello_bad", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3")));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("你好")).contains("hello_bad"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testAddSameTranslation() {
-        target.addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
-        target.addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
-        ArrayList<Vocabulary> res = target.getTranslations("西风");
+        getDB().addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
+        getDB().addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
+        ArrayList<Vocabulary> res = getDB().getTranslations("西风");
         assertTrue(res.size()==1);
         assertTrue(res.get(0).english.size() == 1);
-        assertTrue(target.checkDatabase());
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testMultipleAdd() {
-        target.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("好")).contains("good"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("好")).contains("well"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("好")).contains("perfect"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("好")).contains("good"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("好")).contains("well"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("好")).contains("perfect"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testVocabularyAdd() {
-        target.addVocabulary(new Vocabulary("风", "feng1", new ArrayList<String>(Arrays.asList("wind", "custom"))));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("风")).contains("wind"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("风")).contains("custom"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary(new Vocabulary("风", "feng1", new ArrayList<String>(Arrays.asList("wind", "custom"))));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("风")).contains("wind"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("风")).contains("custom"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testOneCharMultipleWords() {
-        target.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
-        target.addVocabulary("long", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("chang2")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("长","zhang3")).contains("grow"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("长","zhang3")).contains("long"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("长","chang2")).contains("long"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("长","chang2")).contains("grow"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        getDB().addVocabulary("long", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("chang2")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("长","zhang3")).contains("grow"));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("长","zhang3")).contains("long"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("长","chang2")).contains("long"));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("长","chang2")).contains("grow"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testMultipleChinese() {
-        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
-        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("伟")), new ArrayList<String>(Arrays.asList("wei3")));
-        assertTrue(target.getCTranslations("big").size()==2);
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        getDB().addVocabulary("big",new ArrayList<String>(Arrays.asList("伟")), new ArrayList<String>(Arrays.asList("wei3")));
+        assertTrue(getDB().getCTranslations("big").size()==2);
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testSimpleDelete() {
-        target.addVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("小")).contains("small"));
-        target.delVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("小")).contains("small"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("小")).contains("small"));
+        getDB().delVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("小")).contains("small"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testMultipleDelete() {
-        target.addVocabulary(new ArrayList<String>(Arrays.asList("bright", "next", "wise")),new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("明")).contains("bright"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("明")).contains("wise"));
-        target.delVocabulary(new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("明")).contains("bright"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("明")).contains("next"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("明")).contains("wise"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary(new ArrayList<String>(Arrays.asList("bright", "next", "wise")),new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("明")).contains("bright"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("明")).contains("wise"));
+        getDB().delVocabulary(new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("明")).contains("bright"));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("明")).contains("next"));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("明")).contains("wise"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testLeftOverFromDelete() {
-        target.addVocabulary("sky",new ArrayList<String>(Arrays.asList("天")), new ArrayList<String>(Arrays.asList("tian1")));
-        target.addVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("天")).contains("sky"));
-        target.delVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getTranslations("天")).contains("sky"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getTranslations("今天")).contains("today"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("sky",new ArrayList<String>(Arrays.asList("天")), new ArrayList<String>(Arrays.asList("tian1")));
+        getDB().addVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("天")).contains("sky"));
+        getDB().delVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("天")).contains("sky"));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getTranslations("今天")).contains("today"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testGetWordsWithPinyin() {
-        target.addVocabulary("everyone",new ArrayList<String>(Arrays.asList("大","家")), new ArrayList<String>(Arrays.asList("da4", "jia1")));
-        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
-        target.addVocabulary("great",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
-        target.addVocabulary("not very",new ArrayList<String>(Arrays.asList("不","大")), new ArrayList<String>(Arrays.asList("bu4", "da4")));
-        target.addVocabulary("doctor",new ArrayList<String>(Arrays.asList("大","夫")), new ArrayList<String>(Arrays.asList("dai4", "fu")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("everyone"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("great"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("not very"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("大", "da4")).contains("doctor"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("everyone",new ArrayList<String>(Arrays.asList("大","家")), new ArrayList<String>(Arrays.asList("da4", "jia1")));
+        getDB().addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        getDB().addVocabulary("great",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        getDB().addVocabulary("not very",new ArrayList<String>(Arrays.asList("不","大")), new ArrayList<String>(Arrays.asList("bu4", "da4")));
+        getDB().addVocabulary("doctor",new ArrayList<String>(Arrays.asList("大","夫")), new ArrayList<String>(Arrays.asList("dai4", "fu")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("大", "da4")).contains("everyone"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("大", "da4")).contains("great"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("大", "da4")).contains("not very"));
+        assertFalse(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("大", "da4")).contains("doctor"));
+        assertTrue(getDB().checkDatabase());
     }
 
     public void testGetWordsWithChar() {
-        target.addVocabulary("to go",new ArrayList<String>(Arrays.asList("去")), new ArrayList<String>(Arrays.asList("qu4")));
-        target.addVocabulary("last year",new ArrayList<String>(Arrays.asList("去","年")), new ArrayList<String>(Arrays.asList("qu4", "nian2")));
-        target.addVocabulary("it seems",new ArrayList<String>(Arrays.asList("看","上","去")), new ArrayList<String>(Arrays.asList("kan4", "shang", "qu")));
-        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("去")).contains("to go"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("去")).contains("last year"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getWordsWithPinyin("去")).contains("it seems"));
-        assertTrue(target.checkDatabase());
+        getDB().addVocabulary("to go",new ArrayList<String>(Arrays.asList("去")), new ArrayList<String>(Arrays.asList("qu4")));
+        getDB().addVocabulary("last year",new ArrayList<String>(Arrays.asList("去","年")), new ArrayList<String>(Arrays.asList("qu4", "nian2")));
+        getDB().addVocabulary("it seems",new ArrayList<String>(Arrays.asList("看","上","去")), new ArrayList<String>(Arrays.asList("kan4", "shang", "qu")));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("去")).contains("to go"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("去")).contains("last year"));
+        assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("去")).contains("it seems"));
+        assertTrue(getDB().checkDatabase());
     }
 }

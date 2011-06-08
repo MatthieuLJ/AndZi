@@ -12,75 +12,84 @@ import java.util.Arrays;
  * Date: 5/31/11
  * Time: 5:14 PM
  */
-public class HanziDBlessonTest extends AndroidTestCase {
+public class HanziDBlessonTest extends HanziDBTest {
     private static final String TAG = "HanziDBlessonTest";
     protected static final String DbName = "test_lesson_db";
-    protected HanziDBlesson target;
+    private HanziDBlesson lesson_target;
 
     @Override
     protected void setUp() {
         ContextWrapper cw = new ContextWrapper(this.getContext());
         cw.deleteDatabase(DbName);
-        target = new HanziDBlesson(this.getContext(),  DbName);
+        lesson_target = new HanziDBlesson(this.getContext(),  DbName);
         Log.d(TAG, " is setup");
     }
 
     @Override
     protected void tearDown() {
-        target.close();
+        lesson_target.close();
+    }
+
+    @Override
+    protected HanziDB getDB() {
+        return lesson_target;
+    }
+
+    protected HanziDBlesson getLessonDB() {
+        return lesson_target;
     }
 
     public void testLessonAddDelete() {
-        target.addLesson("lesson 1");
-        target.addLesson("lesson 2");
-        assertTrue(target.getLessons().contains("lesson 1"));
-        target.delLesson("lesson 1");
-        assertFalse(target.getLessons().contains("lesson 1"));
-        assertTrue(target.getLessons().contains("lesson 2"));
-        assertTrue(target.checkDatabase());
+        getLessonDB().addLesson("lesson 1");
+        getLessonDB().addLesson("lesson 2");
+        assertTrue(getLessonDB().getLessons().contains("lesson 1"));
+        getLessonDB().delLesson("lesson 1");
+        assertFalse(getLessonDB().getLessons().contains("lesson 1"));
+        assertTrue(getLessonDB().getLessons().contains("lesson 2"));
+        assertTrue(getLessonDB().checkDatabase());
     }
 
     public void testLessonAssignment() {
-        target.addLesson("lesson 1");
-        target.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
-        target.assignWordLesson("lesson 1", "good", "好", "hao3");
-        assertTrue(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
-        target.assignWordLesson("lesson 1", "well", "好", "hao3");
-        assertTrue(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
-        target.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
-        target.assignWordLesson("lesson 1", "big", "大", "da4");
-        assertTrue(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
-        assertTrue(target.checkDatabase());
+        getLessonDB().addLesson("lesson 1");
+        getLessonDB().addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        getLessonDB().assignWordLesson("lesson 1", "good", "好", "hao3");
+        assertTrue(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
+        getLessonDB().assignWordLesson("lesson 1", "well", "好", "hao3");
+        assertTrue(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
+        getLessonDB().addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        getLessonDB().assignWordLesson("lesson 1", "big", "大", "da4");
+        assertTrue(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
+        assertTrue(getLessonDB().checkDatabase());
     }
 
     public void testRemoveFromLesson() {
-        target.addVocabulary(new ArrayList<String>(Arrays.asList("down", "below")), new ArrayList<String>(Arrays.asList("下")), new ArrayList<String>(Arrays.asList("xia4")));
-        target.addLesson("remove_lesson");
-        target.assignWordLesson("remove_lesson", "down", "下", "xia4");
-        target.assignWordLesson("remove_lesson", "below", "下", "xia4");
-        assertTrue(HanziDB.combineListOfTranslations(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("down"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("below"));
-        target.removeWordLesson("remove_lesson", "down", "下", "xia4");
-        assertFalse(HanziDB.combineListOfTranslations(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("down"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("below"));
-        assertTrue(target.checkDatabase());
+        getLessonDB().addVocabulary(new ArrayList<String>(Arrays.asList("down", "below")), new ArrayList<String>(Arrays.asList("下")), new ArrayList<String>(Arrays.asList("xia4")));
+        getLessonDB().addLesson("remove_lesson");
+        getLessonDB().assignWordLesson("remove_lesson", "down", "下", "xia4");
+        getLessonDB().assignWordLesson("remove_lesson", "below", "下", "xia4");
+        assertTrue(HanziDB.combineListOfTranslations(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("down"));
+        assertTrue(HanziDB.combineListOfTranslations(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("below"));
+        getLessonDB().removeWordLesson("remove_lesson", "down", "下", "xia4");
+        assertFalse(HanziDB.combineListOfTranslations(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("down"));
+        assertTrue(HanziDB.combineListOfTranslations(getLessonDB().getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("below"));
+        assertTrue(getLessonDB().checkDatabase());
     }
 
     public void testFiltersDB() {
-        target.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
-        target.addLesson("lesson filter");
-        target.assignWordLesson("lesson filter", "good", "好", "hao3");
-        target.assignWordLesson("lesson filter", "well", "好", "hao3");
-        target.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
-        target.enableFilter(true);
-        assertTrue(HanziDB.combineListOfTranslations(target.getFilteredTranslations("好")).contains("good"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getFilteredTranslations("好", "hao3")).contains("good"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getFilteredTranslations("好", "ni3")).contains("good"));
-        assertTrue(HanziDB.combineListOfTranslations(target.getFilteredTranslations("好")).contains("well"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getFilteredTranslations("好")).contains("perfect"));
-        assertFalse(HanziDB.combineListOfTranslations(target.getFilteredTranslations("好", "hao3")).contains("perfect"));
-        assertTrue(target.getFilteredCTranslations("good").get(0).chinese.equals("好"));
-        assertTrue(target.getFilteredCTranslations("perfect").size()==0);
-        assertTrue(target.checkDatabase());
+        getLessonDB().addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        getLessonDB().addLesson("lesson filter");
+        getLessonDB().assignWordLesson("lesson filter", "good", "好", "hao3");
+        getLessonDB().assignWordLesson("lesson filter", "well", "好", "hao3");
+        getLessonDB().setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
+        getLessonDB().enableFilter(true);
+        assertTrue(HanziDB.combineListOfTranslations(getLessonDB().getFilteredTranslations("好")).contains("good"));
+        assertTrue(HanziDB.combineListOfTranslations(getLessonDB().getFilteredTranslations("好", "hao3")).contains("good"));
+        assertFalse(HanziDB.combineListOfTranslations(getLessonDB().getFilteredTranslations("好", "ni3")).contains("good"));
+        assertTrue(HanziDB.combineListOfTranslations(getLessonDB().getFilteredTranslations("好")).contains("well"));
+        assertFalse(HanziDB.combineListOfTranslations(getLessonDB().getFilteredTranslations("好")).contains("perfect"));
+        assertFalse(HanziDB.combineListOfTranslations(getLessonDB().getFilteredTranslations("好", "hao3")).contains("perfect"));
+        assertTrue(getLessonDB().getFilteredCTranslations("good").get(0).chinese.equals("好"));
+        assertTrue(getLessonDB().getFilteredCTranslations("perfect").size()==0);
+        assertTrue(getLessonDB().checkDatabase());
     }
 }
