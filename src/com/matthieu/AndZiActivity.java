@@ -3,31 +3,51 @@ package com.matthieu;
 import android.app.Activity;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextPaint;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 public class AndZiActivity extends Activity
 {
     private static final String TAG="AndZiActivity";
-    //HanziDB hanDB;
-    /** Called when the activity is first created. */
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.vocabulary_item);
+
+        /*
         setContentView(R.layout.add_vocabulary);
-        //hanDB = new HanziDB(this);
         
         AutoCompleteTextView actv = (AutoCompleteTextView) findViewById(R.id.chinese);
         actv.addTextChangedListener(new ChineseTextWatcher(actv));
+        */
     }
 
+    public void expand(View v) {
+        String tag = (String) v.getTag();
+        if (tag.equals("0")) {
+            v.setBackgroundResource(R.drawable.expand_arrow_down);
+            v.setTag("1");
+            findViewById(R.id.separation).setVisibility(View.VISIBLE);
+            findViewById(R.id.more).setVisibility(View.VISIBLE);
+        }
+        else {
+            v.setBackgroundResource(R.drawable.expand_arrow_right);
+            v.setTag("0");
+            findViewById(R.id.separation).setVisibility(View.GONE);
+            findViewById(R.id.more).setVisibility(View.GONE);
+        }
+        //v.invalidate();
+    }
     private class ChineseTextWatcher implements TextWatcher {
         private static final int maximum_text_size=32;
         private static final int minimum_text_size=10;

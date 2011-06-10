@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="separation_line_margin">5sp</dimen>
+    <dimen name="separation_line_thickness">1px</dimen>
+</resources>

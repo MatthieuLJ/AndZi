@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#cccccc">
+    <Button android:id="@+id/expand_button"
+            android:layout_width="24sp"
+            android:layout_height="24sp"
+            android:layout_margin="5dp"
+            android:background="@drawable/expand_arrow_right"
+            android:onClick="expand"
+            android:tag="0"/>
+    <View android:layout_height="fill_parent"
+          android:layout_width="@dimen/separation_line_thickness"
+          android:layout_margin="@dimen/separation_line_margin"
+          android:background="@color/separation_line_color" />
+    <LinearLayout android:id="@+id/vocabulary_info"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:orientation="vertical">
+        <TextView android:id="@+id/word"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:textColor="#000000"
+                  android:text="Hello"
+                  android:textSize="20sp" />
+        <View android:id="@+id/separation"
+              android:layout_height="1px"
+              android:layout_width="fill_parent"
+              android:layout_margin="@dimen/separation_line_thickness"
+              android:background="@color/separation_line_color"
+              android:visibility="gone" />
+        <TextView android:id="@+id/more"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:textColor="#555555"
+                  android:text="more info\nhere..."
+                  android:textSize="12sp"
+                  android:visibility="gone" />
+    </LinearLayout>
+    <View android:layout_height="fill_parent"
+          android:layout_width="@dimen/separation_line_thickness"
+          android:layout_margin="@dimen/separation_line_margin"
+          android:background="@color/separation_line_color" />
+    <CheckBox android:id="@+id/check"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content" />
+</LinearLayout>
