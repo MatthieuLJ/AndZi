@@ -47,6 +47,8 @@ public class HanziDBlesson extends HanziDB {
     public boolean checkDatabase() {
         boolean res = super.checkDatabase();
 
+        Log.v(TAG, "checkDatabase");
+
         // check foreign key from lesson_word to lessons
         Cursor c = db.rawQuery("SELECT DISTINCT lesson_id FROM lesson_word WHERE lesson_id NOT IN (SELECT lesson_id FROM lessons);", null);
         if (c.moveToFirst()) {

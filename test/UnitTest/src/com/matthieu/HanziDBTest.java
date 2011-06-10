@@ -29,12 +29,11 @@ public class HanziDBTest extends AndroidTestCase {
         return target;
     }
 
-
     @Override
     protected void tearDown() {
         getDB().close();
     }
-
+    
     public void testSimpleAdd() {
         getDB().addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(HanziDB.combineListOfTranslations(getDB().getTranslations("你好")).contains("hello"));
@@ -137,6 +136,25 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("去")).contains("to go"));
         assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("去")).contains("last year"));
         assertTrue(HanziDB.combineListOfTranslations(getDB().getWordsWithPinyin("去")).contains("it seems"));
+        assertTrue(getDB().checkDatabase());
+    }
+
+    public void testWordCharCount() {
+        getDB().addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        assertTrue(getDB().getNumChars()==2);
+        assertTrue(getDB().getNumWords()==1);
+        getDB().addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        assertTrue(getDB().getNumChars()==2);
+        assertTrue(getDB().getNumWords()==2);
+        getDB().addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        assertTrue(getDB().getNumChars()==3);
+        assertTrue(getDB().getNumWords()==3);
+        getDB().addVocabulary("long", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("chang2")));
+        assertTrue(getDB().getNumChars()==3);
+        assertTrue(getDB().getNumWords()==4);
+        getDB().delVocabulary(new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        assertTrue(getDB().getNumChars()==2);
+        assertTrue(getDB().getNumWords()==3);
         assertTrue(getDB().checkDatabase());
     }
 }

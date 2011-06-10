@@ -20,14 +20,14 @@ public class Pinyin {
 
         for (i = 0; i < pinyin_list_notone.length; i++) {
             if (entry.equals(pinyin_list_notone[i])) {
-                this.lame=entry;
+                this.lame=entry+"5";
                 this.radical=entry;
                 this.tone=0;
                 this.print=entry;
                 this.html_color_print=entry;
                 return;
             }
-            for (j = 0; j < 5; j++)
+            for (j = 0; j < 6; j++)
             {
                 temp = pinyin_list_notone[i] + Integer.toString(j);
                 if (entry.equals(temp))
@@ -37,6 +37,8 @@ public class Pinyin {
                     this.tone=j;
                     switch(tone) {
                         case 0 :
+                        case 5 :
+                            this.tone=5;
                             this.print=entry;
                             this.html_color_print=entry;
                             break;
@@ -105,7 +107,7 @@ public class Pinyin {
             {
                 return true;
             }
-            for (i = 0; i < 5; i++)
+            for (i = 0; i < 6; i++)
             {
                 temp = try_pinyin + i;
                 if (entry.equals(temp))

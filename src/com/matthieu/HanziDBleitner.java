@@ -43,6 +43,8 @@ public class HanziDBleitner extends HanziDBlesson {
     public boolean checkDatabase() {
         boolean res = super.checkDatabase();
 
+        Log.v(TAG, "checkDatabase");
+
         // check all characters in DB are assigned a box
         Cursor c = db.rawQuery("SELECT DISTINCT char_pinyin_id, hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner);", null);
         if (c.moveToFirst()) {
@@ -104,5 +106,94 @@ public class HanziDBleitner extends HanziDBlesson {
         db.insert("leitner", null, cv);
 
         return res;
+    }
+
+    ////////////////////////////////////////
+    // Get information
+    ////////////////////////////////////////
+
+    public int getNumCharsInBox(int box) {
+        int res;
+        Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=?;", new String[] {Integer.toString(box)});
+        res= cur.getCount();
+
+        cur.close();
+        return res;
+    }
+
+    public int getNumCharsExpiredInBox(int box) {
+        int res;
+        long add_time = getExpiryTime(box);
+        
+        Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=? AND mod_time<?;",
+                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()-add_time)});
+        res= cur.getCount();
+
+        cur.close();
+        return res;
+    }
+
+    public int getBoxForChar(String hanzi) {
+        int res;
+
+        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?;",
+                new String[] {hanzi});
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res = cur.getInt(cur.getColumnIndex("box"));
+            }while(cur.moveToNext());
+        }
+        else {
+            Log.d(TAG, "no box found for char "+hanzi);
+            res = -1;
+        }
+
+        cur.close();
+        return res;
+    }
+
+    private long getExpiryTime (int box) {
+        switch (box) {
+            case 0 :
+                return 0;
+            case 1:
+                return two_hours;
+            case 2:
+                return two_days;
+            case 3:
+                return two_weeks;
+            case 4:
+                return two_months;
+            default:
+                return 0;
+        }
+    }
+
+    ////////////////////////////////////////
+    // Update data
+    ////////////////////////////////////////
+    public void resetTime(String hanzi) {
+        ContentValues cv = new ContentValues();
+        cv.put("mod_time", System.currentTimeMillis());
+        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+    }
+
+    public void betterBox(String hanzi) {
+        int current_box = getBoxForChar(hanzi);
+        current_box ++;
+        if (current_box > 4) current_box = 4;
+        ContentValues cv = new ContentValues();
+        cv.put("box", current_box);
+        cv.put("mod_time", System.currentTimeMillis());
+        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+
+    }
+
+    public void restartStudy(String hanzi) {
+        ContentValues cv = new ContentValues();
+        cv.put("box", 0);
+        cv.put("mod_time", System.currentTimeMillis());
+        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
     }
 }

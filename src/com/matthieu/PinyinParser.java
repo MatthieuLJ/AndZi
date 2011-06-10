@@ -52,7 +52,7 @@ public class PinyinParser {
         }
 
         // digits are tones at the end of pinyins... can split there too
-        while ((split_index == -1) && (i<5)) {
+        while ((split_index == -1) && (i<6)) {
             split_index = pinyin_string.indexOf(Integer.toString(i));
             i++;
         }
@@ -130,6 +130,20 @@ public class PinyinParser {
         for (i = 0; i < parsed.size(); i++)
         {
             result += new Pinyin(parsed.get(i)).get_color();
+        }
+        return result;
+    }
+
+    public static String convert_to_lame_version(String input)
+    {
+        int i;
+        String result = "";
+        if (input == "")
+            return result;
+        ArrayList<String> parsed = parse_string(input);
+        for (i = 0; i < parsed.size(); i++)
+        {
+            result += new Pinyin(parsed.get(i)).get_lame();
         }
         return result;
     }

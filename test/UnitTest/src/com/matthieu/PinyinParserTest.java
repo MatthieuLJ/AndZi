@@ -31,7 +31,7 @@ public class PinyinParserTest extends AndroidTestCase {
     public void testNoTone() {
         ArrayList<String> res=PinyinParser.parse_string("nihao");
         assertTrue(res.size() == 2);
-        assertTrue(res.get(0).equals("ni"));
-        assertTrue(res.get(1).equals("hao"));
+        assertTrue(res.get(0).equals("ni5"));
+        assertTrue(res.get(1).equals("hao5"));
     }
 }
