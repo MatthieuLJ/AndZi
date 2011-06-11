@@ -10,7 +10,7 @@
             android:layout_height="56dp"
             android:capitalize="none"
             android:singleLine="true"
-            android:textSize="32dp"
+            android:textSize="32sp"
             />
     <ScrollView
             android:layout_width="fill_parent"

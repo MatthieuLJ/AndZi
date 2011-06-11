@@ -1,0 +1,5 @@
+<resources>
+    <declare-styleable name="VocabularyItemView">
+        <attr name="hide_on_collapse" format="boolean" />
+    </declare-styleable>
+</resources>

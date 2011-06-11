@@ -36,15 +36,23 @@ public class AndZiActivity extends Activity
         String tag = (String) v.getTag();
         if (tag.equals("0")) {
             v.setBackgroundResource(R.drawable.expand_arrow_down);
+
+            // at the end of the animation...
             v.setTag("1");
+            ((VocabularyItemView) findViewById(R.id.vocabulary_info)).expand();
+            /*
             findViewById(R.id.separation).setVisibility(View.VISIBLE);
             findViewById(R.id.more).setVisibility(View.VISIBLE);
+            */
         }
         else {
             v.setBackgroundResource(R.drawable.expand_arrow_right);
             v.setTag("0");
+            ((VocabularyItemView) findViewById(R.id.vocabulary_info)).collapse();
+            /*
             findViewById(R.id.separation).setVisibility(View.GONE);
             findViewById(R.id.more).setVisibility(View.GONE);
+            */
         }
         //v.invalidate();
     }
