@@ -17,8 +17,8 @@ import java.util.ArrayList;
  * Date: 6/10/11
  * Time: 11:16 AM
  */
-public class VocabularyItemView extends LinearLayout {
-    private static final String TAG="VocabularyItemView";
+public class ExtendingLinearLayout extends LinearLayout {
+    private static final String TAG="ExtendingLinearLayout";
     protected ArrayList<View> itemsToHide=null;
     private Interpolator interpolator;
     private int state=0; // -1:collapsing, 1:expanding, 0:nothing
@@ -28,11 +28,11 @@ public class VocabularyItemView extends LinearLayout {
     protected Handler handler = new Handler();
     private ResizeRunnable runnable;
 
-    public VocabularyItemView(Context context) {
+    public ExtendingLinearLayout(Context context) {
         super(context);
     }
 
-    public VocabularyItemView(Context context, AttributeSet attrs) {
+    public ExtendingLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
@@ -70,6 +70,13 @@ public class VocabularyItemView extends LinearLayout {
 
     public void expand() {
         Log.d(TAG, "expand !");
+        if (state > 0)
+            return;
+        if (state < 0) {
+            runnable.reverse();
+            state = 2;
+            return;
+        }
         findItemsToHide();
         current_height = getMeasuredHeight();
         state = 1;
@@ -81,6 +88,13 @@ public class VocabularyItemView extends LinearLayout {
 
     public void collapse() {
         Log.d(TAG, "collapse !");
+        if (state < 0)
+            return;
+        if (state > 0) {
+            runnable.reverse();
+            state = -2;
+            return;
+        }
         findItemsToHide();
         current_height = getMeasuredHeight();
         state = -1;
@@ -92,7 +106,6 @@ public class VocabularyItemView extends LinearLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //Log.d(TAG, "onMeasure ! (" + widthMeasureSpec + ", " + heightMeasureSpec +")");
         if (state == -1) {
             super.onMeasure(widthMeasureSpec,heightMeasureSpec);
             new_height = getMeasuredHeight();
@@ -101,7 +114,8 @@ public class VocabularyItemView extends LinearLayout {
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
-            //super.onMeasure(widthMeasureSpec,heightMeasureSpec);
+            Log.v(TAG, "setMeasure " + getMeasuredWidth() + ", " + current_height);
+            setMeasuredDimension(getMeasuredWidth(),current_height);
             state = -2;
         }
         else if (state == 1) {
@@ -112,7 +126,8 @@ public class VocabularyItemView extends LinearLayout {
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
-            //super.onMeasure(widthMeasureSpec,heightMeasureSpec);
+            Log.v(TAG, "setMeasure " + getMeasuredWidth() + ", " + current_height);
+            setMeasuredDimension(getMeasuredWidth(),current_height);
             state = 2;
         }
         else {
@@ -122,7 +137,7 @@ public class VocabularyItemView extends LinearLayout {
         Log.v(TAG, "state : "+state+", saved width "+savedParams.width+", height "+savedParams.height);
         Log.v(TAG, "from " + current_height + " to " +new_height);
         if (runnable == null) {
-            runnable = new ResizeRunnable(current_height, new_height, 5000 );
+            runnable = new ResizeRunnable(current_height, new_height, 500 );
             handler.post(runnable);
         }
     }
@@ -164,6 +179,18 @@ public class VocabularyItemView extends LinearLayout {
             duration=dur;
         }
 
+        public void reverse() {
+            long remaining = duration - (System.currentTimeMillis() - startTime);
+            if(remaining <= 0)
+            {
+                remaining = 0;
+            }
+            int tmp = endHeight;
+            endHeight = startHeight;
+            startHeight = tmp;
+            startTime = System.currentTimeMillis() - remaining;
+        }
+
         public void run()
         {
             final long elapsed = System.currentTimeMillis() - startTime;
@@ -178,7 +205,6 @@ public class VocabularyItemView extends LinearLayout {
                 timelinePoint = interpolator.getInterpolation(timelinePoint);
 
             int height_diff = endHeight - startHeight;
-//            final int newHeight = adding ? (startHeight + (int) (timelinePoint * guesstimatedSize)) : (startHeight - (int) (timelinePoint * guesstimatedSize));
 
             final int newHeight = startHeight + (int) (timelinePoint * height_diff);
 

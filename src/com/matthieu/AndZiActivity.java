@@ -1,17 +1,12 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextPaint;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 public class AndZiActivity extends Activity
@@ -39,7 +34,7 @@ public class AndZiActivity extends Activity
 
             // at the end of the animation...
             v.setTag("1");
-            ((VocabularyItemView) findViewById(R.id.vocabulary_info)).expand();
+            ((ExtendingLinearLayout) findViewById(R.id.vocabulary_info)).expand();
             /*
             findViewById(R.id.separation).setVisibility(View.VISIBLE);
             findViewById(R.id.more).setVisibility(View.VISIBLE);
@@ -48,7 +43,7 @@ public class AndZiActivity extends Activity
         else {
             v.setBackgroundResource(R.drawable.expand_arrow_right);
             v.setTag("0");
-            ((VocabularyItemView) findViewById(R.id.vocabulary_info)).collapse();
+            ((ExtendingLinearLayout) findViewById(R.id.vocabulary_info)).collapse();
             /*
             findViewById(R.id.separation).setVisibility(View.GONE);
             findViewById(R.id.more).setVisibility(View.GONE);
