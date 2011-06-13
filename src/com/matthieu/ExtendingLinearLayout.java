@@ -12,11 +12,6 @@ import android.os.Handler;
 import java.util.ArrayList;
 
 
-/**
- * User: matthieu
- * Date: 6/10/11
- * Time: 11:16 AM
- */
 public class ExtendingLinearLayout extends LinearLayout {
     private static final String TAG="ExtendingLinearLayout";
     protected ArrayList<View> itemsToHide=null;
@@ -24,7 +19,7 @@ public class ExtendingLinearLayout extends LinearLayout {
     private int state=0; // -1:collapsing, 1:expanding, 0:nothing
 
     private int current_height, new_height;
-    private ViewGroup.LayoutParams savedParams;
+    private LinearLayout.LayoutParams savedParams;
     protected Handler handler = new Handler();
     private ResizeRunnable runnable;
 
@@ -109,19 +104,19 @@ public class ExtendingLinearLayout extends LinearLayout {
         if (state == -1) {
             super.onMeasure(widthMeasureSpec,heightMeasureSpec);
             new_height = getMeasuredHeight();
-            savedParams = getLayoutParams();
+            savedParams = (LinearLayout.LayoutParams) this.getLayoutParams();
 
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
             Log.v(TAG, "setMeasure " + getMeasuredWidth() + ", " + current_height);
-            setMeasuredDimension(getMeasuredWidth(),current_height);
+            setMeasuredDimension(getMeasuredWidth(), current_height);
             state = -2;
         }
         else if (state == 1) {
             super.onMeasure(widthMeasureSpec,heightMeasureSpec);
             new_height = getMeasuredHeight();
-            savedParams = getLayoutParams();
+            savedParams = (LinearLayout.LayoutParams) getLayoutParams();
 
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
@@ -171,6 +166,7 @@ public class ExtendingLinearLayout extends LinearLayout {
         private int endHeight;
         private int duration;
 
+
         protected ResizeRunnable(int sHeight, int eHeight, int dur)
         {
             startTime = System.currentTimeMillis();
@@ -208,7 +204,10 @@ public class ExtendingLinearLayout extends LinearLayout {
 
             final int newHeight = startHeight + (int) (timelinePoint * height_diff);
 
-            setLayoutParams(new LinearLayout.LayoutParams(getWidth(), newHeight));
+            LinearLayout.LayoutParams new_params = new LinearLayout.LayoutParams(savedParams);
+            new_params.height = newHeight;
+            new_params.width = getWidth();
+            setLayoutParams(new_params);
             handler.postDelayed(this, refreshTime);
         }
     }
@@ -234,7 +233,7 @@ public class ExtendingLinearLayout extends LinearLayout {
         return p instanceof HideParams;
     }
 
-    public static class HideParams extends LayoutParams {
+    public static class HideParams extends LinearLayout.LayoutParams {
         public boolean hide_on_collapse=false;
 
         public HideParams(Context c, AttributeSet attrs) {
