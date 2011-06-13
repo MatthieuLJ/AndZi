@@ -13,9 +13,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class AndZiActivity extends Activity
+public class AddVocabularyActivity extends Activity
 {
-    private static final String TAG="AndZiActivity";
+    private static final String TAG="AddVocabularyActivity";
 
     @Override
     public void onCreate(Bundle savedInstanceState)
