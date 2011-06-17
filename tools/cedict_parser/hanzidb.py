@@ -35,6 +35,10 @@ class HanziDB:
                 translation VARCHAR(250) NOT NULL, \
                 FOREIGN KEY (cword_id) REFERENCES cword(cword_id), \
                 UNIQUE(cword_id, translation));")
+
+        # Make it Android compatible
+        self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US')")
+        self.connection.execute("INSERT INTO android_metadata VALUES ('en_US')")
         self.connection.commit()
 
     def __init__(self, filename):

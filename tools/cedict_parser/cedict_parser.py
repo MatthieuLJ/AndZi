@@ -44,11 +44,17 @@ pinyin_radicals=("a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca"
         "yuan", "juan", "quan", "xuan",
         "yun", "jun", "qun", "xun")
 
+def check_chinese_character(c):
+    if ((c < u'\u2e00') or (c > u'\u31ff')) and ((c < u'\u3400') or (c > u'\u4dbf')) and ((c < u'\u4e00') or (c > u'\u9fff')):
+        #print "wrong chinese character in ", chinese, " index ", i
+        return False
+    return True
+
 def check_chinese(chinese):
     """check there is only chinese characters in the list"""
     for i in range(0, len(chinese)):
         c=chinese[i]
-        if ((c < u'\u2e00') or (c > u'\u31ff')) and ((c < u'\u3400') or (c > u'\u4dbf')) and ((c < u'\u4e00') or (c > u'\u9fff')):
+        if not check_chinese_character(c):
             #print "wrong chinese character in ", chinese, " index ", i
             return False
     return True
@@ -84,8 +90,27 @@ def check_translations(translations):
             continue
         if (re.match("variant of", t) is not None):
             continue
+        if (re.match("archaic variant of", t) is not None):
+            continue
         if (re.match("Japanese variant", t) is not None):
             continue
+        if (re.match("abbr. of", t) is not None):
+            continue
+        if (re.match("abbr. for", t) is not None):
+            continue
+        if (re.match("also written", t) is not None):
+            continue
+        m = re.match("see (.).+", t)
+        if (m is not None) and check_chinese_character(m.groups()[0]):
+            continue
+        m = re.match("same as (.).+", t)
+        if (m is not None) and check_chinese_character(m.groups()[0]):
+            continue
+        m = re.match("see also (.).+", t)
+        if (m is not None) and check_chinese_character(m.groups()[0]):
+            continue
+        # TODO :replace "traditional|simplified[pinyins]" with "simplified" or "chinese[pinyins]" with "chinese"
+
         new_t.append(t)
     return new_t
 
