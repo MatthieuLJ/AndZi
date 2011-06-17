@@ -108,18 +108,22 @@ class CedictParser:
     """A class that can go through a cedict file and iterate through the lines one by one"""
 
     def __init__(self, filename):
+        self.filename=filename
         try:
             self.file = codecs.open(filename, "r", "utf-8")
         except IOError:
             print "cannot open file ",filename
             sys.exit()
-        pass
+        self.current_line=0
 
     def total_lines(self):
-        with open(filename, "r") as f:
+        with open(self.filename, "r") as f:
             for i, l in enumerate(f):
                 pass
             return i+1
+
+    def get_current_line(self):
+        return self.current_line
 
     def __iter__(self):
         return self
@@ -129,6 +133,7 @@ class CedictParser:
         while True:
             while True:
                 m=re.match(r"(.+) .+ \[(.+)\] (.+)", self.file.next())
+                self.current_line=self.current_line+1
                 if m is not None:
                      break
 
@@ -152,6 +157,7 @@ if __name__ == "__main__":
         print "not enough argument (give me the name of the cedict file)"
         sys.exit()
     parser = CedictParser(sys.argv[1])
+    total_lines = parser.total_lines()
     for voc in parser:
-        #print voc
-        pass
+        sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
+    print ""
