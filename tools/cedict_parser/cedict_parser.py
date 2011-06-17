@@ -66,14 +66,42 @@ def check_pinyins(pinyin):
             pinyin[i] = p+"5"
     return True
 
+def check_translations(translations):
+    """remove some stuff we do not need"""
+    new_t=[]
+    for i in range(0, len(translations)):
+        t=translations[i]
+        if (re.match("erhua variant of", t) is not None):
+            continue
+        if (re.match("Taiwan pr.", t) is not None):
+            continue
+        if (re.match("CL:", t) is not None):
+            continue
+        if (re.match("old varia", t) is not None):
+            continue
+        if (re.match("trad.", t) is not None):
+            continue
+        if (re.match("variant of", t) is not None):
+            continue
+        if (re.match("Japanese variant", t) is not None):
+            continue
+        new_t.append(t)
+    return new_t
+
 def filter_out(chinese, pinyin, translations):
     """Filter out some Cedict entries (non-chinese characters, wrong pinyins, erhua variants...etc...)"""
 
+    if (len(chinese) != len(pinyin)):
+        return
     if (not check_chinese(chinese)):
         return
     if (not check_pinyins(pinyin)):
         return
-    return (chinese, pinyin, translations)
+    new_translations = check_translations(translations)
+    if (len(new_translations) == 0):
+        return
+
+    return (chinese, pinyin, new_translations)
 
 
 class CedictParser:
@@ -113,10 +141,11 @@ class CedictParser:
                 continue
             translations=m.groups()[2].split("/")[1:-1]
 
-            if (filter_out(chinese, pinyins, translations) is not None):
+            res = filter_out(chinese, pinyins, translations)
+            if (res is not None):
                 break;
 
-        return (chinese,pinyins,translations)
+        return res
     
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -126,5 +155,3 @@ if __name__ == "__main__":
     for voc in parser:
         #print voc
         pass
-    
-    
