@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import sys
 import re
@@ -159,5 +160,6 @@ if __name__ == "__main__":
     parser = CedictParser(sys.argv[1])
     total_lines = parser.total_lines()
     for voc in parser:
-        sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
+        #sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
+        print voc
     print ""
