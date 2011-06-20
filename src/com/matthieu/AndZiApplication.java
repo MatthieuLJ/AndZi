@@ -3,6 +3,6 @@ package com.matthieu;
 import android.app.Application;
 
 public class AndZiApplication extends Application {
-    private HanziDBleitner myLeitnerDB;
+    private HanziDB myLeitnerDB;
     private HanziDB cedictDB;
 }

@@ -20,11 +20,6 @@ public class RefHanziDBImporter {
         }
     }
 
-    /*
-    public Class<HanziDB> getDatabaseType() {
-        return HanziDBleitner.class;
-    }
-    */
 
     private void copyDataBase(InputStream input, String destination) throws IOException {
     	OutputStream output = new FileOutputStream(destination);
