@@ -36,7 +36,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Database construction and structure
     ////////////////////////////////////////
-    
     @Override
     public void close() {
         db.close();
@@ -107,6 +106,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
+        // TODO : test when that is happening...
         Log.v(TAG, "onUpgrade ("+i+","+i1+")");
     }
 
@@ -273,7 +273,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Querying for data
     ////////////////////////////////////////
-
     public ArrayList<Vocabulary> getTranslations(String chinese) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         ArrayList<Integer> cword_ids = getWordId(chinese);
@@ -506,7 +505,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Adding data
     ////////////////////////////////////////
-
     public void addVocabulary(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
         if (pinyin.size() != chinese.size()) {
             Log.e(TAG, "addVocabulary : Pinyins and Hanzi tables have different sizes");
@@ -644,7 +642,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Deleting data
     ////////////////////////////////////////
-
     public void delVocabulary(ArrayList<String> chinese, ArrayList<String> pinyin) {
         int i;
         ArrayList<Integer> cword_id;
@@ -758,7 +755,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Get information
     ////////////////////////////////////////
-
     public int getNumWords() {
         int res;
         Cursor cur = db.rawQuery("SELECT cword_id FROM cword;", null);
@@ -967,7 +963,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use lesson filter
     ////////////////////////////////////////
-
     public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -1109,7 +1104,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Get information
     ////////////////////////////////////////
-
     public int getNumCharsInBox(int box) {
         int res;
         Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=?;", new String[] {Integer.toString(box)});
