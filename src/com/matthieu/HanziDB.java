@@ -249,17 +249,6 @@ public class HanziDB extends SQLiteOpenHelper {
         // Leitner
         //
 
-        // check all characters in DB are assigned a box
-        c = db.rawQuery("SELECT DISTINCT char_pinyin_id, hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner);", null);
-        if (c.moveToFirst()) {
-            Log.w(TAG, "Character does not have a leitner box");
-            res = false;
-            do{
-                Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
-            }while(c.moveToNext());
-        }
-        c.close();
-
         // check all characters in leitner table are in DB
         c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE hanzi NOT IN (SELECT hanzi FROM char_pinyin);", null);
         if (c.moveToFirst()) {
@@ -614,14 +603,6 @@ public class HanziDB extends SQLiteOpenHelper {
             Log.w(TAG, "Add a char_pinyin id, but could not find it");
         }
 
-        // TODO : not sure we should add right away or only when the leitner system is being used
-        // (and consider any chararcter not in the DB system to be new...)
-        
-        cv.clear();
-        cv.put("hanzi", hanzi);
-        cv.put("box", 0);
-        cv.put("mod_time", System.currentTimeMillis());
-        db.insert("leitner", null, cv);
         return res;
     }
 
@@ -972,7 +953,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     protected boolean lesson_filter_enabled =false;
     protected ArrayList<String> lesson_filter=new ArrayList<String>();
-    protected String where_filter; // TODO implement and use
+    protected String where_filter;
 
     public void enableFilter(boolean enable) {
         lesson_filter_enabled = enable;
@@ -1135,11 +1116,23 @@ public class HanziDB extends SQLiteOpenHelper {
         res= cur.getCount();
 
         cur.close();
+
+        if (box == 0) {
+            // add the characters that do not have any box...
+            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner)", null);
+            res += cur.getCount();
+            cur.close();
+        }
+
         return res;
     }
 
     public int getNumCharsExpiredInBox(int box) {
         int res;
+
+        if (box == 0)
+            return getNumCharsInBox(0);
+        
         long add_time = getExpiryTime(box);
 
         Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=? AND mod_time<?;",
@@ -1162,8 +1155,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no box found for char "+hanzi);
-            res = -1;
+            res = 0;
         }
 
         cur.close();
@@ -1191,26 +1183,54 @@ public class HanziDB extends SQLiteOpenHelper {
     // Update data
     ////////////////////////////////////////
     public void resetTime(String hanzi) {
+
+        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?;",
+                new String[] {hanzi});
         ContentValues cv = new ContentValues();
         cv.put("mod_time", System.currentTimeMillis());
-        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+
+        if (cur.getCount() == 0) {
+            cv.put("hanzi", hanzi);
+            cv.put("box", 0);
+            db.insert("leitner", null, cv);
+        }
+        else {
+            cv.put("mod_time", System.currentTimeMillis());
+            db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+        }
     }
 
     public void betterBox(String hanzi) {
         int current_box = getBoxForChar(hanzi);
         current_box ++;
         if (current_box > 4) current_box = 4;
+
         ContentValues cv = new ContentValues();
         cv.put("box", current_box);
         cv.put("mod_time", System.currentTimeMillis());
-        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
-
+        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?;",
+                new String[] {hanzi});
+        if (cur.getCount() == 0) {
+            cv.put("hanzi", hanzi);
+            db.insert("leitner", null, cv);
+        }
+        else {
+            db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+        }
     }
 
     public void restartStudy(String hanzi) {
         ContentValues cv = new ContentValues();
         cv.put("box", 0);
         cv.put("mod_time", System.currentTimeMillis());
-        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?;",
+                new String[] {hanzi});
+        if (cur.getCount() == 0) {
+            cv.put("hanzi", hanzi);
+            db.insert("leitner", null, cv);
+        }
+        else {
+            db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+        }
     }
 }
