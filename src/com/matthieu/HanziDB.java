@@ -33,6 +33,10 @@ public class HanziDB extends SQLiteOpenHelper {
         appContext = context;
     }
 
+    public String getDatabasePath() {
+        return db.getPath();
+    }
+
     ////////////////////////////////////////
     // Database construction and structure
     ////////////////////////////////////////
@@ -773,6 +777,17 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    ////////////////////////////////////////
+    // Merge Database
+    ////////////////////////////////////////
+    public void mergeDB(HanziDB other_db) {
+        ArrayList<String> lessons = other_db.getLessons();
+        lessons.add("");
+        ArrayList<Vocabulary> vocabulary = other_db.getVocabularyInLessons(lessons);
+        for (Vocabulary v : vocabulary) {
+            addVocabulary(v);
+        }
+    }
     /*
      *
      *  Lesson database management
@@ -859,6 +874,12 @@ public class HanziDB extends SQLiteOpenHelper {
         //db.insertWithOnConflict("lesson_word", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
+    public void assignWordLesson(String lesson, Vocabulary voc) {
+        for (String english : voc.english) {
+            assignWordLesson(lesson, english, voc.chinese, voc.pinyin);
+        }
+    }
+
     public void removeWordLesson(String lesson, String english, String chinese, String pinyin) {
         int eng_id=-1;
         int lesson_id;
@@ -884,6 +905,12 @@ public class HanziDB extends SQLiteOpenHelper {
         }
 
         db.delete("lesson_word", "eng_id=? AND lesson_id=?", new String[] {Integer.toString(eng_id), Integer.toString(lesson_id)});
+    }
+
+    public void removeWordLesson(String lesson, Vocabulary voc) {
+        for (String english : voc.english) {
+            removeWordLesson(lesson, english, voc.chinese, voc.pinyin);
+        }
     }
 
     public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
@@ -1096,16 +1123,22 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      *
      */
-    private static final long two_hours = 2 * 60 * 60 * 1000;
-    private static final long two_days = 2 * 24 * 60 * 60 * 1000;
-    private static final long two_weeks = 2 * 7 * 24 * 60 * 60 * 1000;
-    private static final long two_months = 2 * 30 * 24 * 60 * 60 * 1000;
+    private static final long two_hours = (long) 2 * 60 * 60 * 1000;
+    private static final long two_days = (long) 2 * 24 * 60 * 60 * 1000;
+    private static final long two_weeks = (long) 2 * 7 * 24 * 60 * 60 * 1000;
+    private static final long two_months = (long) 2 * 30 * 24 * 60 * 60 * 1000;
+
+    private static final int MAX_BOX=4;
 
     ////////////////////////////////////////
     // Get information
     ////////////////////////////////////////
     public int getNumCharsInBox(int box) {
         int res;
+
+        if ((box < 0) || (box > MAX_BOX))
+            return 0;
+
         Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=?;", new String[] {Integer.toString(box)});
         res= cur.getCount();
 
@@ -1123,6 +1156,9 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public int getNumCharsExpiredInBox(int box) {
         int res;
+
+        if ((box < 0) || (box > MAX_BOX))
+            return 0;
 
         if (box == 0)
             return getNumCharsInBox(0);
@@ -1197,7 +1233,7 @@ public class HanziDB extends SQLiteOpenHelper {
     public void betterBox(String hanzi) {
         int current_box = getBoxForChar(hanzi);
         current_box ++;
-        if (current_box > 4) current_box = 4;
+        if (current_box > MAX_BOX) current_box = MAX_BOX;
 
         ContentValues cv = new ContentValues();
         cv.put("box", current_box);
@@ -1226,5 +1262,42 @@ public class HanziDB extends SQLiteOpenHelper {
         else {
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
+    }
+
+    ////////////////////////////////////////
+    // Use to find what character to study
+    ////////////////////////////////////////
+    public String getNextToStudy() {
+        String res;
+        for (int i = MAX_BOX; i >= 0; i--) {
+            res = getNextToStudy(i);
+            if (res != null) {
+                return res;
+            }
+        }
+        return null;
+    }
+
+    public String getNextToStudy(int box) {
+        String res = null;
+        Cursor cur = db.rawQuery("SELECT hanzi FROM leitner " +
+                "WHERE box=? AND mod_time<? " +
+                "ORDER BY mod_time ASC " +
+                "LIMIT 1;",
+                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis() - getExpiryTime(box))});
+        if (cur.moveToFirst()) {
+            res = cur.getString(cur.getColumnIndex("hanzi"));
+        }
+        cur.close();
+
+        if ((box == 0) && (res == null)) {
+            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) LIMIT 1", null);
+            if (cur.moveToFirst()) {
+                res = cur.getString(cur.getColumnIndex("hanzi"));
+            }
+        }
+
+
+        return res;
     }
 }

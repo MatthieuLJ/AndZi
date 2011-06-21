@@ -234,6 +234,27 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.checkDatabase();
     }
 
+    public void testNextToStudy() {
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        target_db.resetTime("你");
+        target_db.addVocabulary("good", new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.resetTime("好");
+        assertTrue(target_db.getNextToStudy().equals("你"));
+        target_db.resetTime("你");
+        assertTrue(target_db.getNextToStudy().equals("好"));
+        target_db.betterBox("好");
+        assertTrue(target_db.getNextToStudy().equals("你"));
+        target_db.betterBox("你");
+        assertTrue(target_db.getNextToStudy() == null);
+        target_db.restartStudy("好");
+        assertTrue(target_db.getNextToStudy().equals("好"));
+    }
+
+    public void testNextToStudyNeverUsed() {
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        assertTrue(target_db.getNextToStudy().equals("你"));
+    }
+
     /*
     public void testExpiration() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
