@@ -22,7 +22,7 @@ public class AddVocabularyActivity extends Activity
     {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.add_vocabulary);
+        setContentView(R.layout.add_vocabulary_top);
         
         EditText chinese_word = (EditText) findViewById(R.id.chinese);
         chinese_word.addTextChangedListener(new ChineseTextWatcher(chinese_word));
@@ -100,7 +100,7 @@ public class AddVocabularyActivity extends Activity
             if (new_state != state) {
                 switch(new_state) {
                     case 0:
-                        Log.d(TAG, "Empty string...");
+                        // empty string
                         if(state == 1) {
                             main_content.removeAllViews();
                             View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, main_content);
@@ -108,12 +108,12 @@ public class AddVocabularyActivity extends Activity
                         ((TextView) findViewById(R.id.warning_chinese_word)).setText("Enter a Chinese word");
                         break;
                     case 1:
-                        Log.d(TAG, "All Chinese string...");
+                        // all chinese characters
                         main_content.removeAllViews();
                         View.inflate(getApplicationContext(), R.layout.add_vocabulary_context, main_content);
                         break;
                     case 2:
-                        Log.d(TAG, "Unknown characters...");
+                        // some non-chinese characters...
                         if(state == 1) {
                             main_content.removeAllViews();
                             View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, main_content);
