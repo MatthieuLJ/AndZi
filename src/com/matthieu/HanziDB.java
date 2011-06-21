@@ -442,12 +442,12 @@ public class HanziDB extends SQLiteOpenHelper {
         return res.get(0);
     }
 
-    protected ArrayList<Integer> getCharPinyinId(String hanzi) {
-        ArrayList<Integer> res = new ArrayList<Integer>();
+    public ArrayList<String> getPinyinForChar(String hanzi) {
+        ArrayList<String> res = new ArrayList<String>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?;", new String[] {hanzi});
         if (cur.moveToFirst()) {
             do{
-                res.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
+                res.add(cur.getString(cur.getColumnIndex("pinyin")));
             }while(cur.moveToNext());
         }
         else {

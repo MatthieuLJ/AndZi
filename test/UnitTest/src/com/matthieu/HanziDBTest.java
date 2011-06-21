@@ -153,6 +153,18 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.getNumWords()==3);
         assertTrue(target_db.checkDatabase());
     }
+
+    public void testPinyinsForChar() {
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary("long", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("chang2")));
+        assertTrue(target_db.getPinyinForChar("长").contains("zhang3"));
+        assertTrue(target_db.getPinyinForChar("长").contains("chang2"));
+        assertTrue(target_db.getPinyinForChar("长").size()==2);
+        assertTrue(target_db.getPinyinForChar("你").contains("ni3"));
+        assertTrue(target_db.getPinyinForChar("你").size()==1);
+        assertTrue(target_db.checkDatabase());
+    }
     
     public void testLessonAddDelete() {
         target_db.addLesson("lesson 1");
@@ -248,11 +260,13 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.getNextToStudy() == null);
         target_db.restartStudy("好");
         assertTrue(target_db.getNextToStudy().equals("好"));
+        target_db.checkDatabase();
     }
 
     public void testNextToStudyNeverUsed() {
         target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
         assertTrue(target_db.getNextToStudy().equals("你"));
+        target_db.checkDatabase();
     }
 
     /*
