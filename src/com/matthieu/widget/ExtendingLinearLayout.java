@@ -1,4 +1,4 @@
-package com.matthieu;
+package com.matthieu.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.os.Handler;
+import com.matthieu.R;
 import java.util.ArrayList;
 
 

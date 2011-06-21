@@ -20,7 +20,7 @@
           android:layout_width="@dimen/separation_line_thickness"
           android:layout_marginRight="@dimen/separation_line_margin"
           android:background="@color/separation_line_color" />
-    <com.matthieu.ExtendingLinearLayout android:id="@+id/vocabulary_info"
+    <com.matthieu.widget.ExtendingLinearLayout android:id="@+id/vocabulary_info"
                                         android:background="#ff0000"
                                         android:layout_width="fill_parent"
                                         android:layout_height="wrap_content"
@@ -48,7 +48,7 @@
                   android:textSize="12sp"
                   android:visibility="gone"
                   matthieu:hide_on_collapse="true"/>
-    </com.matthieu.ExtendingLinearLayout>
+    </com.matthieu.widget.ExtendingLinearLayout>
     <View android:layout_height="fill_parent"
           android:layout_width="@dimen/separation_line_thickness"
           android:layout_margin="@dimen/separation_line_margin"
