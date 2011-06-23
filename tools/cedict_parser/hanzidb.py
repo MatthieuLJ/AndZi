@@ -12,6 +12,11 @@ class HanziDB:
         self.connection = sqlite3.connect(self.filename)
 
         print "creating database"
+        self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US');")
+        self.connection.execute("INSERT INTO android_metadata VALUES ('en_US');")
+
+        self.connection.execute("PRAGMA user_version=1;")
+
         self.connection.execute("CREATE TABLE char_pinyin ( \
                 char_pinyin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
                 hanzi VARCHAR(2) NOT NULL, \
@@ -52,8 +57,6 @@ class HanziDB:
                 mod_time INTEGER NOT NULL);")
 
         # Make it Android compatible
-        self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US')")
-        self.connection.execute("INSERT INTO android_metadata VALUES ('en_US')")
         self.connection.commit()
 
     def __init__(self, filename):

@@ -11,9 +11,12 @@ if len(sys.argv) != 3:
 parser = cedict_parser.CedictParser(sys.argv[1])
 db = hanzidb.HanziDB(sys.argv[2])
 total_lines = parser.total_lines()
+i = 0
 for voc in parser:
-    sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
+    i = i + 1
+    if i % 50 == 0:
+        sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
     cw = db.add_cword(*voc[0:2])
     db.add_english(cw, *voc[2:3])
 print ""
-print "imported "+db.word_index+" chinese words"
+print "imported ",db.word_index," chinese words"
