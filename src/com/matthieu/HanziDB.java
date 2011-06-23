@@ -1296,7 +1296,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 res = cur.getString(cur.getColumnIndex("hanzi"));
             }
         }
-
+        cur.close();
 
         return res;
     }
