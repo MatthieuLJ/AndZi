@@ -1,8 +1,120 @@
 package com.matthieu;
 
 import android.app.Application;
+import android.content.ContextWrapper;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+import java.io.*;
 
 public class AndZiApplication extends Application {
-    private HanziDB myLeitnerDB;
-    private HanziDB cedictDB;
+    public HanziDB myDB=null;
+    public HanziDB refDB=null;
+
+    private final static String TAG = "AndZiApplication";
+    private final static String PREFERENCES_NAME="AndziPrefs";
+    private final static String REF_DB_NAME = "cedict_db";
+
+    public void onCreate() {
+        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        String db_name = prefs.getString("LocalDB", "");
+        if ((!db_name.equals("")) && (checkFileExists(db_name))) {
+            myDB = new HanziDB(getApplicationContext(), db_name);
+            Log.d(TAG, "opened local DB "+db_name);
+        }
+        else
+        {
+            myDB = new HanziDB(getApplicationContext());
+            SharedPreferences.Editor edit = prefs.edit();
+            edit.putString("LocalDB", myDB.getDatabasePath());
+            edit.commit();
+            Log.d(TAG, "Created new local DB "+myDB.getDatabasePath());
+        }
+
+        db_name = prefs.getString("ReferenceDB", "");
+        if ((!db_name.equals("")) && (checkFileExists(db_name))) {
+            refDB = new HanziDB(getApplicationContext(),db_name);
+            Log.d(TAG, "opened reference DB "+db_name);
+        }
+        else {
+            // try to find a reference DB in the assets
+            installAssetsDB();
+        }
+    }
+
+    public boolean checkFileExists(String path) {
+        return new File(path).exists();
+    }
+
+    public void installAssetsDB() {
+        InputStream input;
+        /*
+        try {
+            input = getApplicationContext().getAssets().open(REF_DB_NAME);
+
+        }
+        catch (IOException e) {
+            Log.d(TAG, "no ref DB in assets");
+            return;
+        }
+        */
+        /*
+        input = getResources().openRawResource(R.raw.cedict_db);
+        */
+        try {
+            input = new FileInputStream("/sdcard/cedict_db");
+        }
+        catch (IOException e) {
+            Log.d(TAG, "no ref DB in assets");
+            return;
+        }
+        if (input != null)
+            copyDataBase(input, getApplicationContext().getDatabasePath(REF_DB_NAME).getPath());
+        else
+            Log.d(TAG, "could not open resource");
+    }
+
+    public void eraseRefDB() {
+        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        String db_name = prefs.getString("ReferenceDB", "");
+        if (refDB != null) {
+            refDB.close();
+            refDB = null;
+        }
+        if (!db_name.equals("")) {
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+            cw.deleteDatabase(db_name);
+        }
+    }
+
+    private void copyDataBase(InputStream input, String destination) {
+        OutputStream output=null;
+        try {
+            output = new FileOutputStream(destination);
+
+            //transfer bytes
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = input.read(buffer))>0){
+                output.write(buffer, 0, length);
+            }
+
+            //Close the streams
+            output.flush();
+            output.close();
+            input.close();
+        }
+        catch (IOException e) {
+            Log.d(TAG, "Failed to copy database");
+            return;
+        }
+        refDB = new HanziDB(getApplicationContext(), destination);
+
+        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("ReferenceDB", destination);
+        edit.commit();
+
+        Log.d(TAG, "Done installing reference db " + destination);
+    }
 }
