@@ -158,7 +158,7 @@ class CedictParser:
         # match a line
         while True:
             while True:
-                m=re.match(r"(.+) .+ \[(.+)\] (.+)", self.file.next())
+                m=re.match(r".+ (.+) \[(.+)\] (.+)", self.file.next())
                 self.current_line=self.current_line+1
                 if m is not None:
                      break
