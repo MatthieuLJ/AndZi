@@ -6,16 +6,19 @@
         android:layout_height="fill_parent"
         android:layout_weight="1"
         android:orientation="vertical">
-    <ScrollView
+    <HorizontalScrollView
+            android:id="@+id/pinyin_button_scroll"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:fillViewport="true">
         <LinearLayout
                 android:id="@+id/pinyin_buttons"
                 android:orientation="horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"/>
-    </ScrollView>
+    </HorizontalScrollView>
     <ListView
             android:id="@+id/vocabulary"
             android:layout_width="fill_parent"

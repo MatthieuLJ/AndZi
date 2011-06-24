@@ -10,10 +10,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.*;
 import com.matthieu.widget.ExtendingLinearLayout;
 import java.util.ArrayList;
 
@@ -46,6 +43,7 @@ public class AddVocabularyActivity extends Activity
         private static final int minimum_text_size=10;
         private TextView tview;
         private int state; // 0 is empty, 1 is "normal", 2 is "wrong character in the string"
+        private boolean need_complete_update=false;
 
         public ChineseTextWatcher(TextView tv) {
             tview = tv;
@@ -59,30 +57,44 @@ public class AddVocabularyActivity extends Activity
             Log.d(TAG, "text changed at "+i+", sequence of "+i1+" chars became "+i2+"; new sequence=["+charSequence.toString()+"]");
             Log.d(TAG, "pinyin_choices has "+pinyin_choices.size()+" elements");
             LinearLayout pinyin_button_container = (LinearLayout) findViewById(R.id.pinyin_buttons);
+            if (pinyin_button_container == null) { Log.d(TAG, "pinyin_container is null.."); return; }
 
-            if (i1 > 0) {
-                // remove the ones that were changed
-                for (int j=0; j<i1; j++) {
-                    pinyin_choices.remove(i);
-                    pinyin_button_container.removeViewAt(i);
+            if (!need_complete_update) {
+                if (i1 > 0) {
+                    // remove the ones that were changed
+                    for (int j=0; j<i1; j++) {
+                        pinyin_choices.remove(i);
+                        pinyin_button_container.removeViewAt(i);
+                    }
+                }
+                if (i2 > 0) {
+                    for (int j=0; j<i2; j++) {
+                        Button b = new Button(AddVocabularyActivity.this);
+                        PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(i+j, i+j+1),
+                                ((AndZiApplication) getApplication()).myDB,
+                                ((AndZiApplication) getApplication()).refDB, b);
+                        pinyin_choices.add(i + j, tmp);
+                        b.setOnClickListener(new PinyinButtonOnClickListener(tmp));
+                        pinyin_button_container.addView(b, i+j,
+                                new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    }
                 }
             }
-            if (i2 > 0) {
-                for (int j=0; j<i2; j++) {
+            else {
+                pinyin_choices.clear();
+                for (int j=0; j<charSequence.toString().length(); j++) {
                     Button b = new Button(AddVocabularyActivity.this);
-                    PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(i+j, i+j+1),
+                    PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(j, j+1),
                             ((AndZiApplication) getApplication()).myDB,
                             ((AndZiApplication) getApplication()).refDB, b);
-                    pinyin_choices.add(i+j, tmp);
+                    pinyin_choices.add(j, tmp);
                     b.setOnClickListener(new PinyinButtonOnClickListener(tmp));
-                    pinyin_button_container.addView(b, i+j,
+                    pinyin_button_container.addView(b, j,
                             new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
             }
 
-            for (int j=0; j<pinyin_choices.size(); j++) {
-                Log.d(TAG, "pinyin_choices["+j+"], currently at "+pinyin_choices.get(j).current_choice);
-            }
+            new ContextUpdater().execute(tview);
         }
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
@@ -111,6 +123,8 @@ public class AddVocabularyActivity extends Activity
             }
             Log.d(TAG, "context going to state "+new_state);
 
+            need_complete_update=false;
+
             LinearLayout main_content = (LinearLayout) findViewById(R.id.main_content);
             if (new_state != state) {
                 switch(new_state) {
@@ -124,6 +138,9 @@ public class AddVocabularyActivity extends Activity
                         break;
                     case 1:
                         // all chinese characters
+                        if (state == 2) {
+                            need_complete_update = true;
+                        }
                         main_content.removeAllViews();
                         View.inflate(getApplicationContext(), R.layout.add_vocabulary_context, main_content);
                         break;
@@ -157,10 +174,6 @@ public class AddVocabularyActivity extends Activity
                 tp.getTextBounds((String) text, 0, text.length(), currentBounds );
             }
         }
-    }
-
-    private void populatePinyinButtons() {
-        LinearLayout container = (LinearLayout) findViewById(R.id.pinyin_buttons);
     }
 
     private class PinyinChoices extends AsyncTask<Void, Void, Void> {
@@ -207,6 +220,7 @@ public class AddVocabularyActivity extends Activity
 
         public void setDefaultChoice(String s) {
             default_choice = s;
+            updateButton();
         }
         public void setCurrentChoice(String s) {
             current_choice = s;
@@ -216,26 +230,6 @@ public class AddVocabularyActivity extends Activity
         }
         public String getHanzi() {
             return hanzi;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if ((!default_choice.equals("")) && ((local_pinyins.contains(default_choice)) || (ref_pinyins.contains(default_choice)))) {
-                current_choice=default_choice;
-            }
-            else if (local_pinyins.size()!= 0) {
-                current_choice = local_pinyins.get(0);
-            }
-            else if (ref_pinyins.size() != 0) {
-                current_choice = ref_pinyins.get(0);
-            }
-            else {
-                current_choice = "?";
-            }
-            button.setText(current_choice);
-            button.invalidate();
-            Log.d(TAG, "Set button with "+current_choice);
         }
 
         @Override
@@ -255,6 +249,78 @@ public class AddVocabularyActivity extends Activity
                     ref_pinyins.remove(i);
                 }
             }
+            return null;
+        }
+
+        private void updateButton() {
+            if ((!default_choice.equals("")) && ((local_pinyins.contains(default_choice)) || (ref_pinyins.contains(default_choice)))) {
+                current_choice=default_choice;
+            }
+            else if (local_pinyins.size()!= 0) {
+                current_choice = local_pinyins.get(0);
+            }
+            else if (ref_pinyins.size() != 0) {
+                current_choice = ref_pinyins.get(0);
+            }
+            else {
+                current_choice = "?";
+            }
+            button.setText(current_choice);
+            button.invalidate();
+            Log.d(TAG, "Set button with "+current_choice);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            updateButton();
+
+        }
+    }
+
+    private class ContextUpdater extends AsyncTask<TextView, Void, Void> {
+
+        ArrayList<String> default_pinyins;
+
+        public ContextUpdater() {
+            default_pinyins = new ArrayList<String>();
+        }
+        
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            int i;
+
+            super.onPostExecute(aVoid);
+            for (i=0; i<default_pinyins.size(); i++) {
+                if (i >= pinyin_choices.size()) break;
+                pinyin_choices.get(i).setDefaultChoice(default_pinyins.get(i));
+            }
+            //((ScrollView) findViewById(R.id.pinyin_button_scroll)).invalidate();
+        }
+
+        @Override
+        protected Void doInBackground(TextView... tviews) {
+            int i;
+            default_pinyins.clear();
+            TextView tview=tviews[0];
+            String text = tview.getText().toString();
+
+            HanziDB local_db = ((AndZiApplication) getApplication()).myDB;
+            HanziDB ref_db = ((AndZiApplication) getApplication()).refDB;
+
+            ArrayList<Vocabulary> vocs = local_db.getTranslations(text);
+            vocs.addAll(ref_db.getTranslations(text));
+            if (vocs.size() == 0)
+                return null;
+
+            int max_transl=-1, best_index=0;
+            for (i=0; i<vocs.size(); i++) {
+                if (vocs.get(i).english.size() > max_transl) best_index=i;
+            }
+            Log.d(TAG, "Setting default pinyins to "+vocs.get(best_index).pinyin);
+            
+            default_pinyins = PinyinParser.parse_string(vocs.get(best_index).pinyin);
+
             return null;
         }
     }
