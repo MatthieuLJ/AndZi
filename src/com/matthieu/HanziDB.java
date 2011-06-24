@@ -110,7 +110,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
-        // TODO : test when that is happening...
         Log.v(TAG, "onUpgrade ("+i+","+i1+")");
     }
 
@@ -788,6 +787,7 @@ public class HanziDB extends SQLiteOpenHelper {
             addVocabulary(v);
         }
     }
+
     /*
      *
      *  Lesson database management
@@ -913,6 +913,32 @@ public class HanziDB extends SQLiteOpenHelper {
         }
     }
 
+    public ArrayList<String> getLessonForWord(String chinese, String pinyin, String english) {
+        ArrayList<String> res=new ArrayList<String>();
+        ArrayList<Integer> cword_id = getWordId(chinese, pinyin);
+
+        if (cword_id.size() == 0)
+            return res;
+
+        Cursor cur = db.rawQuery("SELECT l.name AS name " +
+                "FROM lessons AS l " +
+                " JOIN lesson_word AS lw ON lw.lesson_id=l.lesson_id " +
+                " JOIN (SELECT cword_id, eng_id FROM eword WHERE translation=?) AS ew ON lw.eng_id=ew.eng_id" +
+                " JOIN (SELECT cword_id FROM cword WHERE chinese=? AND pinyin=?) AS cw ON ew.cword_id=cw.cword_id"
+                , new String[] {english, chinese, pinyin});
+
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res.add(cur.getString(cur.getColumnIndex("name")));
+            }while(cur.moveToNext());
+        }
+
+        cur.close();
+
+        return res;
+    }
+
     public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary tmp=null;
@@ -921,7 +947,7 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT e.translation AS translation, " +
                                  "c.chinese AS chinese, " +
                                  "c.pinyin AS pinyin " +
-                                 "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word" +
+                                 "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
                                  " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
                                  " JOIN cword AS c ON c.cword_id=e.cword_id "
                                  ,null);
@@ -1116,13 +1142,13 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-
     /*
      *
      *  Leitner learning database management
      *
      *
      */
+
     private static final long two_hours = (long) 2 * 60 * 60 * 1000;
     private static final long two_days = (long) 2 * 24 * 60 * 60 * 1000;
     private static final long two_weeks = (long) 2 * 7 * 24 * 60 * 60 * 1000;

@@ -202,6 +202,20 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.checkDatabase());
     }
 
+    public void testLessonsForWord() {
+        target_db.addLesson("lesson 1");
+        target_db.addLesson("lesson 2");
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson 2", "well", "好", "hao3");
+        assertTrue(target_db.getLessonForWord("好", "hao3", "good").contains("lesson 1"));
+        assertFalse(target_db.getLessonForWord("好", "hao3", "good").contains("lesson 2"));
+        assertTrue(target_db.getLessonForWord("好", "hao3", "well").contains("lesson 2"));
+        assertFalse(target_db.getLessonForWord("好", "hao3", "well").contains("lesson 1"));
+        assertTrue(target_db.getLessonForWord("好", "hao3", "perfect").size() == 0);
+        assertTrue(target_db.checkDatabase());
+    }
+
     public void testFiltersDB() {
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
         target_db.addLesson("lesson filter");
