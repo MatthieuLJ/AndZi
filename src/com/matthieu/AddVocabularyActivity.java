@@ -5,7 +5,6 @@ import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.Html;
 import android.text.TextPaint;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -50,35 +49,49 @@ public class AddVocabularyActivity extends Activity
 
         public ChineseTextWatcher(TextView tv) {
             tview = tv;
+            state=-1;
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            adaptTextSize();
+            checkChineseChars();
+
             Log.d(TAG, "text changed at "+i+", sequence of "+i1+" chars became "+i2+"; new sequence=["+charSequence.toString()+"]");
             Log.d(TAG, "pinyin_choices has "+pinyin_choices.size()+" elements");
+            LinearLayout pinyin_button_container = (LinearLayout) findViewById(R.id.pinyin_buttons);
+
             if (i1 > 0) {
                 // remove the ones that were changed
-                for (int j=0; j<i1; j++) pinyin_choices.remove(i);
+                for (int j=0; j<i1; j++) {
+                    pinyin_choices.remove(i);
+                    pinyin_button_container.removeViewAt(i);
+                }
             }
             if (i2 > 0) {
                 for (int j=0; j<i2; j++) {
+                    Button b = new Button(AddVocabularyActivity.this);
                     PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(i+j, i+j+1),
                             ((AndZiApplication) getApplication()).myDB,
-                            ((AndZiApplication) getApplication()).refDB, i+j);
+                            ((AndZiApplication) getApplication()).refDB, b);
+                    pinyin_choices.add(i+j, tmp);
+                    b.setOnClickListener(new PinyinButtonOnClickListener(tmp));
+                    pinyin_button_container.addView(b, i+j,
+                            new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
             }
-        }
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            adaptTextSize();
-            checkChineseChars();
-        }
 
-        public void afterTextChanged(Editable editable) {
+            for (int j=0; j<pinyin_choices.size(); j++) {
+                Log.d(TAG, "pinyin_choices["+j+"], currently at "+pinyin_choices.get(j).current_choice);
+            }
         }
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+        public void afterTextChanged(Editable editable) {}
 
         private void checkChineseChars() {
             String text = tview.getText().toString();
             int count = text.codePointCount(0, text.length());
-            int new_state = state;
+            int new_state;
             if (count == 0) {
                 new_state = 0;
             }
@@ -96,6 +109,7 @@ public class AddVocabularyActivity extends Activity
                     }
                 }
             }
+            Log.d(TAG, "context going to state "+new_state);
 
             LinearLayout main_content = (LinearLayout) findViewById(R.id.main_content);
             if (new_state != state) {
@@ -153,7 +167,6 @@ public class AddVocabularyActivity extends Activity
         private HanziDB local_db;
         private HanziDB ref_db;
         private String hanzi;
-        private int position;
         private ArrayList<String> local_pinyins;
         private ArrayList<String> ref_pinyins;
 
@@ -162,17 +175,15 @@ public class AddVocabularyActivity extends Activity
         private String current_choice;
 
         private final static String TAG = "PinyinChoices";
-        //private Button button;
+        private Button button;
 
-        //public PinyinChoices(String h, HanziDB l_db, HanziDB r_db, Button b, int p) {
-        //    button = b;
-        public PinyinChoices(String h, HanziDB l_db, HanziDB r_db, int p) {
-            Log.d(TAG, "new [" + h + "], at "+p);
+        public PinyinChoices(String h, HanziDB l_db, HanziDB r_db, Button b) {
+            button = b;
+            Log.d(TAG, "new [" + h + "], at ");
             local_db = l_db;
             ref_db = r_db;
             new_pinyin = "";
             hanzi = h;
-            position = p;
             this.execute((Void[]) null);
         }
 
@@ -206,9 +217,6 @@ public class AddVocabularyActivity extends Activity
         public String getHanzi() {
             return hanzi;
         }
-        public int getPosition() {
-            return position;
-        }
 
         @Override
         protected void onPostExecute(Void aVoid) {
@@ -225,8 +233,8 @@ public class AddVocabularyActivity extends Activity
             else {
                 current_choice = "?";
             }
-            //button.setText(current_choice);
-            //button.invalidate();
+            button.setText(current_choice);
+            button.invalidate();
             Log.d(TAG, "Set button with "+current_choice);
         }
 
@@ -251,6 +259,16 @@ public class AddVocabularyActivity extends Activity
         }
     }
 
+    private class PinyinButtonOnClickListener implements View.OnClickListener {
+        PinyinChoices choices;
+
+        public PinyinButtonOnClickListener( PinyinChoices ch) {
+            choices = ch;
+        }
+        public void onClick(View view) {
+
+        }
+    }
 
     public void expand(View v) {
         String tag = (String) v.getTag();
