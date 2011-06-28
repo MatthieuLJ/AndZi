@@ -1,0 +1,4 @@
+<resources>
+    <item type="id" name="expanded"/>
+    <item type="id" name="view_to_expand"/>
+</resources>
