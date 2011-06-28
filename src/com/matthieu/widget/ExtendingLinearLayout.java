@@ -2,6 +2,7 @@ package com.matthieu.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Debug;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -19,7 +20,7 @@ public class ExtendingLinearLayout extends LinearLayout {
     private Interpolator interpolator;
     private int state=0; // -1:collapsing, 1:expanding, 0:nothing
 
-    private int current_height, new_height;
+    private int current_height, current_width, new_height;
     private LinearLayout.LayoutParams savedParams;
     protected Handler handler = new Handler();
     private ResizeRunnable runnable;
@@ -75,6 +76,7 @@ public class ExtendingLinearLayout extends LinearLayout {
         }
         findItemsToHide();
         current_height = getMeasuredHeight();
+        current_width = getMeasuredWidth();
         state = 1;
         for (View v : itemsToHide) {
             v.setVisibility(VISIBLE);
@@ -92,7 +94,8 @@ public class ExtendingLinearLayout extends LinearLayout {
             return;
         }
         findItemsToHide();
-        current_height = getMeasuredHeight();
+        current_height = getHeight();
+        current_width = getWidth();
         state = -1;
         for (View v : itemsToHide) {
             v.setVisibility(GONE);
@@ -110,8 +113,6 @@ public class ExtendingLinearLayout extends LinearLayout {
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
-            Log.v(TAG, "setMeasure " + getMeasuredWidth() + ", " + current_height);
-            setMeasuredDimension(getMeasuredWidth(), current_height);
             state = -2;
         }
         else if (state == 1) {
@@ -122,14 +123,23 @@ public class ExtendingLinearLayout extends LinearLayout {
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
-            Log.v(TAG, "setMeasure " + getMeasuredWidth() + ", " + current_height);
-            setMeasuredDimension(getMeasuredWidth(),current_height);
             state = 2;
         }
         else {
             super.onMeasure(widthMeasureSpec,heightMeasureSpec);
             return;
         }
+
+        LinearLayout.LayoutParams new_params = new LinearLayout.LayoutParams(savedParams);
+        new_params.height = current_height;
+        new_params.width = current_width;
+        Log.v(TAG, "set params "+current_width+", "+current_height);
+        setLayoutParams(new_params);
+
+        Log.v(TAG, "setMeasure " + current_width + ", " + current_height);
+        setMeasuredDimension(current_width,current_height);
+
+
         Log.v(TAG, "state : "+state+", saved width "+savedParams.width+", height "+savedParams.height);
         Log.v(TAG, "from " + current_height + " to " +new_height);
         if (runnable == null) {
@@ -153,6 +163,7 @@ public class ExtendingLinearLayout extends LinearLayout {
             }
             invalidate();
         }
+
 
         state = 0;
         runnable = null;
@@ -208,6 +219,7 @@ public class ExtendingLinearLayout extends LinearLayout {
             LinearLayout.LayoutParams new_params = new LinearLayout.LayoutParams(savedParams);
             new_params.height = newHeight;
             new_params.width = getWidth();
+            Log.v(TAG, "set params "+getWidth()+", "+newHeight);
             setLayoutParams(new_params);
             handler.postDelayed(this, refreshTime);
         }
