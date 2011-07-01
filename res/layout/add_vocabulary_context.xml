@@ -23,7 +23,25 @@
             android:id="@+id/vocabulary"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
+            android:layout_weight="1"
+            />
+    <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:orientation="horizontal"
             >
+        <Button
+                android:id="@+id/add_vocabulary_cancel"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                android:text="Cancel"/>
+        <Button
+                android:id="@+id/add_vocabulary_submit"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                android:text="OK"/>
+    </LinearLayout>
 
-    </ListView>
 </LinearLayout>
