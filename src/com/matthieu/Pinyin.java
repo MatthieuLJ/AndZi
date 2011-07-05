@@ -39,7 +39,7 @@ public class Pinyin {
                         case 0 :
                         case 5 :
                             this.tone=5;
-                            this.print=entry;
+                            this.print=pinyin_list_notone[i];
                             this.html_color_print=entry;
                             break;
                         case 1:
