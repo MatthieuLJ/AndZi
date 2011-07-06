@@ -2,13 +2,14 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:matthieu="http://schemas.android.com/apk/res/com.matthieu"
+        xmlns:expandable="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:baselineAligned="false"
         android:orientation="horizontal"
         android:background="#cccccc">
-    <Button android:id="@+id/expand_button"
+    <Button
+            android:id="@+id/expand_button"
             android:layout_width="24sp"
             android:layout_height="24sp"
             android:layout_margin="5dp"
@@ -16,42 +17,52 @@
             android:background="@drawable/expand_arrow_right"
             android:onClick="expand"
             android:tag="0"/>
-    <View android:layout_height="fill_parent"
-          android:layout_width="@dimen/separation_line_thickness"
-          android:layout_marginRight="@dimen/separation_line_margin"
-          android:background="@color/separation_line_color" />
-    <com.matthieu.widget.ExtendingLinearLayout android:id="@+id/vocabulary_info"
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:layout_marginTop="5dp"
-                                        android:orientation="vertical">
-        <TextView android:id="@+id/word"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textColor="#000000"
-                  android:textSize="20sp" />
-        <View android:id="@+id/separation"
-              android:layout_height="1px"
-              android:layout_width="fill_parent"
-              android:layout_margin="@dimen/separation_line_thickness"
-              android:background="@color/separation_line_color"
-              android:visibility="gone"
-              matthieu:hide_on_collapse="true" />
-        <TextView android:id="@+id/more"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textColor="#555555"
-                  android:text="more info\nhere..."
-                  android:textSize="12sp"
-                  android:visibility="gone"
-                  matthieu:hide_on_collapse="true"/>
+    <View
+            android:layout_height="fill_parent"
+            android:layout_width="@dimen/separation_line_thickness"
+            android:layout_marginRight="@dimen/separation_line_margin"
+            android:background="@color/separation_line_color" />
+    <com.matthieu.widget.ExtendingLinearLayout
+            android:id="@+id/vocabulary_info"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+        <TextView
+                android:id="@+id/word"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:clickable="true"
+                android:onClick="handle_word_click"
+                />
+        <View
+                android:id="@+id/separation"
+                android:layout_height="1px"
+                android:layout_width="fill_parent"
+                android:layout_margin="@dimen/separation_line_thickness"
+                android:background="@color/separation_line_color"
+                android:visibility="gone"
+                expandable:hide_on_collapse="true" />
+        <TextView
+                android:id="@+id/more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#555555"
+                android:text="more info\nhere..."
+                android:textSize="12sp"
+                android:visibility="gone"
+                expandable:hide_on_collapse="true"/>
     </com.matthieu.widget.ExtendingLinearLayout>
-    <View android:layout_height="fill_parent"
-          android:layout_width="@dimen/separation_line_thickness"
-          android:layout_margin="@dimen/separation_line_margin"
-          android:background="@color/separation_line_color" />
-    <CheckBox android:id="@+id/check"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content" />
+    <View
+            android:layout_height="fill_parent"
+            android:layout_width="@dimen/separation_line_thickness"
+            android:layout_margin="@dimen/separation_line_margin"
+            android:background="@color/separation_line_color" />
+    <CheckBox
+            android:id="@+id/check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 </LinearLayout>

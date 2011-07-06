@@ -1,4 +1,5 @@
 <resources>
     <item type="id" name="expanded"/>
     <item type="id" name="view_to_expand"/>
+    <item type="id" name="vocabulary_item"/>
 </resources>

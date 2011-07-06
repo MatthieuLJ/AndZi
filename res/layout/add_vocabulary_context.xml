@@ -26,6 +26,33 @@
             android:layout_weight="1"
             />
     <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:minHeight="?android:attr/listPreferredItemHeight">
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New word:"
+            />
+        <EditText
+                android:id="@+id/edit_new_vocabulary"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                android:singleLine="true"
+                />
+        <Button
+                android:id="@+id/edit_new_vocabulary_ok"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="OK"
+                android:onClick="handle_add_vocabulary"
+                />
+
+    </LinearLayout>
+    <LinearLayout
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:orientation="horizontal"
@@ -42,7 +69,8 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
-                android:text="OK"/>
+                android:text="OK"
+                android:onClick="handle_ok"/>
     </LinearLayout>
 
 </LinearLayout>

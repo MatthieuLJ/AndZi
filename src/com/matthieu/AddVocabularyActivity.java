@@ -462,6 +462,7 @@ public class AddVocabularyActivity extends Activity
         public ArrayList<String> lessons;
         public boolean enabled; // true if included, false if excluded
         public int state; // 1 from local database; 2 from reference; 3 if edited
+        public boolean visible; // if the view is expanded
 
         public VocabularyItem(String tr, ArrayList<String > ls, int from) {
             translation=tr;
@@ -471,6 +472,7 @@ public class AddVocabularyActivity extends Activity
                 enabled=true;
             else
                 enabled=false;
+            visible=false;
         }
     }
 
@@ -497,10 +499,37 @@ public class AddVocabularyActivity extends Activity
             
             VocabularyItem voc = translation_choices.get(position);
 
-            row.setTag(R.id.expanded, "0");
+
+            ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.vocabulary_info);
+            Button bt = (Button) row.findViewById(R.id.expand_button);
+            if (el!=null) {
+                if(voc.visible) {
+                    el.expand_immediate();
+                    bt.setBackgroundResource(R.drawable.expand_arrow_down);
+                    bt.setTag(R.id.expanded, "1");
+                }
+                else {
+                    el.collapse_immediate();
+                    bt.setBackgroundResource(R.drawable.expand_arrow_right);
+                    bt.setTag(R.id.expanded, "0");
+                }
+            }
+            bt.setTag(R.id.view_to_expand, el);
+            bt.setTag(R.id.vocabulary_item, voc);
 
             TextView word = (TextView) row.findViewById(R.id.word);
             word.setText(voc.translation);
+            switch(voc.state) {
+                case 1:
+                    word.setTypeface(word.getTypeface(), 1);
+                    break;
+                case 2:
+                    word.setTypeface(word.getTypeface(), 2);
+                    break;
+                case 3:
+                    word.setTypeface(word.getTypeface(), 0);
+                    break;
+            }
 
             TextView more = (TextView) row.findViewById(R.id.more);
             if (voc.state == 1) {
@@ -517,24 +546,30 @@ public class AddVocabularyActivity extends Activity
             }
 
             CheckBox cb = (CheckBox) row.findViewById(R.id.check);
+            cb.setTag(R.id.vocabulary_item, voc);
+            cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.vocabulary_item);
+                    voc.enabled=b;
+                    Log.d(TAG, "translation "+voc.translation+" is changed");
+                }
+            });
             cb.setChecked(voc.enabled);
-
-            ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.vocabulary_info);
-            Button bt = (Button) row.findViewById(R.id.expand_button);
-            bt.setTag(R.id.view_to_expand, el);
-
+            
             return row;
         }
     }
 
     public void expand(View v) {
         String tag = (String) v.getTag(R.id.expanded);
-        if ((tag==null) || (tag.equals("0"))) {
+        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
+        if (tag.equals("0")) {
             v.setBackgroundResource(R.drawable.expand_arrow_down);
             ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.view_to_expand);
             if (el!=null)
                 el.expand();
             v.setTag(R.id.expanded, "1");
+            voc.visible=true;
         }
         else {
             v.setBackgroundResource(R.drawable.expand_arrow_right);
@@ -542,11 +577,42 @@ public class AddVocabularyActivity extends Activity
             if (el!=null)
                 el.collapse();
             v.setTag(R.id.expanded, "0");
+            voc.visible=false;
         }
+    }
+
+    public void handle_word_click(View v) {
+        TextView tview = (TextView) v;
+        ((EditText) findViewById(R.id.edit_new_vocabulary)).setText(tview.getText());
+        ((EditText) findViewById(R.id.edit_new_vocabulary)).requestFocus();
+    }
+
+    public void handle_add_vocabulary(View v) {
+        String new_word= ((EditText) findViewById(R.id.edit_new_vocabulary)).getText().toString();
+        for(int i=translation_choices.size()-1; i>=0; i-- ) {
+            VocabularyItem voc = translation_choices.get(i);
+            // remove anything from the reference database that would be similar...
+            if (HanziDB.bare_translation(voc.translation).equals(HanziDB.bare_translation(new_word))) {
+                translation_choices.remove(i);
+            }
+
+        }
+        translation_choices.add(0, new VocabularyItem(new_word, new ArrayList<String>(), 3));
+        ListView lv = (ListView) findViewById(R.id.vocabulary);
+        if (lv != null) {
+            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        }
+        ((EditText) findViewById(R.id.edit_new_vocabulary)).setText("");
     }
 
     public void handle_cancel(View v) {
         EditText chinese_word = (EditText) findViewById(R.id.chinese);
         chinese_word.setText("");
     }
+
+    public void handle_ok(View v) {
+        
+    }
+
+
 }
