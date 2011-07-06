@@ -25,7 +25,6 @@ public class AddVocabularyActivity extends Activity
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,7 +38,7 @@ public class AddVocabularyActivity extends Activity
 
         EditText chinese_word = (EditText) findViewById(R.id.chinese);
         chinese_word.addTextChangedListener(new ChineseTextWatcher(chinese_word));
-        View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
+        View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
     }
 
     private class ChineseTextWatcher implements TextWatcher {
@@ -124,7 +123,7 @@ public class AddVocabularyActivity extends Activity
                         // empty string
                         if(state == 1) {
                             main_content.removeAllViews();
-                            View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, main_content);
+                            View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
                         }
                         ((TextView) findViewById(R.id.warning_chinese_word)).setText("Enter a Chinese word");
                         break;
@@ -132,7 +131,7 @@ public class AddVocabularyActivity extends Activity
                         // all chinese characters
                         need_complete_update = true;
                         main_content.removeAllViews();
-                        View.inflate(getApplicationContext(), R.layout.add_vocabulary_context, main_content);
+                        View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_context, main_content);
                         ListView lv = (ListView) findViewById(R.id.vocabulary);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
@@ -141,7 +140,7 @@ public class AddVocabularyActivity extends Activity
                         // some non-chinese characters...
                         if(state == 1) {
                             main_content.removeAllViews();
-                            View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, main_content);
+                            View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
                         }
                         ((TextView) findViewById(R.id.warning_chinese_word)).setText("Only enter chinese characters");
                         break;
@@ -544,5 +543,10 @@ public class AddVocabularyActivity extends Activity
                 el.collapse();
             v.setTag(R.id.expanded, "0");
         }
+    }
+
+    public void handle_cancel(View v) {
+        EditText chinese_word = (EditText) findViewById(R.id.chinese);
+        chinese_word.setText("");
     }
 }

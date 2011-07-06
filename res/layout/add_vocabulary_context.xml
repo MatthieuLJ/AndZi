@@ -35,7 +35,8 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
-                android:text="Cancel"/>
+                android:text="Cancel"
+                android:onClick="handle_cancel"/>
         <Button
                 android:id="@+id/add_vocabulary_submit"
                 android:layout_height="wrap_content"
