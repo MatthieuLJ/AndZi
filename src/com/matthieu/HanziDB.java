@@ -307,7 +307,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word "+english);
+            //Log.d(TAG, "no record found for word "+english);
         }
 
         cur.close();
@@ -354,7 +354,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word with "+hanzi);
+            //Log.d(TAG, "no record found for word with "+hanzi);
         }
         cur.close();
         return res;
@@ -374,7 +374,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word with "+hanzi+"/"+pinyin);
+            //Log.d(TAG, "no record found for word with "+hanzi+"/"+pinyin);
         }
         cur.close();
         return res;
@@ -390,7 +390,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word "+chinese);
+            //Log.d(TAG, "no record found for word "+chinese);
         }
         cur.close();
         return res;
@@ -407,7 +407,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word "+chinese+"/"+pinyin);
+            //Log.d(TAG, "no record found for word "+chinese+"/"+pinyin);
         }
 
         if (res.size() > 1) {
@@ -429,7 +429,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for character "+hanzi+"/"+pinyin);
+            //Log.d(TAG, "no record found for character "+hanzi+"/"+pinyin);
             res.add(-1);
         }
 
@@ -450,7 +450,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for character "+hanzi);
+            //Log.d(TAG, "no record found for character "+hanzi);
         }
 
         cur.close();
@@ -1057,7 +1057,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word "+english);
+            //Log.d(TAG, "no record found for word "+english);
         }
 
         cur.close();
@@ -1081,7 +1081,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word "+chinese+" in filtered db");
+            //Log.d(TAG, "no record found for word "+chinese+" in filtered db");
         }
         cur.close();
         return res;
@@ -1101,7 +1101,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(cur.moveToNext());
         }
         else {
-            Log.d(TAG, "no record found for word "+chinese+" in filtered db");
+            //Log.d(TAG, "no record found for word "+chinese+" in filtered db");
         }
         cur.close();
         return res;
