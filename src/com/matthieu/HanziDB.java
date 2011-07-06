@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -264,6 +266,24 @@ public class HanziDB extends SQLiteOpenHelper {
         c.close();
 
         return res;
+    }
+
+    /*
+     *
+     *  Some utility functions
+     *
+     *
+     */
+    public static String bare_translation(String input) {
+        Pattern pattern = Pattern.compile("(.*)\\(.*\\)(.*)");
+        Matcher matcher = pattern.matcher(input);
+        String res=input;
+
+        while(matcher.matches()) {
+            res = matcher.group(1) + matcher.group(2);
+            matcher = pattern.matcher(res);
+        }
+        return res.toLowerCase().trim();
     }
 
     /*

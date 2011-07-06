@@ -29,6 +29,12 @@ public class HanziDBTest extends AndroidTestCase {
     protected void tearDown() {
         target_db.close();
     }
+
+    public void testBareTranslation() {
+        assertTrue(HanziDB.bare_translation("abc").equals("abc"));
+        assertTrue(HanziDB.bare_translation("a(bc)").equals("a"));
+        assertTrue(HanziDB.bare_translation("a(bc)d(ef)").equals("ad"));
+    }
     
     public void testSimpleAdd() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
