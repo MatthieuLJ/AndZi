@@ -102,6 +102,22 @@ public class ExtendingLinearLayout extends LinearLayout {
         requestLayout();
     }
 
+    public void expand_immediate() {
+        findItemsToHide();
+        for (View v : itemsToHide) {
+            v.setVisibility(VISIBLE);
+        }
+        invalidate();
+    }
+
+    public void collapse_immediate() {
+        findItemsToHide();
+        for (View v : itemsToHide) {
+            v.setVisibility(GONE);
+        }
+        invalidate();
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         //Log.d(TAG, "onMeasure..." + MeasureSpec.toString(widthMeasureSpec) +", "+MeasureSpec.toString(heightMeasureSpec));
