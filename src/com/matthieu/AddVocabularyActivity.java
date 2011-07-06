@@ -22,8 +22,9 @@ public class AddVocabularyActivity extends Activity
 
     ArrayList<PinyinChoices> pinyin_choices;
     ArrayList<VocabularyItem> translation_choices;
-    public HanziDB myDB=null;
-    public HanziDB refDB=null;
+    protected HanziDB myDB=null;
+    protected HanziDB refDB=null;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,7 @@ public class AddVocabularyActivity extends Activity
         translation_choices = new ArrayList<VocabularyItem>();
 
         setContentView(R.layout.add_vocabulary_top);
-        
+
         EditText chinese_word = (EditText) findViewById(R.id.chinese);
         chinese_word.addTextChangedListener(new ChineseTextWatcher(chinese_word));
         View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
@@ -63,8 +64,10 @@ public class AddVocabularyActivity extends Activity
             // Populate the choices for the pinyin buttons
             setPinyinButtons(charSequence, i, i1, i2);
 
-            // populate the word list and the default values for the pinyin buttons
-            new ContextUpdater().execute(tview);
+            if (state == 1) {
+                // populate the default values for the pinyin buttons
+                new update_default_pinyins(tview);
+            }
         }
 
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -130,7 +133,6 @@ public class AddVocabularyActivity extends Activity
                         need_complete_update = true;
                         main_content.removeAllViews();
                         View.inflate(getApplicationContext(), R.layout.add_vocabulary_context, main_content);
-                        translation_choices.clear();
                         ListView lv = (ListView) findViewById(R.id.vocabulary);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
@@ -198,7 +200,7 @@ public class AddVocabularyActivity extends Activity
         private ArrayList<String> local_pinyins;
         private ArrayList<String> ref_pinyins;
 
-        private String new_pinyin;
+        private String new_pinyin="";
         private String default_choice="";
         private String current_choice="";
 
@@ -207,10 +209,9 @@ public class AddVocabularyActivity extends Activity
 
         public PinyinChoices(String h, HanziDB l_db, HanziDB r_db, Button b) {
             button = b;
-            Log.d(TAG, "new [" + h + "], at ");
+            Log.d(TAG, "new button [" + h + "]");
             local_db = l_db;
             ref_db = r_db;
-            new_pinyin = "";
             hanzi = h;
             this.execute((Void[]) null);
         }
@@ -241,38 +242,43 @@ public class AddVocabularyActivity extends Activity
             }
         }
 
-        public void setDefaultChoice(String s) {
+        public void set_default_choice(String s) {
             default_choice = s;
             if ((current_choice.length()==0) || (current_choice.equals("?"))) {
-                current_choice=s;
+                Log.d(TAG, "did not have any current choice, set it to the default: "+s);
+                //current_choice=s;
             }
-            updateButton();
+            update_button();
         }
-        public void setCurrentChoice(String s) {
+        public void set_current_choice(String s) {
             Log.d(TAG, "pinying button set current choice"+s);
             current_choice = s;
             if ((!ref_pinyins.contains(s)) && (!local_pinyins.contains(s)))
                 new_pinyin=s;
-            updateButton();
+            update_button();
         }
-        public String getCurrentChoice() {
-            return current_choice;
-        }
-        public int getCurrentChoiceIndex() {
-            int res=0;
-            if (current_choice.equals(new_pinyin))
-                return res;
-            else if (local_pinyins.contains(current_choice))
-                res = local_pinyins.indexOf(current_choice);
-            else if (ref_pinyins.contains(current_choice))
-                res = local_pinyins.size()+ref_pinyins.indexOf(current_choice);
-
-            if (new_pinyin.length()!=0) {
-                res++;
+        public String get_current_choice() {
+            String res;
+            if (current_choice.length()==0) {
+                if ((default_choice.length()!=0) && ((local_pinyins.contains(default_choice)) || (ref_pinyins.contains(default_choice)))) {
+                    res=default_choice;
+                }
+                else if (local_pinyins.size()!= 0) {
+                    res = local_pinyins.get(0);
+                }
+                else if (ref_pinyins.size() != 0) {
+                    res = ref_pinyins.get(0);
+                }
+                else {
+                    res = "?";
+                }
+            }
+            else {
+                res=current_choice;
             }
             return res;
         }
-        public String getHanzi() {
+        public String get_hanzi() {
             return hanzi;
         }
 
@@ -296,46 +302,34 @@ public class AddVocabularyActivity extends Activity
             return null;
         }
 
-        private void updateButton() {
-            if (current_choice.length()==0) {
-                if ((default_choice.length()!=0) && ((local_pinyins.contains(default_choice)) || (ref_pinyins.contains(default_choice)))) {
-                    current_choice=default_choice;
-                }
-                else if (local_pinyins.size()!= 0) {
-                    current_choice = local_pinyins.get(0);
-                }
-                else if (ref_pinyins.size() != 0) {
-                    current_choice = ref_pinyins.get(0);
-                }
-                else {
-                    current_choice = "?";
-                }
-            }
-            Log.d(TAG, "set pinyin button with "+current_choice);
-            button.setText(new Pinyin(current_choice).get_pretty());
+        private void update_button() {
+            String to_display=get_current_choice();
+
+            button.setText(new Pinyin(to_display).get_pretty());
             button.invalidate();
             button.setOnClickListener(new PinyinButtonClickListener());
-            Log.d(TAG, "Set button with " + current_choice);
+            Log.d(TAG, "Set pinyin button with " + to_display);
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            updateButton();
+            update_button();
 
         }
 
         private class PinyinButtonClickListener implements View.OnClickListener {
             public void onClick(View view) {
                 Dialog dialog = new Dialog(AddVocabularyActivity.this);
-                dialog.setTitle("Pick a pinyin");
+                dialog.setTitle("Pick a pinyin for character "+PinyinChoices.this.get_hanzi());
                 fill_dialog(dialog);
                 dialog.show();
             }
 
-            private void fill_dialog(Dialog dial) {
+            private void fill_dialog(final Dialog dial) {
                 dial.setContentView(R.layout.add_vocabulary_pinyin_dialog);
-                ListView list = (ListView) dial.findViewById(R.id.pinyin_dialog_choices);
+
+                final ListView list = (ListView) dial.findViewById(R.id.pinyin_dialog_choices);
                 String choices[] = new String[PinyinChoices.this.get_number_pinyins()];
                 for (int i=0; i<PinyinChoices.this.get_number_pinyins(); i++) {
                     choices[i] = new Pinyin(PinyinChoices.this.get_pinyin(i)).get_pretty();
@@ -343,15 +337,38 @@ public class AddVocabularyActivity extends Activity
                 }
 
                 list.setAdapter(new ArrayAdapter<String>(dial.getContext(), R.layout.add_vocabulary_pinyin_dialog_item, choices));
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        change_pinyin(new Pinyin(PinyinChoices.this.get_pinyin(i)).get_lame());
+                        dial.dismiss();
+                    }
+                });
+
+                Button OK_button = (Button) dial.findViewById(R.id.edit_new_pinyin_ok);
+                OK_button.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        EditText new_pinyin = (EditText) dial.findViewById(R.id.edit_new_pinyin);
+                        change_pinyin(new Pinyin(new_pinyin.getText().toString()).get_lame());
+                        dial.dismiss();
+                    }
+                });
+            }
+
+            private void change_pinyin(String new_pinyin) {
+                PinyinChoices.this.set_current_choice(new_pinyin);
+                new update_vocabulary_list((TextView) AddVocabularyActivity.this.findViewById(R.id.chinese));
             }
         }
     }
 
-    private class ContextUpdater extends AsyncTask<TextView, Void, Void> {
+    private class update_default_pinyins extends AsyncTask<Void, Void, Void> {
         ArrayList<String> default_pinyins;
+        TextView tview;
 
-        public ContextUpdater() {
+        public update_default_pinyins(TextView tv) {
+            tview = tv;
             default_pinyins = new ArrayList<String>();
+            this.execute();
         }
         
         @Override
@@ -361,27 +378,22 @@ public class AddVocabularyActivity extends Activity
             super.onPostExecute(aVoid);
             for (i=0; i<default_pinyins.size(); i++) {
                 if (i >= pinyin_choices.size()) break;
-                pinyin_choices.get(i).setDefaultChoice(default_pinyins.get(i));
+                pinyin_choices.get(i).set_default_choice(default_pinyins.get(i));
             }
 
-            ListView lv = (ListView) findViewById(R.id.vocabulary);
-            if (lv != null) {
-                ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-            }
-
+            new update_vocabulary_list(tview);
         }
 
         @Override
-        protected Void doInBackground(TextView... tviews) {
+        protected Void doInBackground(Void... voids) {
             int i;
             default_pinyins.clear();
-            TextView tview=tviews[0];
             String text = tview.getText().toString();
 
-            // figure out the default pinyin buttons
             HanziDB local_db = ((AndZiApplication) getApplication()).myDB;
             HanziDB ref_db = ((AndZiApplication) getApplication()).refDB;
 
+            // figure out the default pinyin buttons
             ArrayList<Vocabulary> vocs = local_db.getTranslations(text);
             vocs.addAll(ref_db.getTranslations(text));
             if (vocs.size() == 0)
@@ -395,10 +407,40 @@ public class AddVocabularyActivity extends Activity
             
             default_pinyins = PinyinParser.parse_string(vocs.get(best_index).pinyin);
 
+            return null;
+        }
+    }
+
+    private class update_vocabulary_list extends AsyncTask<Void, Void, Void> {
+        TextView tview;
+        public update_vocabulary_list(TextView tv) {
+            tview = tv;
+            this.execute();
+        }
+        
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            ListView lv = (ListView) findViewById(R.id.vocabulary);
+            if (lv != null) {
+                ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            }
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            String text = tview.getText().toString();
+            
+            HanziDB local_db = ((AndZiApplication) getApplication()).myDB;
+            HanziDB ref_db = ((AndZiApplication) getApplication()).refDB;
+
+            translation_choices.clear();
+
             // figure out the list of translations based on the current pinyin chosen
             String pinyin="";
             for (PinyinChoices pc : pinyin_choices) {
-                pinyin = pinyin.concat(pc.getCurrentChoice());
+                pinyin = pinyin.concat(pc.get_current_choice());
             }
             ArrayList<Vocabulary> tr = local_db.getTranslations(text, pinyin);
             for (Vocabulary t : tr) {
@@ -412,7 +454,6 @@ public class AddVocabularyActivity extends Activity
                     translation_choices.add(new VocabularyItem(e, ref_db.getLessonForWord(t.chinese, t.pinyin, e), 2));
                 }
             }
-
             return null;
         }
     }
