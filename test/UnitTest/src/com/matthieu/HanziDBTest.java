@@ -195,6 +195,16 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.checkDatabase());
     }
 
+    public void testLessonRename() {
+        target_db.addLesson("lesson 1");
+        target_db.addVocabulary("good", new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.renameLesson("lesson 1", "lesson 2");
+        assertFalse(target_db.getLessons().contains("lesson 1"));
+        assertTrue(target_db.getLessons().contains("lesson 2"));
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 2"))).size() == 1);
+    }
+
     public void testRemoveFromLesson() {
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("down", "below")), new ArrayList<String>(Arrays.asList("下")), new ArrayList<String>(Arrays.asList("xia4")));
         target_db.addLesson("remove_lesson");

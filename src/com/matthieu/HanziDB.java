@@ -874,6 +874,19 @@ public class HanziDB extends SQLiteOpenHelper {
         db.delete("lessons", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
     }
 
+    public void renameLesson(String old_name, String new_name) {
+        int lesson_id;
+
+        lesson_id = getLessonId(old_name);
+        if (lesson_id == -1)
+            return;
+
+        ContentValues cv = new ContentValues();
+        cv.put("name", new_name);
+
+        db.update("lessons", cv, "lesson_id=?", new String[] {Integer.toString(lesson_id)});
+    }
+
     public ArrayList<String> getLessons() {
         ArrayList<String> res = new ArrayList<String>();
 
