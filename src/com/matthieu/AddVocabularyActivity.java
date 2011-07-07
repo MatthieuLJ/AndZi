@@ -535,15 +535,16 @@ public class AddVocabularyActivity extends Activity
             word.setText(voc.translation);
             switch(voc.state) {
                 case 1: // local database
-                    word.setTypeface(word.getTypeface(), Typeface.BOLD);
+                    word.setTypeface(null, Typeface.BOLD);
                     break;
                 case 2: // reference database
-                    word.setTypeface(word.getTypeface(), Typeface.ITALIC);
+                    word.setTypeface(null, Typeface.ITALIC);
                     break;
                 case 3: // edited (new) word
-                    word.setTypeface(word.getTypeface(), Typeface.NORMAL);
+                    word.setTypeface(null, Typeface.NORMAL);
                     break;
             }
+            word.setTag(R.id.vocabulary_item, voc);
 
             TextView more = (TextView) row.findViewById(R.id.more);
             if ((voc.state == 1) || (voc.state == 3)) { // from local databases or edited
@@ -603,12 +604,17 @@ public class AddVocabularyActivity extends Activity
 
     public void handle_word_click(View v) {
         TextView tview = (TextView) v;
+        VocabularyItem voc = (VocabularyItem) tview.getTag(R.id.vocabulary_item);
+
         ((EditText) findViewById(R.id.edit_new_vocabulary)).setText(tview.getText());
-        if ((tview.getTypeface().getStyle() == Typeface.BOLD) || (tview.getTypeface().getStyle() == Typeface.NORMAL)) {
+
+        if ((voc.state == 1) || (voc.state == 3)) {
             edited_word=tview.getText().toString();
+            ((TextView) findViewById(R.id.new_vocabulary_label)).setText("Edit word:");
         }
         else {
             edited_word = "";
+            ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
         }
         ((EditText) findViewById(R.id.edit_new_vocabulary)).requestFocus();
     }
@@ -635,6 +641,7 @@ public class AddVocabularyActivity extends Activity
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
         ((EditText) findViewById(R.id.edit_new_vocabulary)).setText("");
+        ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
     }
 
     public void handle_cancel(View v) {
