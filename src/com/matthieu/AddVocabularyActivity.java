@@ -430,6 +430,7 @@ public class AddVocabularyActivity extends Activity
         @Override
         protected Void doInBackground(Void... voids) {
             String text = tview.getText().toString();
+            ArrayList<String> bare_translations = new ArrayList<String>();
             
             HanziDB local_db = ((AndZiApplication) getApplication()).myDB;
             HanziDB ref_db = ((AndZiApplication) getApplication()).refDB;
@@ -445,12 +446,15 @@ public class AddVocabularyActivity extends Activity
             for (Vocabulary t : tr) {
                 for (String e : t.english) {
                     translation_choices.add(new VocabularyItem(e, local_db.getLessonForWord(t.chinese, t.pinyin, e), 1));
+                    bare_translations.add(HanziDB.bare_translation(e));
                 }
             }
             tr = ref_db.getTranslations(text, pinyin);
             for (Vocabulary t : tr) {
                 for (String e : t.english) {
-                    translation_choices.add(new VocabularyItem(e, ref_db.getLessonForWord(t.chinese, t.pinyin, e), 2));
+                    if (!bare_translations.contains(HanziDB.bare_translation(e))) {
+                        translation_choices.add(new VocabularyItem(e, ref_db.getLessonForWord(t.chinese, t.pinyin, e), 2));
+                    }
                 }
             }
             return null;
@@ -476,7 +480,7 @@ public class AddVocabularyActivity extends Activity
         }
     }
 
-    private class VocabularyArrayAdapter extends ArrayAdapter {
+    private class VocabularyArrayAdapter extends ArrayAdapter<Object> {
         public VocabularyArrayAdapter() {
             super(AddVocabularyActivity.this, R.layout.add_vocabulary_list_item, translation_choices.toArray());
         }
@@ -611,8 +615,21 @@ public class AddVocabularyActivity extends Activity
     }
 
     public void handle_ok(View v) {
-        
+        String chinese = ((EditText) findViewById(R.id.chinese)).getText().toString();
+        String pinyin = "";
+        for (PinyinChoices pc : pinyin_choices) {
+            pinyin = pinyin.concat(pc.get_current_choice());
+        }
+        ArrayList<String> translations=new ArrayList<String>();
+        for (VocabularyItem voc: translation_choices) {
+            if (voc.enabled) {
+                translations.add(voc.translation);
+            }
+        }
+        myDB.delVocabulary(new Vocabulary(chinese, pinyin));
+        myDB.addVocabulary(new Vocabulary(chinese, pinyin, translations));
+
+        EditText chinese_word = (EditText) findViewById(R.id.chinese);
+        chinese_word.setText("");
     }
-
-
 }
