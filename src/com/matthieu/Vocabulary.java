@@ -13,6 +13,11 @@ public class Vocabulary {
     public String pinyin;
     public ArrayList<String> english;
 
+    public Vocabulary(String ch, String pi) {
+        chinese = ch;
+        pinyin = pi;
+        english = null;
+    }
     public Vocabulary(String ch, String pi, String en) {
         chinese = ch;
         pinyin = pi;

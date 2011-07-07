@@ -556,6 +556,11 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> pinyin;
         int i, len;
 
+        if (voc.english == null) {
+            Log.w(TAG, "Cannot add vocabulary without translations");
+            return;
+        }
+
         len = voc.chinese.codePointCount(0, voc.chinese.length());
         for (i = 0; i< len; i++) {
             int from = voc.chinese.offsetByCodePoints(0, i);
@@ -716,6 +721,39 @@ public class HanziDB extends SQLiteOpenHelper {
             checkIsolatedCword(cword_id);
         }
         cur.close();
+    }
+
+    public void delVocabulary(ArrayList<String> english, ArrayList<String> chinese, ArrayList<String> pinyin) {
+        if (english == null) {
+            delVocabulary(chinese,pinyin);
+        }
+        else {
+            for(String en:english) {
+                delVocabulary(en, chinese, pinyin);
+            }
+        }
+    }
+
+    public void delVocabulary(Vocabulary voc) {
+        ArrayList<String> chinese = new ArrayList<String>();
+        ArrayList<String> pinyin;
+        int i, len;
+
+        len = voc.chinese.codePointCount(0, voc.chinese.length());
+        for (i = 0; i< len; i++) {
+            int from = voc.chinese.offsetByCodePoints(0, i);
+            int to = voc.chinese.offsetByCodePoints(0, i + 1);
+
+            chinese.add(voc.chinese.substring(from, to));
+        }
+        pinyin = PinyinParser.parse_string(voc.pinyin);
+
+        if (voc.english == null) {
+            delVocabulary(chinese, pinyin);
+        }
+        else {
+            delVocabulary(voc.english,chinese,pinyin);
+        }
     }
 
     protected void delEword(int eng_id) {
@@ -895,7 +933,14 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void assignWordLesson(String lesson, Vocabulary voc) {
-        for (String english : voc.english) {
+        Vocabulary new_voc;
+        if (voc.english == null) {
+            new_voc = getTranslations(voc.chinese, voc.pinyin).get(0);
+        }
+        else {
+            new_voc = voc;
+        }
+        for (String english : new_voc.english) {
             assignWordLesson(lesson, english, voc.chinese, voc.pinyin);
         }
     }
@@ -928,7 +973,14 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void removeWordLesson(String lesson, Vocabulary voc) {
-        for (String english : voc.english) {
+        Vocabulary new_voc;
+        if (voc.english == null) {
+            new_voc = getTranslations(voc.chinese, voc.pinyin).get(0);
+        }
+        else {
+            new_voc = voc;
+        }
+        for (String english : new_voc.english) {
             removeWordLesson(lesson, english, voc.chinese, voc.pinyin);
         }
     }
