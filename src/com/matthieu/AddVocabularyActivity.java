@@ -3,6 +3,7 @@ package com.matthieu;
 import android.app.Activity;
 import android.app.Dialog;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -25,6 +26,8 @@ public class AddVocabularyActivity extends Activity
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
 
+    private String edited_word="";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +44,15 @@ public class AddVocabularyActivity extends Activity
         View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // in case those changed...
+        myDB = ((AndZiApplication) getApplication()).myDB;
+        refDB = ((AndZiApplication) getApplication()).refDB;
+    }
+
     private class ChineseTextWatcher implements TextWatcher {
         private static final int maximum_text_size=32;
         private static final int minimum_text_size=10;
@@ -54,6 +66,8 @@ public class AddVocabularyActivity extends Activity
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            edited_word="";
+
             // change text size to fit in the box
             adaptTextSize();
 
@@ -168,8 +182,7 @@ public class AddVocabularyActivity extends Activity
                     for (int j=0; j<i2; j++) {
                         Button b = new Button(AddVocabularyActivity.this);
                         PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(i+j, i+j+1),
-                                ((AndZiApplication) getApplication()).myDB,
-                                ((AndZiApplication) getApplication()).refDB, b);
+                                myDB, refDB, b);
                         pinyin_choices.add(i + j, tmp);
                         pinyin_button_container.addView(b, i+j,
                                 new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -181,8 +194,7 @@ public class AddVocabularyActivity extends Activity
                 for (int j=0; j<charSequence.toString().length(); j++) {
                     Button b = new Button(AddVocabularyActivity.this);
                     PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(j, j+1),
-                            ((AndZiApplication) getApplication()).myDB,
-                            ((AndZiApplication) getApplication()).refDB, b);
+                            myDB, refDB, b);
                     pinyin_choices.add(j, tmp);
                     pinyin_button_container.addView(b, j,
                             new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -389,12 +401,11 @@ public class AddVocabularyActivity extends Activity
             default_pinyins.clear();
             String text = tview.getText().toString();
 
-            HanziDB local_db = ((AndZiApplication) getApplication()).myDB;
-            HanziDB ref_db = ((AndZiApplication) getApplication()).refDB;
-
             // figure out the default pinyin buttons
-            ArrayList<Vocabulary> vocs = local_db.getTranslations(text);
-            vocs.addAll(ref_db.getTranslations(text));
+            ArrayList<Vocabulary> vocs = myDB.getTranslations(text);
+            if (refDB != null) {
+                vocs.addAll(refDB.getTranslations(text));
+            }
             if (vocs.size() == 0)
                 return null;
 
@@ -431,9 +442,6 @@ public class AddVocabularyActivity extends Activity
         protected Void doInBackground(Void... voids) {
             String text = tview.getText().toString();
             ArrayList<String> bare_translations = new ArrayList<String>();
-            
-            HanziDB local_db = ((AndZiApplication) getApplication()).myDB;
-            HanziDB ref_db = ((AndZiApplication) getApplication()).refDB;
 
             translation_choices.clear();
 
@@ -442,18 +450,20 @@ public class AddVocabularyActivity extends Activity
             for (PinyinChoices pc : pinyin_choices) {
                 pinyin = pinyin.concat(pc.get_current_choice());
             }
-            ArrayList<Vocabulary> tr = local_db.getTranslations(text, pinyin);
+            ArrayList<Vocabulary> tr = myDB.getTranslations(text, pinyin);
             for (Vocabulary t : tr) {
                 for (String e : t.english) {
-                    translation_choices.add(new VocabularyItem(e, local_db.getLessonForWord(t.chinese, t.pinyin, e), 1));
+                    translation_choices.add(new VocabularyItem(e, myDB.getLessonForWord(t.chinese, t.pinyin, e), 1));
                     bare_translations.add(HanziDB.bare_translation(e));
                 }
             }
-            tr = ref_db.getTranslations(text, pinyin);
-            for (Vocabulary t : tr) {
-                for (String e : t.english) {
-                    if (!bare_translations.contains(HanziDB.bare_translation(e))) {
-                        translation_choices.add(new VocabularyItem(e, ref_db.getLessonForWord(t.chinese, t.pinyin, e), 2));
+            if (refDB != null) {
+                tr = refDB.getTranslations(text, pinyin);
+                for (Vocabulary t : tr) {
+                    for (String e : t.english) {
+                        if (!bare_translations.contains(HanziDB.bare_translation(e))) {
+                            translation_choices.add(new VocabularyItem(e, refDB.getLessonForWord(t.chinese, t.pinyin, e), 2));
+                        }
                     }
                 }
             }
@@ -524,30 +534,36 @@ public class AddVocabularyActivity extends Activity
             TextView word = (TextView) row.findViewById(R.id.word);
             word.setText(voc.translation);
             switch(voc.state) {
-                case 1:
-                    word.setTypeface(word.getTypeface(), 1);
+                case 1: // local database
+                    word.setTypeface(word.getTypeface(), Typeface.BOLD);
                     break;
-                case 2:
-                    word.setTypeface(word.getTypeface(), 2);
+                case 2: // reference database
+                    word.setTypeface(word.getTypeface(), Typeface.ITALIC);
                     break;
-                case 3:
-                    word.setTypeface(word.getTypeface(), 0);
+                case 3: // edited (new) word
+                    word.setTypeface(word.getTypeface(), Typeface.NORMAL);
                     break;
             }
 
             TextView more = (TextView) row.findViewById(R.id.more);
-            if (voc.state == 1) {
+            if ((voc.state == 1) || (voc.state == 3)) { // from local databases or edited
                 String lessons = new String();
-                for (String s : voc.lessons) {
-                    lessons=lessons.concat(s);
-                    lessons=lessons.concat("\n");
+                if (voc.lessons.size() != 0) {
+                    for (String s : voc.lessons) {
+                        lessons=lessons.concat(s);
+                        lessons=lessons.concat("\n");
+                    }
+                    lessons=lessons.concat("Edit lessons");
                 }
-                lessons=lessons.concat("Edit lessons");
+                else {
+                    lessons = "Assign to lesson";
+                }
                 more.setText(lessons);
             }
             else {
                 more.setText("");
             }
+            more.setTag(R.id.vocabulary_item, voc);
 
             CheckBox cb = (CheckBox) row.findViewById(R.id.check);
             cb.setTag(R.id.vocabulary_item, voc);
@@ -588,7 +604,17 @@ public class AddVocabularyActivity extends Activity
     public void handle_word_click(View v) {
         TextView tview = (TextView) v;
         ((EditText) findViewById(R.id.edit_new_vocabulary)).setText(tview.getText());
+        if ((tview.getTypeface().getStyle() == Typeface.BOLD) || (tview.getTypeface().getStyle() == Typeface.NORMAL)) {
+            edited_word=tview.getText().toString();
+        }
+        else {
+            edited_word = "";
+        }
         ((EditText) findViewById(R.id.edit_new_vocabulary)).requestFocus();
+    }
+
+    public void handle_edit_lesson(View v) {
+        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
     }
 
     public void handle_add_vocabulary(View v) {
@@ -599,7 +625,9 @@ public class AddVocabularyActivity extends Activity
             if (HanziDB.bare_translation(voc.translation).equals(HanziDB.bare_translation(new_word))) {
                 translation_choices.remove(i);
             }
-
+            if (voc.translation.equals(edited_word)) {
+                translation_choices.remove(i);
+            }
         }
         translation_choices.add(0, new VocabularyItem(new_word, new ArrayList<String>(), 3));
         ListView lv = (ListView) findViewById(R.id.vocabulary);
