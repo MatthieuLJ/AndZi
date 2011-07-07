@@ -146,7 +146,7 @@ public class AddVocabularyActivity extends Activity
                         need_complete_update = true;
                         main_content.removeAllViews();
                         View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_context, main_content);
-                        ListView lv = (ListView) findViewById(R.id.vocabulary);
+                        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
                         break;
@@ -431,7 +431,7 @@ public class AddVocabularyActivity extends Activity
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            ListView lv = (ListView) findViewById(R.id.vocabulary);
+            ListView lv = (ListView) findViewById(R.id.vocabulary_list);
             if (lv != null) {
                 ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
@@ -636,7 +636,7 @@ public class AddVocabularyActivity extends Activity
             }
         }
         translation_choices.add(0, new VocabularyItem(new_word, new ArrayList<String>(), 3));
-        ListView lv = (ListView) findViewById(R.id.vocabulary);
+        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
