@@ -7,13 +7,16 @@
             android:label="@string/app_name"
             android:name="AndZiApplication">
         <activity
-                android:name=".AddVocabularyActivity"
+                android:name=".MainMenuActivity"
                 android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".EditLessonsActivity" />
+        <activity android:name=".AddVocabularyActivity" />
+
     </application>
     <supports-screens android:resizeable="true"
                   android:smallScreens="true"
