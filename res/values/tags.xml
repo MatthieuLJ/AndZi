@@ -2,4 +2,5 @@
     <item type="id" name="expanded"/>
     <item type="id" name="view_to_expand"/>
     <item type="id" name="vocabulary_item"/>
+    <item type="id" name="lesson_item"/>
 </resources>
