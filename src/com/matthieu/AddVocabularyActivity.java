@@ -625,6 +625,10 @@ public class AddVocabularyActivity extends Activity
 
     public void handle_add_vocabulary(View v) {
         String new_word= ((EditText) findViewById(R.id.edit_new_vocabulary)).getText().toString();
+        if (new_word.equals("")) {
+            ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
+            return;
+        }
         for(int i=translation_choices.size()-1; i>=0; i-- ) {
             VocabularyItem voc = translation_choices.get(i);
             // remove anything from the reference database that would be similar...
