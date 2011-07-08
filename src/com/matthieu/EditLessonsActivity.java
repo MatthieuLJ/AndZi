@@ -1,22 +1,29 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.gesture.Gesture;
+import android.gesture.GestureLibraries;
+import android.gesture.GestureLibrary;
+import android.gesture.GestureOverlayView;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class EditLessonsActivity extends Activity {
-
     protected HanziDB myDB=null;
 
     protected ArrayList<Lesson> current_lessons;
     protected String edited_lesson;
+
+    private GestureLibrary gestureLib = null;
+    private static final String TAG = "EditLessonsActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +33,9 @@ public class EditLessonsActivity extends Activity {
 
         current_lessons = new ArrayList<Lesson>();
         edited_lesson="";
+
+        gestureLib = GestureLibraries.fromRawResource(this, R.raw.strike_gesture);
+        gestureLib.load();
 
         setContentView(R.layout.edit_lessons);
         ListView list = (ListView) findViewById(R.id.lesson_list);
@@ -51,7 +61,7 @@ public class EditLessonsActivity extends Activity {
 
             for (String lesson : existing_lessons) {
                 int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new String[] {lesson}))).size();
-                current_lessons.add(new Lesson(lesson, num));
+                current_lessons.add(new Lesson(lesson, Lesson.EXISTING, num));
             }
 
             return null;
@@ -63,19 +73,25 @@ public class EditLessonsActivity extends Activity {
         public String previous_label;
         public boolean deleted;
         public int num_items;
+        public int origin; // 1 is pre-existing, 2 is new
 
-        public Lesson(String label) {
+        public static final int EXISTING=1;
+        public static final int NEW=2;
+
+        public Lesson(String label, int from) {
             current_label = label;
             previous_label="";
             deleted = false;
             num_items = 0;
+            origin = from;
         }
 
-        public Lesson(String label, int num) {
+        public Lesson(String label, int from, int num) {
             current_label = label;
             previous_label="";
             deleted = false;
             num_items = num;
+            origin = from;
         }
     }
 
@@ -120,8 +136,36 @@ public class EditLessonsActivity extends Activity {
 
             TextView label = (TextView) row.findViewById(R.id.lesson_label);
             label.setText(le.current_label);
-            label.setTag(R.id.lesson_item);
+            if (le.deleted) {
+                label.setPaintFlags(label.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            }
+            else {
+                label.setPaintFlags(label.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+            }
+
+            GestureOverlayView overlay = (GestureOverlayView) row.findViewById(R.id.gesture);
+            overlay.setTag(R.id.lesson_item, le);
+            overlay.addOnGesturePerformedListener(new StrikeGesture());
             return row;
+        }
+
+        private class StrikeGesture implements GestureOverlayView.OnGesturePerformedListener {
+
+            public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
+                Log.d(TAG, "Strike !");
+                Lesson le = (Lesson) gestureOverlayView.getTag(R.id.lesson_item);
+                if (le.origin == Lesson.NEW) {
+                    current_lessons.remove(le);
+                }
+                else if (!le.deleted) {
+                    le.deleted=true;
+                }
+                else {
+                    return;
+                }
+                ListView lv = (ListView) findViewById(R.id.lesson_list);
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            }
         }
 
         @Override
@@ -149,7 +193,7 @@ public class EditLessonsActivity extends Activity {
         }
 
         if (edited_lesson.equals("")) {
-            current_lessons.add(new Lesson(new_lesson));
+            current_lessons.add(new Lesson(new_lesson, Lesson.NEW));
         } else {
             for (i=current_lessons.size()-1; i>=0; i--) {
                 if (current_lessons.get(i).current_label.equals(edited_lesson)) {
@@ -163,11 +207,11 @@ public class EditLessonsActivity extends Activity {
             }
         }
         edited_lesson = "";
-        ((TextView) findViewById(R.id.new_lesson_label)).setText("New word:");
+        ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
+
         ListView lv = (ListView) findViewById(R.id.lesson_list);
-        if (lv != null) {
-            ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        }
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+
         ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
     }
 
@@ -182,5 +226,34 @@ public class EditLessonsActivity extends Activity {
         ((TextView) findViewById(R.id.new_lesson_label)).setText("Edit word:");
 
         edit.requestFocus();
+    }
+
+    public void handle_cancel(View v) {
+        finish();
+    }
+
+    public void handle_ok(View v) {
+        for(Lesson le : current_lessons) {
+            if (le.origin == Lesson.NEW) {
+                if (le.deleted) {
+                    continue;
+                }
+                myDB.addLesson(le.current_label);
+            }
+            if (!le.previous_label.equals("")) {
+                if (le.deleted) {
+                    myDB.delLesson(le.previous_label);
+                }
+                else {
+                    myDB.renameLesson(le.previous_label, le.current_label);
+                }
+            }
+            else {
+                if (le.deleted) {
+                    myDB.delLesson(le.current_label);
+                }
+            }
+        }
+        finish();
     }
 }
