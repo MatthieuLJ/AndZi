@@ -9,7 +9,7 @@
         android:orientation="horizontal"
         android:background="#cccccc">
     <Button
-            android:id="@+id/expand_button"
+            android:id="@+id/add_expand_button"
             android:layout_width="24sp"
             android:layout_height="24sp"
             android:layout_margin="5dp"
@@ -18,19 +18,20 @@
             android:onClick="expand"
             android:tag="0"/>
     <View
+            android:id="@+id/add_separator"
             android:layout_height="fill_parent"
             android:layout_width="@dimen/separation_line_thickness"
             android:layout_marginRight="@dimen/separation_line_margin"
             android:background="@color/separation_line_color" />
     <com.matthieu.widget.ExtendingLinearLayout
-            android:id="@+id/vocabulary_info"
+            android:id="@+id/add_vocabulary_info"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginTop="5dp"
             android:orientation="vertical">
         <TextView
-                android:id="@+id/word"
+                android:id="@+id/add_word"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#000000"
@@ -39,7 +40,6 @@
                 android:onClick="handle_word_click"
                 />
         <View
-                android:id="@+id/separation"
                 android:layout_height="1px"
                 android:layout_width="fill_parent"
                 android:layout_margin="@dimen/separation_line_thickness"
@@ -47,7 +47,7 @@
                 android:visibility="gone"
                 expandable:hide_on_collapse="true" />
         <TextView
-                android:id="@+id/more"
+                android:id="@+id/add_more"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#555555"
@@ -64,7 +64,7 @@
             android:layout_margin="@dimen/separation_line_margin"
             android:background="@color/separation_line_color" />
     <CheckBox
-            android:id="@+id/check"
+            android:id="@+id/add_check"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 </LinearLayout>

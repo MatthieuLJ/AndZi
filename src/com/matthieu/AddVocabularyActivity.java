@@ -513,25 +513,24 @@ public class AddVocabularyActivity extends Activity
             
             VocabularyItem voc = translation_choices.get(position);
 
-
-            ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.vocabulary_info);
-            Button bt = (Button) row.findViewById(R.id.expand_button);
+            ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.add_vocabulary_info);
+            Button bt = (Button) row.findViewById(R.id.add_expand_button);
             if (el!=null) {
                 if(voc.visible) {
                     el.expand_immediate();
                     bt.setBackgroundResource(R.drawable.expand_arrow_down);
-                    bt.setTag(R.id.expanded, "1");
+                    bt.setTag(R.id.add_expanded, "1");
                 }
                 else {
                     el.collapse_immediate();
                     bt.setBackgroundResource(R.drawable.expand_arrow_right);
-                    bt.setTag(R.id.expanded, "0");
+                    bt.setTag(R.id.add_expanded, "0");
                 }
             }
-            bt.setTag(R.id.view_to_expand, el);
-            bt.setTag(R.id.vocabulary_item, voc);
+            bt.setTag(R.id.add_view_to_expand, el);
+            bt.setTag(R.id.add_vocabulary_item, voc);
 
-            TextView word = (TextView) row.findViewById(R.id.word);
+            TextView word = (TextView) row.findViewById(R.id.add_word);
             word.setText(voc.translation);
             switch(voc.state) {
                 case 1: // local database
@@ -544,9 +543,9 @@ public class AddVocabularyActivity extends Activity
                     word.setTypeface(null, Typeface.NORMAL);
                     break;
             }
-            word.setTag(R.id.vocabulary_item, voc);
+            word.setTag(R.id.add_vocabulary_item, voc);
 
-            TextView more = (TextView) row.findViewById(R.id.more);
+            TextView more = (TextView) row.findViewById(R.id.add_more);
             if ((voc.state == 1) || (voc.state == 3)) { // from local databases or edited
                 String lessons = new String();
                 if (voc.lessons.size() != 0) {
@@ -564,13 +563,13 @@ public class AddVocabularyActivity extends Activity
             else {
                 more.setText("");
             }
-            more.setTag(R.id.vocabulary_item, voc);
+            more.setTag(R.id.add_vocabulary_item, voc);
 
-            CheckBox cb = (CheckBox) row.findViewById(R.id.check);
-            cb.setTag(R.id.vocabulary_item, voc);
+            CheckBox cb = (CheckBox) row.findViewById(R.id.add_check);
+            cb.setTag(R.id.add_vocabulary_item, voc);
             cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.vocabulary_item);
+                    VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
                     voc.enabled=b;
                     Log.d(TAG, "translation "+voc.translation+" is changed");
                 }
@@ -582,29 +581,29 @@ public class AddVocabularyActivity extends Activity
     }
 
     public void expand(View v) {
-        String tag = (String) v.getTag(R.id.expanded);
-        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
+        String tag = (String) v.getTag(R.id.add_expanded);
+        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
         if (tag.equals("0")) {
             v.setBackgroundResource(R.drawable.expand_arrow_down);
-            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.view_to_expand);
+            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.add_view_to_expand);
             if (el!=null)
                 el.expand();
-            v.setTag(R.id.expanded, "1");
+            v.setTag(R.id.add_expanded, "1");
             voc.visible=true;
         }
         else {
             v.setBackgroundResource(R.drawable.expand_arrow_right);
-            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.view_to_expand);
+            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.add_view_to_expand);
             if (el!=null)
                 el.collapse();
-            v.setTag(R.id.expanded, "0");
+            v.setTag(R.id.add_expanded, "0");
             voc.visible=false;
         }
     }
 
     public void handle_word_click(View v) {
         TextView tview = (TextView) v;
-        VocabularyItem voc = (VocabularyItem) tview.getTag(R.id.vocabulary_item);
+        VocabularyItem voc = (VocabularyItem) tview.getTag(R.id.add_vocabulary_item);
 
         ((EditText) findViewById(R.id.edit_new_vocabulary)).setText(tview.getText());
 
@@ -620,7 +619,7 @@ public class AddVocabularyActivity extends Activity
     }
 
     public void handle_edit_lesson(View v) {
-        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
+        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
     }
 
     public void handle_add_vocabulary(View v) {

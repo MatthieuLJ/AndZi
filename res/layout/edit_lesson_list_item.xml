@@ -11,7 +11,7 @@
             android:orientation="vertical">
 
         <android.gesture.GestureOverlayView
-                android:id="@+id/gesture"
+                android:id="@+id/lesson_gesture"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:gestureStrokeType="single"
@@ -29,7 +29,7 @@
                     />
         </android.gesture.GestureOverlayView>
         <TextView
-                android:id="@+id/more_info_lesson_label"
+                android:id="@+id/lesson_more_info_label"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"

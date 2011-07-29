@@ -126,10 +126,10 @@ public class EditLessonsActivity extends Activity {
             }
 
             if (more_info.equals("")) {
-                row.findViewById(R.id.more_info_lesson_label).setVisibility(View.GONE);
+                row.findViewById(R.id.lesson_more_info_label).setVisibility(View.GONE);
             }
             else {
-                TextView more_tview = (TextView) row.findViewById(R.id.more_info_lesson_label);
+                TextView more_tview = (TextView) row.findViewById(R.id.lesson_more_info_label);
                 more_tview.setText(more_info);
                 more_tview.setVisibility(View.VISIBLE);
             }
@@ -143,7 +143,7 @@ public class EditLessonsActivity extends Activity {
                 label.setPaintFlags(label.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
             }
 
-            GestureOverlayView overlay = (GestureOverlayView) row.findViewById(R.id.gesture);
+            GestureOverlayView overlay = (GestureOverlayView) row.findViewById(R.id.lesson_gesture);
             overlay.setTag(R.id.lesson_item, le);
             overlay.addOnGesturePerformedListener(new StrikeGesture());
             return row;
