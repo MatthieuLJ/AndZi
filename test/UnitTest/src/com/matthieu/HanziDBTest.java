@@ -232,6 +232,34 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.checkDatabase());
     }
 
+    public void testLessonOrder() {
+        target_db.addLesson("lesson 1");
+        target_db.addLesson("lesson 2");
+        target_db.addLesson("lesson 3");
+        target_db.addLesson("lesson 4");
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson 3", "well", "好", "hao3");
+        target_db.sortLessons(new ArrayList<String>(Arrays.asList("lesson 4", "lesson 2", "lesson 3", "lesson 1")));
+        assertTrue(target_db.getLessons().get(0).equals("lesson 4"));
+        assertTrue(target_db.getLessons().get(1).equals("lesson 2"));
+        assertTrue(target_db.getLessons().get(2).equals("lesson 3"));
+        assertTrue(target_db.getLessons().get(3).equals("lesson 1"));
+
+        // make sure all the words are there still
+        assertTrue(target_db.getLessonForWord("好", "hao3", "good").contains("lesson 1"));
+        assertTrue(target_db.getLessonForWord("好", "hao3", "well").contains("lesson 3"));
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 2"))).size()==0);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 4"))).size()==0);
+
+        target_db.sortLessons(new ArrayList<String>(Arrays.asList("lesson 1", "lesson 2", "lesson 4", "lesson 3")));
+        assertTrue(target_db.getLessons().get(0).equals("lesson 1"));
+        assertTrue(target_db.getLessons().get(1).equals("lesson 2"));
+        assertTrue(target_db.getLessons().get(2).equals("lesson 4"));
+        assertTrue(target_db.getLessons().get(3).equals("lesson 3"));
+
+    }
+
     public void testFiltersDB() {
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
         target_db.addLesson("lesson filter");

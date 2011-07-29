@@ -93,8 +93,8 @@ public class HanziDB extends SQLiteOpenHelper {
         // lesson stuff
         db.execSQL("CREATE TABLE lessons (" +
                 "lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                "name VARCHAR(64) NOT NULL," +
-                "UNIQUE(name));");
+                "list_order INTEGER DEFAULT 0," +
+                "name VARCHAR(64) NOT NULL UNIQUE);");
         db.execSQL("CREATE TABLE lesson_word (" +
                 "eng_id INTEGER NOT NULL," +
                 "lesson_id INTEGER NOT NULL," +
@@ -838,6 +838,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Merge Database
     ////////////////////////////////////////
     public void mergeDB(HanziDB other_db) {
+        // Utterly incomplete...
         ArrayList<String> lessons = other_db.getLessons();
         lessons.add("");
         ArrayList<Vocabulary> vocabulary = other_db.getVocabularyInLessons(lessons);
@@ -890,7 +891,7 @@ public class HanziDB extends SQLiteOpenHelper {
     public ArrayList<String> getLessons() {
         ArrayList<String> res = new ArrayList<String>();
 
-        Cursor cur = db.rawQuery("SELECT name FROM lessons", null);
+        Cursor cur = db.rawQuery("SELECT name FROM lessons ORDER BY list_order ASC", null);
         if (cur.moveToFirst()) {
             do{
                 res.add(cur.getString(cur.getColumnIndex("name")));
@@ -908,6 +909,19 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         cur.close();
         return res;
+
+    }
+
+    protected void sortLessons(ArrayList<String> lessons) {
+        int i = 1;
+        ContentValues cv = new ContentValues();
+        for (String le : lessons) {
+            cv.clear();
+            cv.put("list_order", i);
+
+            db.update("lessons", cv, "name=?", new String[] {le});
+            i++;
+        }
 
     }
 
