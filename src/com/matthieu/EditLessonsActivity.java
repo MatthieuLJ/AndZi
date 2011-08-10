@@ -45,10 +45,12 @@ public class EditLessonsActivity extends Activity {
     }
 
     private class InitLessons extends AsyncTask<Void, Void, Void> {
+        ArrayList<Lesson> tmp_lessons;
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
 
+            current_lessons = tmp_lessons;
             ListView lv = (ListView) findViewById(R.id.lesson_list);
             if (lv != null) {
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
@@ -57,11 +59,12 @@ public class EditLessonsActivity extends Activity {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            tmp_lessons = new ArrayList<Lesson>();
             ArrayList<String> existing_lessons = myDB.getLessons();
 
             for (String lesson : existing_lessons) {
                 int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new String[] {lesson}))).size();
-                current_lessons.add(new Lesson(lesson, Lesson.EXISTING, num));
+                tmp_lessons.add(new Lesson(lesson, Lesson.EXISTING, num));
             }
 
             return null;
