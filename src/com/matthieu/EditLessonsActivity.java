@@ -125,7 +125,9 @@ public class EditLessonsActivity extends Activity {
             if (le.num_items != 0) {
                 if (!more_info.equals(""))
                     more_info = more_info + ", ";
-                more_info = more_info + "has " + le.num_items + "words";
+                more_info = more_info + "has " + le.num_items + " chinese word";
+                if (le.num_items > 1)
+                    more_info += "s";
             }
 
             if (more_info.equals("")) {
