@@ -2,6 +2,7 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -269,7 +270,7 @@ public class AddVocabularyActivity extends Activity
             update_button();
         }
         public void set_current_choice(String s) {
-            Log.d(TAG, "pinying button set current choice"+s);
+            Log.d(TAG, "pinyin button set current choice"+s);
             current_choice = s;
             if ((!ref_pinyins.contains(s)) && (!local_pinyins.contains(s)))
                 new_pinyin=s;
@@ -350,7 +351,7 @@ public class AddVocabularyActivity extends Activity
                 String choices[] = new String[PinyinChoices.this.get_number_pinyins()];
                 for (int i=0; i<PinyinChoices.this.get_number_pinyins(); i++) {
                     choices[i] = new Pinyin(PinyinChoices.this.get_pinyin(i)).get_pretty();
-                    Log.d(TAG, "Add pinying " + choices[i] +" to the list");
+                    //Log.d(TAG, "Add pinyin " + choices[i] +" to the list");
                 }
 
                 list.setAdapter(new ArrayAdapter<String>(dial.getContext(), R.layout.add_vocabulary_pinyin_dialog_item, choices));
@@ -488,9 +489,9 @@ public class AddVocabularyActivity extends Activity
         }
 
         ListView lv = (ListView) findViewById(R.id.vocabulary_list);
-            if (lv != null) {
-                ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-            }
+        if (lv != null) {
+            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        }
     }
 
     private class VocabularyItem {
@@ -634,6 +635,7 @@ public class AddVocabularyActivity extends Activity
                 }
                 more.setText(lessons);
                 more.setTag(R.id.add_vocabulary_item, voc);
+                more.setOnClickListener(new LessonEdit());
             }
             else  {
 
@@ -696,6 +698,111 @@ public class AddVocabularyActivity extends Activity
             cb.setChecked(voc.enabled);
             
             return row;
+        }
+
+        private class LessonEdit implements View.OnClickListener {
+            VocabularyItem voc;
+            ArrayList<EnabledLessons> lesson_list;
+
+            private class EnabledLessons {
+                public String lesson;
+                public boolean enabled;
+            }
+
+            public void onClick(View view) {
+                Dialog dialog = new Dialog(AddVocabularyActivity.this);
+                voc = (VocabularyItem) view.getTag(R.id.add_vocabulary_item);
+                dialog.setTitle("Choose the lessons for word "+voc.translation);
+                lesson_list = new ArrayList<EnabledLessons>();
+                fill_dialog(dialog);
+                dialog.show();
+            }
+
+            private void fill_dialog(final Dialog dial) {
+                dial.setContentView(R.layout.add_vocabulary_lesson_dialog);
+
+                final ListView list = (ListView) dial.findViewById(R.id.lesson_dialog_choices);
+
+                for (String l : myDB.getLessons()) {
+                    EnabledLessons elesson = new EnabledLessons();
+                    elesson.lesson=l;
+                    elesson.enabled=false;
+                    for (String vl : voc.lessons) {
+                        if (vl.equals(l)) {
+                            elesson.enabled=true;
+                            break;
+                        }
+                    }
+
+                    lesson_list.add(elesson);
+                }
+
+                list.setAdapter(new LessonArrayAdapter());
+                ((LessonArrayAdapter)list.getAdapter()).notifyDataSetChanged();
+
+                Button OK_button = (Button) dial.findViewById(R.id.lesson_ok);
+                OK_button.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        voc.lessons.clear();
+                        for (EnabledLessons el : lesson_list) {
+                            if (el.enabled) {
+                                voc.lessons.add(el.lesson);
+                            }
+                        }
+                        dial.dismiss();
+                        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                        ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                    }
+                });
+                Button Cancel_button = (Button) dial.findViewById(R.id.lesson_cancel);
+                Cancel_button.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        dial.dismiss();
+                    }
+                });
+            }
+
+            private class LessonArrayAdapter extends ArrayAdapter<Object> {
+
+                public LessonArrayAdapter() {
+                    super(AddVocabularyActivity.this, R.layout.add_vocabulary_lesson_dialog, lesson_list.toArray());
+                }
+
+                @Override
+                public int getCount() {
+                    return lesson_list.size();
+                }
+
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View row;
+                    if (convertView == null) {
+                        LayoutInflater inflater = getLayoutInflater();
+                        row = inflater.inflate(R.layout.add_vocabulary_lesson_dialog_item, parent, false);
+                    }
+                    else {
+                        row = convertView;
+                    }
+
+                    Log.d(TAG, "Checking position "+position);
+                    EnabledLessons lesson = lesson_list.get(position);
+
+                    final TextView tv = (TextView) row.findViewById(R.id.lesson_name);
+                    tv.setText(lesson.lesson);
+
+                    final CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_check);
+                    cb.setTag(R.id.add_vocabulary_lesson, lesson);
+                    cb.setChecked(lesson.enabled);
+                    cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                            EnabledLessons lesson = (EnabledLessons) compoundButton.getTag(R.id.add_vocabulary_lesson);
+                            lesson.enabled = b;
+                        }
+                    });
+
+                    return row;
+                }
+            }
         }
     }
 
@@ -798,6 +905,12 @@ public class AddVocabularyActivity extends Activity
         }
         myDB.delVocabulary(new Vocabulary(chinese, pinyin));
         myDB.addVocabulary(new Vocabulary(chinese, pinyin, translations));
+
+        for (VocabularyItem voc: translations_in_db) {
+            for (String lesson : voc.lessons) {
+                myDB.assignWordLesson(lesson, voc.translation,chinese,pinyin);
+            }
+        }
 
         EditText chinese_word = (EditText) findViewById(R.id.chinese);
         chinese_word.setText("");
