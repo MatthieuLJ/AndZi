@@ -16,6 +16,7 @@
         </activity>
         <activity android:name=".EditLessonsActivity" />
         <activity android:name=".AddVocabularyActivity" />
+        <activity android:name=".ToneTester" />
 
     </application>
     <supports-screens android:resizeable="true"
