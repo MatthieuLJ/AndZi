@@ -1405,21 +1405,25 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public String getNextToStudy(int box) {
         String res = null;
-        Cursor cur = db.rawQuery("SELECT hanzi FROM leitner " +
+        Cursor cur;
+
+        if (box == 0) {
+            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) LIMIT 1", null);
+            if (cur.moveToFirst()) {
+                res = cur.getString(cur.getColumnIndex("hanzi"));
+                cur.close();
+                return res;
+            }
+            cur.close();
+        }
+
+        cur = db.rawQuery("SELECT hanzi FROM leitner " +
                 "WHERE box=? AND mod_time<? " +
                 "ORDER BY mod_time ASC " +
                 "LIMIT 1;",
                 new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis() - getExpiryTime(box))});
         if (cur.moveToFirst()) {
             res = cur.getString(cur.getColumnIndex("hanzi"));
-        }
-        cur.close();
-
-        if ((box == 0) && (res == null)) {
-            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) LIMIT 1", null);
-            if (cur.moveToFirst()) {
-                res = cur.getString(cur.getColumnIndex("hanzi"));
-            }
         }
         cur.close();
 
