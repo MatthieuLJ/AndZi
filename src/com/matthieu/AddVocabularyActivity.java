@@ -240,21 +240,21 @@ public class AddVocabularyActivity extends Activity
                 if (index < local_pinyins.size())
                     return local_pinyins.get(index);
                 if (index < local_pinyins.size() + ref_pinyins.size())
-                    return ref_pinyins.get(index+local_pinyins.size());
+                    return ref_pinyins.get(index-local_pinyins.size());
             }
             else {
                 if (index == 0) return new_pinyin;
                 if (index <= local_pinyins.size())
                     return local_pinyins.get(index-1);
                 if (index <= local_pinyins.size() + ref_pinyins.size())
-                    return ref_pinyins.get(index+local_pinyins.size()-1);
+                    return ref_pinyins.get(index-local_pinyins.size()-1);
             }
             return "";
         }
 
         public int get_number_pinyins() {
             int res = local_pinyins.size()+ref_pinyins.size();
-            if (new_pinyin.length()==0) {
+            if (new_pinyin.equals("")) {
                 return res;
             } else {
                 return res+1;
