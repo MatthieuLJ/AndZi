@@ -76,6 +76,32 @@ public class ToneTester extends Activity{
         Log.d(TAG, "Expects tones : "+tones.toString());
     }
 
+    private void check_guesses() {
+        ArrayList<Integer> guesses=new ArrayList<Integer>();
+        CheckBox cb;
+
+        // check if any wrong guess
+
+        cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
+        if (cb.isChecked() && !tones.contains(1)) { myDB.restartStudy(hanzi); return; }
+        if (tones.contains(1) && !cb.isChecked()) { myDB.restartStudy(hanzi); return; }
+        cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
+        if (cb.isChecked() && !tones.contains(2)) { myDB.restartStudy(hanzi); return; }
+        if (tones.contains(2) && !cb.isChecked()) { myDB.restartStudy(hanzi); return; }
+        cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
+        if (cb.isChecked() && !tones.contains(3)) { myDB.restartStudy(hanzi); return; }
+        if (tones.contains(3) && !cb.isChecked()) { myDB.restartStudy(hanzi); return; }
+        cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
+        if (cb.isChecked() && !tones.contains(4)) { myDB.restartStudy(hanzi); return; }
+        if (tones.contains(4) && !cb.isChecked()) { myDB.restartStudy(hanzi); return; }
+        cb = (CheckBox) findViewById(R.id.tone_test_fifth_tone);
+        if (cb.isChecked() && !tones.contains(5)) { myDB.restartStudy(hanzi); return; }
+        // no need to check if 5th tone is missing...
+
+        // if we got here, we're good... :)
+        myDB.resetTime(hanzi);
+    }
+
     private void show_solution() {
         setContentView(R.layout.tone_tester_result);
         LinearLayout main_layout = (LinearLayout) findViewById(R.id.tone_tester_results);
@@ -121,7 +147,7 @@ public class ToneTester extends Activity{
     }
 
     public void handle_ok(View v) {
-        myDB.resetTime(hanzi);
+        check_guesses();
         show_solution();
     }
 
