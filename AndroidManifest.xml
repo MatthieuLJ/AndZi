@@ -17,11 +17,13 @@
         <activity android:name=".EditLessonsActivity" />
         <activity android:name=".AddVocabularyActivity" />
         <activity android:name=".ToneTester" />
+        <activity android:name=".StatsActivity" />
 
     </application>
-    <supports-screens android:resizeable="true"
-                  android:smallScreens="true"
-                  android:normalScreens="true"
-                  android:largeScreens="true"
-                  android:anyDensity="true"/>
+    <supports-screens
+            android:resizeable="true"
+            android:smallScreens="true"
+            android:normalScreens="true"
+            android:largeScreens="true"
+            android:anyDensity="true"/>
 </manifest> 

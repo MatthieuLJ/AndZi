@@ -29,5 +29,9 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
+    public void handle_stats(View v) {
+        Intent intent = new Intent(this, StatsActivity.class);
+        startActivity(intent);
+    }
 
 }
