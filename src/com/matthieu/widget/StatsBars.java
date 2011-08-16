@@ -64,8 +64,8 @@ public class StatsBars extends View {
             return;
         }
         if (good == 0) { // only expired ones
-            Log.d(TAG,"red :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*good/100)+ "," + (getPaddingTop()+total_height));
-            red_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*good/100, getPaddingTop()+total_height);
+            Log.d(TAG,"red :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*expired/100)+ "," + (getPaddingTop()+total_height));
+            red_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*expired/100, getPaddingTop()+total_height);
             red_rect.draw(canvas);
             return;
         }
@@ -73,8 +73,8 @@ public class StatsBars extends View {
         // split...
         Log.d(TAG,"green :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*good/100)+ "," + (getPaddingTop()+total_height/3));
         green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*good/100, getPaddingTop()+total_height/3);
-        Log.d(TAG,"red :"+getPaddingLeft()+ "," +(getPaddingTop()+(total_height*2)/3)+ "," +(getPaddingLeft()+(total_width)*good/100)+ "," + (getPaddingTop()+total_height/3));
-        red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(total_height*2)/3,getPaddingLeft()+(total_width)*good/100, getPaddingTop()+total_height/3);
+        Log.d(TAG,"red :"+getPaddingLeft()+ "," +(getPaddingTop()+(total_height*2)/3)+ "," +(getPaddingLeft()+(total_width)*expired/100)+ "," + (getPaddingTop()+total_height/3));
+        red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(total_height*2)/3,getPaddingLeft()+(total_width)*expired/100, getPaddingTop()+total_height/3);
         green_rect.draw(canvas);
         red_rect.draw(canvas);
     }

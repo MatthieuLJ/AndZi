@@ -8,35 +8,30 @@
         android:background="#dddddd"
         >
     <TableLayout
-            android:layout_height="wrap_content"
+            android:layout_height="fill_parent"
             android:layout_width="fill_parent"
-            android:orientation="horizontal"
+            android:layout_weight="1"
+            android:stretchColumns="true"
             >
         <TableRow>
             <TextView
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="Number of characters:"
                     />
             <TextView
                     android:id="@+id/stats_chars"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
+                    android:gravity="right"
                     android:textColor="#000000"
                     />
         </TableRow>
         <TableRow>
             <TextView
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
                     android:textColor="#000000"
                     android:text="Number of chinese words:"
                     />
             <TextView
                     android:id="@+id/stats_words"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
+                    android:gravity="right"
                     android:textColor="#000000"
                     />
         </TableRow>
@@ -58,6 +53,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
+                android:layout_margin="5sp"
                 />
     </LinearLayout>
     <LinearLayout
@@ -77,6 +73,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
+                android:layout_margin="5sp"
                 />
     </LinearLayout>
     <LinearLayout
@@ -96,6 +93,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
+                android:layout_margin="5sp"
                 />
     </LinearLayout>
     <LinearLayout
@@ -115,6 +113,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
+                android:layout_margin="5sp"
                 />
     </LinearLayout>
     <LinearLayout
@@ -134,6 +133,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
+                android:layout_margin="5sp"
                 />
     </LinearLayout>
 
