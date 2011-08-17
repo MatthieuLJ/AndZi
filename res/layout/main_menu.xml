@@ -1,36 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<TableLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical">
-    <Button
-            android:layout_width="fill_parent"
+    <TableRow
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="Add Vocabulary"
-            android:onClick="handle_add_vocabulary" />
+            >
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Add Vocabulary"
+                android:onClick="handle_add_vocabulary" />
 
-    <Button
-            android:layout_width="fill_parent"
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Edit Lessons"
+                android:onClick="handle_edit_lessons" />
+    </TableRow>
+    <TableRow
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="Edit Lessons"
-            android:onClick="handle_edit_lessons" />
+            >
 
-    <Button
-            android:layout_width="fill_parent"
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Tone tester"
+                android:onClick="handle_tone_tester" />
+
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Char Finder"
+                android:onClick="handle_char_finder" />
+    </TableRow>
+    <TableRow
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="Tone tester"
-            android:onClick="handle_tone_tester" />
+            >
 
-    <Button
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:text="Stats"
-            android:onClick="handle_stats" />
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Stats"
+                android:onClick="handle_stats" />
+    </TableRow>
 
-</LinearLayout>
+</TableLayout>

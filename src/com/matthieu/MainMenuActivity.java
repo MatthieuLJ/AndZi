@@ -34,4 +34,9 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
+    public void handle_char_finder(View v) {
+        Intent intent = new Intent(this, CharFinder.class);
+        startActivity(intent);
+    }
+
 }
