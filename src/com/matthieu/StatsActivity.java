@@ -37,23 +37,37 @@ public class StatsActivity extends Activity{
         int num_in_box5 = myDB.getNumCharsInBox(4);
         int num_expired_in_box5 = myDB.getNumCharsExpiredInBox(4);
 
+        /*
+        int max_to_display=Math.max(num_in_box1,
+                Math.max(num_in_box2 - num_expired_in_box2,
+                Math.max(num_expired_in_box2,
+                Math.max(num_in_box3 - num_expired_in_box3,
+                Math.max(num_expired_in_box3,
+                Math.max(num_in_box4 - num_expired_in_box4,
+                Math.max(num_expired_in_box4,
+                Math.max(num_in_box5 - num_expired_in_box5,
+                num_expired_in_box5))))))));
+                */
+        int max_to_display = num_in_box1 + num_in_box2 + num_in_box3 + num_in_box4 + num_in_box5;
+
+
         bar = (StatsBars) findViewById(R.id.stats_box1graph);
-        bar.set_expired(num_in_box1);
+        bar.set_expired((num_in_box1*100)/max_to_display);
 
         bar = (StatsBars) findViewById(R.id.stats_box2graph);
-        bar.set_expired(num_expired_in_box2);
-        bar.set_good(num_in_box2-num_expired_in_box2);
+        bar.set_expired((num_expired_in_box2*100)/max_to_display);
+        bar.set_good(((num_in_box2-num_expired_in_box2)*100)/max_to_display);
 
         bar = (StatsBars) findViewById(R.id.stats_box3graph);
-        bar.set_expired(num_expired_in_box3);
-        bar.set_good(num_in_box3-num_expired_in_box3);
+        bar.set_expired((num_expired_in_box3*100)/max_to_display);
+        bar.set_good(((num_in_box3-num_expired_in_box3)*100)/max_to_display);
 
         bar = (StatsBars) findViewById(R.id.stats_box4graph);
-        bar.set_expired(num_expired_in_box4);
-        bar.set_good(num_in_box4-num_expired_in_box4);
+        bar.set_expired((num_expired_in_box4*100)/max_to_display);
+        bar.set_good(((num_in_box4-num_expired_in_box4)*100)/max_to_display);
 
         bar = (StatsBars) findViewById(R.id.stats_box5graph);
-        bar.set_expired(num_expired_in_box5);
-        bar.set_good(num_in_box5-num_expired_in_box5);
+        bar.set_expired((num_expired_in_box5*100)/max_to_display);
+        bar.set_good(((num_in_box5-num_expired_in_box5)*100)/max_to_display);
     }
 }
