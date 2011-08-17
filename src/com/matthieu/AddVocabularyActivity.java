@@ -278,14 +278,15 @@ public class AddVocabularyActivity extends Activity
         }
         public String get_current_choice() {
             String res;
+
             if (current_choice.length()==0) {
                 if ((default_choice.length()!=0) && ((local_pinyins.contains(default_choice)) || (ref_pinyins.contains(default_choice)))) {
                     res=default_choice;
                 }
-                else if (local_pinyins.size()!= 0) {
+                else if ((local_pinyins != null) && (local_pinyins.size()!= 0)) {
                     res = local_pinyins.get(0);
                 }
-                else if (ref_pinyins.size() != 0) {
+                else if ((ref_pinyins != null) && (ref_pinyins.size() != 0)) {
                     res = ref_pinyins.get(0);
                 }
                 else {

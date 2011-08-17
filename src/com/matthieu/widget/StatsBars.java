@@ -8,11 +8,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-/**
- * User: matthieu
- * Date: 8/16/11
- * Time: 2:41 PM
- */
 public class StatsBars extends View {
     int good=0;  // those two go from 0 to 100...
     int expired=0;
