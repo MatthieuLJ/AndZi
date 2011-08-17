@@ -9,15 +9,16 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class ToneTester extends Activity{
     protected HanziDB myDB=null;
-    String hanzi;
-    Pinyin pinyin;
-    String radical;
-    ArrayList<Integer> tones;
+    private String hanzi;
+    private Pinyin pinyin;
+    private String radical;
+    private ArrayList<Integer> tones;
 
     private final String TAG="ToneTester";
 
@@ -27,7 +28,6 @@ public class ToneTester extends Activity{
         myDB = ((AndZiApplication) getApplication()).myDB;
         tones=new ArrayList<Integer>();
 
-
         set_next_study();
     }
 
@@ -35,7 +35,9 @@ public class ToneTester extends Activity{
         hanzi = myDB.getNextToStudy();
 
         if (hanzi == null) {
-            // TODO : handle nothing left to study
+            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
+            this.finish();
+            return;
         }
 
         setContentView(R.layout.tone_tester);
@@ -99,7 +101,8 @@ public class ToneTester extends Activity{
         // no need to check if 5th tone is missing...
 
         // if we got here, we're good... :)
-        myDB.resetTime(hanzi);
+        //myDB.resetTime(hanzi);
+        myDB.betterBox(hanzi);
     }
 
     private void show_solution() {

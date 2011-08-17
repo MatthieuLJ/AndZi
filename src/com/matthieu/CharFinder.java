@@ -1,14 +1,13 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.AndroidCharacter;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.GridView;
-import android.widget.TextView;
+import android.widget.*;
 
 import java.util.ArrayList;
 
@@ -28,74 +27,78 @@ public class CharFinder extends Activity{
         words=new ArrayList<Vocabulary>();
 
         setContentView(R.layout.char_finder);
-        GridView gv = (GridView) findViewById(R.id.char_finder_word_grid);
-        gv.setAdapter(new VocabularyAdapter());
-
+       
         setup_test();
     }
 
     private void setup_test() {
         hanzi = myDB.getNextToStudy();
+
+        if (hanzi == null) {
+            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
+            this.finish();
+            return;
+        }
+        
         words = myDB.getWordsWithPinyin(hanzi);
 
         Log.d(TAG, "Testing for character"+hanzi);
 
+        TableLayout tl = (TableLayout) findViewById(R.id.char_finder_word_grid);
+        tl.removeAllViews();
+        TableRow.LayoutParams trlp;
         for (Vocabulary w : words) {
-            w.chinese = w.chinese.replaceAll(hanzi, "\\?");
-        }
+            TableRow tr = new TableRow(this);
 
-        GridView gv = (GridView) findViewById(R.id.char_finder_word_grid);
-        ((VocabularyAdapter)gv.getAdapter()).notifyDataSetChanged();
+            TextView chinese = new TextView(this);
+            chinese.setTextAppearance(CharFinder.this, android.R.style.TextAppearance_Medium_Inverse);
+            chinese.setClickable(false);
+            chinese.setText(w.chinese.replaceAll(hanzi, "\\?"));
+            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            trlp.setMargins(5,5,5,5);
+            chinese.setLayoutParams(trlp);
+            tr.addView(chinese);
+
+            TextView trans = new TextView(this);
+            trans.setTextAppearance(CharFinder.this, android.R.style.TextAppearance_Medium_Inverse);
+            trans.setClickable(false);
+            String en=new String();
+            for (int j=0; j<w.english.size(); j++) {
+                en += w.english.get(j);
+                if (j<w.english.size()-1)
+                    en += ", ";
+            }
+            trans.setText(en);
+            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            trlp.setMargins(5,5,5,5);
+            trans.setLayoutParams(trlp);
+            tr.addView(trans);
+
+            tl.addView(tr);
+        }
+        tl.invalidate();
+
+        EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
+        chinese.setText("");
     }
 
-    private class VocabularyAdapter extends BaseAdapter {
-
-        public Object getItem(int i) {
-            return null;
+    private void check_guess() {
+        Toast toast;
+        EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
+        String guess = chinese.getText().toString();
+        if (guess.equals(hanzi)) {
+            myDB.betterBox(hanzi);
+            toast = Toast.makeText(this, "Well done !", 2);
         }
-
-        public long getItemId(int i) {
-            return 0;
+        else {
+            myDB.restartStudy(hanzi);
+            toast = Toast.makeText(this, "Sorry, the correct answer was " + hanzi, 2);
         }
-
-        public int getCount() {
-            Log.d(TAG, "grid has "+ words.size()*2 +" items");
-            return words.size()*2;
-        }
-
-        public View getView(int i, View convertView, ViewGroup parent) {
-            TextView tv;
-            if (convertView == null) {
-                tv = new TextView(CharFinder.this);
-                tv.setTextAppearance(CharFinder.this, android.R.style.TextAppearance_Medium_Inverse);
-                tv.setClickable(false);
-            }
-            else {
-                tv= (TextView) convertView;
-            }
-
-            Vocabulary word = words.get(i/2);
-            if (i%2 == 0) { // chinese part
-                Log.d(TAG, "at "+i+": "+word.chinese);
-                tv.setText(word.chinese);
-            }
-            else { // english part
-                String en = new String();
-                for (int j=0; j<word.english.size(); j++) {
-                    String tr=word.english.get(j);
-                    en += tr;
-                    if (j<word.english.size()-1)
-                        en += ", ";
-                }
-                Log.d(TAG, "at "+i+": "+en);
-                tv.setText(en);
-            }
-
-            return tv;
-        }
+        toast.show();
     }
 
     public void handle_ok(View v) {
+        check_guess();
         setup_test();
     }
 
