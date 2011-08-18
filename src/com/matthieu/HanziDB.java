@@ -1408,8 +1408,10 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
 
         if (box == 0) {
-            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) LIMIT 1", null);
+            // look for any character where Leitner has not been initialized yet...
+            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner);", null);
             if (cur.moveToFirst()) {
+                cur.moveToPosition((int) (cur.getCount()*Math.random()));
                 res = cur.getString(cur.getColumnIndex("hanzi"));
                 cur.close();
                 return res;
@@ -1418,11 +1420,10 @@ public class HanziDB extends SQLiteOpenHelper {
         }
 
         cur = db.rawQuery("SELECT hanzi FROM leitner " +
-                "WHERE box=? AND mod_time<? " +
-                "ORDER BY mod_time ASC " +
-                "LIMIT 1;",
+                "WHERE box=? AND mod_time<?;",
                 new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis() - getExpiryTime(box))});
         if (cur.moveToFirst()) {
+            cur.moveToPosition((int) (cur.getCount()*Math.random()));
             res = cur.getString(cur.getColumnIndex("hanzi"));
         }
         cur.close();
