@@ -2,11 +2,6 @@ package com.matthieu;
 
 import java.util.Arrays;
 
-/**
- * User: matthieu
- * Date: 5/27/11
- * Time: 10:59 AM
- */
 public class Pinyin {
     private String lame="";
     private String radical="";

@@ -2,11 +2,6 @@ package com.matthieu;
 
 import java.util.ArrayList;
 
-/**
- * User: matthieu
- * Date: 6/1/11
- * Time: 3:54 PM
- */
 public class PinyinParser {
     private final static String TAG = "PinyinParser";
 

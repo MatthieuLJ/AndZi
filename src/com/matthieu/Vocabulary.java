@@ -3,11 +3,6 @@ package com.matthieu;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-/**
- * User: matthieu
- * Date: 5/31/11
- * Time: 2:01 PM
- */
 public class Vocabulary {
     public String chinese;
     public String pinyin;

@@ -101,8 +101,12 @@ public class ToneTester extends Activity{
         // no need to check if 5th tone is missing...
 
         // if we got here, we're good... :)
-        //myDB.resetTime(hanzi);
-        myDB.betterBox(hanzi);
+        if (myDB.getBoxForChar(hanzi) == 0) {
+            myDB.betterBox(hanzi);
+        }
+        else {
+            myDB.resetTime(hanzi);
+        }
     }
 
     private void show_solution() {
