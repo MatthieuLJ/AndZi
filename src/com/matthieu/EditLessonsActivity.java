@@ -41,6 +41,8 @@ public class EditLessonsActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.lesson_list);
         list.setAdapter(new LessonArrayAdapter());
 
+        ((Button) findViewById(R.id.edit_lesson_delete)).setEnabled(false);
+
         new InitLessons().execute();
     }
 
@@ -147,6 +149,7 @@ public class EditLessonsActivity extends Activity {
             else {
                 label.setPaintFlags(label.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
             }
+            label.setTag(R.id.lesson_item, le);
 
             GestureOverlayView overlay = (GestureOverlayView) row.findViewById(R.id.lesson_gesture);
             overlay.setTag(R.id.lesson_item, le);
@@ -168,8 +171,14 @@ public class EditLessonsActivity extends Activity {
                 else {
                     return;
                 }
+                edited_lesson = "";
+                ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
+                ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
                 ListView lv = (ListView) findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
+                delete_button.setText("Delete");
+                delete_button.setEnabled(false);
             }
         }
 
@@ -177,6 +186,28 @@ public class EditLessonsActivity extends Activity {
         public int getCount() {
             return current_lessons.size();
         }
+    }
+
+    public void handle_delete_lesson(View v) {
+        if (edited_lesson.equals("")) {
+            // that's a problem !
+            Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
+            delete_button.setText("Delete");
+            delete_button.setEnabled(false);
+        }
+        for (int i=current_lessons.size()-1; i>=0; i--) {
+            if (current_lessons.get(i).current_label.equals(edited_lesson)) {
+                current_lessons.get(i).deleted = !current_lessons.get(i).deleted;
+            }
+        }
+        edited_lesson = "";
+        ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
+        ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
+        ListView lv = (ListView) findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
+        delete_button.setText("Delete");
+        delete_button.setEnabled(false);
     }
 
     public void handle_add_lesson(View v) {
@@ -187,11 +218,13 @@ public class EditLessonsActivity extends Activity {
         }
         for (i=current_lessons.size()-1; i>=0; i--) {
             if (current_lessons.get(i).current_label.equals(new_lesson)) {
+                /*
                 if (current_lessons.get(i).deleted) {
                     current_lessons.get(i).deleted=false;
                 }
+                */
                 edited_lesson = "";
-                ((TextView) findViewById(R.id.new_lesson_label)).setText("New word:");
+                ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
                 ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
                 return; // do not do anything if it is already in the list...
             }
@@ -212,6 +245,9 @@ public class EditLessonsActivity extends Activity {
             }
         }
         edited_lesson = "";
+        Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
+        delete_button.setText("Delete");
+        delete_button.setEnabled(false);
         ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
 
         ListView lv = (ListView) findViewById(R.id.lesson_list);
@@ -228,7 +264,16 @@ public class EditLessonsActivity extends Activity {
         edit.setText(tview.getText());
 
         edited_lesson=tview.getText().toString();
-        ((TextView) findViewById(R.id.new_lesson_label)).setText("Edit word:");
+        ((TextView) findViewById(R.id.new_lesson_label)).setText("Edit lesson:");
+
+        Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
+        if (le.deleted) {
+            delete_button.setText("Undelete");
+        }
+        else {
+            delete_button.setText("Delete");
+        }
+        delete_button.setEnabled(true);
 
         edit.requestFocus();
     }

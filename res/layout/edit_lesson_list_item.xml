@@ -32,7 +32,7 @@
                 android:id="@+id/lesson_more_info_label"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:paddingLeft="6dip"
                 android:textColor="#333333"
                 android:visibility="gone"

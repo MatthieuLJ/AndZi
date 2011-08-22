@@ -33,6 +33,13 @@
                 android:singleLine="true"
                 />
         <Button
+                android:id="@+id/edit_lesson_delete"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Delete"
+                android:onClick="handle_delete_lesson"
+                />
+        <Button
                 android:id="@+id/edit_new_lesson_ok"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
