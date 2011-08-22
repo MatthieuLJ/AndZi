@@ -2,8 +2,6 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.gesture.Gesture;
-import android.gesture.GestureLibraries;
-import android.gesture.GestureLibrary;
 import android.gesture.GestureOverlayView;
 import android.graphics.Paint;
 import android.os.AsyncTask;
@@ -13,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import com.matthieu.widget.TouchListView;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -22,7 +22,6 @@ public class EditLessonsActivity extends Activity {
     protected ArrayList<Lesson> current_lessons;
     protected String edited_lesson;
 
-    private GestureLibrary gestureLib = null;
     private static final String TAG = "EditLessonsActivity";
 
     @Override
@@ -34,12 +33,24 @@ public class EditLessonsActivity extends Activity {
         current_lessons = new ArrayList<Lesson>();
         edited_lesson="";
 
-        gestureLib = GestureLibraries.fromRawResource(this, R.raw.strike_gesture);
-        gestureLib.load();
-
         setContentView(R.layout.edit_lessons);
-        ListView list = (ListView) findViewById(R.id.lesson_list);
+        TouchListView list = (TouchListView) findViewById(R.id.lesson_list);
         list.setAdapter(new LessonArrayAdapter());
+        list.setRemoveListener(new TouchListView.RemoveListener() {
+            public void remove(int which) {
+                current_lessons.get(which).deleted=true;
+            }
+        });
+        list.setDropListener(new TouchListView.DropListener() {
+            public void drop(int from, int to) {
+                Lesson le = current_lessons.get(from);
+                Log.d(TAG, "Moving from "+from+" to "+to);
+                current_lessons.remove(from);
+                current_lessons.add(to, le);
+                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            }
+        });
 
         ((Button) findViewById(R.id.edit_lesson_delete)).setEnabled(false);
 
@@ -53,7 +64,7 @@ public class EditLessonsActivity extends Activity {
             super.onPostExecute(aVoid);
 
             current_lessons = tmp_lessons;
-            ListView lv = (ListView) findViewById(R.id.lesson_list);
+            TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
             if (lv != null) {
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
@@ -151,9 +162,6 @@ public class EditLessonsActivity extends Activity {
             }
             label.setTag(R.id.lesson_item, le);
 
-            GestureOverlayView overlay = (GestureOverlayView) row.findViewById(R.id.lesson_gesture);
-            overlay.setTag(R.id.lesson_item, le);
-            overlay.addOnGesturePerformedListener(new StrikeGesture());
             return row;
         }
 
@@ -174,7 +182,7 @@ public class EditLessonsActivity extends Activity {
                 edited_lesson = "";
                 ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
                 ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
-                ListView lv = (ListView) findViewById(R.id.lesson_list);
+                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                 Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
                 delete_button.setText("Delete");
@@ -203,7 +211,7 @@ public class EditLessonsActivity extends Activity {
         edited_lesson = "";
         ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
         ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
-        ListView lv = (ListView) findViewById(R.id.lesson_list);
+        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
         delete_button.setText("Delete");
@@ -250,7 +258,7 @@ public class EditLessonsActivity extends Activity {
         delete_button.setEnabled(false);
         ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
 
-        ListView lv = (ListView) findViewById(R.id.lesson_list);
+        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
 
         ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
@@ -283,6 +291,8 @@ public class EditLessonsActivity extends Activity {
     }
 
     public void handle_ok(View v) {
+        ArrayList<String> lesson_order=new ArrayList<String>();
+
         for(Lesson le : current_lessons) {
             if (le.origin == Lesson.NEW) {
                 if (le.deleted) {
@@ -303,7 +313,11 @@ public class EditLessonsActivity extends Activity {
                     myDB.delLesson(le.current_label);
                 }
             }
+            if (!le.deleted) {
+                lesson_order.add(le.current_label);
+            }
         }
+        myDB.sortLessons(lesson_order);
         finish();
     }
 }

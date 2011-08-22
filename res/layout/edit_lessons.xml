@@ -2,16 +2,20 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tlv="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:background="#dddddd">
 
-    <ListView
+    <com.matthieu.widget.TouchListView
             android:id="@+id/lesson_list"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
+            android:drawSelectorOnTop="false"
+            tlv:grabber="@+id/edit_lesson_grab"
+            tlv:remove_mode="slideRight"
             />
     <LinearLayout
             android:layout_width="fill_parent"
