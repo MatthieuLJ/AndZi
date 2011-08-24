@@ -1,6 +1,8 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -91,6 +93,7 @@ public class StatsActivity extends Activity{
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.stats_email_db:
+                email_database();
                 break;
             case R.id.stats_copy_db:
                 copy_database();
@@ -99,6 +102,28 @@ public class StatsActivity extends Activity{
                 return super.onOptionsItemSelected(item);
         }
         return true;
+    }
+
+    private void email_database() {
+        File export_db;
+        try {
+            export_db = File.createTempFile("AndZi", "");
+        } catch (IOException e) {
+            Log.d(TAG, "Could not create file");
+            e.printStackTrace();
+            return;
+        }
+        myDB.exportDB(export_db.getPath());
+
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.setType("application/sqlite");
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "AndZi database shared");
+        sendIntent.putExtra(Intent.EXTRA_TEXT, "File attached.");
+        sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + export_db.getPath()));
+        startActivity(Intent.createChooser(sendIntent, "Email:"));
+        
+        Toast toast = Toast.makeText(this, "Database was copied to "+export_db.getPath(), 5);
+        toast.show();
     }
 
     private void copy_database() {
