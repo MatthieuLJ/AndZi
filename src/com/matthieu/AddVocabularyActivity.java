@@ -2,7 +2,6 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -11,13 +10,9 @@ import android.text.Editable;
 import android.text.TextPaint;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.ExtendingLinearLayout;
-
-import java.sql.Ref;
 import java.util.ArrayList;
 
 public class AddVocabularyActivity extends Activity
@@ -32,6 +27,7 @@ public class AddVocabularyActivity extends Activity
     protected HanziDB refDB=null;
 
     private String edited_word="";
+    private String default_lesson="";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -686,7 +682,11 @@ public class AddVocabularyActivity extends Activity
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
                     if ((voc.state == 2) && (b)) { // we clicked an item from the reference database
-                        VocabularyItem item = new VocabularyItem(voc.translation, new ArrayList<String>(), 4);
+                        ArrayList<String> lesson = new ArrayList<String>();
+                        if (!(default_lesson.equals(""))) {
+                            lesson.add(default_lesson);
+                        }
+                        VocabularyItem item = new VocabularyItem(voc.translation, lesson, 4);
                         item.enabled=true;
                         translations_in_db.add(item);
                         hide_duplicates_in_ref();
@@ -807,6 +807,92 @@ public class AddVocabularyActivity extends Activity
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.add_vocabulary_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.add_vocabulary_set_default_lesson:
+                set_default_lesson();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
+    private void set_default_lesson() {
+        Dialog dialog = new Dialog(AddVocabularyActivity.this);
+        dialog.setTitle("Choose the default lesson");
+        fill_default_lesson_dialog(dialog);
+        dialog.show();
+    }
+
+    private void fill_default_lesson_dialog(final Dialog dialog) {
+        dialog.setContentView(R.layout.add_vocabulary_default_lesson_dialog);
+        ArrayList<String> lessons = myDB.getLessons();
+        lessons.add(0, "(none)");
+
+        ListView list = (ListView) dialog.findViewById(R.id.default_lesson_list);
+        ListAdapter adapter = new DefaultLessonArrayAdapter(lessons);
+        list.setAdapter(adapter);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) {
+                    default_lesson = "";
+                } else {
+                    default_lesson = myDB.getLessons().get(i - 1);
+                }
+                //((DefaultLessonArrayAdapter) ((ListView) adapterView).getAdapter()).notifyDataSetChanged();
+                dialog.dismiss();
+            }
+        });
+
+        Button cancel_button = (Button) dialog.findViewById(R.id.default_lesson_cancel);
+        cancel_button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+    }
+
+    private class DefaultLessonArrayAdapter extends ArrayAdapter<String> {
+        ArrayList<String> lessons;
+        public DefaultLessonArrayAdapter(ArrayList<String> le) {
+            super(AddVocabularyActivity.this, android.R.layout.simple_list_item_single_choice, le);
+            lessons = le;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            CheckedTextView view;
+            if (convertView == null) {
+                LayoutInflater inflater = getLayoutInflater();
+                view = (CheckedTextView) inflater.inflate(R.layout.add_vocabulary_default_lesson_dialog_item, parent, false);
+            }
+            else {
+                view = (CheckedTextView) convertView;
+            }
+            view.setText(lessons.get(position));
+
+            if ((position == 0) && (default_lesson.equals(""))) {
+                view.setChecked(true);
+            }
+            else if ((position > 0) && (default_lesson.equals(lessons.get(position)))) {
+                view.setChecked(true);
+            }
+            else {
+                view.setChecked(false);
+            }
+            return view;
+        }
+    }
+
     public void expand(View v) {
         String tag = (String) v.getTag(R.id.add_expanded);
         VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
@@ -871,7 +957,11 @@ public class AddVocabularyActivity extends Activity
             }
         }
         if (edited_word.equals("")) {
-            translations_in_db.add(0, new VocabularyItem(new_word, new ArrayList<String>(), 4));
+            ArrayList<String> lesson = new ArrayList<String>();
+            if (!(default_lesson.equals(""))) {
+                lesson.add(default_lesson);
+            }
+            translations_in_db.add(0, new VocabularyItem(new_word, lesson, 4));
         }
         else {
             translations_in_db.add(0, new VocabularyItem(new_word, new ArrayList<String>(), 3));
