@@ -2,8 +2,17 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.matthieu.widget.StatsBars;
+
+import java.io.File;
+import java.io.IOException;
 
 public class StatsActivity extends Activity{
     protected HanziDB myDB=null;
@@ -69,5 +78,41 @@ public class StatsActivity extends Activity{
         bar = (StatsBars) findViewById(R.id.stats_box5graph);
         bar.set_expired((num_expired_in_box5*100)/max_to_display);
         bar.set_good(((num_in_box5-num_expired_in_box5)*100)/max_to_display);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.stats_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.stats_email_db:
+                break;
+            case R.id.stats_copy_db:
+                copy_database();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
+    private void copy_database() {
+        File export_db;
+        try {
+            export_db = File.createTempFile("AndZi", "", Environment.getExternalStorageDirectory());
+        } catch (IOException e) {
+            Log.d(TAG, "Could not create file");
+            e.printStackTrace();
+            return;
+        }
+        myDB.exportDB(export_db.getPath());
+
+        Toast toast = Toast.makeText(this, "Database was copied to "+export_db.getPath(), 5);
+        toast.show();
     }
 }

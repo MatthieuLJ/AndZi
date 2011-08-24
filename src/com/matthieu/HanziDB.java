@@ -3,9 +3,10 @@ package com.matthieu;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.*;
 import android.util.Log;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,6 +116,8 @@ public class HanziDB extends SQLiteOpenHelper {
         boolean res = true;
 
         Log.v(TAG, "checkDatabase");
+
+        try {
 
         //
         // Basics
@@ -260,6 +263,13 @@ public class HanziDB extends SQLiteOpenHelper {
             }while(c.moveToNext());
         }
         c.close();
+
+        }
+        catch (SQLiteException exp) {
+            Log.d(TAG, "Ran into a problem while opening database");
+            Log.d(TAG, exp.toString());
+            res=false;
+        }
 
         return res;
     }
@@ -834,13 +844,73 @@ public class HanziDB extends SQLiteOpenHelper {
     // Merge Database
     ////////////////////////////////////////
     public void mergeDB(HanziDB other_db) {
-        // Utterly incomplete...
         ArrayList<String> lessons = other_db.getLessons();
         lessons.add("");
-        ArrayList<Vocabulary> vocabulary = other_db.getVocabularyInLessons(lessons);
-        for (Vocabulary v : vocabulary) {
-            addVocabulary(v);
+        for (String lesson : lessons) {
+            addLesson(lesson);
+            ArrayList<String> single_lesson = new ArrayList<String>();
+            single_lesson.add(lesson);
+            ArrayList<Vocabulary> vocabulary = other_db.getVocabularyInLessons(single_lesson);
+            for (Vocabulary v : vocabulary) {
+                addVocabulary(v);
+                if (!(lesson.equals(""))) {
+                    assignWordLesson(lesson, v);
+                }
+            }
         }
+    }
+
+    ////////////////////////////////////////
+    // Export Database
+    ////////////////////////////////////////
+    public void exportDB(String path) {
+        ArrayList<String> lessons = getLessons();
+        lessons.add("");
+        exportDB(path, lessons);
+    }
+
+    public void exportDB(String path, ArrayList<String> lessons) {
+        HanziDB new_db = new HanziDB(appContext, "tmp_db");
+
+        for (String lesson : lessons) {
+            Log.d(TAG, "exporting lesson "+lesson);
+            new_db.addLesson(lesson);
+            ArrayList<String> single_lesson = new ArrayList<String>();
+            single_lesson.add(lesson);
+            ArrayList<Vocabulary> vocabulary = getVocabularyInLessons(single_lesson);
+            for (Vocabulary v : vocabulary) {
+                new_db.addVocabulary(v);
+                Log.d(TAG, "exporting cword "+v.chinese);
+                if (!(lesson.equals(""))) {
+                    new_db.assignWordLesson(lesson, v);
+                }
+            }
+        }
+        new_db.close();
+        
+        InputStream myInput;
+
+        try {
+            myInput = new FileInputStream(new_db.getWritableDatabase().getPath());
+            OutputStream myOutput = new FileOutputStream(path);
+
+            // Transfer bytes from the input file to the output file
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = myInput.read(buffer))>0)
+            {
+                myOutput.write(buffer, 0, length);
+            }
+
+            // Close and clear the streams
+            myOutput.flush();
+            myOutput.close();
+            myInput.close();
+        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
+        }
+
+        appContext.deleteDatabase("tmp_db");
     }
 
     /*
@@ -1037,15 +1107,27 @@ public class HanziDB extends SQLiteOpenHelper {
     public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary tmp=null;
-        String whereQuery = buildWhereQuery(lessons);
+        Cursor cur;
 
-        Cursor cur = db.rawQuery("SELECT e.translation AS translation, " +
-                                 "c.chinese AS chinese, " +
-                                 "c.pinyin AS pinyin " +
-                                 "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
-                                 " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
-                                 " JOIN cword AS c ON c.cword_id=e.cword_id "
-                                 ,null);
+        if (lessons.contains("")) {
+            cur = db.rawQuery("SELECT e.translation AS translation, " +
+                    "c.chinese AS chinese, " +
+                    "c.pinyin AS pinyin " +
+                    "FROM  eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id "
+                    ,null);
+        }
+        else {
+            String whereQuery = buildWhereQuery(lessons);
+
+            cur = db.rawQuery("SELECT e.translation AS translation, " +
+                    "c.chinese AS chinese, " +
+                    "c.pinyin AS pinyin " +
+                    "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
+                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id "
+                    ,null);
+        }
 
         if (cur.moveToFirst()) {
             do{

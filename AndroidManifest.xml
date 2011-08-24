@@ -27,4 +27,6 @@
             android:normalScreens="true"
             android:largeScreens="true"
             android:anyDensity="true"/>
+    
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 </manifest> 
