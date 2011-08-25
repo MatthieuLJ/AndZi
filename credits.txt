@@ -3,3 +3,6 @@ https://github.com/commonsguy/cwac-touchlist
 
 Android Wheel :
 http://code.google.com/p/android-wheel/
+
+File dialog :
+http://code.google.com/p/android-file-dialog/

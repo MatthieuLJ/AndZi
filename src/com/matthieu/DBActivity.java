@@ -28,6 +28,11 @@ public class DBActivity extends Activity{
         setContentView(R.layout.db);
 
         update_content();
+
+        Intent intent = getIntent();
+        if ((intent.getScheme() != null) && (intent.getScheme().equals("file"))) {
+            Log.d(TAG, "Want to include database "+intent.getDataString());
+        }
     }
 
     private void update_content() {
@@ -127,6 +132,9 @@ public class DBActivity extends Activity{
             case R.id.clear_db:
                 clear_database();
                 break;
+            case R.id.import_db:
+                import_database();
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -170,5 +178,27 @@ public class DBActivity extends Activity{
     private void clear_database() {
         myDB.clearDB();
         update_content();
+    }
+
+    private void import_database() {
+        Intent intent = new Intent(this, com.matthieu.widget.file_dialog.FileDialog.class);
+        intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
+        startActivityForResult(intent, 0);
+    }
+
+    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+
+            if (requestCode != 0) {
+                return;
+            }
+
+            String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
+            myDB.mergeDB(filePath);
+            update_content();
+
+        } else if (resultCode == Activity.RESULT_CANCELED) {
+            return;
+        }
     }
 }

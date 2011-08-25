@@ -8,4 +8,6 @@
           android:title="Copy database"/>
     <item android:id="@+id/clear_db"
           android:title="Clear database"/>
+    <item android:id="@+id/import_db"
+          android:title="Import database"/>
 </menu>
