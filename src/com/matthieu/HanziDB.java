@@ -913,6 +913,13 @@ public class HanziDB extends SQLiteOpenHelper {
         appContext.deleteDatabase("tmp_db");
     }
 
+    ////////////////////////////////////////
+    // Clear Database
+    ////////////////////////////////////////
+    public void clearDB() {
+        onCreate(db);
+    }
+
     /*
      *
      *  Lesson database management

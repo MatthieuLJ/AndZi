@@ -17,7 +17,17 @@
         <activity android:name=".EditLessonsActivity" />
         <activity android:name=".AddVocabularyActivity" />
         <activity android:name=".ToneTester" />
-        <activity android:name=".StatsActivity" />
+        <activity android:name=".DBActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.azdb" />
+                <data android:host="*" />
+            </intent-filter>
+        </activity>
         <activity android:name=".CharFinder" />
 
     </application>
@@ -29,4 +39,7 @@
             android:anyDensity="true"/>
     
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-sdk android:minSdkVersion="4"
+              android:targetSdkVersion="8" />
 </manifest> 

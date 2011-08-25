@@ -16,7 +16,7 @@ import com.matthieu.widget.StatsBars;
 import java.io.File;
 import java.io.IOException;
 
-public class StatsActivity extends Activity{
+public class DBActivity extends Activity{
     protected HanziDB myDB=null;
 
     private final String TAG="Stats";
@@ -25,8 +25,12 @@ public class StatsActivity extends Activity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).myDB;
-        setContentView(R.layout.stats);
+        setContentView(R.layout.db);
 
+        update_content();
+    }
+
+    private void update_content() {
         TextView tv;
         StatsBars bar;
 
@@ -61,6 +65,28 @@ public class StatsActivity extends Activity{
                 */
         int max_to_display = num_in_box1 + num_in_box2 + num_in_box3 + num_in_box4 + num_in_box5;
 
+        if (max_to_display == 0) {
+            bar = (StatsBars) findViewById(R.id.stats_box1graph);
+            bar.set_expired(0);
+
+            bar = (StatsBars) findViewById(R.id.stats_box2graph);
+            bar.set_expired(0);
+            bar.set_good(0);
+
+            bar = (StatsBars) findViewById(R.id.stats_box3graph);
+            bar.set_expired(0);
+            bar.set_good(0);
+
+            bar = (StatsBars) findViewById(R.id.stats_box4graph);
+            bar.set_expired(0);
+            bar.set_good(0);
+
+            bar = (StatsBars) findViewById(R.id.stats_box5graph);
+            bar.set_expired(0);
+            bar.set_good(0);
+            return;
+        }
+
 
         bar = (StatsBars) findViewById(R.id.stats_box1graph);
         bar.set_expired((num_in_box1*100)/max_to_display);
@@ -85,7 +111,7 @@ public class StatsActivity extends Activity{
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.stats_menu, menu);
+        inflater.inflate(R.menu.db_menu, menu);
         return true;
     }
 
@@ -98,6 +124,9 @@ public class StatsActivity extends Activity{
             case R.id.stats_copy_db:
                 copy_database();
                 break;
+            case R.id.clear_db:
+                clear_database();
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -107,7 +136,7 @@ public class StatsActivity extends Activity{
     private void email_database() {
         File export_db;
         try {
-            export_db = File.createTempFile("AndZi", "");
+            export_db = File.createTempFile("AndZi", ".azdb");
         } catch (IOException e) {
             Log.d(TAG, "Could not create file");
             e.printStackTrace();
@@ -121,15 +150,12 @@ public class StatsActivity extends Activity{
         sendIntent.putExtra(Intent.EXTRA_TEXT, "File attached.");
         sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + export_db.getPath()));
         startActivity(Intent.createChooser(sendIntent, "Email:"));
-        
-        Toast toast = Toast.makeText(this, "Database was copied to "+export_db.getPath(), 5);
-        toast.show();
     }
 
     private void copy_database() {
         File export_db;
         try {
-            export_db = File.createTempFile("AndZi", "", Environment.getExternalStorageDirectory());
+            export_db = File.createTempFile("AndZi", ".azdb", Environment.getExternalStorageDirectory());
         } catch (IOException e) {
             Log.d(TAG, "Could not create file");
             e.printStackTrace();
@@ -139,5 +165,10 @@ public class StatsActivity extends Activity{
 
         Toast toast = Toast.makeText(this, "Database was copied to "+export_db.getPath(), 5);
         toast.show();
+    }
+
+    private void clear_database() {
+        myDB.clearDB();
+        update_content();
     }
 }

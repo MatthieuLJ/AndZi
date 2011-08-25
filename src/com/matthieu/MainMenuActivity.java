@@ -30,7 +30,7 @@ public class MainMenuActivity extends Activity {
     }
 
     public void handle_stats(View v) {
-        Intent intent = new Intent(this, StatsActivity.class);
+        Intent intent = new Intent(this, DBActivity.class);
         startActivity(intent);
     }
 
