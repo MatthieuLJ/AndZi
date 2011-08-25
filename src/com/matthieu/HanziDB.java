@@ -18,32 +18,25 @@ public class HanziDB extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
     protected Context appContext;
-    protected SQLiteDatabase db;
 
     public HanziDB(Context context) {
         super(context, DEFAULT_DATABASE_NAME, null, DATABASE_VERSION);
-        db = this.getWritableDatabase();
         appContext = context;
     }
 
     public HanziDB(Context context, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);
-        db = this.getWritableDatabase();
         appContext = context;
     }
 
     public String getDatabasePath() {
+        SQLiteDatabase db = this.getWritableDatabase();
         return db.getPath();
     }
 
     ////////////////////////////////////////
     // Database construction and structure
     ////////////////////////////////////////
-    @Override
-    public void close() {
-        db.close();
-        super.close();
-    }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -114,6 +107,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public boolean checkDatabase() {
         boolean res = true;
+        SQLiteDatabase db = this.getWritableDatabase();
 
         Log.v(TAG, "checkDatabase");
 
@@ -321,6 +315,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<Vocabulary> getCTranslations(String english) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Cursor cur = db.rawQuery("SELECT c.chinese AS chinese,c.pinyin AS pinyin " +
                 "FROM eword " +
@@ -367,6 +362,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getWordIdWithPinyin(String hanzi) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
                 "FROM cword " +
@@ -387,6 +383,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getWordIdWithPinyin(String hanzi, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
                 "FROM cword " +
@@ -407,6 +404,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getWordId(String chinese) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=?;", new String[] {chinese});
         if (cur.moveToFirst()) {
@@ -423,6 +421,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getWordId(String chinese, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=? AND pinyin=?;", new String[] {chinese, pinyin});
         if (cur.moveToFirst()) {
@@ -445,6 +444,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int getCharPinyinId(String hanzi, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=? AND pinyin=?;", new String[] {hanzi, pinyin});
         if (cur.moveToFirst()) {
@@ -468,6 +468,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<String> getPinyinForChar(String hanzi) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?;", new String[] {hanzi});
         if (cur.moveToFirst()) {
@@ -484,6 +485,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Vocabulary> getTranslations(int cword_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary tmp=null;
 
@@ -518,6 +520,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getCwordWithChar(int char_pinyin_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword_id " +
                 "FROM cword_segment " +
@@ -580,6 +583,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int addCword(ArrayList<String> chinese, ArrayList<String> pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> cword_id_lst;
         int cword_id, char_pinyin_id;
         int i;
@@ -622,6 +626,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int addCharPinyin(String hanzi, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res;
 
         ContentValues cv = new ContentValues();
@@ -666,6 +671,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void addVocabulary(String english, int cword_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("cword_id", cword_id);
         cv.put("translation", english);
@@ -677,6 +683,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Deleting data
     ////////////////////////////////////////
     public void delVocabulary(ArrayList<String> chinese, ArrayList<String> pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int i;
         ArrayList<Integer> cword_id;
         String chinese_str="", pinyin_str="";
@@ -700,6 +707,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void delVocabulary(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int eng_id, cword_id, i;
         String chinese_str="", pinyin_str="";
 
@@ -763,12 +771,14 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void delEword(int eng_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
         db.delete("eword", "eng_id=?", new String[] {Integer.toString(eng_id)} );
 
         db.delete("lesson_word", "eng_id=?", new String[] {Integer.toString(eng_id)});
     }
 
     protected void delCharPinyin(int char_pinyin_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
 
         String hanzi;
         Cursor cur = db.rawQuery("SELECT hanzi  " +
@@ -792,6 +802,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void delCword(int cword_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> char_pinyin_id = new ArrayList<Integer>();
 
         Cursor cur = db.rawQuery("SELECT char_pinyin_id FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
@@ -823,6 +834,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Get information
     ////////////////////////////////////////
     public int getNumWords() {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res;
         Cursor cur = db.rawQuery("SELECT cword_id FROM cword;", null);
         res= cur.getCount();
@@ -832,6 +844,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public int getNumChars() {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res;
         Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin GROUP BY hanzi;", null);
         res= cur.getCount();
@@ -843,6 +856,35 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Merge Database
     ////////////////////////////////////////
+    public void mergeDB(String path) {
+        HanziDB new_db = new HanziDB(appContext, "tmp_db");
+        new_db.close();
+        InputStream myInput;
+
+        try {
+            myInput = new FileInputStream(path);
+            OutputStream myOutput = new FileOutputStream(new_db.getWritableDatabase().getPath());
+
+            // Transfer bytes from the input file to the output file
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = myInput.read(buffer))>0)
+            {
+                myOutput.write(buffer, 0, length);
+            }
+
+            // Close and clear the streams
+            myOutput.flush();
+            myOutput.close();
+            myInput.close();
+        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
+        }
+        
+        mergeDB(new_db);
+
+        appContext.deleteDatabase("tmp_db");
+    }
     public void mergeDB(HanziDB other_db) {
         ArrayList<String> lessons = other_db.getLessons();
         lessons.add("");
@@ -917,6 +959,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Clear Database
     ////////////////////////////////////////
     public void clearDB() {
+        SQLiteDatabase db = this.getWritableDatabase();
         onCreate(db);
     }
 
@@ -931,6 +974,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Manage Lessons
     ////////////////////////////////////////
     public void addLesson(String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("name", name);
         db.insert("lessons", null, cv);
@@ -938,6 +982,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void delLesson(String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int lesson_id;
 
         lesson_id = getLessonId(name);
@@ -949,6 +994,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void renameLesson(String old_name, String new_name) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int lesson_id;
 
         lesson_id = getLessonId(old_name);
@@ -962,6 +1008,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<String> getLessons() {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<String> res = new ArrayList<String>();
 
         Cursor cur = db.rawQuery("SELECT name FROM lessons ORDER BY list_order ASC", null);
@@ -975,6 +1022,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int getLessonId(String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res = -1;
         Cursor cur = db.rawQuery("SELECT * FROM lessons WHERE name=?;", new String[] {name});
         if (cur.moveToFirst()) {
@@ -986,6 +1034,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void sortLessons(ArrayList<String> lessons) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int i = 1;
         ContentValues cv = new ContentValues();
         for (String le : lessons) {
@@ -1002,6 +1051,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Manage Words in lessons
     ////////////////////////////////////////
     public void assignWordLesson(String lesson, String english, String chinese, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int eng_id=-1;
         int lesson_id;
 
@@ -1046,6 +1096,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void removeWordLesson(String lesson, String english, String chinese, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int eng_id=-1;
         int lesson_id;
 
@@ -1086,6 +1137,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<String> getLessonForWord(String chinese, String pinyin, String english) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<String> res=new ArrayList<String>();
         ArrayList<Integer> cword_id = getWordId(chinese, pinyin);
 
@@ -1112,6 +1164,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary tmp=null;
         Cursor cur;
@@ -1227,6 +1280,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<Vocabulary> getFilteredCTranslations(String english) {
+        SQLiteDatabase db = this.getWritableDatabase();
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Cursor cur = db.rawQuery("SELECT cword.chinese AS chinese,cword.pinyin AS pinyin " +
@@ -1252,6 +1306,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getFilteredWordId(String chinese) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
@@ -1272,6 +1327,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Integer> getFilteredWordId(String chinese, String pinyin) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
@@ -1292,6 +1348,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<Vocabulary> getFilteredTranslations(int cword_id) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary tmp=null;
 
@@ -1344,6 +1401,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Get information
     ////////////////////////////////////////
     public int getNumCharsInBox(int box) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res;
 
         if ((box < 0) || (box > MAX_BOX))
@@ -1365,6 +1423,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public int getNumCharsExpiredInBox(int box) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res;
 
         if ((box < 0) || (box > MAX_BOX))
@@ -1384,6 +1443,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public int getBoxForChar(String hanzi) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int res;
 
         Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?;",
@@ -1423,6 +1483,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Update data
     ////////////////////////////////////////
     public void resetTime(String hanzi) {
+        SQLiteDatabase db = this.getWritableDatabase();
 
         Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?;",
                 new String[] {hanzi});
@@ -1441,6 +1502,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void betterBox(String hanzi) {
+        SQLiteDatabase db = this.getWritableDatabase();
         int current_box = getBoxForChar(hanzi);
         current_box ++;
         if (current_box > MAX_BOX) current_box = MAX_BOX;
@@ -1460,6 +1522,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void restartStudy(String hanzi) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("box", 0);
         cv.put("mod_time", System.currentTimeMillis());
@@ -1498,6 +1561,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<String> getAllToStudy(int box) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur;
 
@@ -1554,6 +1618,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<String> getAllFilteredToStudy(int box) {
+        SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur;
 
