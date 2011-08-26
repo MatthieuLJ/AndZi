@@ -1,8 +1,10 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -150,14 +152,38 @@ public class DBActivity extends Activity{
             e.printStackTrace();
             return;
         }
-        myDB.exportDB(export_db.getPath());
 
-        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.setType("application/sqlite");
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "AndZi database shared");
-        sendIntent.putExtra(Intent.EXTRA_TEXT, "File attached.");
-        sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + export_db.getPath()));
-        startActivity(Intent.createChooser(sendIntent, "Email:"));
+        new database_emailer().execute(export_db);
+    }
+
+    private class database_emailer extends AsyncTask<File,Void,Void> {
+        File export_db;
+        ProgressDialog pd;
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            pd.dismiss();
+            
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("application/sqlite");
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "AndZi database shared");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, "File attached.");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + export_db.getPath()));
+            startActivity(Intent.createChooser(sendIntent, "Email:"));
+        }
+
+        @Override
+        protected Void doInBackground(File... files) {
+            export_db=files[0];
+            myDB.exportDB(export_db.getPath());
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            pd = ProgressDialog.show(DBActivity.this, "Emailing Database", "Copying...", false);
+        }
     }
 
     private void copy_database() {
@@ -167,12 +193,38 @@ public class DBActivity extends Activity{
         } catch (IOException e) {
             Log.d(TAG, "Could not create file");
             e.printStackTrace();
+            Toast toast = Toast.makeText(DBActivity.this, "There was an error copying the database", 5);
+            toast.show();
             return;
         }
-        myDB.exportDB(export_db.getPath());
 
-        Toast toast = Toast.makeText(this, "Database was copied to "+export_db.getPath(), 5);
-        toast.show();
+        new database_exporter().execute(export_db);
+    }
+
+    private class database_exporter extends AsyncTask<File,Void,Void> {
+        File export_db;
+        ProgressDialog pd;
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            pd.dismiss();
+
+            Toast toast = Toast.makeText(DBActivity.this, "Database was copied to "+export_db.getPath(), 5);
+            toast.show();
+        }
+
+        @Override
+        protected Void doInBackground(File... files) {
+            export_db=files[0];
+            myDB.exportDB(export_db.getPath());
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            pd = ProgressDialog.show(DBActivity.this, "Exporting Database", "Copying...", false);
+        }
     }
 
     private void clear_database() {

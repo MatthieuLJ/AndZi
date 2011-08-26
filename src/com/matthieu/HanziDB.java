@@ -874,7 +874,9 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> lessons = other_db.getLessons();
         lessons.add("");
         for (String lesson : lessons) {
-            addLesson(lesson);
+            if (!(lesson.equals(""))) {
+                addLesson(lesson);
+            }
             ArrayList<String> single_lesson = new ArrayList<String>();
             single_lesson.add(lesson);
             ArrayList<Vocabulary> vocabulary = other_db.getVocabularyInLessons(single_lesson);
@@ -903,7 +905,9 @@ public class HanziDB extends SQLiteOpenHelper {
             Log.d(TAG, "exporting lesson "+lesson);
             new_db.addLesson(lesson);
             ArrayList<String> single_lesson = new ArrayList<String>();
-            single_lesson.add(lesson);
+            if (!(lesson.equals(""))) {
+                single_lesson.add(lesson);
+            }
             ArrayList<Vocabulary> vocabulary = getVocabularyInLessons(single_lesson);
             for (Vocabulary v : vocabulary) {
                 new_db.addVocabulary(v);
