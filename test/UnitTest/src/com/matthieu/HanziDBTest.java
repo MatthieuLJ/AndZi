@@ -21,7 +21,7 @@ public class HanziDBTest extends AndroidTestCase {
     protected void setUp() {
         ContextWrapper cw = new ContextWrapper(this.getContext());
         cw.deleteDatabase(DbName);
-        target_db = new HanziDB(this.getContext(),  DbName);
+        target_db = new HanziDB(this.getContext(), new AndZiApplication(),  DbName);
         Log.d(TAG, " is setup");
     }
 

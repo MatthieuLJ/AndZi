@@ -19,12 +19,12 @@ public class AndZiApplication extends Application {
         SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
         String db_name = prefs.getString("LocalDB", "");
         if ((!db_name.equals("")) && (checkFileExists(db_name))) {
-            myDB = new HanziDB(getApplicationContext(), db_name);
+            myDB = new HanziDB(getApplicationContext(), this, db_name);
             Log.d(TAG, "opened local DB "+db_name);
         }
         else
         {
-            myDB = new HanziDB(getApplicationContext());
+            myDB = new HanziDB(getApplicationContext(), this);
             SharedPreferences.Editor edit = prefs.edit();
             edit.putString("LocalDB", myDB.getDatabasePath());
             edit.commit();
@@ -33,12 +33,8 @@ public class AndZiApplication extends Application {
 
         db_name = prefs.getString("ReferenceDB", "");
         if ((!db_name.equals("")) && (checkFileExists(db_name))) {
-            refDB = new HanziDB(getApplicationContext(),db_name);
-            Log.d(TAG, "opened reference DB "+db_name);
-        }
-        else {
-            // try to find a reference DB in the assets
-            installAssetsDB();
+            refDB = new HanziDB(getApplicationContext(), this,db_name);
+            Log.d(TAG, "opened reference DB " + db_name);
         }
     }
 
@@ -46,32 +42,17 @@ public class AndZiApplication extends Application {
         return new File(path).exists();
     }
 
-    public void installAssetsDB() {
-        InputStream input;
-        /*
-        try {
-            input = getApplicationContext().getAssets().open(REF_DB_NAME);
+    public void installRefDB(String path) {
+        String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
+        copyDataBase(path, dest);
 
-        }
-        catch (IOException e) {
-            Log.d(TAG, "no ref DB in assets");
-            return;
-        }
-        */
-        /*
-        input = getResources().openRawResource(R.raw.cedict_db);
-        */
-        try {
-            input = new FileInputStream("/sdcard/cedict_db");
-        }
-        catch (IOException e) {
-            Log.d(TAG, "no ref DB in assets");
-            return;
-        }
-        if (input != null)
-            copyDataBase(input, getApplicationContext().getDatabasePath(REF_DB_NAME).getPath());
-        else
-            Log.d(TAG, "could not open resource");
+        refDB = new HanziDB(getApplicationContext(), this, dest);
+        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("ReferenceDB", dest);
+        edit.commit();
+
+        Log.d(TAG, "Done installing reference db " + dest);
     }
 
     public void eraseRefDB() {
@@ -87,7 +68,20 @@ public class AndZiApplication extends Application {
         }
     }
 
-    private void copyDataBase(InputStream input, String destination) {
+    public void copyDataBase(String source, String destination) {
+        InputStream input;
+        try {
+            input = new FileInputStream(source);
+        }
+        catch (IOException e) {
+            Log.d(TAG, "no ref DB in assets");
+            return;
+        }
+        if (input == null) {
+            Log.d(TAG, "could not open file at "+source);
+            return;
+        }
+
         OutputStream output=null;
         try {
             output = new FileOutputStream(destination);
@@ -108,13 +102,6 @@ public class AndZiApplication extends Application {
             Log.d(TAG, "Failed to copy database");
             return;
         }
-        refDB = new HanziDB(getApplicationContext(), destination);
 
-        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putString("ReferenceDB", destination);
-        edit.commit();
-
-        Log.d(TAG, "Done installing reference db " + destination);
     }
 }

@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -18,15 +19,18 @@ public class HanziDB extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
     protected Context appContext;
+    protected AndZiApplication app;
 
-    public HanziDB(Context context) {
+    public HanziDB(Context context, AndZiApplication application) {
         super(context, DEFAULT_DATABASE_NAME, null, DATABASE_VERSION);
         appContext = context;
+        app = application;
     }
 
-    public HanziDB(Context context, String db_name) {
+    public HanziDB(Context context, AndZiApplication application, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);
         appContext = context;
+        app = application;
     }
 
     public String getDatabasePath() {
@@ -857,33 +861,14 @@ public class HanziDB extends SQLiteOpenHelper {
     // Merge Database
     ////////////////////////////////////////
     public void mergeDB(String path) {
-        HanziDB new_db = new HanziDB(appContext, "tmp_db");
-        new_db.close();
-        InputStream myInput;
+        String new_db_name = "tmp_db";
 
-        try {
-            myInput = new FileInputStream(path);
-            OutputStream myOutput = new FileOutputStream(new_db.getWritableDatabase().getPath());
+        app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath());
 
-            // Transfer bytes from the input file to the output file
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = myInput.read(buffer))>0)
-            {
-                myOutput.write(buffer, 0, length);
-            }
-
-            // Close and clear the streams
-            myOutput.flush();
-            myOutput.close();
-            myInput.close();
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-        
+        HanziDB new_db = new HanziDB(appContext, app, new_db_name);
         mergeDB(new_db);
 
-        appContext.deleteDatabase("tmp_db");
+        appContext.deleteDatabase(new_db_name);
     }
     public void mergeDB(HanziDB other_db) {
         ArrayList<String> lessons = other_db.getLessons();
@@ -912,7 +897,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void exportDB(String path, ArrayList<String> lessons) {
-        HanziDB new_db = new HanziDB(appContext, "tmp_db");
+        HanziDB new_db = new HanziDB(appContext, app, "tmp_db");
 
         for (String lesson : lessons) {
             Log.d(TAG, "exporting lesson "+lesson);
@@ -929,29 +914,9 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         }
         new_db.close();
+
+        app.copyDataBase(new_db.getWritableDatabase().getPath(), path);
         
-        InputStream myInput;
-
-        try {
-            myInput = new FileInputStream(new_db.getWritableDatabase().getPath());
-            OutputStream myOutput = new FileOutputStream(path);
-
-            // Transfer bytes from the input file to the output file
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = myInput.read(buffer))>0)
-            {
-                myOutput.write(buffer, 0, length);
-            }
-
-            // Close and clear the streams
-            myOutput.flush();
-            myOutput.close();
-            myInput.close();
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-
         appContext.deleteDatabase("tmp_db");
     }
 
