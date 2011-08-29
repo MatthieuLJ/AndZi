@@ -368,7 +368,7 @@ public class HanziDB extends SQLiteOpenHelper {
     protected ArrayList<Integer> getWordIdWithPinyin(String hanzi) {
         SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
-        Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
+        Cursor cur = db.rawQuery("SELECT DISTINCT cword.cword_id AS cword_id " +
                 "FROM cword " +
                 "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
                 "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -389,7 +389,7 @@ public class HanziDB extends SQLiteOpenHelper {
     protected ArrayList<Integer> getWordIdWithPinyin(String hanzi, String pinyin) {
         SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<Integer> res = new ArrayList<Integer>();
-        Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
+        Cursor cur = db.rawQuery("SELECT DISTINCT cword.cword_id AS cword_id " +
                 "FROM cword " +
                 "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
                 "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1213,10 +1213,18 @@ public class HanziDB extends SQLiteOpenHelper {
     public void enableFilter(boolean enable) {
         lesson_filter_enabled = enable;
     }
+    
+    public boolean isFilterEnabled() {
+        return lesson_filter_enabled;
+    }
 
     public void setLessonsToFilter(ArrayList<String> lessons) {
         lesson_filter = lessons;
         where_filter = buildWhereQuery(lessons);
+    }
+
+    public ArrayList<String> getLessonsToFilter() {
+        return (ArrayList<String>) lesson_filter.clone();
     }
 
     ////////////////////////////////////////
@@ -1252,23 +1260,23 @@ public class HanziDB extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        Cursor cur = db.rawQuery("SELECT cword.chinese AS chinese,cword.pinyin AS pinyin " +
-                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                "JOIN (SELECT * FROM eword WHERE translation=?) AS eword ON eword.eng_id=lesson_word.eng_id " +
-                "JOIN cword ON cword.cword_id=eword.cword_id "
-                , new String[] {english});
-        if (cur.moveToFirst()) {
-            do{
-                res.add(new Vocabulary
-                        (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")),english));
-            }while(cur.moveToNext());
-        }
-        else {
-            //Log.d(TAG, "no record found for word "+english);
-        }
+            Cursor cur = db.rawQuery("SELECT cword.chinese AS chinese,cword.pinyin AS pinyin " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN (SELECT * FROM eword WHERE translation=?) AS eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON cword.cword_id=eword.cword_id "
+                    , new String[] {english});
+            if (cur.moveToFirst()) {
+                do{
+                    res.add(new Vocabulary
+                            (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")),english));
+                }while(cur.moveToNext());
+            }
+            else {
+                //Log.d(TAG, "no record found for word "+english);
+            }
 
-        cur.close();
-        return res;
+            cur.close();
+            return res;
         }
         else
             return getCTranslations(english);
@@ -1468,6 +1476,7 @@ public class HanziDB extends SQLiteOpenHelper {
             cv.put("mod_time", System.currentTimeMillis());
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
+        cur.close();
     }
 
     public void betterBox(String hanzi) {
@@ -1488,6 +1497,7 @@ public class HanziDB extends SQLiteOpenHelper {
         else {
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
+        cur.close();
     }
 
     public void restartStudy(String hanzi) {
@@ -1504,6 +1514,7 @@ public class HanziDB extends SQLiteOpenHelper {
         else {
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
+        cur.close();
     }
 
     ////////////////////////////////////////
