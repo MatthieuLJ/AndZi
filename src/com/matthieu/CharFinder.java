@@ -32,7 +32,7 @@ public class CharFinder extends Activity{
     }
 
     private void setup_test() {
-        hanzi = myDB.getNextToStudy();
+        hanzi = myDB.getNextFilteredToStudy();
 
         if (hanzi == null) {
             Toast.makeText(this, "Sorry, nothing to test you on", 5).show();

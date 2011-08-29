@@ -32,7 +32,7 @@ public class ToneTester extends Activity{
     }
 
     private void set_next_study() {
-        hanzi = myDB.getNextToStudy();
+        hanzi = myDB.getNextFilteredToStudy();
 
         if (hanzi == null) {
             Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
