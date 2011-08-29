@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class AndZiApplication extends Application {
     public HanziDB myDB=null;
@@ -36,6 +37,30 @@ public class AndZiApplication extends Application {
             refDB = new HanziDB(getApplicationContext(), this,db_name);
             Log.d(TAG, "opened reference DB " + db_name);
         }
+
+        boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
+        ArrayList<String> lesson=new ArrayList<String>();
+        try {
+            lesson = (ArrayList<String>) ObjectSerializer.deserialize(prefs.getString("Lesson_Filter", (String) ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+            filter_on = false;
+        }
+        myDB.enableFilter(filter_on);
+        myDB.setLessonsToFilter(lesson);
+    }
+
+    public void save_database_filter(boolean on, ArrayList<String> list) {
+        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putBoolean("Lesson_Filter_On", on);
+        try {
+            edit.putString("Lesson_Filter", (String) ObjectSerializer.serialize(list));
+        } catch (IOException e) {
+            edit.putBoolean("Lesson_Filter_On", false);
+            e.printStackTrace();
+        }
+        edit.commit();
     }
 
     public boolean checkFileExists(String path) {

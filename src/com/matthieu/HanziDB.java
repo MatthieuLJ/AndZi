@@ -1212,6 +1212,8 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public void enableFilter(boolean enable) {
         lesson_filter_enabled = enable;
+        
+        app.save_database_filter(lesson_filter_enabled, lesson_filter);
     }
     
     public boolean isFilterEnabled() {
@@ -1221,6 +1223,8 @@ public class HanziDB extends SQLiteOpenHelper {
     public void setLessonsToFilter(ArrayList<String> lessons) {
         lesson_filter = lessons;
         where_filter = buildWhereQuery(lessons);
+
+        app.save_database_filter(lesson_filter_enabled, lessons);
     }
 
     public ArrayList<String> getLessonsToFilter() {
