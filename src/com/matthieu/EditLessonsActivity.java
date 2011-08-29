@@ -7,9 +7,7 @@ import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.TouchListView;
 
@@ -21,6 +19,7 @@ public class EditLessonsActivity extends Activity {
 
     protected ArrayList<Lesson> current_lessons;
     protected String edited_lesson;
+    protected boolean filter_on;
 
     private static final String TAG = "EditLessonsActivity";
 
@@ -32,6 +31,7 @@ public class EditLessonsActivity extends Activity {
 
         current_lessons = new ArrayList<Lesson>();
         edited_lesson="";
+        filter_on = myDB.isFilterEnabled();
 
         setContentView(R.layout.edit_lessons);
         TouchListView list = (TouchListView) findViewById(R.id.lesson_list);
@@ -72,12 +72,13 @@ public class EditLessonsActivity extends Activity {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            ArrayList<String> filtered_lessons = myDB.getLessonsToFilter();
             tmp_lessons = new ArrayList<Lesson>();
             ArrayList<String> existing_lessons = myDB.getLessons();
 
             for (String lesson : existing_lessons) {
                 int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new String[] {lesson}))).size();
-                tmp_lessons.add(new Lesson(lesson, Lesson.EXISTING, num));
+                tmp_lessons.add(new Lesson(lesson, Lesson.EXISTING, num, filtered_lessons.contains(lesson) ));
             }
 
             return null;
@@ -90,6 +91,7 @@ public class EditLessonsActivity extends Activity {
         public boolean deleted;
         public int num_items;
         public int origin; // 1 is pre-existing, 2 is new
+        public boolean enabled;
 
         public static final int EXISTING=1;
         public static final int NEW=2;
@@ -103,11 +105,18 @@ public class EditLessonsActivity extends Activity {
         }
 
         public Lesson(String label, int from, int num) {
-            current_label = label;
-            previous_label="";
-            deleted = false;
+            this(label, from);
             num_items = num;
-            origin = from;
+        }
+
+        public Lesson(String label, int from, boolean en) {
+            this(label, from);
+            enabled = en;
+        }
+
+        public Lesson(String label, int from, int num, boolean en) {
+            this(label, from, num);
+            enabled = en;
         }
     }
 
@@ -162,32 +171,23 @@ public class EditLessonsActivity extends Activity {
             }
             label.setTag(R.id.lesson_item, le);
 
-            return row;
-        }
-
-        private class StrikeGesture implements GestureOverlayView.OnGesturePerformedListener {
-
-            public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
-                Log.d(TAG, "Strike !");
-                Lesson le = (Lesson) gestureOverlayView.getTag(R.id.lesson_item);
-                if (le.origin == Lesson.NEW) {
-                    current_lessons.remove(le);
-                }
-                else if (!le.deleted) {
-                    le.deleted=true;
-                }
-                else {
-                    return;
-                }
-                edited_lesson = "";
-                ((TextView) findViewById(R.id.new_lesson_label)).setText("New lesson:");
-                ((EditText) findViewById(R.id.edit_new_lesson)).setText("");
-                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                Button delete_button = (Button) findViewById(R.id.edit_lesson_delete);
-                delete_button.setText("Delete");
-                delete_button.setEnabled(false);
+            CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_filter_on);
+            cb.setTag(R.id.lesson_item, le);
+            cb.setChecked(le.enabled);
+            if (filter_on) {
+                cb.setVisibility(View.VISIBLE);
             }
+            else {
+                cb.setVisibility(View.GONE);
+            }
+            cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    Lesson lesson = (Lesson) compoundButton.getTag(R.id.lesson_item);
+                    lesson.enabled = b;
+                }
+            });
+
+            return row;
         }
 
         @Override
@@ -239,7 +239,7 @@ public class EditLessonsActivity extends Activity {
         }
 
         if (edited_lesson.equals("")) {
-            current_lessons.add(new Lesson(new_lesson, Lesson.NEW));
+            current_lessons.add(new Lesson(new_lesson, Lesson.NEW, true));
         } else {
             for (i=current_lessons.size()-1; i>=0; i--) {
                 if (current_lessons.get(i).current_label.equals(edited_lesson)) {
@@ -292,6 +292,7 @@ public class EditLessonsActivity extends Activity {
 
     public void handle_ok(View v) {
         ArrayList<String> lesson_order=new ArrayList<String>();
+        ArrayList<String> lesson_filter=new ArrayList<String>();
 
         for(Lesson le : current_lessons) {
             if (le.origin == Lesson.NEW) {
@@ -300,7 +301,7 @@ public class EditLessonsActivity extends Activity {
                 }
                 myDB.addLesson(le.current_label);
             }
-            if (!le.previous_label.equals("")) {
+            else if (!le.previous_label.equals("")) {
                 if (le.deleted) {
                     myDB.delLesson(le.previous_label);
                 }
@@ -316,8 +317,49 @@ public class EditLessonsActivity extends Activity {
             if (!le.deleted) {
                 lesson_order.add(le.current_label);
             }
+            if (le.enabled) {
+                Log.d(TAG, "Adding lesson "+le.current_label+" into filter");
+                lesson_filter.add(le.current_label);
+            }
         }
         myDB.sortLessons(lesson_order);
+        myDB.setLessonsToFilter(lesson_filter);
+        myDB.enableFilter(filter_on);
         finish();
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.edit_lesson_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean res = super.onPrepareOptionsMenu(menu);
+        MenuItem enable = menu.findItem(R.id.lesson_enable_filter);
+        if (filter_on) {
+            enable.setTitle("Disable Lesson Filter");
+        }
+        else {
+            enable.setTitle("Enable Lesson Filter");
+        }
+        return res;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.lesson_enable_filter:
+                filter_on = !filter_on;
+                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
 }
