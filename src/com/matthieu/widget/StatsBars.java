@@ -38,7 +38,7 @@ public class StatsBars extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         //Log.d(TAG, "onDraw " + canvas.getWidth() + "," + canvas.getHeight());
-        //Log.d(TAG, ""+good+","+expired);
+        //Log.d(TAG, "onDraw StatsBars: "+good+","+expired);
 
         if ((good == 0) && (expired == 0)) { // not ready yet to draw anything
             return;
@@ -67,9 +67,9 @@ public class StatsBars extends View {
 
         // split...
         //Log.d(TAG,"green :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*good/100)+ "," + (getPaddingTop()+total_height/3));
-        green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*good/100, getPaddingTop()+total_height/3);
+        green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*good/100, getPaddingTop()+(3*total_height)/8);
         //Log.d(TAG,"red :"+getPaddingLeft()+ "," +(getPaddingTop()+(total_height*2)/3)+ "," +(getPaddingLeft()+(total_width)*expired/100)+ "," + (getPaddingTop()+total_height/3));
-        red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(total_height*2)/3,getPaddingLeft()+(total_width)*expired/100, getPaddingTop()+total_height/3);
+        red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(5*total_height)/8,getPaddingLeft()+(total_width)*expired/100, getPaddingTop()+total_height);
         green_rect.draw(canvas);
         red_rect.draw(canvas);
     }
