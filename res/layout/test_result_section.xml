@@ -6,7 +6,7 @@
         android:layout_height="fill_parent"
         android:background="#dddddd">
     <TextView
-            android:id="@+id/tone_test_result_pinyin"
+            android:id="@+id/test_result_pinyin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|top"
@@ -14,18 +14,18 @@
             android:textColor="#000000"
             />
     <TextView
-            android:id="@+id/tone_test_result_translations"
+            android:id="@+id/test_result_translations"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tone_test_result_pinyin"
+            android:layout_below="@id/test_result_pinyin"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="#000000"
             />
     <View
-            android:id="@+id/tone_test_result_separator"
+            android:id="@+id/test_result_separator"
             android:layout_width="fill_parent"
             android:layout_height="@dimen/separation_line_thickness"
             android:layout_margin="@dimen/separation_line_margin"
-            android:layout_below="@id/tone_test_result_translations"
+            android:layout_below="@id/test_result_translations"
             android:background="@color/separation_line_color" />
 </RelativeLayout>

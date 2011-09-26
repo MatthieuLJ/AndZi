@@ -1,13 +1,11 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +26,13 @@ public class ToneTester extends Activity{
         myDB = ((AndZiApplication) getApplication()).myDB;
         tones=new ArrayList<Integer>();
 
+        set_next_study();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
         set_next_study();
     }
 
@@ -110,43 +115,18 @@ public class ToneTester extends Activity{
     }
 
     private void show_solution() {
-        setContentView(R.layout.tone_tester_result);
-        LinearLayout main_layout = (LinearLayout) findViewById(R.id.tone_tester_results);
+        ArrayList<String> pinyins = new ArrayList<String>();
+
         for (int tone : tones) {
-            add_one_tone(main_layout, radical+tone);
+            pinyins.add(radical + tone);
         }
-        TextView tv_hanzi = (TextView) findViewById(R.id.tone_test_chinese);
-
-        tv_hanzi.setText(hanzi);
-
+        
+        Intent i = new Intent(this, TestResultActivity.class);
+		i.putExtra("Hanzi", hanzi);
+		i.putExtra("Pinyins", pinyins);
+        startActivity(i);
     }
 
-    private void add_one_tone(LinearLayout linear, String pin) {
-        LayoutInflater inflater = getLayoutInflater();
-        View section = inflater.inflate(R.layout.tone_tester_result_section, linear, false);
-
-        TextView tv_pinyin = (TextView) section.findViewById(R.id.tone_test_result_pinyin);
-        tv_pinyin.setText(PinyinParser.convert_to_pretty_version(pin));
-
-        TextView tv_translations = (TextView) section.findViewById(R.id.tone_test_result_translations);
-        ArrayList<Vocabulary> trans = myDB.getWordsWithPinyin(hanzi, pin);
-        String str_trans = new String();
-        for (int i=0; i<trans.size(); i++) {
-            Vocabulary voc = trans.get(i);
-            str_trans += voc.chinese + "(" + PinyinParser.convert_to_pretty_version(voc.pinyin) + ") ";
-            for (int j=0; j<voc.english.size(); j++) {
-                String tr=voc.english.get(j);
-                str_trans += tr;
-                if (j<voc.english.size()-1)
-                    str_trans += ", ";
-            }
-            if (i<trans.size()-1)
-                str_trans += "\n";
-        }
-        tv_translations.setText(str_trans);
-
-        linear.addView(section, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-    }
 
     public void handle_cancel(View v) {
         myDB.restartStudy(hanzi);
@@ -156,9 +136,5 @@ public class ToneTester extends Activity{
     public void handle_ok(View v) {
         check_guesses();
         show_solution();
-    }
-
-    public void handle_next(View v) {
-        set_next_study();
     }
 }
