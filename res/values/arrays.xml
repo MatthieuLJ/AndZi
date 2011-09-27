@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="result_preference">
+        <item>Always</item>
+        <item>Only when wrong</item>
+        <item>Never</item>
+    </string-array>
+
+    <string-array name="result_preference_values">
+        <item>always</item>
+        <item>sometimes</item>
+        <item>never</item>
+    </string-array>
+</resources>

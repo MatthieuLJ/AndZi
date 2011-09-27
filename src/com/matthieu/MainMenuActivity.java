@@ -39,4 +39,9 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
+    public void handle_prefs(View v) {
+        Intent intent = new Intent(this, AndZiPreferences.class);
+        startActivity(intent);
+    }
+
 }

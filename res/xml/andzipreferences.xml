@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+            android:title="Test Results">
+        <ListPreference
+                android:title="Show correct answer"
+                android:summary="Customize when you want to see the correct answer when doing a test"
+                android:key="show_result"
+                android:defaultValue="1"
+                android:entries="@array/result_preference"
+                android:entryValues="@array/result_preference_values"
+                />
+    </PreferenceCategory>
+
+</PreferenceScreen>
