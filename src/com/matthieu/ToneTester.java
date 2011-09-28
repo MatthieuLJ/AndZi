@@ -66,12 +66,12 @@ public class ToneTester extends Activity{
                 int j = (int) (pinyins.size()*Math.random());
                 pinyin = new Pinyin(pinyins.remove(j));
                 if (pinyin.get_tone() == 5) {
-                    Log.v(TAG,"Reject study of pinyin "+pinyin.get_pretty());
+                    //Log.v(TAG,"Reject study of pinyin "+pinyin.get_pretty());
                     pinyin=null;
                 }
             }
             if (pinyin == null) {
-                Log.v(TAG,"Reject study of pinyin "+hanzi);
+                //Log.v(TAG,"Reject study of character "+hanzi);
                 hanzi=null;
             }
         }
