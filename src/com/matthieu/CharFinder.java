@@ -2,7 +2,10 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.AndroidCharacter;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +18,7 @@ public class CharFinder extends Activity{
     protected HanziDB myDB=null;
     private String hanzi;
     private ArrayList<Vocabulary> words;
+    int show_result;
 
     private final String TAG="CharFinder";
 
@@ -22,12 +26,30 @@ public class CharFinder extends Activity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).myDB;
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if (sp.getString("show_result", "always").equals("always")) {
+            show_result = 1;
+        }
+        else if (sp.getString("show_result", "always").equals("sometimes")) {
+            show_result = 2;
+        }
+        else {
+            show_result = 3;
+        }
 
         hanzi=new String();
         words=new ArrayList<Vocabulary>();
 
         setContentView(R.layout.char_finder);
        
+        setup_test();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
         setup_test();
     }
 
@@ -82,27 +104,43 @@ public class CharFinder extends Activity{
         chinese.setText("");
     }
 
-    private void check_guess() {
-        Toast toast;
+    private int check_guess() {
+        int res=0;
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         String guess = chinese.getText().toString();
         if (guess.equals(hanzi)) {
             myDB.betterBox(hanzi);
-            toast = Toast.makeText(this, "Well done !", 2);
+            res=1;
         }
         else {
             myDB.restartStudy(hanzi);
-            toast = Toast.makeText(this, "Sorry, the correct answer was " + hanzi, 2);
+            res=0;
         }
-        toast.show();
+        return res;
+    }
+
+    private void show_solution() {
+        Intent i = new Intent(this, TestResultActivity.class);
+		i.putExtra("Hanzi", hanzi);
+        startActivity(i);
     }
 
     public void handle_ok(View v) {
-        check_guess();
-        setup_test();
-    }
+        Toast toast;
+        int res = check_guess();
 
-    public void handle_give_up(View v) {
-
+        if ((show_result==1) || ((show_result == 2) && (res == 0))) {
+            show_solution();
+        }
+        else {
+            if (res == 0) {
+                toast = Toast.makeText(this, "Sorry, the correct answer was " + hanzi, 2);
+            }
+            else {
+                toast = Toast.makeText(this, "Well done !", 2);
+            }
+            toast.show();
+            setup_test();
+        }
     }
 }
