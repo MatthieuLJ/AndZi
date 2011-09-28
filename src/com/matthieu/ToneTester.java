@@ -52,19 +52,39 @@ public class ToneTester extends Activity{
     }
 
     private void set_next_study() {
-        hanzi = myDB.getNextFilteredToStudy();
+        ArrayList<String> all = myDB.getAllFilteredToStudy();
+        ArrayList<String> pinyins = new ArrayList<String>();
+        hanzi = null;
+
+        while((hanzi==null) && (all.size()>0)) {
+            int i = (int) (all.size()*Math.random());
+            hanzi=all.remove(i);
+            pinyins = myDB.getPinyinForChar(hanzi);
+
+            pinyin = null;
+            while ((pinyin == null) && (pinyins.size() > 0)) {
+                int j = (int) (pinyins.size()*Math.random());
+                pinyin = new Pinyin(pinyins.remove(j));
+                if (pinyin.get_tone() == 5) {
+                    Log.v(TAG,"Reject study of pinyin "+pinyin.get_pretty());
+                    pinyin=null;
+                }
+            }
+            if (pinyin == null) {
+                Log.v(TAG,"Reject study of pinyin "+hanzi);
+                hanzi=null;
+            }
+        }
 
         if (hanzi == null) {
             Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
             this.finish();
             return;
         }
-
+        
+        pinyins = myDB.getPinyinForChar(hanzi);
         setContentView(R.layout.tone_tester);
 
-        ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
-
-        pinyin = new Pinyin(pinyins.get((int)(Math.random()*pinyins.size())));
         radical = pinyin.get_radical();
         tones.clear();
 
@@ -74,7 +94,6 @@ public class ToneTester extends Activity{
                 tones.add(tmp_p.get_tone());
             }
         }
-
 
         TextView tv_hanzi = (TextView) findViewById(R.id.tone_test_chinese);
         TextView tv_pinyin = (TextView) findViewById(R.id.tone_test_pinyin);

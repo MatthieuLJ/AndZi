@@ -1544,6 +1544,16 @@ public class HanziDB extends SQLiteOpenHelper {
         return choices.get(i);
     }
 
+    protected ArrayList<String> getAllToStudy() {
+        ArrayList<String> res=new ArrayList<String>();
+
+        for(int b=0; b<=MAX_BOX; b++) {
+            res.addAll(getAllToStudy(b));
+        }
+        return res;
+
+    }
+
     protected ArrayList<String> getAllToStudy(int box) {
         SQLiteDatabase db = this.getWritableDatabase();
         ArrayList<String> res = new ArrayList<String>();
@@ -1599,6 +1609,20 @@ public class HanziDB extends SQLiteOpenHelper {
         int i = (int) (choices.size()*Math.random());
 
         return choices.get(i);
+    }
+
+    public ArrayList<String> getAllFilteredToStudy() {
+        ArrayList<String> res=new ArrayList<String>();
+
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+           for(int b=0; b<=MAX_BOX; b++) {
+               res.addAll(getAllFilteredToStudy(b));
+           }
+            return res;
+        }
+        else {
+            return getAllToStudy();
+        }
     }
 
     public ArrayList<String> getAllFilteredToStudy(int box) {

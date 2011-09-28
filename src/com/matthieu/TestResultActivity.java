@@ -33,7 +33,7 @@ public class TestResultActivity extends Activity {
         Log.d(TAG, "Character is "+hanzi);
         
         pinyins = getIntent().getStringArrayListExtra("Pinyins");
-        if (pinyins == null) {
+        if (pinyins.size() == 0) {
             pinyins = myDB.getPinyinForChar(hanzi);
         }
 
