@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.AndroidCharacter;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +16,7 @@ import android.widget.*;
 
 import java.util.ArrayList;
 
-public class CharFinder extends Activity{
+public class CharFinder extends Activity implements TextWatcher {
     protected HanziDB myDB=null;
     private String hanzi;
     private ArrayList<Vocabulary> words;
@@ -42,6 +44,9 @@ public class CharFinder extends Activity{
         words=new ArrayList<Vocabulary>();
 
         setContentView(R.layout.char_finder);
+
+        EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
+        guess.addTextChangedListener(this);
        
         setup_test();
     }
@@ -142,5 +147,23 @@ public class CharFinder extends Activity{
             toast.show();
             setup_test();
         }
+    }
+
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    }
+
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    }
+
+    public void afterTextChanged(Editable editable) {
+        Log.d(TAG, "after it changed:" +editable.toString());
+        
+        String current_guess = editable.toString();
+        if (current_guess.codePointCount(0, current_guess.length()) == 1) {
+            if (current_guess.codePointAt(0) == hanzi.codePointAt(0)) {
+                handle_ok(null);
+            }
+        }
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 }
