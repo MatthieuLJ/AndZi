@@ -46,6 +46,18 @@
             android:layout_height="fill_parent"
             android:layout_weight="1"
             >
+
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Guess Chinese Word"
+                android:onClick="handle_guesschinese" />
+    </TableRow>
+    <TableRow
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            >
         <Button
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"

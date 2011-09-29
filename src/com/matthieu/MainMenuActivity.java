@@ -44,4 +44,10 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
+    public void handle_guesschinese(View v) {
+        Intent intent = new Intent(this, GuessChineseWord.class);
+        startActivity(intent);
+    }
+
+
 }
