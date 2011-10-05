@@ -163,6 +163,5 @@ public class CharFinder extends Activity implements TextWatcher {
                 handle_ok(null);
             }
         }
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

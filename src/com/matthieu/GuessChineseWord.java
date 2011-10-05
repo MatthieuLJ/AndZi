@@ -73,7 +73,12 @@ public class GuessChineseWord extends Activity {
         solution = voc.get((int) (voc.size()*Math.random()));
 
         translations = solution.english;
-        more_translations = refDB.getTranslations(candidate, solution.pinyin).get(0).english;
+        if (refDB != null) {
+            more_translations = refDB.getTranslations(candidate, solution.pinyin).get(0).english;
+        }
+        else {
+            more_translations = new ArrayList<String>();
+        }
         //    }
         //}
         ArrayList<String> bare_translations = new ArrayList<String>();
@@ -150,6 +155,9 @@ public class GuessChineseWord extends Activity {
         else {
             // check if the word guessed is in the database and relates somewhat...
             ArrayList<Vocabulary> guess_translations = myDB.getTranslations(guess);
+            if (refDB != null) {
+                guess_translations.addAll(refDB.getTranslations(guess));
+            }
             for(Vocabulary voc : guess_translations) {
                 for (String en : voc.english) {
                     if (en.equals(guess) ||
@@ -199,6 +207,10 @@ public class GuessChineseWord extends Activity {
     public void handle_ok(View v) {
         Toast toast;
         int res = check_guess();
+
+        if (res == -1)
+            return;
+        
         if ((show_result==1) || ((show_result == 2) && (res == 0))) {
             show_solution();
         }
