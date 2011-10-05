@@ -161,6 +161,7 @@ public class ToneTester extends Activity{
         Intent i = new Intent(this, TestResultActivity.class);
 		i.putExtra("Hanzi", hanzi);
 		i.putExtra("Pinyins", pinyins);
+        i.putExtra("Mode", 0);
         startActivity(i);
     }
 

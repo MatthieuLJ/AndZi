@@ -1,12 +1,10 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.AndroidCharacter;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -48,17 +46,17 @@ public class CharFinder extends Activity implements TextWatcher {
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.addTextChangedListener(this);
        
-        setup_test();
+        set_next_study();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        setup_test();
+        set_next_study();
     }
 
-    private void setup_test() {
+    private void set_next_study() {
         hanzi = myDB.getNextFilteredToStudy();
 
         if (hanzi == null) {
@@ -127,6 +125,7 @@ public class CharFinder extends Activity implements TextWatcher {
     private void show_solution() {
         Intent i = new Intent(this, TestResultActivity.class);
 		i.putExtra("Hanzi", hanzi);
+        i.putExtra("Mode", 0);
         startActivity(i);
     }
 
@@ -145,7 +144,7 @@ public class CharFinder extends Activity implements TextWatcher {
                 toast = Toast.makeText(this, "Well done !", 2);
             }
             toast.show();
-            setup_test();
+            set_next_study();
         }
     }
 
