@@ -111,14 +111,14 @@ public class AddVocabularyActivity extends Activity
 
         private void checkChineseChars() {
             String text = tview.getText().toString();
-            int count = text.codePointCount(0, text.length());
+            int len = text.length();
             int new_state;
-            if (count == 0) {
+            if (len == 0) {
                 new_state = 0;
             }
             else {
                 new_state=1;
-                for (int i=0; i<count; i++) {
+                for (int i=0; i<len;) {
                     int entry=text.codePointAt(i);
                     if (((entry < 0x4E00) || (entry > 0x9fff)) // main CJK
                             && ((entry < 0x2e00) || (entry > 0x31ff)) // additional punctuation
@@ -128,6 +128,7 @@ public class AddVocabularyActivity extends Activity
                         new_state=2;
                         break;
                     }
+                    i+=Character.charCount(entry);
                 }
             }
             Log.d(TAG, "context going to state "+new_state);
