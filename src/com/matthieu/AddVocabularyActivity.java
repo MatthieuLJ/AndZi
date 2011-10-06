@@ -479,7 +479,9 @@ public class AddVocabularyActivity extends Activity
         translations_displayed_from_ref.clear();
         ArrayList<String> bare_translations = new ArrayList<String>();
         for (VocabularyItem v : translations_in_db) {
-            bare_translations.add(HanziDB.bare_translation(v.translation));
+            String bare = HanziDB.bare_translation(v.translation);
+            if (!bare.equals(""))
+                bare_translations.add(bare);
         }
         for (VocabularyItem v : translations_from_ref) {
             if (!bare_translations.contains(HanziDB.bare_translation(v.translation)))
