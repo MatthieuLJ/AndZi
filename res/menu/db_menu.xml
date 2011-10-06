@@ -6,6 +6,8 @@
           android:title="Email database"/>
     <item android:id="@+id/stats_copy_db"
           android:title="Copy database"/>
+    <item android:id="@+id/reset_db"
+          android:title="Reset database" />
     <item android:id="@+id/clear_db"
           android:title="Clear database"/>
     <item android:id="@+id/import_db"

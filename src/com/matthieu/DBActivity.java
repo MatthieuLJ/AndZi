@@ -17,6 +17,7 @@ import com.matthieu.widget.StatsBars;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -130,6 +131,17 @@ public class DBActivity extends Activity {
         bar.invalidate();
     }
 
+private class updater extends TimerTask {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    update_content();
+                }
+            });
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -152,6 +164,8 @@ public class DBActivity extends Activity {
             case R.id.import_db:
                 import_database();
                 break;
+            case R.id.reset_db:
+                reset_database();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -169,17 +183,6 @@ public class DBActivity extends Activity {
         }
 
         new database_emailer().execute(export_db);
-    }
-
-    private class updater extends TimerTask {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    update_content();
-                }
-            });
-        }
     }
 
     private class database_emailer extends AsyncTask<File,Void,Void> {
@@ -262,6 +265,14 @@ public class DBActivity extends Activity {
         Intent intent = new Intent(this, com.matthieu.widget.file_dialog.FileDialog.class);
         intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
         startActivityForResult(intent, 0);
+    }
+
+    private void reset_database() {
+        ArrayList<String> hanzis = myDB.getAllChar();
+        for (String han : hanzis) {
+            myDB.restartStudy(han);
+        }
+        update_content();
     }
 
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
