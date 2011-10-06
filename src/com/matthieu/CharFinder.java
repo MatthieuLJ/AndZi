@@ -155,8 +155,6 @@ public class CharFinder extends Activity implements TextWatcher {
     }
 
     public void afterTextChanged(Editable editable) {
-        Log.d(TAG, "after it changed:" +editable.toString());
-        
         String current_guess = editable.toString();
         if (current_guess.codePointCount(0, current_guess.length()) == 1) {
             if (current_guess.codePointAt(0) == hanzi.codePointAt(0)) {
