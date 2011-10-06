@@ -17,9 +17,13 @@ import com.matthieu.widget.StatsBars;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class DBActivity extends Activity{
+public class DBActivity extends Activity {
     protected HanziDB myDB=null;
+    Timer timer;
+
 
     private final String TAG="Stats";
 
@@ -35,6 +39,10 @@ public class DBActivity extends Activity{
         if ((intent.getScheme() != null) && (intent.getScheme().equals("file"))) {
             Log.d(TAG, "Want to include database "+intent.getDataString());
         }
+
+        timer = new Timer();
+        long two_minutes_delay = 2*60*1000;
+        timer.schedule(new updater(), two_minutes_delay, two_minutes_delay);
     }
 
     private void update_content() {
@@ -99,22 +107,27 @@ public class DBActivity extends Activity{
 
         bar = (StatsBars) findViewById(R.id.stats_box1graph);
         bar.set_expired((num_in_box1*100)/max_to_display);
+        bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box2graph);
         bar.set_expired((num_expired_in_box2*100)/max_to_display);
         bar.set_good(((num_in_box2-num_expired_in_box2)*100)/max_to_display);
+        bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box3graph);
         bar.set_expired((num_expired_in_box3*100)/max_to_display);
         bar.set_good(((num_in_box3-num_expired_in_box3)*100)/max_to_display);
+        bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box4graph);
         bar.set_expired((num_expired_in_box4*100)/max_to_display);
         bar.set_good(((num_in_box4-num_expired_in_box4)*100)/max_to_display);
+        bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box5graph);
         bar.set_expired((num_expired_in_box5*100)/max_to_display);
         bar.set_good(((num_in_box5-num_expired_in_box5)*100)/max_to_display);
+        bar.invalidate();
     }
 
     @Override
@@ -156,6 +169,17 @@ public class DBActivity extends Activity{
         }
 
         new database_emailer().execute(export_db);
+    }
+
+    private class updater extends TimerTask {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    update_content();
+                }
+            });
+        }
     }
 
     private class database_emailer extends AsyncTask<File,Void,Void> {
