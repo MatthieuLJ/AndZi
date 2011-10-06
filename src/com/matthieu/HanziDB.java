@@ -1,13 +1,11 @@
 package com.matthieu;
 
-import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.*;
 import android.util.Log;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -534,6 +532,23 @@ public class HanziDB extends SQLiteOpenHelper {
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
             }while(cur.moveToNext());
         }
+        cur.close();
+        return res;
+    }
+
+    public ArrayList<String> getAllChar() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ArrayList<String> res = new ArrayList<String>();
+
+        Cursor cur = db.rawQuery("SELECT DISTINCT hanzi " +
+                "FROM char_pinyin;",null);
+
+        if (cur.moveToFirst()) {
+            do{
+                res.add(cur.getString(cur.getColumnIndex("hanzi")));
+            }while(cur.moveToNext());
+        }
+
         cur.close();
         return res;
     }
@@ -1373,8 +1388,14 @@ public class HanziDB extends SQLiteOpenHelper {
 
     private static final long two_hours = (long) 2 * 60 * 60 * 1000;
     private static final long two_days = (long) 2 * 24 * 60 * 60 * 1000;
-    private static final long two_weeks = (long) 2 * 7 * 24 * 60 * 60 * 1000;
-    private static final long two_months = (long) 2 * 30 * 24 * 60 * 60 * 1000;
+    private static final long one_week = (long) 1 * 7 * 24 * 60 * 60 * 1000;
+    private static final long one_month = (long) 1 * 30 * 24 * 60 * 60 * 1000;
+
+    // testing short delays
+    //private static final long two_hours = (long) 60 * 1000;
+    //private static final long two_days = (long) 2 * 60 * 1000;
+    //private static final long one_week = (long) 5 * 60 * 1000;
+    //private static final long one_month = (long) 10 * 60 * 1000;
 
     private static final int MAX_BOX=4;
 
@@ -1452,9 +1473,9 @@ public class HanziDB extends SQLiteOpenHelper {
             case 2:
                 return two_days;
             case 3:
-                return two_weeks;
+                return one_week;
             case 4:
-                return two_months;
+                return one_month;
             default:
                 return 0;
         }
