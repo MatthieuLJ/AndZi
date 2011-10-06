@@ -158,22 +158,25 @@ public class GuessChineseWord extends Activity {
             if (refDB != null) {
                 guess_translations.addAll(refDB.getTranslations(guess));
             }
-            for(Vocabulary voc : guess_translations) {
-                for (String en : voc.english) {
-                    if (en.equals(guess) ||
-                            HanziDB.bare_translation(en).equals(guess) ||
-                            en.equals(HanziDB.bare_translation(guess)) ||
-                            HanziDB.bare_translation(en).equals(HanziDB.bare_translation(guess))) {
-                        previous_guess.add(guess);
-                        TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
-                        previous.setText("");
-                        for (int i=0; i<previous_guess.size(); i++) {
-                            previous.setText(previous.getText() + previous_guess.get(i));
-                            if (i<previous_guess.size()-1)
-                                previous.setText(previous.getText() + ",\n");
+            for (String hint:solution.english) {
+                for(Vocabulary voc : guess_translations) {
+                    for (String en : voc.english) {
+                        if (en.equals(hint) ||
+                                HanziDB.bare_translation(en).equals(hint) ||
+                                en.equals(HanziDB.bare_translation(hint)) ||
+                                HanziDB.bare_translation(en).equals(HanziDB.bare_translation(hint))) {
+                            previous_guess.add(guess);
+                            TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
+                            previous.setText("Previous try:\n");
+                            for (int i=0; i<previous_guess.size(); i++) {
+                                previous.setText(previous.getText() + previous_guess.get(i));
+                                if (i<previous_guess.size()-1)
+                                    previous.setText(previous.getText() + ",\n");
+                            }
+                            edit_guess.setText("");
+                            previous.invalidate();
+                            return -1;
                         }
-                        previous.invalidate();
-                        return -1;
                     }
                 }
             }

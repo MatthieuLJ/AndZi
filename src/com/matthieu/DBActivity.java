@@ -94,6 +94,8 @@ public class DBActivity extends Activity{
             return;
         }
 
+        Log.d(TAG, "stats : "+num_in_box1+",("+num_expired_in_box2+","+num_in_box2+"),("+num_expired_in_box3+","+num_in_box3+"),("+
+                num_expired_in_box4+","+num_in_box4+"),("+num_expired_in_box5+","+num_in_box5+")");
 
         bar = (StatsBars) findViewById(R.id.stats_box1graph);
         bar.set_expired((num_in_box1*100)/max_to_display);
