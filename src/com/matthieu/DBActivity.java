@@ -15,8 +15,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.matthieu.widget.StatsBars;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -166,6 +167,13 @@ private class updater extends TimerTask {
                 break;
             case R.id.reset_db:
                 reset_database();
+                break;
+            case R.id.download_ref_db:
+                download_ref_database();
+                break;
+            case R.id.delete_ref_db:
+                delete_ref_database();
+                break;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -275,6 +283,102 @@ private class updater extends TimerTask {
         update_content();
     }
 
+    private void download_ref_database() {
+        final String params[]= {/*"http://db.tt/RdRHvoJa"*/ "http://172.16.21.2/cedict_db"};
+        downloader down = new downloader();
+        down.execute(params);
+    }
+
+    private class downloader extends AsyncTask<String,Integer,Void> {
+        ProgressDialog mProgressDialog;
+        String PATH, URL;
+        private final String TAG="downloader";
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            try {
+                PATH=File.createTempFile("ref", "db").getPath();
+            } catch (IOException e) {
+                e.printStackTrace();
+                //PATH=DBActivity.getApplicationContext().getFilesDir()+"/cedict_ref/";
+            }
+            URL=strings[0];
+
+            DownloadFromUrl(URL, PATH);
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressDialog = new ProgressDialog(DBActivity.this);
+            mProgressDialog.setMessage("Downloading reference database");
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMax(100);
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            mProgressDialog.setMessage("Installing...");
+            ((AndZiApplication) getApplication()).installRefDB(PATH);
+            Log.d(TAG, "installed");
+            mProgressDialog.dismiss();
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            mProgressDialog.setProgress(values[0]);
+        }
+
+        private void DownloadFromUrl(String download_URL, String fileName) {
+            int count;
+            try {
+                URL url = new URL(download_URL);
+                URLConnection conexion = url.openConnection();
+                conexion.connect();
+                int lenghtOfFile = conexion.getContentLength();
+                long startTime = System.currentTimeMillis();
+
+                Log.d(TAG, "download begining");
+                Log.d(TAG, "download url:" + url);
+                Log.d(TAG, "downloaded file name:" + fileName);
+                Log.d(TAG, "file size:" + lenghtOfFile);
+
+                // downlod the file
+                InputStream input = new BufferedInputStream(url.openStream());
+                OutputStream output = new FileOutputStream(fileName);
+
+                byte data[] = new byte[1024];
+
+                long total = 0;
+
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+                    // publishing the progress....
+                    publishProgress((int)(total*100/lenghtOfFile));
+                    output.write(data, 0, count);
+                }
+
+                output.flush();
+                output.close();
+                input.close();
+
+                Log.d(TAG, "download ready in"
+                                        + ((System.currentTimeMillis() - startTime) / 1000)
+                                        + " sec");
+            } catch (IOException e) {
+                Log.d(TAG, "Error: " + e);
+            }
+
+        }
+    }
+
+    private void delete_ref_database() {
+        ((AndZiApplication) getApplication()).eraseRefDB();
+    }
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         if (resultCode == Activity.RESULT_OK) {
 
