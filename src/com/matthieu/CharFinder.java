@@ -19,6 +19,7 @@ public class CharFinder extends Activity implements TextWatcher {
     private String hanzi;
     private ArrayList<Vocabulary> words;
     int show_result;
+    boolean first_try=true;
 
     private final String TAG="CharFinder";
 
@@ -105,6 +106,7 @@ public class CharFinder extends Activity implements TextWatcher {
 
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         chinese.setText("");
+        first_try=true;
     }
 
     private int check_guess() {
@@ -155,11 +157,14 @@ public class CharFinder extends Activity implements TextWatcher {
     }
 
     public void afterTextChanged(Editable editable) {
-        String current_guess = editable.toString();
-        if (current_guess.codePointCount(0, current_guess.length()) == 1) {
-            if (current_guess.codePointAt(0) == hanzi.codePointAt(0)) {
-                handle_ok(null);
+        if (first_try) {
+            String current_guess = editable.toString();
+            if (current_guess.codePointCount(0, current_guess.length()) == 1) {
+                if (current_guess.codePointAt(0) == hanzi.codePointAt(0)) {
+                    handle_ok(null);
+                }
             }
         }
+        first_try=false;
     }
 }
