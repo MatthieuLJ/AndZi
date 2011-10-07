@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.matthieu.widget.StatsBars;
@@ -293,6 +292,49 @@ private class updater extends TimerTask {
         startActivityForResult(intent, 0);
     }
 
+    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+
+            if (requestCode != 0) {
+                return;
+            }
+
+            String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
+
+            merger merge_task = new merger();
+            merge_task.execute(filePath);
+        } else if (resultCode == Activity.RESULT_CANCELED) {
+            return;
+        }
+    }
+
+    private class merger extends AsyncTask<String, Void, Void> {
+        ProgressDialog mProgressDialog;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressDialog = new ProgressDialog(DBActivity.this);
+            mProgressDialog.setMessage("Downloading reference database");
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMax(100);
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            myDB.mergeDB(strings[0], mProgressDialog);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mProgressDialog.dismiss();
+            update_content();
+        }
+    }
+
     private void reset_database() {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setMessage("Are you sure you want to restart the study for everything?");
@@ -410,20 +452,5 @@ private class updater extends TimerTask {
 
     private void delete_ref_database() {
         ((AndZiApplication) getApplication()).eraseRefDB();
-    }
-    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
-        if (resultCode == Activity.RESULT_OK) {
-
-            if (requestCode != 0) {
-                return;
-            }
-
-            String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
-            myDB.mergeDB(filePath);
-            update_content();
-
-        } else if (resultCode == Activity.RESULT_CANCELED) {
-            return;
-        }
     }
 }

@@ -1,9 +1,11 @@
 package com.matthieu;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.*;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -875,33 +877,50 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Merge Database
     ////////////////////////////////////////
-    public void mergeDB(String path) {
+    public void mergeDB(String path, ProgressDialog dialog) {
         String new_db_name = "tmp_db";
 
         app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath());
 
         HanziDB new_db = new HanziDB(appContext, app, new_db_name);
-        mergeDB(new_db);
+        mergeDB(new_db, dialog);
 
         appContext.deleteDatabase(new_db_name);
     }
-    public void mergeDB(HanziDB other_db) {
+    public void mergeDB(HanziDB other_db, ProgressDialog dialog) {
         ArrayList<String> lessons = other_db.getLessons();
+        int num_lessons = lessons.size();
         lessons.add("");
-        for (String lesson : lessons) {
+        for (int i=0; i<num_lessons; i++) {
+            String lesson = lessons.get(i);
             if (!(lesson.equals(""))) {
                 addLesson(lesson);
             }
             ArrayList<String> single_lesson = new ArrayList<String>();
             single_lesson.add(lesson);
             ArrayList<Vocabulary> vocabulary = other_db.getVocabularyInLessons(single_lesson);
-            for (Vocabulary v : vocabulary) {
+            int num_vocabulary = vocabulary.size();
+            if(dialog!=null) {
+                dialog.setProgress((100*i)/num_lessons);
+            }
+            for (int j=0; j<num_vocabulary; j++) {
+                Vocabulary v = vocabulary.get(j);
                 addVocabulary(v);
                 if (!(lesson.equals(""))) {
                     assignWordLesson(lesson, v);
+                    if ((dialog != null) && (num_lessons<20)) {
+                        dialog.setProgress((int) (100*(i+((float)j/num_vocabulary))/num_lessons));
+                    }
                 }
             }
         }
+    }
+    public void mergeDB(String path) {
+        mergeDB(path, null);
+    }
+
+    public void mergeDB(HanziDB other_db) {
+        mergeDB(other_db,null);
     }
 
     ////////////////////////////////////////
