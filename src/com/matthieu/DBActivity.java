@@ -1,7 +1,9 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -11,6 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.matthieu.widget.StatsBars;
@@ -265,8 +268,23 @@ private class updater extends TimerTask {
     }
 
     private void clear_database() {
-        myDB.clearDB();
-        update_content();
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setMessage("Are you sure you want to clear all your database?");
+        alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+                myDB.clearDB();
+                update_content();
+                update_content();
+                dialog.dismiss();
+            }
+        });
+        alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+                dialog.dismiss();
+            }
+        });
+        alert.create();
+        alert.show();
     }
 
     private void import_database() {
@@ -276,11 +294,25 @@ private class updater extends TimerTask {
     }
 
     private void reset_database() {
-        ArrayList<String> hanzis = myDB.getAllChar();
-        for (String han : hanzis) {
-            myDB.restartStudy(han);
-        }
-        update_content();
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setMessage("Are you sure you want to restart the study for everything?");
+        alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+                ArrayList<String> hanzis = myDB.getAllChar();
+                for (String han : hanzis) {
+                    myDB.restartStudy(han);
+                }
+                update_content();
+                dialog.dismiss();
+            }
+        });
+        alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+                dialog.dismiss();
+            }
+        });
+        alert.create();
+        alert.show();
     }
 
     private void download_ref_database() {
