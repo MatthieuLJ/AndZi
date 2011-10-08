@@ -3,6 +3,7 @@ package com.matthieu;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.gesture.*;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -13,13 +14,14 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class ToneTester extends Activity{
+public class ToneTester extends Activity implements GestureOverlayView.OnGesturePerformedListener {
     protected HanziDB myDB=null;
     private String hanzi;
     private Pinyin pinyin;
     private String radical;
     private ArrayList<Integer> tones;
     int show_result;
+    GestureLibrary gesturelib = null;
 
     private final String TAG="ToneTester";
 
@@ -40,6 +42,16 @@ public class ToneTester extends Activity{
         else {
             show_result = 3;
         }
+
+        setContentView(R.layout.tone_tester);
+
+        gesturelib = GestureLibraries.fromRawResource(this, R.raw.gestures);
+        if (!gesturelib.load()) {
+            Log.d(TAG, "error loading gestures");
+        }
+
+        GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.tone_tester_gestureview);
+        overlay.addOnGesturePerformedListener(this);
 
         set_next_study();
     }
@@ -83,8 +95,6 @@ public class ToneTester extends Activity{
         }
         
         pinyins = myDB.getPinyinForChar(hanzi);
-        setContentView(R.layout.tone_tester);
-
         radical = pinyin.get_radical();
         tones.clear();
 
@@ -110,8 +120,6 @@ public class ToneTester extends Activity{
         cb.setChecked(false);
         cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.tone_test_fifth_tone);
-        cb.setChecked(false);
 
 
         Log.d(TAG, "Expects tones : "+tones.toString());
@@ -136,9 +144,6 @@ public class ToneTester extends Activity{
         cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
         if (cb.isChecked() && !tones.contains(4)) { myDB.restartStudy(hanzi); return res; }
         if (tones.contains(4) && !cb.isChecked()) { myDB.restartStudy(hanzi); return res; }
-        cb = (CheckBox) findViewById(R.id.tone_test_fifth_tone);
-        if (cb.isChecked() && !tones.contains(5)) { myDB.restartStudy(hanzi); return res; }
-        // no need to check if 5th tone is missing...
 
         // if we got here, we're good... :)
         if (myDB.getBoxForChar(hanzi) == 0) {
@@ -165,6 +170,32 @@ public class ToneTester extends Activity{
         startActivity(i);
     }
 
+    public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
+        ArrayList<Prediction> predictions = gesturelib.recognize(gesture);
+        double max_score=0;
+        String gest = null;
+        CheckBox cb=null;
+
+        for (Prediction pred : predictions) {
+            Log.d(TAG, "gesture " + pred.name +" score "+pred.score);
+            if (pred.score > max_score) {
+                max_score = pred.score;
+                gest = pred.name;
+            }
+        }
+        if (max_score < 1.0) return;
+        if (gest.equals("first_tone")) {
+            cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
+        } else if (gest.equals("second_tone")) {
+            cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
+        } else if (gest.equals("third_tone")) {
+            cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
+        } else if (gest.equals("fourth_tone")) {
+            cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
+        }
+        if (cb != null)
+            cb.setChecked(true);
+    }
 
     public void handle_cancel(View v) {
         myDB.restartStudy(hanzi);
@@ -188,4 +219,6 @@ public class ToneTester extends Activity{
             set_next_study();
         }
     }
+
+
 }
