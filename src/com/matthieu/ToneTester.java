@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.gesture.*;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -21,7 +22,6 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
     private String radical;
     private ArrayList<Integer> tones;
     int show_result;
-    GestureLibrary gesturelib = null;
 
     private final String TAG="ToneTester";
 
@@ -44,12 +44,6 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
         }
 
         setContentView(R.layout.tone_tester);
-
-        gesturelib = GestureLibraries.fromRawResource(this, R.raw.gestures);
-        if (!gesturelib.load()) {
-            Log.d(TAG, "error loading gestures");
-        }
-        gesturelib.setOrientationStyle(GestureStore.ORIENTATION_SENSITIVE);
 
         GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.tone_tester_gestureview);
         overlay.addOnGesturePerformedListener(this);
@@ -172,26 +166,95 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
     }
 
     public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
-        ArrayList<Prediction> predictions = gesturelib.recognize(gesture);
+        int tone=0;
+
+        if (gesture.getStrokesCount() > 1)
+            return;
+
+        GestureStroke stroke = gesture.getStrokes().get(0);
+        ArrayList<Point> points = new ArrayList<Point>();
+
+        for (int i=0; i<stroke.points.length; i+=2) {
+            if ((i>0) && (stroke.points[i] < stroke.points[i-2])) {
+                return; // cannot go right to left
+            }
+
+            points.add(new Point((int)stroke.points[i], (int)stroke.points[i+1]));
+        }
+
+        double angle = Math.atan(((float)points.get(points.size()-1).y - points.get(0).y)
+                / ((float)points.get(points.size()-1).x - points.get(0).x))*180/Math.PI;
+
+        boolean straight=true;
+        for (int i=1; i<points.size(); i++) {
+            double new_angle = Math.atan(((float)points.get(i).y - points.get(i-1).y)
+                / ((float)points.get(i).x - points.get(i-1).x))*180/Math.PI;
+            if (Math.abs(new_angle - angle) > 30) {
+                straight=false;
+                break;
+            }
+        }
+        if (straight) {
+            if (Math.abs(angle) < 30)
+                tone = 1;
+            else if (Math.abs(angle) > 60)
+                return; // too steep
+            else if (angle >=30)
+                tone = 4;
+            else if (angle <= -30)
+                tone = 2;
+        } else {
+            // find the bottom point
+            int bottom=0;
+            for (int i=0; i<points.size(); i++) {
+                if (points.get(i).y == gesture.getBoundingBox().bottom) {
+                    bottom = i;
+                    break;
+                }
+            }
+            if ((bottom == 0) || (bottom == points.size()-1)) {
+                return;
+            }
+            double angle1 = Math.atan(((float)points.get(bottom).y - points.get(0).y)
+                    / ((float)points.get(bottom).x - points.get(0).x))*180/Math.PI;
+            for (int i=1; i<=bottom; i++) {
+                double new_angle = Math.atan(((float)points.get(i).y - points.get(i-1).y)
+                        / ((float)points.get(i).x - points.get(i-1).x))*180/Math.PI;
+                if (Math.abs(new_angle - angle1) > 50) {
+                    return;
+                }
+            }
+            double angle2 = Math.atan(((float)points.get(points.size()-1).y - points.get(bottom).y)
+                    / ((float)points.get(points.size()-1).x - points.get(bottom).x))*180/Math.PI;
+            for (int i=bottom+1; i<points.size(); i++) {
+                double new_angle = Math.atan(((float)points.get(i).y - points.get(i-1).y)
+                        / ((float)points.get(i).x - points.get(i-1).x))*180/Math.PI;
+                if (Math.abs(new_angle - angle2) > 50) {
+                    return;
+                }
+            }
+            tone = 3;
+        }
+
+
         CheckBox cb=null;
 
-        Log.d(TAG, "getting a gesture");
-
-        if ((predictions.size() > 0) && (predictions.get(0).score>1.0)) {
-            String gest = predictions.get(0).name;
-
-            if (gest.equals("first_tone")) {
+        switch (tone) {
+            case 1:
                 cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
-            } else if (gest.equals("second_tone")) {
+                break;
+            case 2:
                 cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
-            } else if (gest.equals("third_tone")) {
+                break;
+            case 3:
                 cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
-            } else if (gest.equals("fourth_tone")) {
+                break;
+            case 4:
                 cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
-            }
-            if (cb != null)
-                cb.setChecked(true);
+                break;
         }
+        if (cb != null)
+            cb.setChecked(true);
     }
 
     public void handle_cancel(View v) {

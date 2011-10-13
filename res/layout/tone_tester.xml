@@ -6,7 +6,10 @@
         android:layout_height="fill_parent"
         android:layout_width="fill_parent"
         android:layout_weight="1"
+        android:orientation="horizontal"
         android:gestureStrokeType="single"
+        android:gestureStrokeLengthThreshold="200.0"
+        android:gestureStrokeAngleThreshold="0.0"
         >
     <LinearLayout
 
