@@ -65,7 +65,10 @@ public class CharFinder extends Activity implements TextWatcher {
             this.finish();
             return;
         }
-        
+
+        EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
+        guess.setText("");
+
         words = myDB.getWordsWithPinyin(hanzi);
 
         Log.d(TAG, "Testing for character"+hanzi);
@@ -104,8 +107,6 @@ public class CharFinder extends Activity implements TextWatcher {
         }
         tl.invalidate();
 
-        EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
-        chinese.setText("");
         first_try=true;
     }
 
@@ -157,14 +158,13 @@ public class CharFinder extends Activity implements TextWatcher {
     }
 
     public void afterTextChanged(Editable editable) {
+        String current_guess = editable.toString();
         if (first_try) {
-            String current_guess = editable.toString();
-            if (current_guess.codePointCount(0, current_guess.length()) == 1) {
-                if (current_guess.codePointAt(0) == hanzi.codePointAt(0)) {
-                    handle_ok(null);
-                }
+            if ((current_guess.codePointCount(0, current_guess.length()) == 1) && (current_guess.codePointAt(0) == hanzi.codePointAt(0))) {
+                handle_ok(null);
             }
+            else if (!current_guess.equals(""))
+                first_try=false;
         }
-        first_try=false;
     }
 }
