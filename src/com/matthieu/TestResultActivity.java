@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -81,7 +82,7 @@ public class TestResultActivity extends Activity {
         LinearLayout section = (LinearLayout) inflater.inflate(R.layout.test_result_section, linear, false);
 
         TextView tv_pinyin = (TextView) section.findViewById(R.id.test_result_pinyin);
-        tv_pinyin.setText(PinyinParser.convert_to_pretty_version(pin));
+        tv_pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(pin)));
 
         LinearLayout result_section = (LinearLayout) section.findViewById(R.id.test_result_translations);
 
@@ -90,7 +91,7 @@ public class TestResultActivity extends Activity {
             String str_trans = new String();
             TextView tv_translations = new TextView(this);
             Vocabulary voc = trans.get(i);
-            str_trans += voc.chinese + "(" + PinyinParser.convert_to_pretty_version(voc.pinyin) + ") ";
+            str_trans += voc.chinese + "(" + PinyinParser.convert_to_html_version(voc.pinyin) + ") ";
             for (int j=0; j<voc.english.size(); j++) {
                 String tr=voc.english.get(j);
                 str_trans += tr;
@@ -98,7 +99,7 @@ public class TestResultActivity extends Activity {
                     str_trans += ", ";
             }
             Log.d(TAG, "adding word "+str_trans+" to list");
-            tv_translations.setText(str_trans);
+            tv_translations.setText(Html.fromHtml(str_trans));
             tv_translations.setTextAppearance(this, android.R.attr.textAppearanceMedium);
             tv_translations.setTextColor(0xff000000);
             tv_translations.setTag(voc.chinese);
@@ -117,7 +118,7 @@ public class TestResultActivity extends Activity {
         View section = inflater.inflate(R.layout.test_result_section, linear, false);
 
         TextView tv_pinyin = (TextView) section.findViewById(R.id.test_result_pinyin);
-        tv_pinyin.setText(PinyinParser.convert_to_pretty_version(pin));
+        tv_pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(pin)));
 
         TextView tv_translations = (TextView) section.findViewById(R.id.test_result_translations);
         ArrayList<Vocabulary> trans = myDB.getTranslations(hanzi, pin);
@@ -149,7 +150,6 @@ public class TestResultActivity extends Activity {
     }
 
     public void click_result(View v) {
-
         TextView text = (TextView) v;
         String hanzi = (String) text.getTag();
         Intent i = new Intent(this, AddVocabularyActivity.class);
