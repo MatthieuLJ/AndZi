@@ -6,7 +6,7 @@
         android:layout_height="fill_parent"
         android:background="#dddddd"
         >
-    <EditText
+    <com.matthieu.widget.EditTextAutomaticSize
             android:id="@+id/chinese"
             android:layout_width="fill_parent"
             android:layout_height="56dp"

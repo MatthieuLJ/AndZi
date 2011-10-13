@@ -15,6 +15,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
+import com.matthieu.widget.EditTextAutomaticSize;
 import com.matthieu.widget.ExtendingLinearLayout;
 import java.util.ArrayList;
 
@@ -45,9 +46,17 @@ public class AddVocabularyActivity extends Activity
 
         setContentView(R.layout.add_vocabulary_top);
 
-        EditText chinese_word = (EditText) findViewById(R.id.chinese);
-        chinese_word.addTextChangedListener(new ChineseTextWatcher(chinese_word));
+        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) findViewById(R.id.chinese);
+        ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
+        chinese_word.addTextChangedListener(text_watcher);
+        chinese_word.setMaximumTextSize(32);
+        chinese_word.setMinimumTextSize(10);
         View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
+
+        String hanzi = getIntent().getStringExtra("Hanzi");
+        if (hanzi!= null) {
+            chinese_word.setText(hanzi);
+        }
     }
 
     @Override
@@ -61,13 +70,12 @@ public class AddVocabularyActivity extends Activity
 
     // Handle when the content of the chinese word text field changes
     private class ChineseTextWatcher implements TextWatcher {
-        private static final int maximum_text_size=32;
-        private static final int minimum_text_size=10;
-        private TextView tview;
+
+        private EditTextAutomaticSize tview;
         private int state; // 0 is empty, 1 is "normal", 2 is "wrong character in the string"
         private boolean need_complete_update=false;
 
-        public ChineseTextWatcher(TextView tv) {
+        public ChineseTextWatcher(EditTextAutomaticSize tv) {
             tview = tv;
             state=-1;
         }
@@ -76,7 +84,7 @@ public class AddVocabularyActivity extends Activity
             edited_word="";
 
             // change text size to fit in the box
-            adaptTextSize();
+            tview.adaptTextSize();
 
             // check if we only have chinese characters (change layout if not)
             checkChineseChars();
@@ -93,24 +101,6 @@ public class AddVocabularyActivity extends Activity
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
         public void afterTextChanged(Editable editable) {}
-
-        private void adaptTextSize() {
-            int width = tview.getWidth() - tview.getCompoundPaddingLeft() - tview.getCompoundPaddingRight();
-            String text = tview.getText().toString();
-            int size=maximum_text_size;
-
-            TextPaint tp = tview.getPaint();
-            Rect currentBounds = new Rect ( );
-
-            tview.setTextSize(size);
-            tp.getTextBounds((String) text, 0, text.length(), currentBounds );
-
-            while ((currentBounds.right > width) && (size > minimum_text_size)) {
-                size--;
-                tview.setTextSize(size);
-                tp.getTextBounds((String) text, 0, text.length(), currentBounds );
-            }
-        }
 
         private void checkChineseChars() {
             String text = tview.getText().toString();
@@ -335,15 +325,11 @@ public class AddVocabularyActivity extends Activity
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(AddVocabularyActivity.this);
             boolean show_color = sp.getBoolean("color_pinyin", true);
 
-            Log.d(TAG, "button " + hanzi +"set pinyin to ["+to_display+"]");
-
-
             if (to_display.equals("")) {
                 button.setText("-?-");
             }
             else {
                 if (show_color) {
-                    Log.d(TAG, "showing "+pinyin.get_color());
                     button.setText(Html.fromHtml(pinyin.get_color()));
                 }
                 else {
@@ -352,7 +338,6 @@ public class AddVocabularyActivity extends Activity
             }
             button.invalidate();
             button.setOnClickListener(new PinyinButtonClickListener());
-            Log.d(TAG, "Set pinyin button with " + to_display);
         }
 
         @Override
@@ -435,7 +420,7 @@ public class AddVocabularyActivity extends Activity
 
             // figure out the default pinyin buttons
             ArrayList<Vocabulary> vocs = myDB.getTranslations(text);
-            if (refDB != null) {
+            if ((refDB != null) && (vocs.size() ==0)){
                 vocs.addAll(refDB.getTranslations(text));
             }
             if (vocs.size() == 0)

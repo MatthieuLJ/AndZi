@@ -16,6 +16,7 @@
         </activity>
         <activity android:name=".EditLessonsActivity" />
         <activity android:name=".AddVocabularyActivity" />
+        <intent-filter android:name="android.intent.action.EDIT" />
         <activity android:name=".ToneTester" />
         <activity android:name=".DBActivity">
             <intent-filter>
