@@ -1,6 +1,11 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,7 +38,7 @@ public class TestResultActivity extends Activity {
 
         mode = getIntent().getIntExtra("Mode", 1);
 
-        Log.d(TAG, "Character is "+hanzi);
+        Log.d(TAG, "Character is "+hanzi+" in mode "+((mode==1)?"word":"character"));
         
         pinyins = getIntent().getStringArrayListExtra("Pinyins");
         if ((pinyins == null) || (pinyins.size() == 0)) {
@@ -66,17 +71,24 @@ public class TestResultActivity extends Activity {
         tv_hanzi.setText(hanzi);
     }
 
+    @Override
+    public boolean onCreateThumbnail(Bitmap outBitmap, Canvas canvas) {
+        return super.onCreateThumbnail(outBitmap, canvas);
+    }
+
     private void add_one_tone(LinearLayout linear, String pin) {
-        LayoutInflater inflater = getLayoutInflater();
-        View section = inflater.inflate(R.layout.test_result_section, linear, false);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LinearLayout section = (LinearLayout) inflater.inflate(R.layout.test_result_section, linear, false);
 
         TextView tv_pinyin = (TextView) section.findViewById(R.id.test_result_pinyin);
         tv_pinyin.setText(PinyinParser.convert_to_pretty_version(pin));
 
-        TextView tv_translations = (TextView) section.findViewById(R.id.test_result_translations);
+        LinearLayout result_section = (LinearLayout) section.findViewById(R.id.test_result_translations);
+
         ArrayList<Vocabulary> trans = myDB.getWordsWithPinyin(hanzi, pin);
-        String str_trans = new String();
         for (int i=0; i<trans.size(); i++) {
+            String str_trans = new String();
+            TextView tv_translations = new TextView(this);
             Vocabulary voc = trans.get(i);
             str_trans += voc.chinese + "(" + PinyinParser.convert_to_pretty_version(voc.pinyin) + ") ";
             for (int j=0; j<voc.english.size(); j++) {
@@ -85,16 +97,23 @@ public class TestResultActivity extends Activity {
                 if (j<voc.english.size()-1)
                     str_trans += ", ";
             }
-            if (i<trans.size()-1)
-                str_trans += "\n";
+            Log.d(TAG, "adding word "+str_trans+" to list");
+            tv_translations.setText(str_trans);
+            tv_translations.setTextAppearance(this, android.R.attr.textAppearanceMedium);
+            tv_translations.setTextColor(0xff000000);
+            tv_translations.setTag(voc.chinese);
+            tv_translations.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    click_result(view);
+                }
+            });
+            result_section.addView(tv_translations, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
-        tv_translations.setText(str_trans);
-
         linear.addView(section, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     private void add_one_word(LinearLayout linear, String pin) {
-        LayoutInflater inflater = getLayoutInflater();
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View section = inflater.inflate(R.layout.test_result_section, linear, false);
 
         TextView tv_pinyin = (TextView) section.findViewById(R.id.test_result_pinyin);
@@ -115,12 +134,28 @@ public class TestResultActivity extends Activity {
                 str_trans += "\n";
         }
         tv_translations.setText(str_trans);
+        tv_translations.setTag(hanzi);
+        tv_translations.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                click_result(view);
+            }
+        });
 
         linear.addView(section, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     public void handle_next(View v) {
         finish();
+    }
+
+    public void click_result(View v) {
+
+        TextView text = (TextView) v;
+        String hanzi = (String) text.getTag();
+        Intent i = new Intent(this, AddVocabularyActivity.class);
+		i.putExtra("Hanzi", hanzi);
+        startActivity(i);
+        this.finish();
     }
 
 }
