@@ -71,17 +71,6 @@ public class DBActivity extends Activity {
         int num_in_box5 = myDB.getNumCharsInBox(4);
         int num_expired_in_box5 = myDB.getNumCharsExpiredInBox(4);
 
-        /*
-        int max_to_display=Math.max(num_in_box1,
-                Math.max(num_in_box2 - num_expired_in_box2,
-                Math.max(num_expired_in_box2,
-                Math.max(num_in_box3 - num_expired_in_box3,
-                Math.max(num_expired_in_box3,
-                Math.max(num_in_box4 - num_expired_in_box4,
-                Math.max(num_expired_in_box4,
-                Math.max(num_in_box5 - num_expired_in_box5,
-                num_expired_in_box5))))))));
-                */
         int max_to_display = num_in_box1 + num_in_box2 + num_in_box3 + num_in_box4 + num_in_box5;
 
         if (max_to_display == 0) {
@@ -273,7 +262,6 @@ private class updater extends TimerTask {
             public void onClick(DialogInterface dialog, int i) {
                 myDB.clearDB();
                 update_content();
-                update_content();
                 dialog.dismiss();
             }
         });
@@ -323,6 +311,8 @@ private class updater extends TimerTask {
 
         @Override
         protected Void doInBackground(String... strings) {
+            // TODO: need to first copy into the database folder, then only use the name
+            // and check there is enough space in that folder beforehand
             myDB.mergeDB(strings[0], mProgressDialog);
             return null;
         }
@@ -358,7 +348,7 @@ private class updater extends TimerTask {
     }
 
     private void download_ref_database() {
-        final String params[]= {/*"http://db.tt/RdRHvoJa"*/ "http://172.16.21.2/cedict_db"};
+        final String params[]= {"http://db.tt/RdRHvoJa" /*"http://172.16.21.2/cedict_db"*/};
         downloader down = new downloader();
         down.execute(params);
     }
@@ -385,6 +375,8 @@ private class updater extends TimerTask {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            // TODO: check the available space first
+            
             mProgressDialog = new ProgressDialog(DBActivity.this);
             mProgressDialog.setMessage("Downloading reference database");
             mProgressDialog.setIndeterminate(false);
@@ -411,17 +403,17 @@ private class updater extends TimerTask {
             int count;
             try {
                 URL url = new URL(download_URL);
-                URLConnection conexion = url.openConnection();
-                conexion.connect();
-                int lenghtOfFile = conexion.getContentLength();
+                URLConnection connection = url.openConnection();
+                connection.connect();
+                int lengthOfFile = connection.getContentLength();
                 long startTime = System.currentTimeMillis();
 
-                Log.d(TAG, "download begining");
+                Log.d(TAG, "download beginning");
                 Log.d(TAG, "download url:" + url);
                 Log.d(TAG, "downloaded file name:" + fileName);
-                Log.d(TAG, "file size:" + lenghtOfFile);
+                Log.d(TAG, "file size:" + lengthOfFile);
 
-                // downlod the file
+                // download the file
                 InputStream input = new BufferedInputStream(url.openStream());
                 OutputStream output = new FileOutputStream(fileName);
 
@@ -432,7 +424,7 @@ private class updater extends TimerTask {
                 while ((count = input.read(data)) != -1) {
                     total += count;
                     // publishing the progress....
-                    publishProgress((int)(total*100/lenghtOfFile));
+                    publishProgress((int)(total*100/lengthOfFile));
                     output.write(data, 0, count);
                 }
 
@@ -440,7 +432,7 @@ private class updater extends TimerTask {
                 output.close();
                 input.close();
 
-                Log.d(TAG, "download ready in"
+                Log.d(TAG, "download ready after "
                                         + ((System.currentTimeMillis() - startTime) / 1000)
                                         + " sec");
             } catch (IOException e) {
