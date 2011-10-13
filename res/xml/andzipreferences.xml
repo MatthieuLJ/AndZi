@@ -12,6 +12,13 @@
                 android:entries="@array/result_preference"
                 android:entryValues="@array/result_preference_values"
                 />
+        <android.preference.CheckBoxPreference
+            android:title="Enable colored pinyins"
+            android:key="color_pinyin"
+            android:defaultValue="true"
+            android:summary="Show different tones with colors"
+            />
+            
     </PreferenceCategory>
 
 </PreferenceScreen>

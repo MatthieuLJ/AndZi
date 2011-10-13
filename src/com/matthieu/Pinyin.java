@@ -35,23 +35,23 @@ public class Pinyin {
                         case 5 :
                             this.tone=5;
                             this.print=pinyin_list_notone[i];
-                            this.html_color_print=entry;
+                            this.html_color_print=this.print;
                             break;
                         case 1:
                             this.print=pinyin_list_tone1[i];
-                            this.html_color_print="<red>"+this.print+"</red>";
+                            this.html_color_print="<font color=\"red\">"+this.print+"</font>";
                             break;
                         case 2:
                             this.print=pinyin_list_tone2[i];
-                            this.html_color_print="<orange>"+this.print+"</orange>";
+                            this.html_color_print="<font color=\"#ff8000\">"+this.print+"</font>";
                             break;
                         case 3:
                             this.print=pinyin_list_tone3[i];
-                            this.html_color_print="<green>"+this.print+"</green>";
+                            this.html_color_print="<font color=\"green\">"+this.print+"</font>";
                             break;
                         case 4:
                             this.print=pinyin_list_tone4[i];
-                            this.html_color_print="<blue>"+this.print+"</blue>";
+                            this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
                             break;
                     }
                     return;
@@ -62,31 +62,31 @@ public class Pinyin {
                 this.tone=1;
                 this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
-                this.html_color_print="<red>"+this.print+"</red>";
+                this.html_color_print="<font color=\"red\">"+this.print+"</font>";
                 return;
             }
-            if (entry.equals(pinyin_list_tone2[i])) {
+            else if (entry.equals(pinyin_list_tone2[i])) {
                 this.radical=pinyin_list_notone[i];
                 this.tone=2;
                 this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
-                this.html_color_print="<orange>"+this.print+"</orange>";
+                this.html_color_print="<font color=\"orange\">"+this.print+"</font>";
                 return;
             }
-            if (entry.equals(pinyin_list_tone3[i])) {
+            else if (entry.equals(pinyin_list_tone3[i])) {
                 this.radical=pinyin_list_notone[i];
                 this.tone=3;
                 this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
-                this.html_color_print="<green>"+this.print+"</green>";
+                this.html_color_print="<font color=\"green\">"+this.print+"</font>";
                 return;
             }
-            if (entry.equals(pinyin_list_tone4[i])) {
+            else if (entry.equals(pinyin_list_tone4[i])) {
                 this.radical=pinyin_list_notone[i];
                 this.tone=4;
                 this.lame=this.radical+Integer.toString(this.tone);
                 this.print=entry;
-                this.html_color_print="<blue>"+this.print+"</blue>";
+                this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
                 return;
             }
         }

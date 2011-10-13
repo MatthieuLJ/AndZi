@@ -2,11 +2,14 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextPaint;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -186,6 +189,9 @@ public class AddVocabularyActivity extends Activity
                 if (i2 > 0) {
                     for (int j=0; j<i2; j++) {
                         Button b = new Button(AddVocabularyActivity.this);
+                        b.setBackgroundColor(0x00000000);
+                        b.setTextColor(0xff000000);
+                        b.setBackgroundResource(0);
                         PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(i+j, i+j+1),
                                 myDB, refDB, b);
                         pinyin_choices.add(i + j, tmp);
@@ -198,6 +204,9 @@ public class AddVocabularyActivity extends Activity
                 pinyin_choices.clear();
                 for (int j=0; j<charSequence.toString().length(); j++) {
                     Button b = new Button(AddVocabularyActivity.this);
+                    b.setBackgroundColor(0x00000000);
+                    b.setTextColor(0xff000000);
+                    b.setBackgroundResource(0);
                     PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(j, j+1),
                             myDB, refDB, b);
                     pinyin_choices.add(j, tmp);
@@ -287,7 +296,7 @@ public class AddVocabularyActivity extends Activity
                     res = ref_pinyins.get(0);
                 }
                 else {
-                    res = "?";
+                    res = "";
                 }
             }
             else {
@@ -295,6 +304,7 @@ public class AddVocabularyActivity extends Activity
             }
             return res;
         }
+
         public String get_hanzi() {
             return hanzi;
         }
@@ -321,8 +331,25 @@ public class AddVocabularyActivity extends Activity
 
         private void update_button() {
             String to_display=get_current_choice();
+            Pinyin pinyin = new Pinyin(to_display);
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(AddVocabularyActivity.this);
+            boolean show_color = sp.getBoolean("color_pinyin", true);
 
-            button.setText(new Pinyin(to_display).get_pretty());
+            Log.d(TAG, "button " + hanzi +"set pinyin to ["+to_display+"]");
+
+
+            if (to_display.equals("")) {
+                button.setText("-?-");
+            }
+            else {
+                if (show_color) {
+                    Log.d(TAG, "showing "+pinyin.get_color());
+                    button.setText(Html.fromHtml(pinyin.get_color()));
+                }
+                else {
+                    button.setText(pinyin.get_pretty());
+                }
+            }
             button.invalidate();
             button.setOnClickListener(new PinyinButtonClickListener());
             Log.d(TAG, "Set pinyin button with " + to_display);
