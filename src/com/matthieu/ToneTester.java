@@ -49,6 +49,7 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
         if (!gesturelib.load()) {
             Log.d(TAG, "error loading gestures");
         }
+        gesturelib.setOrientationStyle(GestureStore.ORIENTATION_SENSITIVE);
 
         GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.tone_tester_gestureview);
         overlay.addOnGesturePerformedListener(this);
@@ -172,29 +173,25 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
 
     public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
         ArrayList<Prediction> predictions = gesturelib.recognize(gesture);
-        double max_score=0;
-        String gest = null;
         CheckBox cb=null;
 
-        for (Prediction pred : predictions) {
-            Log.d(TAG, "gesture " + pred.name +" score "+pred.score);
-            if (pred.score > max_score) {
-                max_score = pred.score;
-                gest = pred.name;
+        Log.d(TAG, "getting a gesture");
+
+        if ((predictions.size() > 0) && (predictions.get(0).score>1.0)) {
+            String gest = predictions.get(0).name;
+
+            if (gest.equals("first_tone")) {
+                cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
+            } else if (gest.equals("second_tone")) {
+                cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
+            } else if (gest.equals("third_tone")) {
+                cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
+            } else if (gest.equals("fourth_tone")) {
+                cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
             }
+            if (cb != null)
+                cb.setChecked(true);
         }
-        if (max_score < 1.0) return;
-        if (gest.equals("first_tone")) {
-            cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
-        } else if (gest.equals("second_tone")) {
-            cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
-        } else if (gest.equals("third_tone")) {
-            cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
-        } else if (gest.equals("fourth_tone")) {
-            cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
-        }
-        if (cb != null)
-            cb.setChecked(true);
     }
 
     public void handle_cancel(View v) {
