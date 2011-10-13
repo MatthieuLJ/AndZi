@@ -15,27 +15,19 @@ public class AndZiApplication extends Application {
     private final static String TAG = "AndZiApplication";
     private final static String PREFERENCES_NAME="AndziPrefs";
     private final static String REF_DB_NAME = "cedict_db";
+    private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
 
     public void onCreate() {
         SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
-        String db_name = prefs.getString("LocalDB", "");
-        if ((!db_name.equals("")) && (checkFileExists(db_name))) {
-            myDB = new HanziDB(getApplicationContext(), this, db_name);
-            Log.d(TAG, "opened local DB "+db_name);
-        }
-        else
-        {
-            myDB = new HanziDB(getApplicationContext(), this);
-            SharedPreferences.Editor edit = prefs.edit();
-            edit.putString("LocalDB", myDB.getDatabasePath());
-            edit.commit();
-            Log.d(TAG, "Created new local DB "+myDB.getDatabasePath());
-        }
 
-        db_name = prefs.getString("ReferenceDB", "");
-        if ((!db_name.equals("")) && (checkFileExists(db_name))) {
-            refDB = new HanziDB(getApplicationContext(), this,db_name);
-            Log.d(TAG, "opened reference DB " + db_name);
+        myDB = new HanziDB(getApplicationContext(), this, DEFAULT_DATABASE_NAME);
+
+        refDB = new HanziDB(getApplicationContext(), this,REF_DB_NAME);
+        if (refDB.getNumChars()==0) {
+            refDB.close();
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+            cw.deleteDatabase(REF_DB_NAME);
+            refDB=null;
         }
 
         boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
@@ -68,29 +60,24 @@ public class AndZiApplication extends Application {
     }
 
     public void installRefDB(String path) {
+        eraseRefDB();
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
         copyDataBase(path, dest);
 
-        refDB = new HanziDB(getApplicationContext(), this, dest);
-        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putString("ReferenceDB", dest);
-        edit.commit();
+        refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
 
         Log.d(TAG, "Done installing reference db " + dest);
     }
 
     public void eraseRefDB() {
-        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
-        String db_name = prefs.getString("ReferenceDB", "");
+
         if (refDB != null) {
             refDB.close();
             refDB = null;
         }
-        if (!db_name.equals("")) {
-            ContextWrapper cw = new ContextWrapper(getApplicationContext());
-            cw.deleteDatabase(db_name);
-        }
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        cw.deleteDatabase(REF_DB_NAME);
+
     }
 
     public void copyDataBase(String source, String destination) {
