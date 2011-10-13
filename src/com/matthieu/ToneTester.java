@@ -235,10 +235,8 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
             }
             tone = 3;
         }
-
-
+        
         CheckBox cb=null;
-
         switch (tone) {
             case 1:
                 cb = (CheckBox) findViewById(R.id.tone_test_first_tone);

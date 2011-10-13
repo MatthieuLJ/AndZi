@@ -123,7 +123,7 @@ public class DBActivity extends Activity {
         bar.invalidate();
     }
 
-private class updater extends TimerTask {
+    private class updater extends TimerTask {
         @Override
         public void run() {
             runOnUiThread(new Runnable() {
