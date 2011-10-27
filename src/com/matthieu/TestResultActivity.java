@@ -119,8 +119,8 @@ public class TestResultActivity extends Activity {
 
         TextView tv_pinyin = (TextView) section.findViewById(R.id.test_result_pinyin);
         tv_pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(pin)));
-
-        TextView tv_translations = (TextView) section.findViewById(R.id.test_result_translations);
+        LinearLayout result_section = (LinearLayout) section.findViewById(R.id.test_result_translations);
+        TextView tv_translations = new TextView(this);
         ArrayList<Vocabulary> trans = myDB.getTranslations(hanzi, pin);
         String str_trans = new String();
         for (int i=0; i<trans.size(); i++) {
@@ -141,7 +141,7 @@ public class TestResultActivity extends Activity {
                 click_result(view);
             }
         });
-
+        result_section.addView(tv_translations, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         linear.addView(section, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
