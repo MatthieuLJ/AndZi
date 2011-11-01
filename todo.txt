@@ -1,0 +1,14 @@
+Using:
+FileDialog: http://code.google.com/p/android-file-dialog/
+TouchListView: https://github.com/commonsguy/cwac-touchlist
+
+TODO:
+* Fix crash in set_next_study
+* Check for storage space before copying / moving files
+* Build history of questions so the same word / character is not reused repeatedly
+* When Guess is wrong, display "your guess was... (more info)"
+* Make it pretty
+* Hide IME when not needed
+* Suggest vocabulary based on what is already known, frequency list
+* Teach to write characters
+* Voice recognition... ?
