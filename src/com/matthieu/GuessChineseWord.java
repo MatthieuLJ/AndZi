@@ -59,7 +59,7 @@ public class GuessChineseWord extends Activity {
         solution=null;
 
         while ((hanzis.size() >0) && (solution == null)) {
-            hanzi = hanzis.remove((int) (hanzis.size()*Math.random()));
+            hanzi = hanzis.remove((int) ((hanzis.size()-1)*Math.random()));
             Log.d(TAG, "will study "+hanzi);
             ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
             if (words.size() == 0) {
@@ -67,16 +67,18 @@ public class GuessChineseWord extends Activity {
             }
 
             while ((words.size() > 0) && (solution == null)) {
-                candidate = words.remove((int) (words.size()*Math.random())).chinese;
+                candidate = words.remove((int) ((words.size()-1)*Math.random())).chinese;
                 ArrayList<Vocabulary> voc = myDB.getTranslations(candidate);
-                solution = voc.get((int) (voc.size()*Math.random()));
+                solution = voc.get((int) ((voc.size()-1)*Math.random()));
 
                 translations = solution.english;
                 if (refDB != null) {
                     if (refDB.getTranslations(candidate, solution.pinyin).size() == 0) {
-                        Log.d(TAG, "more trouble");
+                        more_translations = new ArrayList<String>();
                     }
-                    more_translations = refDB.getTranslations(candidate, solution.pinyin).get(0).english;
+                    else {
+                        more_translations = refDB.getTranslations(candidate, solution.pinyin).get(0).english;
+                    }
                 }
                 else {
                     more_translations = new ArrayList<String>();

@@ -64,13 +64,13 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
         hanzi = null;
 
         while((hanzi==null) && (all.size()>0)) {
-            int i = (int) (all.size()*Math.random());
+            int i = (int) ((all.size()-1)*Math.random());
             hanzi=all.remove(i);
             pinyins = myDB.getPinyinForChar(hanzi);
 
             pinyin = null;
             while ((pinyin == null) && (pinyins.size() > 0)) {
-                int j = (int) (pinyins.size()*Math.random());
+                int j = (int) ((pinyins.size()-1)*Math.random());
                 pinyin = new Pinyin(pinyins.remove(j));
                 if (pinyin.get_tone() == 5) {
                     //Log.v(TAG,"Reject study of pinyin "+pinyin.get_pretty());

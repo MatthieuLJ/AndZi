@@ -1564,7 +1564,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> choices = getAllToStudy(box);
         if (choices.size()==0) return null;
 
-        int i = (int) (choices.size()*Math.random());
+        int i = (int) ((choices.size()-1)*Math.random());
 
         return choices.get(i);
     }
@@ -1631,7 +1631,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> choices = getAllFilteredToStudy(box);
         if (choices.size()==0) return null;
 
-        int i = (int) (choices.size()*Math.random());
+        int i = (int) ((choices.size()-1)*Math.random());
 
         return choices.get(i);
     }
