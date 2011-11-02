@@ -1,12 +1,13 @@
 TODO:
-* Do not have duplicates in "Previous tries"
+* Check for possible false-negative in character finder (several possible good results)
 * Check for storage space before copying / moving files
 * Build history of questions so the same word / character is not reused repeatedly
 * When Guess is wrong, display "your guess was... (more info)"
-* Make it pretty
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
 * Teach to write characters
+* Add credits
+* Make it pretty
 * Voice recognition... ?
 
 DONE:
@@ -14,3 +15,5 @@ DONE:
 * Show something in the stats bar when the result is very low still
 * Handle Enter in guess boxes
 * Make sure the right suggestions show in "Add vocabulary" (when there is nothing in the local db)
+* Do not have duplicates in "Previous tries"
+* Handle correctly in 'guess chinese character' when translations are only "(...)"

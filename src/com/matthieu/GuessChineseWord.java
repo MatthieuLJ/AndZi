@@ -1,6 +1,7 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -181,10 +183,12 @@ public class GuessChineseWord extends Activity {
                 for(Vocabulary voc : guess_translations) {
                     for (String en : voc.english) {
                         if (en.equals(hint) ||
-                                HanziDB.bare_translation(en).equals(hint) ||
                                 en.equals(HanziDB.bare_translation(hint)) ||
-                                HanziDB.bare_translation(en).equals(HanziDB.bare_translation(hint))) {
-                            previous_guess.add(guess);
+                                ((!HanziDB.bare_translation(en).equals("")) && (
+                                HanziDB.bare_translation(en).equals(hint) ||
+                                HanziDB.bare_translation(en).equals(HanziDB.bare_translation(hint))))) {
+                            if (!previous_guess.contains(guess))
+                                previous_guess.add(guess);
                             TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
                             previous.setText("Previous try:\n");
                             for (int i=0; i<previous_guess.size(); i++) {
@@ -228,6 +232,11 @@ public class GuessChineseWord extends Activity {
 
     public void handle_ok(View v) {
         Toast toast;
+
+        EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
+        
         int res = check_guess();
 
         if (res == -1)
