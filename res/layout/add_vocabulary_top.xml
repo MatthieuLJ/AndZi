@@ -7,7 +7,7 @@
         android:background="#dddddd"
         >
     <com.matthieu.widget.EditTextAutomaticSize
-            android:id="@+id/chinese"
+            android:id="@+id/add_vocabulary_chinese"
             android:layout_width="fill_parent"
             android:layout_height="56dp"
             android:gravity="center_horizontal"

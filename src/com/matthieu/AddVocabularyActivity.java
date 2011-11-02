@@ -3,14 +3,12 @@ package com.matthieu;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.SharedPreferences;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Html;
-import android.text.TextPaint;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.*;
@@ -46,7 +44,7 @@ public class AddVocabularyActivity extends Activity
 
         setContentView(R.layout.add_vocabulary_top);
 
-        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) findViewById(R.id.chinese);
+        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese);
         ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
         chinese_word.addTextChangedListener(text_watcher);
         chinese_word.setMaximumTextSize(32);
@@ -89,10 +87,10 @@ public class AddVocabularyActivity extends Activity
             // check if we only have chinese characters (change layout if not)
             checkChineseChars();
 
-            // Populate the choices for the pinyin buttons
-            setPinyinButtons(charSequence, i, i1, i2);
-
             if (state == 1) {
+                // Populate the choices for the pinyin buttons
+                setPinyinButtons(charSequence, i, i1, i2);
+
                 // populate the default values for the pinyin buttons
                 new update_default_pinyins(tview);
             }
@@ -384,7 +382,7 @@ public class AddVocabularyActivity extends Activity
 
             private void change_pinyin(String new_pinyin) {
                 PinyinChoices.this.set_current_choice(new_pinyin);
-                new update_vocabulary_list((TextView) AddVocabularyActivity.this.findViewById(R.id.chinese));
+                new update_vocabulary_list((TextView) AddVocabularyActivity.this.findViewById(R.id.add_vocabulary_chinese));
             }
         }
     }
@@ -420,15 +418,18 @@ public class AddVocabularyActivity extends Activity
 
             // figure out the default pinyin buttons
             ArrayList<Vocabulary> vocs = myDB.getTranslations(text);
-            if ((refDB != null) && (vocs.size() ==0)){
-                vocs.addAll(refDB.getTranslations(text));
+            if ((refDB != null) && (vocs.size() == 0)){
+                vocs= refDB.getTranslations(text);
             }
             if (vocs.size() == 0)
                 return null;
 
-            int max_transl=-1, best_index=0;
+            int max_transl=0, best_index=0;
             for (i=0; i<vocs.size(); i++) {
-                if (vocs.get(i).english.size() > max_transl) best_index=i;
+                if (vocs.get(i).english.size() > max_transl) {
+                    best_index=i;
+                    max_transl = vocs.get(i).english.size();
+                }
             }
             Log.d(TAG, "Setting default pinyins to "+vocs.get(best_index).pinyin);
             
@@ -989,7 +990,7 @@ public class AddVocabularyActivity extends Activity
     }
 
     public void handle_cancel(View v) {
-        EditText chinese_word = (EditText) findViewById(R.id.chinese);
+        EditText chinese_word = (EditText) findViewById(R.id.add_vocabulary_chinese);
         chinese_word.setText("");
 
         translations_in_db.clear();
@@ -998,7 +999,7 @@ public class AddVocabularyActivity extends Activity
     }
 
     public void handle_ok(View v) {
-        String chinese = ((EditText) findViewById(R.id.chinese)).getText().toString();
+        String chinese = ((EditText) findViewById(R.id.add_vocabulary_chinese)).getText().toString();
         String pinyin = "";
         for (PinyinChoices pc : pinyin_choices) {
             pinyin = pinyin.concat(pc.get_current_choice());
@@ -1018,7 +1019,7 @@ public class AddVocabularyActivity extends Activity
             }
         }
 
-        EditText chinese_word = (EditText) findViewById(R.id.chinese);
+        EditText chinese_word = (EditText) findViewById(R.id.add_vocabulary_chinese);
         chinese_word.setText("");
 
         translations_in_db.clear();

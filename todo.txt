@@ -1,5 +1,4 @@
 TODO:
-* Make sure the right suggestions show in "Add vocabulary"
 * Do not have duplicates in "Previous tries"
 * Check for storage space before copying / moving files
 * Build history of questions so the same word / character is not reused repeatedly
@@ -14,3 +13,4 @@ DONE:
 * Fix crash in set_next_study
 * Show something in the stats bar when the result is very low still
 * Handle Enter in guess boxes
+* Make sure the right suggestions show in "Add vocabulary" (when there is nothing in the local db)
