@@ -26,6 +26,7 @@
             android:layout_weight="1"
             android:capitalize="none"
             android:singleLine="true"
+            android:imeOptions="actionDone"
             />
         <Button
             android:layout_width="fill_parent"

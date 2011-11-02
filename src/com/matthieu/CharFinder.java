@@ -8,8 +8,10 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.*;
 
 import java.util.ArrayList;
@@ -46,6 +48,13 @@ public class CharFinder extends Activity implements TextWatcher {
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.addTextChangedListener(this);
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE)
+                    handle_ok(textView);
+                return true;
+            }
+        });
        
         set_next_study();
     }
