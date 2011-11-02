@@ -37,8 +37,7 @@ public class StatsBars extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //Log.d(TAG, "onDraw " + canvas.getWidth() + "," + canvas.getHeight());
-        //Log.d(TAG, "onDraw StatsBars: "+good+","+expired);
+        int bound;
 
         if ((good == 0) && (expired == 0)) { // not ready yet to draw anything
             return;
@@ -53,23 +52,27 @@ public class StatsBars extends View {
         int total_height = getMeasuredHeight();
 
         if (expired == 0) { // only good ones
-            //Log.d(TAG,"green :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*good/100)+ "," + (getPaddingTop()+total_height));
-            green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*good/100, getPaddingTop()+total_height);
+            bound = (total_width)*good/100;
+            if (bound == 0) bound = 1;
+            green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+bound, getPaddingTop()+total_height);
             green_rect.draw(canvas);
             return;
         }
         if (good == 0) { // only expired ones
-            //Log.d(TAG,"red :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*expired/100)+ "," + (getPaddingTop()+total_height));
-            red_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*expired/100, getPaddingTop()+total_height);
+            bound = (total_width)*expired/100;
+            if (bound == 0) bound = 1;
+            red_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+bound, getPaddingTop()+total_height);
             red_rect.draw(canvas);
             return;
         }
 
         // split...
-        //Log.d(TAG,"green :"+getPaddingLeft()+ "," +getPaddingTop()+ "," +(getPaddingLeft()+(total_width)*good/100)+ "," + (getPaddingTop()+total_height/3));
-        green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+(total_width)*good/100, getPaddingTop()+(3*total_height)/8);
-        //Log.d(TAG,"red :"+getPaddingLeft()+ "," +(getPaddingTop()+(total_height*2)/3)+ "," +(getPaddingLeft()+(total_width)*expired/100)+ "," + (getPaddingTop()+total_height/3));
-        red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(5*total_height)/8,getPaddingLeft()+(total_width)*expired/100, getPaddingTop()+total_height);
+        bound = (total_width)*good/100;
+        if (bound == 0) bound = 1;
+        green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+bound, getPaddingTop()+(3*total_height)/8);
+        bound = (total_width)*expired/100;
+        if (bound == 0) bound = 1;
+        red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(5*total_height)/8,getPaddingLeft()+bound, getPaddingTop()+total_height);
         green_rect.draw(canvas);
         red_rect.draw(canvas);
     }
