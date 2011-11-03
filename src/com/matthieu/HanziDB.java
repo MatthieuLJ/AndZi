@@ -278,6 +278,15 @@ public class HanziDB extends SQLiteOpenHelper {
         return res.toLowerCase().trim();
     }
 
+    public static boolean compare_translations(String ref, String guess) {
+        return ref.equals(guess) ||
+                ref.equals(HanziDB.bare_translation(guess)) ||
+                ((!HanziDB.bare_translation(ref).equals("")) &&
+                        (HanziDB.bare_translation(ref).equals(guess) ||
+                        HanziDB.bare_translation(ref).equals(HanziDB.bare_translation(guess)))
+                );
+    }
+
     /*
      *
      *  Basic database management

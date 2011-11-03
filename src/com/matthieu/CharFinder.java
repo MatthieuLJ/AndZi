@@ -1,6 +1,7 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,14 +13,17 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
 
 public class CharFinder extends Activity implements TextWatcher {
     protected HanziDB myDB=null;
+    protected HanziDB refDB=null;
     private String hanzi;
     private ArrayList<Vocabulary> words;
+    private ArrayList<String> previous_guess;
     int show_result;
     boolean first_try=true;
 
@@ -29,6 +33,7 @@ public class CharFinder extends Activity implements TextWatcher {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).myDB;
+        refDB = ((AndZiApplication) getApplication()).refDB;
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (sp.getString("show_result", "always").equals("always")) {
@@ -43,6 +48,7 @@ public class CharFinder extends Activity implements TextWatcher {
 
         hanzi=new String();
         words=new ArrayList<Vocabulary>();
+        previous_guess=new ArrayList<String>();
 
         setContentView(R.layout.char_finder);
 
@@ -68,12 +74,16 @@ public class CharFinder extends Activity implements TextWatcher {
 
     private void set_next_study() {
         hanzi = myDB.getNextFilteredToStudy();
-
+        
         if (hanzi == null) {
             Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
             this.finish();
             return;
         }
+
+        TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
+        previous.setText("");
+        previous_guess.clear();
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.setText("");
@@ -124,12 +134,61 @@ public class CharFinder extends Activity implements TextWatcher {
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         String guess = chinese.getText().toString();
         if (guess.equals(hanzi)) {
-            myDB.betterBox(hanzi);
             res=1;
         }
         else {
-            myDB.restartStudy(hanzi);
-            res=0;
+            //check if that character could have been good also...
+            if (guess.length()==1) {
+                res=-1;
+                for (Vocabulary w:words) {
+                    String tmp_word = new String(w.chinese);
+                    tmp_word.replace(hanzi, guess);
+
+                    ArrayList<String> tmp_translations=new ArrayList<String>();
+                    for (Vocabulary tmp_v:myDB.getTranslations(tmp_word)) {
+                        tmp_translations.addAll(tmp_v.english);
+                    }
+                    if (refDB != null) {
+                        for (Vocabulary tmp_v:refDB.getTranslations(tmp_word)) {
+                            tmp_translations.addAll(tmp_v.english);
+                        }
+                    }
+                    boolean found = false;
+                    for (String en:w.english) {
+                        for (String tmp_en:tmp_translations) {
+                            if (HanziDB.compare_translations(en, tmp_en))
+                                found=true;
+                        }
+                    }
+                    if(!found) {
+                        res=0;
+                        break;
+                    }
+                }
+            }
+        }
+
+        switch(res) {
+            case 0:
+                myDB.restartStudy(hanzi);
+                break;
+            case 1:
+                myDB.betterBox(hanzi);
+                break;
+            case -1:
+                if (!previous_guess.contains(guess))
+                    previous_guess.add(guess);
+                TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
+                EditText edit_guess = (EditText) findViewById(R.id.char_finder_chinese);
+                previous.setText("Previous try:\n");
+                for (int i=0; i<previous_guess.size(); i++) {
+                    previous.setText(previous.getText() + previous_guess.get(i));
+                    if (i<previous_guess.size()-1)
+                        previous.setText(previous.getText() + ",\n");
+                }
+                edit_guess.setText("");
+                previous.invalidate();
+                break;
         }
         return res;
     }
@@ -143,7 +202,15 @@ public class CharFinder extends Activity implements TextWatcher {
 
     public void handle_ok(View v) {
         Toast toast;
+
+        EditText word_guess = (EditText) findViewById(R.id.char_finder_chinese);
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
+
         int res = check_guess();
+
+        if (res == -1)
+            return;
 
         if ((show_result==1) || ((show_result == 2) && (res == 0))) {
             show_solution();

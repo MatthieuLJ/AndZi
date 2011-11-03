@@ -182,11 +182,7 @@ public class GuessChineseWord extends Activity {
             for (String hint:solution.english) {
                 for(Vocabulary voc : guess_translations) {
                     for (String en : voc.english) {
-                        if (en.equals(hint) ||
-                                en.equals(HanziDB.bare_translation(hint)) ||
-                                ((!HanziDB.bare_translation(en).equals("")) && (
-                                HanziDB.bare_translation(en).equals(hint) ||
-                                HanziDB.bare_translation(en).equals(HanziDB.bare_translation(hint))))) {
+                        if (HanziDB.compare_translations(en, hint)) {
                             if (!previous_guess.contains(guess))
                                 previous_guess.add(guess);
                             TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);

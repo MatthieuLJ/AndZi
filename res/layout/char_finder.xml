@@ -15,24 +15,30 @@
             />
 
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
         <EditText
-            android:id="@+id/char_finder_chinese"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:capitalize="none"
-            android:singleLine="true"
-            android:imeOptions="actionDone"
-            />
+                android:id="@+id/char_finder_chinese"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:capitalize="none"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                />
         <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="OK"
+                android:onClick="handle_ok"/>
+    </LinearLayout>
+    <TextView
+            android:id="@+id/char_finder_previous_guess"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="OK"
-            android:onClick="handle_ok"/>
-        </LinearLayout>
+            android:textSize="16sp"
+            android:textColor="#000000" />
 </LinearLayout>
