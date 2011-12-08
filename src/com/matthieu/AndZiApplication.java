@@ -66,7 +66,8 @@ public class AndZiApplication extends Application {
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
         copyDataBase(path, dest);
         if (erase_source) {
-            this.deleteFile(path);
+            File to_delete= new File(path);
+            to_delete.delete();
         }
 
         refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);

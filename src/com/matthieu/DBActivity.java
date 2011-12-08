@@ -183,7 +183,7 @@ public class DBActivity extends Activity {
 
         new database_emailer().execute(export_db);
 
-        this.deleteFile(export_db.getPath());
+        export_db.delete();
     }
 
     private class database_emailer extends AsyncTask<File,Void,Void> {
