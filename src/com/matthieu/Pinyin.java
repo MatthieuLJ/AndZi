@@ -1,6 +1,9 @@
 package com.matthieu;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Pinyin {
     private String lame="";
@@ -9,9 +12,80 @@ public class Pinyin {
     private String print="";
     private String html_color_print="";
 
+    private static boolean map_initialized=false;
+
+    private static Map<String, ArrayList<String>> pinyin_by_first_letter=null;
+    private static Map<String, Integer> vowels_to_tone=null;
+    private static Map<String, String> lame_vowels=null;
+
     public  Pinyin(String entry) {
         int i,j;
         String temp;
+
+        if (!map_initialized)
+            create_pinyin_map();
+
+        for (i = 0; i < 6; i++) {
+            if (entry.endsWith(""+i)) {
+                temp=entry.substring(0, entry.length()-1);
+                for (j = 0; j < pinyin_list_notone.length; j++) {
+                    if (temp.equals(pinyin_list_notone[j])) {
+                        this.lame = temp+i;
+                        this.radical = temp;
+                        this.tone = i;
+                        if (i==5)
+                            this.tone=0;
+                        switch(tone) {
+                            case 0:
+                                this.print=pinyin_list_notone[j];
+                                this.html_color_print=this.print;
+                                break;
+                            case 1:
+                                this.print=pinyin_list_tone1[j];
+                                this.html_color_print="<font color=\"red\">"+this.print+"</font>";
+                                break;
+                            case 2:
+                                this.print=pinyin_list_tone2[j];
+                                this.html_color_print="<font color=\"#ff8000\">"+this.print+"</font>";
+                                break;
+                            case 3:
+                                this.print=pinyin_list_tone3[j];
+                                this.html_color_print="<font color=\"green\">"+this.print+"</font>";
+                                break;
+                            case 4:
+                                this.print=pinyin_list_tone4[j];
+                                this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
+                                break;
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+        for (String v:vowels_to_tone.keySet()) {
+            if (entry.contains(v)) {
+                this.tone = vowels_to_tone.get(v);
+                this.print = entry;
+                switch(tone) {
+                    case 1:
+                        this.html_color_print="<font color=\"red\">"+this.print+"</font>";
+                        break;
+                    case 2:
+                        this.html_color_print="<font color=\"#ff8000\">"+this.print+"</font>";
+                        break;
+                    case 3:
+                        this.html_color_print="<font color=\"green\">"+this.print+"</font>";
+                        break;
+                    case 4:
+                        this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
+                        break;
+                }
+                this.radical=entry.replaceAll(v, lame_vowels.get(v));
+                this.lame = this.radical + this.tone;
+                return;
+            }
+        }
+
 
         for (i = 0; i < pinyin_list_notone.length; i++) {
             if (entry.equals(pinyin_list_notone[i])) {
@@ -22,107 +96,141 @@ public class Pinyin {
                 this.html_color_print=entry;
                 return;
             }
-            for (j = 0; j < 6; j++)
-            {
-                temp = pinyin_list_notone[i] + Integer.toString(j);
-                if (entry.equals(temp))
-                {
-                    this.lame=entry;
-                    this.radical=pinyin_list_notone[i];
-                    this.tone=j;
-                    switch(tone) {
-                        case 0 :
-                        case 5 :
-                            this.tone=5;
-                            this.print=pinyin_list_notone[i];
-                            this.html_color_print=this.print;
-                            break;
-                        case 1:
-                            this.print=pinyin_list_tone1[i];
-                            this.html_color_print="<font color=\"red\">"+this.print+"</font>";
-                            break;
-                        case 2:
-                            this.print=pinyin_list_tone2[i];
-                            this.html_color_print="<font color=\"#ff8000\">"+this.print+"</font>";
-                            break;
-                        case 3:
-                            this.print=pinyin_list_tone3[i];
-                            this.html_color_print="<font color=\"green\">"+this.print+"</font>";
-                            break;
-                        case 4:
-                            this.print=pinyin_list_tone4[i];
-                            this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
-                            break;
-                    }
-                    return;
-                }
-            }
-            if (entry.equals(pinyin_list_tone1[i])) {
-                this.radical=pinyin_list_notone[i];
-                this.tone=1;
-                this.lame=this.radical+Integer.toString(this.tone);
-                this.print=entry;
-                this.html_color_print="<font color=\"red\">"+this.print+"</font>";
-                return;
-            }
-            else if (entry.equals(pinyin_list_tone2[i])) {
-                this.radical=pinyin_list_notone[i];
-                this.tone=2;
-                this.lame=this.radical+Integer.toString(this.tone);
-                this.print=entry;
-                this.html_color_print="<font color=\"orange\">"+this.print+"</font>";
-                return;
-            }
-            else if (entry.equals(pinyin_list_tone3[i])) {
-                this.radical=pinyin_list_notone[i];
-                this.tone=3;
-                this.lame=this.radical+Integer.toString(this.tone);
-                this.print=entry;
-                this.html_color_print="<font color=\"green\">"+this.print+"</font>";
-                return;
-            }
-            else if (entry.equals(pinyin_list_tone4[i])) {
-                this.radical=pinyin_list_notone[i];
-                this.tone=4;
-                this.lame=this.radical+Integer.toString(this.tone);
-                this.print=entry;
-                this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
-                return;
-            }
         }
     }
 
+    private static void create_pinyin_map() {
+        String first;
+        ArrayList<String> list;
+
+        if (map_initialized)
+            return;
+
+        pinyin_by_first_letter = new HashMap<String, ArrayList<String>>();
+
+        for (String pin:pinyin_list_notone) {
+            first = pin.substring(0,1);
+            if (pinyin_by_first_letter.containsKey(first)) {
+                list = pinyin_by_first_letter.get(first);
+                list.add(pin);
+            }
+            else {
+                list = new ArrayList<String>();
+                list.add(pin);
+                pinyin_by_first_letter.put(first, list);
+            }
+        }
+        for (String pin:pinyin_list_tone1) {
+            first = pin.substring(0,1);
+            if (pinyin_by_first_letter.containsKey(first)) {
+                list = pinyin_by_first_letter.get(first);
+                list.add(pin);
+            }
+            else {
+                list = new ArrayList<String>();
+                list.add(pin);
+                pinyin_by_first_letter.put(first, list);
+            }
+        }
+        for (String pin:pinyin_list_tone2) {
+            first = pin.substring(0,1);
+            if (pinyin_by_first_letter.containsKey(first)) {
+                list = pinyin_by_first_letter.get(first);
+                list.add(pin);
+            }
+            else {
+                list = new ArrayList<String>();
+                list.add(pin);
+                pinyin_by_first_letter.put(first, list);
+            }
+        }
+        for (String pin:pinyin_list_tone3) {
+            first = pin.substring(0,1);
+            if (pinyin_by_first_letter.containsKey(first)) {
+                list = pinyin_by_first_letter.get(first);
+                list.add(pin);
+            }
+            else {
+                list = new ArrayList<String>();
+                list.add(pin);
+                pinyin_by_first_letter.put(first, list);
+            }
+        }
+        for (String pin:pinyin_list_tone4) {
+            first = pin.substring(0,1);
+            if (pinyin_by_first_letter.containsKey(first)) {
+                list = pinyin_by_first_letter.get(first);
+                list.add(pin);
+            }
+            else {
+                list = new ArrayList<String>();
+                list.add(pin);
+                pinyin_by_first_letter.put(first, list);
+            }
+        }
+
+        vowels_to_tone = new HashMap<String, Integer>();
+        final String[] first_tone_vowels = {"ā", "ō", "ē", "ī", "ū", "ǖ"};
+        final String[] second_tone_vowels = {"á", "ó", "é", "í", "ú", "ǘ"};
+        final String[] third_tone_vowels = {"ǎ", "ǒ", "ě", "ǐ", "ǔ", "ǚ"};
+        final String[] fourth_tone_vowels = {"à", "ò", "è", "ì", "ù", "ǜ"};
+        for(String s:first_tone_vowels)
+            vowels_to_tone.put(s,1);
+        for(String s:second_tone_vowels)
+            vowels_to_tone.put(s,2);
+        for(String s:third_tone_vowels)
+            vowels_to_tone.put(s,3);
+        for(String s:fourth_tone_vowels)
+            vowels_to_tone.put(s,4);
+
+        lame_vowels = new HashMap<String, String>();
+        final String[] a_vowels={"ā", "á", "ǎ", "à"};
+        final String[] o_vowels={"ō", "ó", "ǒ", "ò"};
+        final String[] e_vowels={"ē", "é", "ě", "è"};
+        final String[] i_vowels={"ī", "í", "ǐ", "ì"};
+        final String[] u_vowels={"ū", "ú", "ǔ", "ù"};
+        final String[] v_vowels={"ǖ", "ǘ", "ǚ", "ǜ"};
+        for(String s:a_vowels)
+            lame_vowels.put(s, "a");
+        for(String s:o_vowels)
+            lame_vowels.put(s, "o");
+        for(String s:e_vowels)
+            lame_vowels.put(s, "e");
+        for(String s:i_vowels)
+            lame_vowels.put(s, "i");
+        for(String s:u_vowels)
+            lame_vowels.put(s, "u");
+        for(String s:v_vowels)
+            lame_vowels.put(s, "v");
+
+        map_initialized=true;
+    }
+
+
     public static boolean verify_pinyin(String entry) {
         int i;
-        String temp;
+        String temp=new String();
 
-        for (String try_pinyin : pinyin_list_notone)
-        {
-            if (entry.equals(try_pinyin))
-            {
-                return true;
-            }
-            for (i = 0; i < 6; i++)
-            {
-                temp = try_pinyin + i;
-                if (entry.equals(temp))
-                {
-                    return true;
-                }
+        if (!map_initialized)
+            create_pinyin_map();
+
+        if (entry.length()==0)
+            return false;
+
+        for (i = 0; i < 6; i++) {
+            if (entry.endsWith(""+i)) {
+                temp=entry.substring(0, entry.length()-1);
             }
         }
-        if (Arrays.asList(pinyin_list_tone1).contains(entry)) {
+        if (temp.equals(""))
+            temp=entry;
+
+        if (!pinyin_by_first_letter.containsKey(temp.substring(0,1)))
+            return false;
+
+        if (pinyin_by_first_letter.get(temp.substring(0,1)).contains(temp))
             return true;
-        }
-        if (Arrays.asList(pinyin_list_tone2).contains(entry)) {
-            return true;
-        }
-        if (Arrays.asList(pinyin_list_tone3).contains(entry)) {
-            return true;
-        }
-        if (Arrays.asList(pinyin_list_tone4).contains(entry)) {
-            return true;
-        }
+
         return false;
     }
 

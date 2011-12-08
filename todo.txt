@@ -1,8 +1,9 @@
 TODO:
-* Transition too slow when going to result page
 * Build history of questions so the same word / character is not reused repeatedly
 * When Guess is wrong, display "your guess was... (more info)" ... and offer to correct the judgment.
 * Guess english from Chinese word
+* Guess words based on character
+* Guess pinyin from character
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
 * Teach to write characters
@@ -11,6 +12,7 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* Transition too slow when going to result page - use Hashmap for Pinying parsing...
 * Character guess (啤)酒 beer... 脾 is found as a correct answer?
 * Check for storage space before copying / moving files
   - HanziDB.exportDB
