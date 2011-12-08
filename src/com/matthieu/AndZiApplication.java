@@ -3,7 +3,9 @@ package com.matthieu;
 import android.app.Application;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
+import android.os.StatFs;
 import android.util.Log;
+import com.matthieu.widget.FileMountPoint;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -59,10 +61,13 @@ public class AndZiApplication extends Application {
         return new File(path).exists();
     }
 
-    public void installRefDB(String path) {
+    public void installRefDB(String path, boolean erase_source) {
         eraseRefDB();
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
         copyDataBase(path, dest);
+        if (erase_source) {
+            this.deleteFile(path);
+        }
 
         refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
 
@@ -77,7 +82,95 @@ public class AndZiApplication extends Application {
         }
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(REF_DB_NAME);
+    }
 
+    public boolean check_exporting_space(String path) {
+        // exporting is a several steps process:
+        // create another temporary database with the data to export
+        // copy the temporary file to the destination
+        // delete the temporary file
+        String destination_mp = FileMountPoint.mount_point(path);
+        String localDB_mp = FileMountPoint.mount_point(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
+
+        if (destination_mp.equals(localDB_mp)) {
+            StatFs stats = new StatFs(path);
+            int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+
+            File f = getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME);
+            long dbSize = f.length();
+
+            if (available_space < 2*dbSize)
+                return false;
+        }
+        else {
+            File f = getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME);
+            long dbSize = f.length();
+
+            StatFs stats = new StatFs(path);
+            int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+
+            if (available_space < dbSize)
+                return false;
+
+            stats = new StatFs(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
+            available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+
+            if (available_space < dbSize)
+                return false;
+        }
+
+        return true;
+    }
+
+    public boolean check_merging_space(String path) {
+        // merging is a several steps process:
+        // copy the database into DB path
+        // merge it
+        // delete the copy
+
+        StatFs stats = new StatFs(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
+        int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+
+        File f = new File(path);
+        long dbSize = f.length();
+
+        if (available_space < 2*dbSize)
+            return false;
+
+        return true;
+    }
+
+    public boolean check_ref_download_space(String path, int size) {
+        // Downloading and installing the reference database means:
+        // download the file to the path
+        // delete the existing ref db
+        // copy the new one in place
+        // delete the temporary file (?)
+
+        String destination_mp = FileMountPoint.mount_point(path);
+        String localDB_mp = FileMountPoint.mount_point(getApplicationContext().getDatabasePath(REF_DB_NAME).getPath());
+        long installed_db_size = getApplicationContext().getDatabasePath(REF_DB_NAME).length();
+
+        // first there is enough space to download the file
+        StatFs stats = new StatFs(path);
+        int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+
+        if (available_space < size)
+            return false;
+
+        if (destination_mp.equals(localDB_mp)) {
+            if (available_space + installed_db_size < 2*size)
+                return false;
+        }
+        else {
+            stats = new StatFs(getApplicationContext().getDatabasePath(REF_DB_NAME).getPath());
+            available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+            if (available_space + installed_db_size < size)
+                return false;
+
+        }
+
+        return true;
     }
 
     public void copyDataBase(String source, String destination) {

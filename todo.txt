@@ -1,7 +1,17 @@
 TODO:
 * Check for storage space before copying / moving files
+  - HanziDB.exportDB
+      X DBActivity.database_emailer()
+      X DBActivity.database_exporter()
+  - HanziDB.mergeDB
+      X DBActivity.merger()
+  X AndZiApplication.installRefDB
+* Word guess mistakes between 对不起, 抱歉
+* Character guess beer... 脾 is found as a correct answer?
+* Transition too slow when going to result page
 * Build history of questions so the same word / character is not reused repeatedly
 * When Guess is wrong, display "your guess was... (more info)"
+* Guess english from Chinese word
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
 * Teach to write characters

@@ -182,28 +182,40 @@ public class DBActivity extends Activity {
         }
 
         new database_emailer().execute(export_db);
+
+        this.deleteFile(export_db.getPath());
     }
 
     private class database_emailer extends AsyncTask<File,Void,Void> {
         File export_db;
         ProgressDialog pd;
+        boolean enough_space;
 
         @Override
         protected void onPostExecute(Void aVoid) {
             pd.dismiss();
-            
-            Intent sendIntent = new Intent(Intent.ACTION_SEND);
-            sendIntent.setType("application/sqlite");
-            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "AndZi database shared");
-            sendIntent.putExtra(Intent.EXTRA_TEXT, "File attached.");
-            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + export_db.getPath()));
-            startActivity(Intent.createChooser(sendIntent, "Email:"));
+
+            if (enough_space) {
+                Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                sendIntent.setType("application/sqlite");
+                sendIntent.putExtra(Intent.EXTRA_SUBJECT, "AndZi database shared");
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "File attached.");
+                sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + export_db.getPath()));
+                startActivity(Intent.createChooser(sendIntent, "Email:"));
+            }
+            else {
+                Toast toast = Toast.makeText(DBActivity.this, "Not enough space on device to email database", 5);
+                toast.show();
+            }
         }
 
         @Override
         protected Void doInBackground(File... files) {
             export_db=files[0];
-            myDB.exportDB(export_db.getPath());
+            enough_space = ((AndZiApplication) getApplication()).check_exporting_space(export_db.getPath());
+            
+            if (enough_space)
+                myDB.exportDB(export_db.getPath());
 
             return null;
         }
@@ -232,19 +244,29 @@ public class DBActivity extends Activity {
     private class database_exporter extends AsyncTask<File,Void,Void> {
         File export_db;
         ProgressDialog pd;
+        boolean enough_space;
 
         @Override
         protected void onPostExecute(Void aVoid) {
             pd.dismiss();
 
-            Toast toast = Toast.makeText(DBActivity.this, "Database was copied to "+export_db.getPath(), 5);
-            toast.show();
+            if (enough_space) {
+                Toast toast = Toast.makeText(DBActivity.this, "Database was copied to "+export_db.getPath(), 5);
+                toast.show();
+            }
+            else {
+                Toast toast = Toast.makeText(DBActivity.this, "Not enough space on device to export database", 5);
+                toast.show();
+            }
         }
 
         @Override
         protected Void doInBackground(File... files) {
             export_db=files[0];
-            myDB.exportDB(export_db.getPath());
+            enough_space = ((AndZiApplication) getApplication()).check_exporting_space(export_db.getPath());
+
+            if (enough_space)
+                myDB.exportDB(export_db.getPath());
 
             return null;
         }
@@ -281,12 +303,12 @@ public class DBActivity extends Activity {
     }
 
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+        // should come here after the activity startedin import_database completes
         if (resultCode == Activity.RESULT_OK) {
 
             if (requestCode != 0) {
                 return;
             }
-
             String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
 
             merger merge_task = new merger();
@@ -298,6 +320,8 @@ public class DBActivity extends Activity {
 
     private class merger extends AsyncTask<String, Void, Void> {
         ProgressDialog mProgressDialog;
+        boolean enough_space;
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -311,9 +335,9 @@ public class DBActivity extends Activity {
 
         @Override
         protected Void doInBackground(String... strings) {
-            // TODO: need to first copy into the database folder, then only use the name
-            // and check there is enough space in that folder beforehand
-            myDB.mergeDB(strings[0], mProgressDialog);
+            enough_space = ((AndZiApplication) getApplication()).check_merging_space(strings[0]);
+            if (enough_space)
+                myDB.mergeDB(strings[0], mProgressDialog);
             return null;
         }
 
@@ -322,6 +346,10 @@ public class DBActivity extends Activity {
             super.onPostExecute(aVoid);
             mProgressDialog.dismiss();
             update_content();
+            if (!enough_space) {
+                Toast toast = Toast.makeText(DBActivity.this, "Not enough space on device to impoort database", 5);
+                toast.show();
+            }
         }
     }
 
@@ -349,14 +377,15 @@ public class DBActivity extends Activity {
 
     private void download_ref_database() {
         final String params[]= {"http://db.tt/RdRHvoJa" /*"http://172.16.21.2/cedict_db"*/};
-        downloader down = new downloader();
+        ref_downloader down = new ref_downloader();
         down.execute(params);
     }
 
-    private class downloader extends AsyncTask<String,Integer,Void> {
+    private class ref_downloader extends AsyncTask<String,Integer,Void> {
         ProgressDialog mProgressDialog;
         String PATH, URL;
-        private final String TAG="downloader";
+        boolean enough_space;
+        private final String TAG="ref_downloader";
 
         @Override
         protected Void doInBackground(String... strings) {
@@ -368,6 +397,8 @@ public class DBActivity extends Activity {
             }
             URL=strings[0];
 
+
+
             DownloadFromUrl(URL, PATH);
             return null;
         }
@@ -375,7 +406,6 @@ public class DBActivity extends Activity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            // TODO: check the available space first
             
             mProgressDialog = new ProgressDialog(DBActivity.this);
             mProgressDialog.setMessage("Downloading reference database");
@@ -387,10 +417,16 @@ public class DBActivity extends Activity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            mProgressDialog.setMessage("Installing...");
-            ((AndZiApplication) getApplication()).installRefDB(PATH);
-            Log.d(TAG, "installed");
+            if (enough_space) {
+                mProgressDialog.setMessage("Installing...");
+                ((AndZiApplication) getApplication()).installRefDB(PATH, true);
+                Log.d(TAG, "installed");
+            }
             mProgressDialog.dismiss();
+            if (!enough_space) {
+                Toast toast = Toast.makeText(DBActivity.this, "Not enough space on device to download and isntall reference database", 5);
+                toast.show();
+            }
         }
 
         @Override
@@ -412,6 +448,11 @@ public class DBActivity extends Activity {
                 Log.d(TAG, "download url:" + url);
                 Log.d(TAG, "downloaded file name:" + fileName);
                 Log.d(TAG, "file size:" + lengthOfFile);
+
+                enough_space = ((AndZiApplication) getApplication()).check_ref_download_space(PATH, lengthOfFile);
+                if (!enough_space) {
+                    return;
+                }
 
                 // download the file
                 InputStream input = new BufferedInputStream(url.openStream());
@@ -437,6 +478,7 @@ public class DBActivity extends Activity {
                                         + " sec");
             } catch (IOException e) {
                 Log.d(TAG, "Error: " + e);
+                enough_space = false;
             }
 
         }
