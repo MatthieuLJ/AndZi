@@ -1,0 +1,44 @@
+package com.matthieu.widget;
+
+import android.util.Log;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class FileMountPoint {
+    private final static String TAG = "FileMountPoint";
+
+    static private ArrayList<String> all_mount_points() {
+        ArrayList<String> res = new ArrayList<String>();
+        try {
+            BufferedReader mounts = new BufferedReader(new FileReader("/proc/mounts"));
+            String point;
+            String[] elements;
+            while ((point = mounts.readLine()) != null) {
+                elements = point.split(" ");
+                res.add(elements[1]);
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.d(TAG, "Cannot find /proc/mounts...");
+        }
+        catch (IOException e) {
+            Log.d(TAG, "Ran into problems reading /proc/mounts...");
+        }
+
+        return res;
+    }
+
+    static public String mount_point(String path) {
+        ArrayList<String> list =  all_mount_points();
+        String res=new String("/");
+        for (String s:list) {
+            if ((path.equals(s) || path.startsWith(s+"/")) && s.length()>res.length())
+                res = s;
+        }
+
+        return res;
+    }
+}
