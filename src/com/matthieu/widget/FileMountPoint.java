@@ -1,10 +1,8 @@
 package com.matthieu.widget;
 
 import android.util.Log;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.ArrayList;
 
 public class FileMountPoint {
@@ -32,6 +30,12 @@ public class FileMountPoint {
     }
 
     static public String mount_point(String path) {
+        try {
+            path = (new File(path)).getCanonicalPath();
+        }
+        catch (IOException e) {
+            Log.d(TAG, "Ran into getting canonical path");
+        }
         ArrayList<String> list =  all_mount_points();
         String res=new String("/");
         for (String s:list) {
