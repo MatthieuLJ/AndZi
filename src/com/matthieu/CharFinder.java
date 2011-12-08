@@ -142,7 +142,7 @@ public class CharFinder extends Activity implements TextWatcher {
                 res=-1;
                 for (Vocabulary w:words) {
                     String tmp_word = new String(w.chinese);
-                    tmp_word.replace(hanzi, guess);
+                    tmp_word = tmp_word.replaceAll(hanzi, guess);
 
                     ArrayList<String> tmp_translations=new ArrayList<String>();
                     for (Vocabulary tmp_v:myDB.getTranslations(tmp_word)) {
@@ -154,10 +154,12 @@ public class CharFinder extends Activity implements TextWatcher {
                         }
                     }
                     boolean found = false;
-                    for (String en:w.english) {
-                        for (String tmp_en:tmp_translations) {
-                            if (HanziDB.compare_translations(en, tmp_en))
-                                found=true;
+                    if (tmp_translations.size()>0) {
+                        for (String en:w.english) {
+                            for (String tmp_en:tmp_translations) {
+                                if (HanziDB.compare_translations(en, tmp_en))
+                                    found=true;
+                            }
                         }
                     }
                     if(!found) {

@@ -1,16 +1,7 @@
 TODO:
-* Check for storage space before copying / moving files
-  - HanziDB.exportDB
-      X DBActivity.database_emailer()
-      X DBActivity.database_exporter()
-  - HanziDB.mergeDB
-      X DBActivity.merger()
-  X AndZiApplication.installRefDB
-* Word guess mistakes between 对不起, 抱歉
-* Character guess beer... 脾 is found as a correct answer?
 * Transition too slow when going to result page
 * Build history of questions so the same word / character is not reused repeatedly
-* When Guess is wrong, display "your guess was... (more info)"
+* When Guess is wrong, display "your guess was... (more info)" ... and offer to correct the judgment.
 * Guess english from Chinese word
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
@@ -20,6 +11,14 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* Character guess (啤)酒 beer... 脾 is found as a correct answer?
+* Check for storage space before copying / moving files
+  - HanziDB.exportDB
+      X DBActivity.database_emailer()
+      X DBActivity.database_exporter()
+  - HanziDB.mergeDB
+      X DBActivity.merger()
+  X AndZiApplication.installRefDB
 * Fix crash in set_next_study
 * Show something in the stats bar when the result is very low still
 * Handle Enter in guess boxes
