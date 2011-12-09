@@ -60,12 +60,11 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
 
     private void set_next_study() {
         ArrayList<String> all = myDB.getAllFilteredToStudy();
-        ArrayList<String> pinyins = new ArrayList<String>();
+        ArrayList<String> pinyins;
         hanzi = null;
 
         while((hanzi==null) && (all.size()>0)) {
-            int i = (int) ((all.size()-1)*Math.random());
-            hanzi=all.remove(i);
+            hanzi=all.remove(0);
             pinyins = myDB.getPinyinForChar(hanzi);
 
             pinyin = null;
@@ -121,7 +120,6 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
     }
 
     private int check_guesses() {
-        ArrayList<Integer> guesses=new ArrayList<Integer>();
         CheckBox cb;
         int res=0;
 

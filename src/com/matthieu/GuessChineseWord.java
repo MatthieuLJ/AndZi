@@ -71,7 +71,7 @@ public class GuessChineseWord extends Activity {
         solution=null;
 
         while ((hanzis.size() >0) && (solution == null)) {
-            hanzi = hanzis.remove((int) ((hanzis.size()-1)*Math.random()));
+            hanzi = hanzis.remove(0);
             Log.d(TAG, "will study "+hanzi);
             ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
             if (words.size() == 0) {

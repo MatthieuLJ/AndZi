@@ -1579,11 +1579,26 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected ArrayList<String> getAllToStudy() {
+        SQLiteDatabase db = this.getReadableDatabase();
         ArrayList<String> res=new ArrayList<String>();
+        Cursor cur;
 
-        for(int b=0; b<=MAX_BOX; b++) {
-            res.addAll(getAllToStudy(b));
+        cur = db.rawQuery("SELECT hanzi, 0 FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
+                "UNION " +
+                "SELECT hanzi, mod_time FROM leitner WHERE (box=0) OR (box=1 AND mod_time<?) OR (box=2 AND mod_time<?) " +
+                "OR (box=3 AND mod_time<?) OR (box=4 AND mod_time<?) ORDER BY mod_time ASC",
+                new String[] {Long.toString(System.currentTimeMillis() - getExpiryTime(1)),
+                        Long.toString(System.currentTimeMillis() - getExpiryTime(2)),
+                        Long.toString(System.currentTimeMillis() - getExpiryTime(3)),
+                        Long.toString(System.currentTimeMillis() - getExpiryTime(4))});
+        if (cur.moveToFirst()) {
+            for (int i=0; i<cur.getCount(); i++) {
+                res.add(cur.getString(cur.getColumnIndex("hanzi")));
+                cur.moveToNext();
+            }
         }
+        cur.close();
+        
         return res;
 
     }
@@ -1640,18 +1655,44 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> choices = getAllFilteredToStudy(box);
         if (choices.size()==0) return null;
 
-        int i = (int) ((choices.size()-1)*Math.random());
-
-        return choices.get(i);
+        return choices.get(0);
     }
 
     public ArrayList<String> getAllFilteredToStudy() {
         ArrayList<String> res=new ArrayList<String>();
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cur;
 
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-           for(int b=0; b<=MAX_BOX; b++) {
-               res.addAll(getAllFilteredToStudy(b));
-           }
+            cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi, 0 " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
+                    "UNION " +
+                    "SELECT char_pinyin.hanzi AS hanzi, leitner.mod_time " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE leitner.box=0 OR (leitner.box=1 AND leitner.mod_time<?) " +
+                    "OR (leitner.box=2 AND leitner.mod_time<?) OR (leitner.box=3 AND leitner.mod_time<?) " +
+                    "OR (leitner.box=4 AND leitner.mod_time<?)  ORDER BY leitner.mod_time ASC",
+                    new String[] {Long.toString(System.currentTimeMillis() - getExpiryTime(1)),
+                            Long.toString(System.currentTimeMillis() - getExpiryTime(2)),
+                            Long.toString(System.currentTimeMillis() - getExpiryTime(3)),
+                            Long.toString(System.currentTimeMillis() - getExpiryTime(4))});
+            if (cur.moveToFirst()) {
+                for (int i=0; i<cur.getCount(); i++) {
+                    res.add(cur.getString(cur.getColumnIndex("hanzi")));
+                    cur.moveToNext();
+                }
+            }
+            cur.close();
             return res;
         }
         else {
