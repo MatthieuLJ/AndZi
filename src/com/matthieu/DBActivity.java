@@ -100,26 +100,35 @@ public class DBActivity extends Activity {
 
         bar = (StatsBars) findViewById(R.id.stats_box1graph);
         bar.set_expired((num_in_box1*100)/max_to_display);
+        if (num_in_box1>0) bar.set_expired_label(""+num_in_box1);
         bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box2graph);
         bar.set_expired((num_expired_in_box2*100)/max_to_display);
+        if (num_expired_in_box2>0) bar.set_expired_label(""+num_expired_in_box2);
         bar.set_good(((num_in_box2-num_expired_in_box2)*100)/max_to_display);
+        if (num_in_box2-num_expired_in_box2>0) bar.set_good_label(""+(num_in_box2-num_expired_in_box2));
         bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box3graph);
         bar.set_expired((num_expired_in_box3*100)/max_to_display);
+        if (num_expired_in_box3>0) bar.set_expired_label(""+num_expired_in_box3);
         bar.set_good(((num_in_box3-num_expired_in_box3)*100)/max_to_display);
+        if (num_in_box3-num_expired_in_box3>0) bar.set_good_label(""+(num_in_box3-num_expired_in_box3));
         bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box4graph);
         bar.set_expired((num_expired_in_box4*100)/max_to_display);
+        if (num_expired_in_box4>0) bar.set_expired_label(""+num_expired_in_box4);
         bar.set_good(((num_in_box4-num_expired_in_box4)*100)/max_to_display);
+        if (num_in_box4-num_expired_in_box4>0) bar.set_good_label(""+(num_in_box4-num_expired_in_box4));
         bar.invalidate();
 
         bar = (StatsBars) findViewById(R.id.stats_box5graph);
         bar.set_expired((num_expired_in_box5*100)/max_to_display);
+        if (num_expired_in_box5>0) bar.set_expired_label(""+num_expired_in_box5);
         bar.set_good(((num_in_box5-num_expired_in_box5)*100)/max_to_display);
+        if (num_in_box5-num_expired_in_box5>0) bar.set_good_label(""+(num_in_box5-num_expired_in_box5));
         bar.invalidate();
     }
 
