@@ -36,6 +36,7 @@
         </activity>
         <activity android:name=".AndZiPreferences" />
         <activity android:name=".GuessChineseWord" />
+        <activity android:name=".ReviewList" />
 
     </application>
     <supports-screens

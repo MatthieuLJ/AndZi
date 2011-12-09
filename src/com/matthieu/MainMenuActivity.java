@@ -49,5 +49,8 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
-
+    public void handle_reviewlist(View v) {
+        Intent intent = new Intent(this, ReviewList.class);
+        startActivity(intent);
+    }
 }
