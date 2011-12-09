@@ -1,12 +1,12 @@
 package com.matthieu;
 
 import android.app.ListActivity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -23,43 +23,83 @@ public class ReviewList extends ListActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).myDB;
-        fill_tables();
 
-        ListAdapter adapter = new ReviewListAdapter();
+        to_study=new ArrayList<String>();
+        data_to_study=new HashMap<String, ArrayList<String>>();
+
+        ArrayAdapter adapter = new ReviewListAdapter();
+
+        new table_filler(adapter).execute();
 
         setListAdapter(adapter);
     }
 
-    private void fill_tables() {
-        to_study = myDB.getAllFilteredToStudy();
-        data_to_study = new HashMap<String, ArrayList<String>>();
-        String pinyin, english;
+    private class table_filler extends AsyncTask<Void, Void, Void> {
+        ArrayAdapter adap;
+        protected ArrayList<String> temp_to_study;
 
-        for (String chinese: to_study) {
-            ArrayList<String> data = new ArrayList<String>();
-            ArrayList<Vocabulary> voc = myDB.getWordsWithPinyin(chinese);
+        public table_filler(ArrayAdapter a) {
+            adap=a;
+        }
 
-            for (Vocabulary v:voc) {
-                pinyin = new String();
-                english = new String();
-                if (!pinyin.equals("")) {
-                    pinyin += " / ";
-                    english += " / ";
+        private void fill_tables() {
+            ArrayList<String> chars_to_study = myDB.getAllFilteredToStudy();
+            temp_to_study=new ArrayList<String>();
+            String pinyin, english;
+
+            for (String chinese: chars_to_study) {
+                ArrayList<Vocabulary> voc = myDB.getWordsWithPinyin(chinese);
+
+                for (Vocabulary v:voc) {
+                    if ((temp_to_study.contains(v.chinese)) || (to_study.contains(v.chinese)))
+                        continue;
+                    ArrayList<String> data = new ArrayList<String>();
+
+                    pinyin = new String();
+                    english = new String();
+                    if (!pinyin.equals("")) {
+                        pinyin += " / ";
+                        english += " / ";
+                    }
+                    pinyin+=v.pinyin;
+                    for (int i=0; i<v.english.size(); i++) {
+                        if (i!=0) english+=", ";
+                        english+=v.english.get(i);
+                    }
+                    data.add(pinyin);
+                    data.add(english);
+
+                    temp_to_study.add(v.chinese);
+                    data_to_study.put(v.chinese, data);
+                    if (temp_to_study.size() > 20) {
+                        to_study.addAll(temp_to_study);
+                        publishProgress();
+                        temp_to_study.clear();
+                    }
                 }
-                pinyin+=v.pinyin;
-                for (int i=0; i<v.english.size(); i++) {
-                    if (i!=0) english+=", ";
-                    english+=v.english.get(i);
-                }
-                data.add(v.chinese);
-                data.add(pinyin);
-                data.add(english);
-
-                data_to_study.put(chinese, data);
             }
         }
 
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            adap.notifyDataSetChanged();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            fill_tables();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            adap.notifyDataSetChanged();
+        }
     }
+
+
 
     private class ReviewListAdapter extends ArrayAdapter<Object> {
 
@@ -72,7 +112,7 @@ public class ReviewList extends ListActivity {
         }
 
         public Object getItem(int i) {
-            return to_study.get(i);
+            return data_to_study.get(to_study.get(i));
         }
 
         public View getView(int i, View view, ViewGroup viewGroup) {
@@ -81,13 +121,13 @@ public class ReviewList extends ListActivity {
                 view = li.inflate(R.layout.review_list_item, viewGroup, false);
             }
             TextView chinese = (TextView) view.findViewById(R.id.review_item_chinese);
-            chinese.setText(data_to_study.get(to_study.get(i)).get(0));
+            chinese.setText(to_study.get(i));
 
             TextView pinyin = (TextView) view.findViewById(R.id.review_item_pinyin);
-            pinyin.setText(PinyinParser.convert_to_pretty_version(data_to_study.get(to_study.get(i)).get(1)));
+            pinyin.setText(PinyinParser.convert_to_pretty_version(data_to_study.get(to_study.get(i)).get(0)));
 
             TextView english = (TextView) view.findViewById(R.id.review_item_english);
-            english.setText(data_to_study.get(to_study.get(i)).get(2));
+            english.setText(data_to_study.get(to_study.get(i)).get(1));
             
             return view;
         }
