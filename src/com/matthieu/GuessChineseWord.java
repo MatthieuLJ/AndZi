@@ -141,7 +141,6 @@ public class GuessChineseWord extends Activity {
     private int check_guess() {
         EditText edit_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
         String guess = edit_guess.getText().toString();
-        int res=0;
 
         if (guess.equals(solution.chinese)) {
             // find the lowest box
@@ -171,7 +170,7 @@ public class GuessChineseWord extends Activity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            res = 1;
+            return 1;
         }
         else {
             // check if the word guessed is in the database and relates somewhat...
@@ -200,7 +199,12 @@ public class GuessChineseWord extends Activity {
                 }
             }
         }
-        return res;
+        for (int i=0; i<solution.chinese.length();) {
+            String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+            myDB.restartStudy(hanzi);
+            i+=Character.charCount(solution.chinese.codePointAt(i));
+        }
+        return 0;
     }
 
     public void more_voc(View v) {
