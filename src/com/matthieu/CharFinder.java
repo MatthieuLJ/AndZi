@@ -192,6 +192,26 @@ public class CharFinder extends Activity implements TextWatcher {
                 previous.invalidate();
                 break;
         }
+
+        if (res != -1) {
+            // reset the time for all characters displayed or restart study
+            for (Vocabulary v:words) {
+                for (int i=0; i<v.chinese.length();) {
+                    String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
+                    i+=Character.charCount(v.chinese.codePointAt(i));
+                    if (other_hanzi.equals(hanzi))
+                        continue;
+                    switch(res) {
+                        case 0:
+                            myDB.restartStudy(other_hanzi);
+                            break;
+                        case 1:
+                            myDB.resetTime(other_hanzi);
+                            break;
+                    }
+                }
+            }
+        }
         return res;
     }
 
