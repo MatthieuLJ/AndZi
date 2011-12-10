@@ -78,6 +78,7 @@ public class ReviewList extends ListActivity {
                     }
                 }
             }
+            to_study.addAll(temp_to_study);
         }
 
         @Override
