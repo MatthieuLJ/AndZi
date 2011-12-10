@@ -20,9 +20,7 @@ public class AndZiApplication extends Application {
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
 
     public void onCreate() {
-        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
-
-        myDB = new HanziDB(getApplicationContext(), this, DEFAULT_DATABASE_NAME);
+        initialize_my_db();
 
         refDB = new HanziDB(getApplicationContext(), this,REF_DB_NAME);
         if (refDB.getNumChars()==0) {
@@ -31,7 +29,11 @@ public class AndZiApplication extends Application {
             cw.deleteDatabase(REF_DB_NAME);
             refDB=null;
         }
+    }
 
+    private void initialize_my_db() {
+        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        myDB = new HanziDB(getApplicationContext(), this, DEFAULT_DATABASE_NAME);
         boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
         ArrayList<String> lesson=new ArrayList<String>();
         try {
@@ -55,10 +57,6 @@ public class AndZiApplication extends Application {
             e.printStackTrace();
         }
         edit.commit();
-    }
-
-    public boolean checkFileExists(String path) {
-        return new File(path).exists();
     }
 
     public void installRefDB(String path, boolean erase_source) {
@@ -209,5 +207,14 @@ public class AndZiApplication extends Application {
             return;
         }
 
+    }
+
+    public void replaceDataBase(String source) {
+        myDB.close();
+        myDB=null;
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        cw.deleteDatabase(DEFAULT_DATABASE_NAME);
+        copyDataBase(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
+        initialize_my_db();
     }
 }

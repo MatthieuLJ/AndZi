@@ -165,6 +165,9 @@ public class DBActivity extends Activity {
             case R.id.import_db:
                 import_database();
                 break;
+            case R.id.replace_db:
+                replace_database();
+                break;
             case R.id.reset_db:
                 reset_database();
                 break;
@@ -311,17 +314,29 @@ public class DBActivity extends Activity {
         startActivityForResult(intent, 0);
     }
 
+    private void replace_database() {
+        Intent intent = new Intent(this, com.matthieu.widget.file_dialog.FileDialog.class);
+        intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
+        startActivityForResult(intent, 1);
+    }
+
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         // should come here after the activity startedin import_database completes
         if (resultCode == Activity.RESULT_OK) {
 
-            if (requestCode != 0) {
+            if ((requestCode != 0) && (requestCode != 1)) {
                 return;
             }
             String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
 
-            merger merge_task = new merger();
-            merge_task.execute(filePath);
+            if (requestCode == 0) {
+                merger merge_task = new merger();
+                merge_task.execute(filePath);
+            }
+            else if (requestCode == 1) {
+                ((AndZiApplication) getApplication()).replaceDataBase(filePath);
+                update_content();
+            }
         } else if (resultCode == Activity.RESULT_CANCELED) {
             return;
         }
@@ -335,7 +350,7 @@ public class DBActivity extends Activity {
         protected void onPreExecute() {
             super.onPreExecute();
             mProgressDialog = new ProgressDialog(DBActivity.this);
-            mProgressDialog.setMessage("Downloading reference database");
+            mProgressDialog.setMessage("Merging database");
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(100);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
