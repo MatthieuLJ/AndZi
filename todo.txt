@@ -1,6 +1,6 @@
 TODO:
 * Build history of questions so the same word / character is not reused repeatedly
-* Display numbers on the stats bars
+* Move Reset and Replace database into separate threads
 * When Guess is wrong, display "your guess was... (more info)" ... and offer to correct the judgment.
 * Guess english from Chinese word
 * Guess words based on character
@@ -13,6 +13,7 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* Display numbers on the stats bars
 * Review list of words to study
 * Transition too slow when going to result page - use Hashmap for Pinying parsing...
 * Character guess (啤)酒 beer... 脾 is found as a correct answer?
