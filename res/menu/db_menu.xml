@@ -2,9 +2,9 @@
 
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/stats_email_db"
+    <item android:id="@+id/email_db"
           android:title="Email database"/>
-    <item android:id="@+id/stats_copy_db"
+    <item android:id="@+id/copy_db"
           android:title="Copy database"/>
     <item android:id="@+id/reset_db"
           android:title="Reset database" />

@@ -153,10 +153,10 @@ public class DBActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            case R.id.stats_email_db:
+            case R.id.email_db:
                 email_database();
                 break;
-            case R.id.stats_copy_db:
+            case R.id.copy_db:
                 copy_database();
                 break;
             case R.id.clear_db:
