@@ -33,8 +33,8 @@ public class Pinyin {
                         this.lame = temp+i;
                         this.radical = temp;
                         this.tone = i;
-                        if (i==5)
-                            this.tone=0;
+                        if (i==0)
+                            this.tone=5;
                         switch(tone) {
                             case 0:
                                 this.print=pinyin_list_notone[j];
@@ -91,7 +91,7 @@ public class Pinyin {
             if (entry.equals(pinyin_list_notone[i])) {
                 this.lame=entry+"5";
                 this.radical=entry;
-                this.tone=0;
+                this.tone=5;
                 this.print=entry;
                 this.html_color_print=entry;
                 return;
