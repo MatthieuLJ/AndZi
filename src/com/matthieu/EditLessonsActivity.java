@@ -325,6 +325,7 @@ public class EditLessonsActivity extends Activity {
         myDB.sortLessons(lesson_order);
         myDB.setLessonsToFilter(lesson_filter);
         myDB.enableFilter(filter_on);
+        ((AndZiApplication) getApplication()).save_database_filter(filter_on, lesson_filter);
         finish();
     }
 

@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.*;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -928,7 +927,7 @@ public class HanziDB extends SQLiteOpenHelper {
         exportDB(path, lessons);
     }
 
-    public void exportDB(String path, ArrayList<String> lessons) {
+    public void exportDB(String path, ArrayList<String> lessons, boolean with_score) {
         HanziDB new_db = new HanziDB(appContext, app, "tmp_db");
 
         for (String lesson : lessons) {
@@ -946,12 +945,26 @@ public class HanziDB extends SQLiteOpenHelper {
                     new_db.assignWordLesson(lesson, v);
                 }
             }
+
+            if (with_score) {
+                ArrayList<String> chars = new_db.getAllChar();
+                for (String c:chars) {
+                    int b = getBoxForChar(c);
+                    long t = getUpdateTimeForChar(c);
+                    new_db.setBoxForChar(c, b);
+                    new_db.setUpdateTimeForChar(c, t);
+                }
+            }
         }
         new_db.close();
 
         app.copyDataBase(new_db.getWritableDatabase().getPath(), path);
-        
+
         appContext.deleteDatabase("tmp_db");
+    }
+
+    public void exportDB(String path, ArrayList<String> lessons) {
+        exportDB(path, lessons, false);
     }
 
     ////////////////////////////////////////
@@ -1241,8 +1254,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public void enableFilter(boolean enable) {
         lesson_filter_enabled = enable;
-        
-        app.save_database_filter(lesson_filter_enabled, lesson_filter);
     }
     
     public boolean isFilterEnabled() {
@@ -1252,8 +1263,6 @@ public class HanziDB extends SQLiteOpenHelper {
     public void setLessonsToFilter(ArrayList<String> lessons) {
         lesson_filter = lessons;
         where_filter = buildWhereQuery(lessons);
-
-        app.save_database_filter(lesson_filter_enabled, lessons);
     }
 
     public ArrayList<String> getLessonsToFilter() {
@@ -1400,16 +1409,16 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      */
 
-    private static final long two_hours = (long) 2 * 60 * 60 * 1000;
-    private static final long two_days = (long) 2 * 24 * 60 * 60 * 1000;
-    private static final long one_week = (long) 1 * 7 * 24 * 60 * 60 * 1000;
-    private static final long one_month = (long) 1 * 30 * 24 * 60 * 60 * 1000;
+    private static final long box1_delay = (long) 2 * 60 * 60 * 1000; // 2 hours
+    private static final long box2_delay = (long) 2 * 24 * 60 * 60 * 1000; // 2 days
+    private static final long box3_delay = (long) 1 * 7 * 24 * 60 * 60 * 1000; // 1 week
+    private static final long box4_delay = (long) 3 * 7 * 24 * 60 * 60 * 1000; // 3 weeks
 
     // testing short delays
-    //private static final long two_hours = (long) 60 * 1000;
-    //private static final long two_days = (long) 2 * 60 * 1000;
-    //private static final long one_week = (long) 5 * 60 * 1000;
-    //private static final long one_month = (long) 10 * 60 * 1000;
+    //private static final long box1_delay = (long) 60 * 1000;
+    //private static final long box2_delay = (long) 2 * 60 * 1000;
+    //private static final long box3_delay = (long) 5 * 60 * 1000;
+    //private static final long box4_delay = (long) 10 * 60 * 1000;
 
     private static final int MAX_BOX=4;
 
@@ -1477,18 +1486,38 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    private long getUpdateTimeForChar(String hanzi) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long res;
+
+        Cursor cur = db.rawQuery("SELECT mod_time FROM leitner WHERE hanzi=?",
+                new String[] {hanzi});
+        if (cur.moveToFirst()) {
+            do{
+                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+                res = cur.getLong(cur.getColumnIndex("mod_time"));
+            }while(cur.moveToNext());
+        }
+        else {
+            res = 0;
+        }
+
+        cur.close();
+        return res;
+    }
+
     private long getExpiryTime (int box) {
         switch (box) {
             case 0 :
                 return 0;
             case 1:
-                return two_hours;
+                return box1_delay;
             case 2:
-                return two_days;
+                return box2_delay;
             case 3:
-                return one_week;
+                return box3_delay;
             case 4:
-                return one_month;
+                return box4_delay;
             default:
                 return 0;
         }
@@ -1555,6 +1584,39 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
+    private void setUpdateTimeForChar(String hanzi, long time) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("mod_time", time);
+        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
+                new String[] {hanzi});
+        if (cur.getCount() == 0) {
+            cv.put("hanzi", hanzi);
+            cv.put("box", 0);
+            db.insert("leitner", null, cv);
+        }
+        else {
+            db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+        }
+        cur.close();
+    }
+
+    private void setBoxForChar(String hanzi, int box) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("box", box);
+        cv.put("mod_time", System.currentTimeMillis());
+        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
+                new String[] {hanzi});
+        if (cur.getCount() == 0) {
+            cv.put("hanzi", hanzi);
+            db.insert("leitner", null, cv);
+        }
+        else {
+            db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+        }
+        cur.close();
+    }
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
