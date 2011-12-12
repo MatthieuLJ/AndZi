@@ -2,6 +2,7 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,14 +14,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.*;
 import com.matthieu.widget.StatsBars;
 
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -184,24 +186,51 @@ public class DBActivity extends Activity {
     }
 
     private void email_database() {
-        File export_db;
+        final File export_db;
         try {
             export_db = File.createTempFile("AndZi", ".azdb");
         } catch (IOException e) {
-            Log.d(TAG, "Could not create file");
+            Log.d(TAG, "Could not create temporary file");
             e.printStackTrace();
             return;
         }
 
-        new database_emailer().execute(export_db);
+        final Dialog dialog = new Dialog(DBActivity.this);
+        dialog.setTitle("Email options");
+        dialog.setContentView(R.layout.db_export_options);
+        ((CheckBox) dialog.findViewById(R.id.db_export_lessons)).setChecked(false);
+        ((CheckBox) dialog.findViewById(R.id.db_export_scores)).setChecked(false);
+        dialog.findViewById(R.id.db_export_path_option).setVisibility(View.GONE);
+        dialog.findViewById(R.id.db_export_ok).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                dialog.dismiss();
 
-        export_db.delete();
+                database_emailer emailer = new database_emailer();
+                emailer.include_scores(((CheckBox) dialog.findViewById(R.id.db_export_scores)).isChecked());
+                emailer.filtered_lessons(((CheckBox) dialog.findViewById(R.id.db_export_lessons)).isChecked());
+                emailer.execute(export_db);
+            }
+        });
+        dialog.findViewById(R.id.db_export_cancel).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
     private class database_emailer extends AsyncTask<File,Void,Void> {
         File export_db;
         ProgressDialog pd;
+        boolean with_scores, only_filtered_lessons;
         boolean enough_space;
+
+        public void include_scores(boolean include) {
+            with_scores=include;
+        }
+        public void filtered_lessons(boolean filter) {
+            only_filtered_lessons=filter;
+        }
 
         @Override
         protected void onPostExecute(Void aVoid) {
@@ -226,8 +255,14 @@ public class DBActivity extends Activity {
             export_db=files[0];
             enough_space = ((AndZiApplication) getApplication()).check_exporting_space(export_db.getPath());
             
-            if (enough_space)
-                myDB.exportDB(export_db.getPath());
+            if (enough_space) {
+                if (only_filtered_lessons) {
+                    myDB.exportDB(export_db.getPath(), myDB.getLessonsToFilter(), with_scores);
+                }
+                else {
+                    myDB.exportDB(export_db.getPath(), with_scores);
+                }
+            }
 
             return null;
         }
@@ -239,24 +274,50 @@ public class DBActivity extends Activity {
     }
 
     private void copy_database() {
-        File export_db;
-        try {
-            export_db = File.createTempFile("AndZi", ".azdb", Environment.getExternalStorageDirectory());
-        } catch (IOException e) {
-            Log.d(TAG, "Could not create file");
-            e.printStackTrace();
-            Toast toast = Toast.makeText(DBActivity.this, "There was an error copying the database", 5);
-            toast.show();
-            return;
-        }
+        String file_path=Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ Calendar.getInstance().get(Calendar.MONTH)+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
 
-        new database_exporter().execute(export_db);
+        final Dialog dialog = new Dialog(DBActivity.this);
+        dialog.setTitle("Export options");
+        dialog.setContentView(R.layout.db_export_options);
+        ((CheckBox) dialog.findViewById(R.id.db_export_lessons)).setChecked(false);
+        ((CheckBox) dialog.findViewById(R.id.db_export_scores)).setChecked(false);
+        ((EditText) dialog.findViewById(R.id.db_export_path)).setText(file_path);
+        dialog.findViewById(R.id.db_export_ok).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                dialog.dismiss();
+                File export_db = new File(((EditText) dialog.findViewById(R.id.db_export_path)).getText().toString());
+                if (!export_db.canWrite()) {
+                    Toast toast = Toast.makeText(DBActivity.this, "There was an error creating the file", 5);
+                    toast.show();
+                    return ;
+                }
+
+                database_exporter exporter = new database_exporter();
+                exporter.include_scores(((CheckBox) dialog.findViewById(R.id.db_export_scores)).isChecked());
+                exporter.filtered_lessons(((CheckBox) dialog.findViewById(R.id.db_export_lessons)).isChecked());
+                exporter.execute(new File(((EditText) dialog.findViewById(R.id.db_export_path)).getText().toString()));
+            }
+        });
+        dialog.findViewById(R.id.db_export_cancel).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
     private class database_exporter extends AsyncTask<File,Void,Void> {
         File export_db;
         ProgressDialog pd;
+        boolean with_scores, only_filtered_lessons;
         boolean enough_space;
+
+        public void include_scores(boolean include) {
+            with_scores=include;
+        }
+        public void filtered_lessons(boolean filter) {
+            only_filtered_lessons=filter;
+        }
 
         @Override
         protected void onPostExecute(Void aVoid) {
@@ -277,14 +338,22 @@ public class DBActivity extends Activity {
             export_db=files[0];
             enough_space = ((AndZiApplication) getApplication()).check_exporting_space(export_db.getPath());
 
-            if (enough_space)
-                myDB.exportDB(export_db.getPath());
+            if (enough_space) {
+                if (only_filtered_lessons) {
+                    myDB.exportDB(export_db.getPath(), myDB.getLessonsToFilter(), with_scores);
+                }
+                else {
+                    myDB.exportDB(export_db.getPath(), with_scores);
+                }
+            }
 
             return null;
         }
 
         @Override
         protected void onPreExecute() {
+
+
             pd = ProgressDialog.show(DBActivity.this, "Exporting Database", "Copying...", false);
         }
     }
