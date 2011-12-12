@@ -326,21 +326,18 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.checkDatabase();
     }
 
-    /*
+
     public void testExpiration() {
+        target_db.box1_delay=2*1000; // 2 secs
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 2);
         target_db.betterBox("你");
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
-        //SystemClock.setCurrentTimeMillis(System.currentTimeMillis()+three_hours);
-        try {
-            Runtime.getRuntime().exec("date \"$((" + three_hours + " + $(date +%s)))\"").waitFor();
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+        long delay = target_db.getDelayUntilMoreStudy();
+        assertTrue(delay<target_db.getExpiryTime(1));
+        long current_time = System.currentTimeMillis();
+        while(System.currentTimeMillis() < current_time+delay) {}
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 1);
         target_db.resetTime("你");
@@ -348,7 +345,21 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
         target_db.checkDatabase();
     }
-    */
+
+    public void testAddingMoreStudy() {
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        assertTrue(target_db.getNumCharsExpiredInBox(0) == 2);
+        target_db.betterBox("你");
+        assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
+        assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
+        long delay = target_db.getDelayUntilMoreStudy();
+        target_db.accelerateTime(delay);
+        assertTrue(target_db.getNumCharsExpiredInBox(1) == 1);
+        target_db.resetTime("你");
+        assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
+        target_db.checkDatabase();
+    }
+
 
     public void testNextToStudyFiltered() {
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));

@@ -1409,10 +1409,10 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      */
 
-    private static final long box1_delay = (long) 2 * 60 * 60 * 1000; // 2 hours
-    private static final long box2_delay = (long) 2 * 24 * 60 * 60 * 1000; // 2 days
-    private static final long box3_delay = (long) 1 * 7 * 24 * 60 * 60 * 1000; // 1 week
-    private static final long box4_delay = (long) 3 * 7 * 24 * 60 * 60 * 1000; // 3 weeks
+    protected long box1_delay = (long) 2 * 60 * 60 * 1000; // 2 hours
+    protected long box2_delay = (long) 2 * 24 * 60 * 60 * 1000; // 2 days
+    protected long box3_delay = (long) 1 * 7 * 24 * 60 * 60 * 1000; // 1 week
+    protected long box4_delay = (long) 3 * 7 * 24 * 60 * 60 * 1000; // 3 weeks
 
     // testing short delays
     //private static final long box1_delay = (long) 60 * 1000;
@@ -1486,7 +1486,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    private long getUpdateTimeForChar(String hanzi) {
+    protected long getUpdateTimeForChar(String hanzi) {
         SQLiteDatabase db = this.getReadableDatabase();
         long res;
 
@@ -1506,7 +1506,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    private long getExpiryTime (int box) {
+    protected long getExpiryTime (int box) {
         switch (box) {
             case 0 :
                 return 0;
@@ -1520,6 +1520,24 @@ public class HanziDB extends SQLiteOpenHelper {
                 return box4_delay;
             default:
                 return 0;
+        }
+    }
+
+    protected long getDelayUntilMoreStudy() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur;
+
+        cur = db.rawQuery("SELECT CASE box WHEN 1 THEN mod_time+? WHEN 2 THEN mod_time+? WHEN 3 THEN mod_time+? WHEN 4 THEN mod_time+? ELSE mod_time END AS delay " +
+                "FROM leitner WHERE (box=1 AND mod_time>?) OR (box=2 AND mod_time>?) OR (box=3 AND mod_time>?) OR (box=4 AND mod_time>?) ORDER BY delay ASC",
+                new String[] {Long.toString(box1_delay-System.currentTimeMillis()), Long.toString(box2_delay-System.currentTimeMillis()),
+                        Long.toString(box3_delay-System.currentTimeMillis()), Long.toString(box4_delay-System.currentTimeMillis()),
+                        Long.toString(System.currentTimeMillis()-box1_delay), Long.toString(System.currentTimeMillis()-box2_delay),
+                        Long.toString(System.currentTimeMillis()-box3_delay), Long.toString(System.currentTimeMillis()-box4_delay)});
+        if (cur.moveToNext()) {
+            return cur.getLong(cur.getColumnIndex("delay"));
+        }
+        else {
+            return 0;
         }
     }
 
@@ -1584,7 +1602,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    private void setUpdateTimeForChar(String hanzi, long time) {
+    protected void setUpdateTimeForChar(String hanzi, long time) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("mod_time", time);
@@ -1601,7 +1619,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    private void setBoxForChar(String hanzi, int box) {
+    protected void setBoxForChar(String hanzi, int box) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("box", box);
@@ -1617,6 +1635,12 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         cur.close();
     }
+
+    protected void accelerateTime(long millis) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("UPDATE leitner SET mod_time=mod_time-"+millis);
+    }
+
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
@@ -1696,6 +1720,12 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public void getMoreStudy(int how_many) {
+        for(int i=how_many; i>0; i--) {
+            long delay = getDelayUntilMoreStudy();
+            accelerateTime(delay);
+        }
+    }
     /*
      *
      *  Combining lesson database management with Leitner system
