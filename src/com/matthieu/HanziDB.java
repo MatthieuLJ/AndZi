@@ -882,6 +882,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         appContext.deleteDatabase(new_db_name);
     }
+    
     public void mergeDB(HanziDB other_db, ProgressDialog dialog) {
         ArrayList<String> lessons = other_db.getLessons();
         int num_lessons = lessons.size();
@@ -917,9 +918,11 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         }
     }
+
     public void mergeDB(String path) {
         mergeDB(path, null);
     }
+
     public void mergeDB(HanziDB other_db) {
         mergeDB(other_db,null);
     }
@@ -1676,7 +1679,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur = db.rawQuery("SELECT hanzi, 0 FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
                 "UNION " +
                 "SELECT hanzi, " +
-                "CASE box WHEN 0 THEN mod_time CASE 1 THEN mod_time+? CASE 2 THEN mod_time+? CASE 3 THEN mod_time+? CASE 4 THEN mod_time+? END AS expiring_time" +
+                "CASE box WHEN 0 THEN mod_time WHEN 1 THEN mod_time+? WHEN 2 THEN mod_time+? WHEN 3 THEN mod_time+? WHEN 4 THEN mod_time+? END AS expiring_time " +
                 "FROM leitner WHERE (box=0) OR (box=1 AND mod_time<?) OR (box=2 AND mod_time<?) " +
                 "OR (box=3 AND mod_time<?) OR (box=4 AND mod_time<?) ORDER BY expiring_time ASC",
                 new String[] {Long.toString(getExpiryTime(1)), Long.toString(getExpiryTime(2)), Long.toString(getExpiryTime(3)), Long.toString(getExpiryTime(4)),
@@ -1772,8 +1775,8 @@ public class HanziDB extends SQLiteOpenHelper {
                     "WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
                     "UNION " +
                     "SELECT char_pinyin.hanzi AS hanzi, " +
-                    "CASE leitner.box WHEN 0 THEN leitner.mod_time CASE 1 THEN leitner.mod_time+? CASE 2 THEN leitner.mod_time+? " +
-                    "CASE 3 THEN leitner.mod_time+? CASE 4 THEN leitner.mod_time+? END AS expiring_time" +
+                    "CASE leitner.box WHEN 0 THEN leitner.mod_time WHEN 1 THEN leitner.mod_time+? WHEN 2 THEN leitner.mod_time+? " +
+                    "WHEN 3 THEN leitner.mod_time+? WHEN 4 THEN leitner.mod_time+? END AS expiring_time" +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
