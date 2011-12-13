@@ -129,10 +129,9 @@ public class CharFinder extends Activity implements TextWatcher {
         first_try=true;
     }
 
-    private int check_guess() {
+    private int check_guess(String guess) {
         int res=0;
-        EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
-        String guess = chinese.getText().toString();
+
         if (guess.equals(hanzi)) {
             res=1;
         }
@@ -222,6 +221,14 @@ public class CharFinder extends Activity implements TextWatcher {
         startActivity(i);
     }
 
+    private void show_solution(String guess) {
+        Intent i = new Intent(this, TestResultActivity.class);
+		i.putExtra("Hanzi", hanzi);
+        i.putExtra("Mode", 0);
+        i.putExtra("WrongGuess", guess);
+        startActivity(i);
+    }
+
     public void handle_ok(View v) {
         Toast toast;
 
@@ -229,13 +236,19 @@ public class CharFinder extends Activity implements TextWatcher {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
-        int res = check_guess();
+        EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
+        String guess = chinese.getText().toString();
+
+        int res = check_guess(guess);
 
         if (res == -1)
             return;
 
-        if ((show_result==1) || ((show_result == 2) && (res == 0))) {
+        if (show_result==1) {
             show_solution();
+        }
+        else if ((show_result == 2) && (res == 0)) {
+            show_solution(guess);
         }
         else {
             if (res == 0) {

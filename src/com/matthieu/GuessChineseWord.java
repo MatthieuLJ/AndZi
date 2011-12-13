@@ -138,10 +138,7 @@ public class GuessChineseWord extends Activity {
         edit_guess.setText("");
     }
 
-    private int check_guess() {
-        EditText edit_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
-        String guess = edit_guess.getText().toString();
-
+    private int check_guess(String guess) {
         if (guess.equals(solution.chinese)) {
             // find the lowest box
             int min_box = 5;
@@ -191,7 +188,6 @@ public class GuessChineseWord extends Activity {
                                 if (i<previous_guess.size()-1)
                                     previous.setText(previous.getText() + ",\n");
                             }
-                            edit_guess.setText("");
                             previous.invalidate();
                             return -1;
                         }
@@ -230,20 +226,41 @@ public class GuessChineseWord extends Activity {
         startActivity(i);
     }
 
+    private void show_solution(String bad_guess) {
+        ArrayList<String> pinyins = new ArrayList<String>();
+
+        pinyins.add(solution.pinyin);
+
+        Intent i = new Intent(this, TestResultActivity.class);
+		i.putExtra("Hanzi", solution.chinese);
+		i.putExtra("Pinyins", pinyins);
+		i.putExtra("Mode", 1);
+        i.putExtra("WrongGuess", bad_guess);
+        startActivity(i);
+    }
+
     public void handle_ok(View v) {
         Toast toast;
 
         EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
-        
-        int res = check_guess();
 
-        if (res == -1)
+        EditText edit_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
+        String guess = edit_guess.getText().toString();
+
+        int res = check_guess(guess);
+
+        if (res == -1) {
+            edit_guess.setText("");
             return;
-        
-        if ((show_result==1) || ((show_result == 2) && (res == 0))) {
+        }
+
+        if (show_result==1) {
             show_solution();
+        }
+        else if ((show_result == 2) && (res == 0)) {
+            show_solution(guess);
         }
         else {
             if (res == 0) {
