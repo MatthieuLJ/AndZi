@@ -14,6 +14,7 @@ import android.view.View;
 public class StatsBars extends View {
     int good=0;  // those two go from 0 to 100...
     int expired=0;
+    int max=0;
     String good_label=null;
     String expired_label=null;
 
@@ -32,6 +33,9 @@ public class StatsBars extends View {
     }
     public void set_expired(int exp) {
         expired=exp;
+    }
+    public void set_max(int m) {
+        max=m;
     }
     public void set_good_label(String gl) {
         good_label=gl;
@@ -54,12 +58,19 @@ public class StatsBars extends View {
         int bound;
         Paint p=new Paint();
         Rect r=new Rect();
+        int good_width = (good * 100) / max;
+        int expired_width = (expired * 100) / max;
+
+        if ((good>0) && (good_width==0)) good_width=1;
+        if ((expired>0) && (expired_width==0)) expired_width=1;
         
         p.setTextSize(20);
 
         if ((good == 0) && (expired == 0)) { // not ready yet to draw anything
             return;
         }
+
+        Log.d(TAG, "good: "+good+", exp: "+expired+", max: "+max);
 
         ShapeDrawable green_rect = new ShapeDrawable(new RectShape());
         ShapeDrawable red_rect = new ShapeDrawable(new RectShape());
@@ -70,7 +81,7 @@ public class StatsBars extends View {
         int total_height = getMeasuredHeight();
 
         if (expired == 0) { // only good ones
-            bound = (total_width)*good/100;
+            bound = (total_width*good_width)/100;
             if (bound == 0) bound = 1;
             green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+bound, getPaddingTop()+total_height);
             green_rect.draw(canvas);
@@ -81,7 +92,7 @@ public class StatsBars extends View {
             return;
         }
         if (good == 0) { // only expired ones
-            bound = (total_width)*expired/100;
+            bound = (total_width*expired_width)/100;
             if (bound == 0) bound = 1;
             red_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+bound, getPaddingTop()+total_height);
             red_rect.draw(canvas);
@@ -94,10 +105,10 @@ public class StatsBars extends View {
 
         p.setTextSize(12);
         // split...
-        bound = (total_width)*good/100;
+        bound = (total_width*good_width)/100;
         if (bound == 0) bound = 1;
         green_rect.setBounds(getPaddingLeft(),getPaddingTop(),getPaddingLeft()+bound, getPaddingTop()+(3*total_height)/8);
-        bound = (total_width)*expired/100;
+        bound = (total_width*expired_width)/100;
         if (bound == 0) bound = 1;
         red_rect.setBounds(getPaddingLeft(),getPaddingTop()+(5*total_height)/8,getPaddingLeft()+bound, getPaddingTop()+total_height);
         green_rect.draw(canvas);
