@@ -19,8 +19,8 @@ import java.util.ArrayList;
 
 public class TestResultActivity extends Activity {
     protected HanziDB myDB=null;
-    protected String hanzi;
-    ArrayList<String> pinyins;
+    protected String hanzi, wrong_guess;
+    ArrayList<String> pinyins, wrong_pinyins;
     int mode; // 0 for character, 1 for word
 
     private final String TAG="TestResult";
@@ -53,18 +53,48 @@ public class TestResultActivity extends Activity {
             }
         }
 
+        wrong_guess=getIntent().getStringExtra("WrongGuess");
+        if (wrong_guess != null) {
+            if (mode == 0)
+                wrong_pinyins = myDB.getPinyinForChar(wrong_guess);
+            else if (mode == 1) {
+                wrong_pinyins = new ArrayList<String>();
+                for (Vocabulary voc : myDB.getTranslations(wrong_guess)) {
+                    wrong_pinyins.add(voc.pinyin);
+                }
+            }
+        }
+
         setContentView(R.layout.test_result);
 
         LinearLayout main_layout = (LinearLayout) findViewById(R.id.test_results);
 
         if (mode == 0) {
             for (String pin : pinyins) {
-                add_one_tone(main_layout, pin);
+                add_one_tone(main_layout, hanzi, pin);
             }
         }
         else if (mode == 1) {
             for (String pin : pinyins) {
-                add_one_word(main_layout, pin);
+                add_one_word(main_layout, hanzi, pin);
+            }
+        }
+
+        if ((wrong_pinyins != null) && (wrong_pinyins.size() != 0)) {
+            LinearLayout wrong_layout = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+            wrong_layout.setVisibility(View.VISIBLE);
+            TextView wrong_guess_tv = (TextView) findViewById(R.id.test_result_guess);
+            wrong_guess_tv.setText("Your guess was : "+wrong_guess);
+            wrong_guess_tv.setVisibility(View.VISIBLE);
+            if (mode == 0) {
+                for (String pin : wrong_pinyins) {
+                    add_one_tone(wrong_layout, wrong_guess, pin);
+                }
+            }
+            else if (mode == 1) {
+                for (String pin : wrong_pinyins) {
+                    add_one_word(wrong_layout, wrong_guess, pin);
+                }
             }
         }
 
@@ -72,12 +102,7 @@ public class TestResultActivity extends Activity {
         tv_hanzi.setText(hanzi);
     }
 
-    @Override
-    public boolean onCreateThumbnail(Bitmap outBitmap, Canvas canvas) {
-        return super.onCreateThumbnail(outBitmap, canvas);
-    }
-
-    private void add_one_tone(LinearLayout linear, String pin) {
+    private void add_one_tone(LinearLayout linear, String han, String pin) {
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         LinearLayout section = (LinearLayout) inflater.inflate(R.layout.test_result_section, linear, false);
 
@@ -86,7 +111,7 @@ public class TestResultActivity extends Activity {
 
         LinearLayout result_section = (LinearLayout) section.findViewById(R.id.test_result_translations);
 
-        ArrayList<Vocabulary> trans = myDB.getWordsWithPinyin(hanzi, pin);
+        ArrayList<Vocabulary> trans = myDB.getWordsWithPinyin(han, pin);
         for (int i=0; i<trans.size(); i++) {
             String str_trans = new String();
             TextView tv_translations = new TextView(this);
@@ -113,7 +138,7 @@ public class TestResultActivity extends Activity {
         linear.addView(section, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
-    private void add_one_word(LinearLayout linear, String pin) {
+    private void add_one_word(LinearLayout linear, String han, String pin) {
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View section = inflater.inflate(R.layout.test_result_section, linear, false);
 
@@ -121,8 +146,8 @@ public class TestResultActivity extends Activity {
         tv_pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(pin)));
         LinearLayout result_section = (LinearLayout) section.findViewById(R.id.test_result_translations);
         TextView tv_translations = new TextView(this);
-        ArrayList<Vocabulary> trans = myDB.getTranslations(hanzi, pin);
-        String str_trans = new String();
+        ArrayList<Vocabulary> trans = myDB.getTranslations(han, pin);
+        String str_trans = "";
         for (int i=0; i<trans.size(); i++) {
             Vocabulary voc = trans.get(i);
             for (int j=0; j<voc.english.size(); j++) {
@@ -135,7 +160,7 @@ public class TestResultActivity extends Activity {
                 str_trans += "\n";
         }
         tv_translations.setText(str_trans);
-        tv_translations.setTag(hanzi);
+        tv_translations.setTag(han);
         tv_translations.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 click_result(view);
