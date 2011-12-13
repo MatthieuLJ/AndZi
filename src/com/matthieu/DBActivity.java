@@ -267,11 +267,16 @@ public class DBActivity extends Activity {
             enough_space = ((AndZiApplication) getApplication()).check_exporting_space(export_db.getPath());
             
             if (enough_space) {
-                if (only_filtered_lessons) {
-                    myDB.exportDB(export_db.getPath(), myDB.getLessonsToFilter(), with_scores);
+                if ((!only_filtered_lessons) && (with_scores)) {
+                    ((AndZiApplication) getApplication()).copyMyDataBase(export_db.getPath());
                 }
                 else {
-                    myDB.exportDB(export_db.getPath(), with_scores);
+                    if (only_filtered_lessons) {
+                        myDB.exportDB(export_db.getPath(), myDB.getLessonsToFilter(), with_scores);
+                    }
+                    else {
+                        myDB.exportDB(export_db.getPath(), with_scores);
+                    }
                 }
             }
 
@@ -360,11 +365,16 @@ public class DBActivity extends Activity {
             enough_space = ((AndZiApplication) getApplication()).check_exporting_space(export_db.getPath());
 
             if (enough_space) {
-                if (only_filtered_lessons) {
-                    myDB.exportDB(export_db.getPath(), myDB.getLessonsToFilter(), with_scores);
+                if ((!only_filtered_lessons) && (with_scores)) {
+                    ((AndZiApplication) getApplication()).copyMyDataBase(export_db.getPath());
                 }
                 else {
-                    myDB.exportDB(export_db.getPath(), with_scores);
+                    if (only_filtered_lessons) {
+                        myDB.exportDB(export_db.getPath(), myDB.getLessonsToFilter(), with_scores);
+                    }
+                    else {
+                        myDB.exportDB(export_db.getPath(), with_scores);
+                    }
                 }
             }
 
@@ -373,8 +383,6 @@ public class DBActivity extends Activity {
 
         @Override
         protected void onPreExecute() {
-
-
             pd = ProgressDialog.show(DBActivity.this, "Exporting Database", "Copying...", false);
         }
     }
@@ -417,15 +425,41 @@ public class DBActivity extends Activity {
             if ((requestCode != 0) && (requestCode != 1)) {
                 return;
             }
-            String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
+            final String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
 
             if (requestCode == 0) {
                 merger merge_task = new merger();
                 merge_task.execute(filePath);
             }
             else if (requestCode == 1) {
-                ((AndZiApplication) getApplication()).replaceDataBase(filePath);
-                update_content();
+                new AsyncTask<Void,Void,Void>() {
+                    ProgressDialog pd;
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        pd.dismiss();
+                    }
+
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        pd = ProgressDialog.show(DBActivity.this, "Replacing Database", "Copying...", false);
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Void... values) {
+                        update_content();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        ((AndZiApplication) getApplication()).replaceDataBase(filePath);
+                        publishProgress((Void)null);
+
+                        return null;
+                    }
+                }.execute((Void)null);
             }
         } else if (resultCode == Activity.RESULT_CANCELED) {
             return;
@@ -471,13 +505,27 @@ public class DBActivity extends Activity {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setMessage("Are you sure you want to restart the study for everything?");
         alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int i) {
-                ArrayList<String> hanzis = myDB.getAllChar();
-                for (String han : hanzis) {
-                    myDB.restartStudy(han);
-                }
-                update_content();
-                dialog.dismiss();
+            public void onClick(final DialogInterface dialog, int i) {
+                new AsyncTask<Void,Void,Void>() {
+                    @Override
+                    protected void onProgressUpdate(Void... values) {
+                        update_content();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        ArrayList<String> hanzis = myDB.getAllChar();
+                        for (int i=0; i<hanzis.size(); i++){
+                            String han = hanzis.get(i);
+                            myDB.restartStudy(han);
+                            if (i%20 ==0)
+                                publishProgress((Void)null);
+                        }
+                        publishProgress((Void)null);
+                        dialog.dismiss();
+                        return null;
+                    }
+                }.execute((Void)null);
             }
         });
         alert.setNegativeButton("No", new DialogInterface.OnClickListener() {

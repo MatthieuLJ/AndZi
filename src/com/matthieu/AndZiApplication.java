@@ -172,6 +172,10 @@ public class AndZiApplication extends Application {
         return true;
     }
 
+    public void copyMyDataBase(String destination) {
+        copyDataBase(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
+    }
+
     public void copyDataBase(String source, String destination) {
         InputStream input;
         try {
