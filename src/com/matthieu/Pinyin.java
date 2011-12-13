@@ -36,7 +36,7 @@ public class Pinyin {
                         if (i==0)
                             this.tone=5;
                         switch(tone) {
-                            case 0:
+                            case 5:
                                 this.print=pinyin_list_notone[j];
                                 this.html_color_print=this.print;
                                 break;
