@@ -291,7 +291,13 @@ public class DBActivity extends Activity {
             public void onClick(View view) {
                 dialog.dismiss();
                 File export_db = new File(((EditText) dialog.findViewById(R.id.db_export_path)).getText().toString());
-                if (!export_db.canWrite()) {
+                try {
+                    if (!export_db.createNewFile()) {
+                        Toast toast = Toast.makeText(DBActivity.this, "There was an error creating the file", 5);
+                        toast.show();
+                        return;
+                    }
+                } catch (IOException e) {
                     Toast toast = Toast.makeText(DBActivity.this, "There was an error creating the file", 5);
                     toast.show();
                     return;
