@@ -11,10 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
+import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.StatsBars;
 
@@ -198,6 +195,10 @@ public class DBActivity extends Activity {
         final Dialog dialog = new Dialog(DBActivity.this);
         dialog.setTitle("Email options");
         dialog.setContentView(R.layout.db_export_options);
+        WindowManager.LayoutParams lp= new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width=WindowManager.LayoutParams.FILL_PARENT;
+        dialog.getWindow().setAttributes(lp);
         ((CheckBox) dialog.findViewById(R.id.db_export_lessons)).setChecked(false);
         ((CheckBox) dialog.findViewById(R.id.db_export_scores)).setChecked(false);
         dialog.findViewById(R.id.db_export_path_option).setVisibility(View.GONE);
@@ -279,6 +280,10 @@ public class DBActivity extends Activity {
         final Dialog dialog = new Dialog(DBActivity.this);
         dialog.setTitle("Export options");
         dialog.setContentView(R.layout.db_export_options);
+        WindowManager.LayoutParams lp= new WindowManager.LayoutParams();
+        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.width=WindowManager.LayoutParams.FILL_PARENT;
+        dialog.getWindow().setAttributes(lp);
         ((CheckBox) dialog.findViewById(R.id.db_export_lessons)).setChecked(false);
         ((CheckBox) dialog.findViewById(R.id.db_export_scores)).setChecked(false);
         ((EditText) dialog.findViewById(R.id.db_export_path)).setText(file_path);
@@ -289,7 +294,7 @@ public class DBActivity extends Activity {
                 if (!export_db.canWrite()) {
                     Toast toast = Toast.makeText(DBActivity.this, "There was an error creating the file", 5);
                     toast.show();
-                    return ;
+                    return;
                 }
 
                 database_exporter exporter = new database_exporter();
