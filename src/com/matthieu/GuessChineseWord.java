@@ -64,6 +64,50 @@ public class GuessChineseWord extends Activity {
         set_next_study();
     }
 
+    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+        Log.d(TAG, "got return code "+resultCode);
+        
+        if (requestCode != 0)
+            return;
+
+        if (resultCode == 1) {
+            update_scores(true);
+        } else {
+            update_scores(false);
+        }
+
+    }
+
+    protected void update_scores(boolean good) {
+        Log.d(TAG, "updating scores "+(good?"good":"bad"));
+        
+        int min_box = 5;
+
+        if (good) {
+            for (int i=0; i<solution.chinese.length();) {
+                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+                int box = myDB.getBoxForChar(hanzi);
+                if (box == min_box) {
+                    Log.d(TAG, hanzi +" moves up");
+
+                }
+                else {
+                    myDB.resetTime(hanzi);
+                    Log.d(TAG, hanzi +" will come back later");
+                }
+
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+        }
+        else {
+            for (int i=0; i<solution.chinese.length();) {
+            String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+            myDB.restartStudy(hanzi);
+            i+=Character.charCount(solution.chinese.codePointAt(i));
+        }
+        }
+    }
+
     private void set_next_study() {
         String candidate;
         ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
@@ -140,33 +184,6 @@ public class GuessChineseWord extends Activity {
 
     private int check_guess(String guess) {
         if (guess.equals(solution.chinese)) {
-            // find the lowest box
-            int min_box = 5;
-
-            for (int i=0; i<solution.chinese.length();) {
-                int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
-                if (new_box < min_box) {
-                    min_box = new_box;
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-
-            // move the characters in the min_box up, reset the time for the rest
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                int box = myDB.getBoxForChar(hanzi);
-                if (box == min_box) {
-                    Log.d(TAG, hanzi +" moves up");
-                    myDB.betterBox(hanzi);
-                }
-                else {
-                    myDB.resetTime(hanzi);
-                    Log.d(TAG, hanzi +" will come back later");
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
             return 1;
         }
         else {
@@ -195,11 +212,7 @@ public class GuessChineseWord extends Activity {
                 }
             }
         }
-        for (int i=0; i<solution.chinese.length();) {
-            String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-            myDB.restartStudy(hanzi);
-            i+=Character.charCount(solution.chinese.codePointAt(i));
-        }
+
         return 0;
     }
 
@@ -226,7 +239,7 @@ public class GuessChineseWord extends Activity {
         startActivity(i);
     }
 
-    private void show_solution(String bad_guess) {
+    private void show_solution(String bad_guess, boolean offer_override) {
         ArrayList<String> pinyins = new ArrayList<String>();
 
         pinyins.add(solution.pinyin);
@@ -236,7 +249,13 @@ public class GuessChineseWord extends Activity {
 		i.putExtra("Pinyins", pinyins);
 		i.putExtra("Mode", 1);
         i.putExtra("WrongGuess", bad_guess);
-        startActivity(i);
+        if (offer_override) {
+            i.putExtra("FixAnswer", true);
+            startActivityForResult(i, 0);
+        }
+        else {
+            startActivity(i);
+        }
     }
 
     public void handle_ok(View v) {
@@ -256,21 +275,33 @@ public class GuessChineseWord extends Activity {
             return;
         }
 
-        if (show_result==1) {
-            show_solution();
-        }
-        else if ((show_result == 2) && (res == 0)) {
-            show_solution(guess);
+        if (((show_result == 2) || (show_result == 1)) && (res == 0)) {
+            if (!guess.equals(""))
+                show_solution(guess, true);
+            else {
+                show_solution(guess, false);
+                update_scores(false);
+            }
         }
         else {
-            if (res == 0) {
-                toast = Toast.makeText(this, "Sorry, this is wrong", 2);
+            if (res == 0)
+                update_scores(false);
+            else
+                update_scores(true);
+
+            if (show_result==1) {
+                show_solution();
             }
             else {
-                toast = Toast.makeText(this, "Well done !", 2);
+                if (res == 0) {
+                    toast = Toast.makeText(this, "Sorry, this is wrong", 2);
+                }
+                else {
+                    toast = Toast.makeText(this, "Well done !", 2);
+                }
+                toast.show();
+                set_next_study();
             }
-            toast.show();
-            set_next_study();
         }
     }
 

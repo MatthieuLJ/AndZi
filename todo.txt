@@ -1,5 +1,4 @@
 TODO:
-* When Guess is wrong, display "your guess was... (more info)" ... and offer to correct the judgment (all options in the Intent)
 * Guess pinyin from character
 * Guess english from Chinese word
 * Guess words based on character
@@ -11,6 +10,7 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* When Guess is wrong, display "your guess was... (more info)" ... and offer to correct the judgment (all options in the Intent)
 * Move Reset and Replace database into separate threads
 * Speed up export and email when copying the whole database
 * Fix StatsBar when number is very low

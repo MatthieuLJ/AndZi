@@ -72,6 +72,20 @@ public class CharFinder extends Activity implements TextWatcher {
         set_next_study();
     }
 
+    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
+        Log.d(TAG, "got return code "+resultCode);
+
+        if (requestCode != 0)
+            return;
+
+        if (resultCode == 1) {
+            update_scores(true);
+        } else {
+            update_scores(false);
+        }
+
+    }
+
     private void set_next_study() {
         hanzi = myDB.getNextFilteredToStudy();
         
@@ -90,7 +104,7 @@ public class CharFinder extends Activity implements TextWatcher {
 
         words = myDB.getWordsWithPinyin(hanzi);
 
-        Log.d(TAG, "Testing for character"+hanzi);
+        Log.d(TAG, "Testing for character "+hanzi+" got "+words.size()+" words");
 
         TableLayout tl = (TableLayout) findViewById(R.id.char_finder_word_grid);
         tl.removeAllViews();
@@ -169,14 +183,7 @@ public class CharFinder extends Activity implements TextWatcher {
             }
         }
 
-        switch(res) {
-            case 0:
-                myDB.restartStudy(hanzi);
-                break;
-            case 1:
-                myDB.betterBox(hanzi);
-                break;
-            case -1:
+        if (res == -1) {
                 if (!previous_guess.contains(guess))
                     previous_guess.add(guess);
                 TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
@@ -189,28 +196,8 @@ public class CharFinder extends Activity implements TextWatcher {
                 }
                 edit_guess.setText("");
                 previous.invalidate();
-                break;
         }
 
-        if (res != -1) {
-            // reset the time for all characters displayed or restart study
-            for (Vocabulary v:words) {
-                for (int i=0; i<v.chinese.length();) {
-                    String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
-                    i+=Character.charCount(v.chinese.codePointAt(i));
-                    if (other_hanzi.equals(hanzi))
-                        continue;
-                    switch(res) {
-                        case 0:
-                            myDB.restartStudy(other_hanzi);
-                            break;
-                        case 1:
-                            myDB.resetTime(other_hanzi);
-                            break;
-                    }
-                }
-            }
-        }
         return res;
     }
 
@@ -221,12 +208,41 @@ public class CharFinder extends Activity implements TextWatcher {
         startActivity(i);
     }
 
-    private void show_solution(String guess) {
+    private void show_solution(String guess, boolean offer_override) {
         Intent i = new Intent(this, TestResultActivity.class);
 		i.putExtra("Hanzi", hanzi);
         i.putExtra("Mode", 0);
         i.putExtra("WrongGuess", guess);
-        startActivity(i);
+        if (offer_override) {
+            i.putExtra("FixAnswer", true);
+            startActivityForResult(i, 0);
+        }
+        else {
+            startActivity(i);
+        }
+    }
+
+    protected void update_scores(boolean good) {
+        if (good) {
+            myDB.betterBox(hanzi);
+        }
+        else {
+            myDB.restartStudy(hanzi);
+        }
+
+        // reset the time for all characters displayed or restart study
+        for (Vocabulary v:words) {
+            for (int i=0; i<v.chinese.length();) {
+                String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
+                i+=Character.charCount(v.chinese.codePointAt(i));
+                if (other_hanzi.equals(hanzi))
+                    continue;
+                if (good)
+                    myDB.resetTime(other_hanzi);
+                else
+                    myDB.restartStudy(other_hanzi);
+            }
+        }
     }
 
     public void handle_ok(View v) {
@@ -244,21 +260,33 @@ public class CharFinder extends Activity implements TextWatcher {
         if (res == -1)
             return;
 
-        if (show_result==1) {
-            show_solution();
-        }
-        else if ((show_result == 2) && (res == 0)) {
-            show_solution(guess);
+        if (((show_result == 2) || (show_result ==1)) && (res == 0)) {
+            if (!guess.equals(""))
+                show_solution(guess, true);
+            else {
+                show_solution(guess, false);
+                update_scores(false);
+            }
         }
         else {
-            if (res == 0) {
-                toast = Toast.makeText(this, "Sorry, the correct answer was " + hanzi, 2);
+            if (res == 0)
+                update_scores(false);
+            else
+                update_scores(true);
+
+            if (show_result==1) {
+                show_solution();
             }
             else {
-                toast = Toast.makeText(this, "Well done !", 2);
+                if (res == 0) {
+                    toast = Toast.makeText(this, "Sorry, the correct answer was " + hanzi, 2);
+                }
+                else {
+                    toast = Toast.makeText(this, "Well done !", 2);
+                }
+                toast.show();
+                set_next_study();
             }
-            toast.show();
-            set_next_study();
         }
     }
 
