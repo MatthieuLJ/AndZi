@@ -70,7 +70,7 @@ public class StatsBars extends View {
             return;
         }
 
-        Log.d(TAG, "good: "+good+", exp: "+expired+", max: "+max);
+        //Log.d(TAG, "good: "+good+", exp: "+expired+", max: "+max);
 
         ShapeDrawable green_rect = new ShapeDrawable(new RectShape());
         ShapeDrawable red_rect = new ShapeDrawable(new RectShape());
