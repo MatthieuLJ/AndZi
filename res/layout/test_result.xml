@@ -44,11 +44,27 @@
             android:orientation="vertical"
             android:visibility="gone"
             />
-    <Button
+    <LinearLayout
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="Next"
-            android:onClick="handle_next"
-            />
+            android:orientation="horizontal"
+            >
+        <Button
+                android:id="@+id/test_result_accept"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                android:text="Accept answer"
+                android:onClick="handle_good"
+                android:visibility="gone"
+                />
+        <Button
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                android:text="Next"
+                android:onClick="handle_next"
+                />
+    </LinearLayout>
 
 </LinearLayout>

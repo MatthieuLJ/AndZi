@@ -2,10 +2,7 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
@@ -22,6 +19,7 @@ public class TestResultActivity extends Activity {
     protected String hanzi, wrong_guess;
     ArrayList<String> pinyins, wrong_pinyins;
     int mode; // 0 for character, 1 for word
+    boolean accept_answer;
 
     private final String TAG="TestResult";
 
@@ -65,6 +63,8 @@ public class TestResultActivity extends Activity {
             }
         }
 
+        accept_answer =getIntent().getBooleanExtra("FixAnswer", false);
+
         setContentView(R.layout.test_result);
 
         LinearLayout main_layout = (LinearLayout) findViewById(R.id.test_results);
@@ -100,6 +100,9 @@ public class TestResultActivity extends Activity {
 
         TextView tv_hanzi = (TextView) findViewById(R.id.test_result_chinese);
         tv_hanzi.setText(hanzi);
+
+        if (accept_answer)
+            findViewById(R.id.test_result_accept).setVisibility(View.VISIBLE);
     }
 
     private void add_one_tone(LinearLayout linear, String han, String pin) {
@@ -171,6 +174,11 @@ public class TestResultActivity extends Activity {
     }
 
     public void handle_next(View v) {
+        finish();
+    }
+
+    public void handle_good(View v) {
+        setResult(1);
         finish();
     }
 
