@@ -35,6 +35,11 @@ public class DBActivity extends Activity {
         myDB = ((AndZiApplication) getApplication()).myDB;
         setContentView(R.layout.db);
 
+        if (!myDB.checkDatabase()) {
+            Toast toast = Toast.makeText(DBActivity.this, "Database is corrupted... FIXME", 10);
+            toast.show();
+        }
+
         update_content();
 
         Intent intent = getIntent();
