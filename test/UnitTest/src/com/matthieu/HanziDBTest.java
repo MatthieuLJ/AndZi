@@ -412,7 +412,7 @@ public class HanziDBTest extends AndroidTestCase {
         delay(1000);
         assertTrue(target_db.getNextToStudy()==null);
         target_db.getMoreStudy(3);
-        assertTrue(target_db.getAllToStudy().size()==3);
+        assertTrue(target_db.getAllToStudy().size()>=3);
     }
 
     public void testNextToStudyFiltered() {

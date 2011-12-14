@@ -131,6 +131,16 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
 
+            // check all char_pinyins are used
+            c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
+            if (c.moveToFirst()) {
+                res = false;
+                do{
+                    Log.w(TAG, "char_pinyin_id " + c.getInt(c.getColumnIndex("char_pinyin_id")) + "not used in cword_segment");
+                }while(c.moveToNext());
+            }
+            c.close();
+
             // check foreign key from eword to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
             if (c.moveToFirst()) {
@@ -210,7 +220,15 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
 
             // check every cword has at least one translation
-            c = db.rawQuery("SELECT COUNT(cword_id) AS count FROM eword GROUP BY cword_id", null);
+            int count=0;
+            c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
+            if (c.moveToFirst()) {
+                do{
+                    res = false;
+                    Log.w(TAG, "cword_id "+c.getInt(c.getColumnIndex("cword_id"))+", does not have translation");
+                }while(c.moveToNext());
+            }
+            c.close();
 
             //
             // Lessons
