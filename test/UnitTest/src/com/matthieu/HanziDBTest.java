@@ -16,18 +16,22 @@ public class HanziDBTest extends AndroidTestCase {
     private static final String TAG = "HanziDBTest";
     protected static final String DbName = "test_db";
     private HanziDB target_db;
+    private AndZiApplication app;
 
     @Override
     protected void setUp() {
         ContextWrapper cw = new ContextWrapper(this.getContext());
         cw.deleteDatabase(DbName);
-        target_db = new HanziDB(this.getContext(), new AndZiApplication(),  DbName);
+        app = new AndZiApplication();
+        target_db = new HanziDB(this.getContext(), app,  DbName);
         Log.d(TAG, " is setup");
     }
 
     @Override
     protected void tearDown() {
         target_db.close();
+        //ContextWrapper cw = new ContextWrapper(this.getContext());
+        //cw.deleteDatabase(DbName);
     }
 
     public void testBareTranslation() {
@@ -39,6 +43,7 @@ public class HanziDBTest extends AndroidTestCase {
     public void testSimpleAdd() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("你好")).contains("hello"));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("你好", "ni3hao3")).contains("hello"));
         assertTrue(target_db.checkDatabase());
     }
 
@@ -108,6 +113,22 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.checkDatabase());
     }
 
+    public void testMoreDelete() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("bright", "next", "wise")),new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("name", "famous")), new ArrayList<String>(Arrays.asList("名")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("明")).contains("bright"));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("明")).contains("wise"));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("名")).contains("name"));
+        target_db.delVocabulary("name", new ArrayList<String>(Arrays.asList("名")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("名")).contains("famous"));
+        assertFalse(HanziDB.combineListOfTranslations(target_db.getTranslations("名")).contains("name"));
+        target_db.delVocabulary(new ArrayList<String>(Arrays.asList("bright", "next")), new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        assertFalse(HanziDB.combineListOfTranslations(target_db.getTranslations("明")).contains("bright"));
+        assertFalse(HanziDB.combineListOfTranslations(target_db.getTranslations("明")).contains("next"));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getTranslations("明")).contains("wise"));
+        assertTrue(target_db.checkDatabase());
+    }
+
     public void testLeftOverFromDelete() {
         target_db.addVocabulary("sky",new ArrayList<String>(Arrays.asList("天")), new ArrayList<String>(Arrays.asList("tian1")));
         target_db.addVocabulary("today",new ArrayList<String>(Arrays.asList("今","天")), new ArrayList<String>(Arrays.asList("jin1","tian1")));
@@ -154,9 +175,11 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.addVocabulary("long", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("chang2")));
         assertTrue(target_db.getNumChars()==3);
         assertTrue(target_db.getNumWords()==4);
+        assertTrue(target_db.getAllChar().size()==3);
         target_db.delVocabulary(new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(target_db.getNumChars()==2);
         assertTrue(target_db.getNumWords()==3);
+        assertTrue(target_db.getAllChar().size()==2);
         assertTrue(target_db.checkDatabase());
     }
 
@@ -230,6 +253,19 @@ public class HanziDBTest extends AndroidTestCase {
         assertFalse(target_db.getLessonForWord("好", "hao3", "well").contains("lesson 1"));
         assertTrue(target_db.getLessonForWord("好", "hao3", "perfect").size() == 0);
         assertTrue(target_db.checkDatabase());
+    }
+
+    public void testLessonRemoveAfterAssignment() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("down", "below")), new ArrayList<String>(Arrays.asList("下")), new ArrayList<String>(Arrays.asList("xia4")));
+        target_db.addLesson("remove_lesson");
+        target_db.assignWordLesson("remove_lesson", new Vocabulary("下", "xia4", new ArrayList<String>(Arrays.asList("down", "below"))));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("down"));
+        assertTrue(HanziDB.combineListOfTranslations(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("remove_lesson")))).contains("below"));
+        assertTrue(target_db.getLessons().size()==1);
+        assertTrue(target_db.getLessonForWord("下", "xia4","down").size()==1);
+        target_db.delLesson("remove_lesson");
+        assertTrue(target_db.getLessons().size()==0);
+        assertTrue(target_db.getLessonForWord("下", "xia4","down").size()==0);
     }
 
     public void testLessonOrder() {
@@ -326,6 +362,10 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.checkDatabase();
     }
 
+    private void delay(long millis) {
+         long current_time = System.currentTimeMillis();
+        while(System.currentTimeMillis() < current_time+millis) {}
+    }
 
     public void testExpiration() {
         target_db.box1_delay=2*1000; // 2 secs
@@ -334,10 +374,9 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.betterBox("你");
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
-        long delay = target_db.getDelayUntilMoreStudy();
-        assertTrue(delay<target_db.getExpiryTime(1));
-        long current_time = System.currentTimeMillis();
-        while(System.currentTimeMillis() < current_time+delay) {}
+        long delay_millis = target_db.getDelayUntilMoreStudy();
+        assertTrue(delay_millis<target_db.getExpiryTime(1));
+        delay(delay_millis);
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 1);
         target_db.resetTime("你");
@@ -358,8 +397,23 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.resetTime("你");
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
         target_db.checkDatabase();
-    }
 
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
+        target_db.setBoxForChar("你", 4);
+        delay(1000);
+        target_db.setBoxForChar("好", 4);
+        delay(1000);
+        target_db.setBoxForChar("长", 4);
+        delay(1000);
+        target_db.setBoxForChar("西", 4);
+        delay(1000);
+        target_db.setBoxForChar("风", 4);
+        delay(1000);
+        assertTrue(target_db.getNextToStudy()==null);
+        target_db.getMoreStudy(3);
+        assertTrue(target_db.getAllToStudy().size()==3);
+    }
 
     public void testNextToStudyFiltered() {
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
@@ -392,5 +446,107 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.assignWordLesson("lesson filter", "hello", "你好", "ni3hao3");
         assertTrue(target_db.getAllFilteredToStudy(0).contains("你"));
         target_db.checkDatabase();
+    }
+
+    public void testExportAllNoScores() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
+        target_db.addLesson("lesson 1");
+        target_db.addLesson("lesson 2");
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson 1", "you", "你", "ni3");
+        target_db.setBoxForChar("你", 3);
+        target_db.setBoxForChar("西", 4);
+        target_db.exportDB(getContext().getDatabasePath("exported_db").getPath());
+        HanziDB export_db = new HanziDB(getContext(), app, "exported_db");
+        assertTrue(export_db.getAllChar().size()==5);
+        assertTrue(export_db.getLessons().size()==2);
+        assertTrue(export_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
+        assertTrue(export_db.getBoxForChar("你")==0);
+        assertTrue(export_db.getNumCharsInBox(0)==5);
+        assertTrue(export_db.checkDatabase());
+        assertTrue(target_db.checkDatabase());
+        export_db.close();
+        ContextWrapper cw = new ContextWrapper(this.getContext());
+        cw.deleteDatabase("exported_db");
+    }
+
+    public void testExportAllWithScores() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
+        target_db.addLesson("lesson 1");
+        target_db.addLesson("lesson 2");
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson 1", "well", "好", "hao3");
+        target_db.setBoxForChar("你", 3);
+        target_db.setBoxForChar("西", 4);
+        target_db.exportDB(getContext().getDatabasePath("exported_db").getPath(), true);
+        HanziDB export_db = new HanziDB(getContext(), app, "exported_db");
+        assertTrue(export_db.getBoxForChar("你")==3);
+        assertTrue(export_db.getNumCharsInBox(0)==3);
+        assertTrue(export_db.checkDatabase());
+        assertTrue(target_db.checkDatabase());
+        export_db.close();
+        ContextWrapper cw = new ContextWrapper(this.getContext());
+        cw.deleteDatabase("exported_db");
+    }
+
+    public void testExportSomeLessons() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary("west", new ArrayList<String>(Arrays.asList("西")), new ArrayList<String>(Arrays.asList("xi1")));
+        target_db.addLesson("lesson 1");
+        target_db.addLesson("lesson 2");
+        target_db.addLesson("lesson 3");
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson 1", "you", "你", "ni3");
+        target_db.assignWordLesson("lesson 2", "grow", "长", "zhang3");
+        target_db.assignWordLesson("lesson 3", "west", "西", "xi1");
+        target_db.exportDB(getContext().getDatabasePath("exported_db").getPath(), new ArrayList<String>(Arrays.asList("lesson 1","lesson 2")));
+        HanziDB export_db = new HanziDB(getContext(), app, "exported_db");
+        assertTrue(export_db.getAllChar().size()==3);
+        assertTrue(export_db.getLessons().size()==2);
+        assertTrue(export_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
+        assertTrue(export_db.checkDatabase());
+        assertTrue(target_db.checkDatabase());
+        export_db.close();
+        ContextWrapper cw = new ContextWrapper(this.getContext());
+        cw.deleteDatabase("exported_db");
+    }
+
+    public void testMergeDB() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary("west", new ArrayList<String>(Arrays.asList("西")), new ArrayList<String>(Arrays.asList("xi1")));
+        target_db.addLesson("lesson 1");
+        target_db.addLesson("lesson 2");
+        target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson 1", "you", "你", "ni3");
+        target_db.assignWordLesson("lesson 2", "grow", "长", "zhang3");
+
+        HanziDB other_db = new HanziDB(getContext(), app, "other_db");
+        other_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        other_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        other_db.addVocabulary("wind", new ArrayList<String>(Arrays.asList("风")), new ArrayList<String>(Arrays.asList("feng1")));
+        other_db.addLesson("lesson 2");
+        other_db.addLesson("lesson 3");
+        other_db.assignWordLesson("lesson 2", "hello", "你好", "ni3hao3");
+        other_db.assignWordLesson("lesson 3", "grow", "长", "zhang3");
+        other_db.assignWordLesson("lesson 3", "west", "西", "xi1");
+        
+        target_db.mergeDB(other_db);
+        assertTrue(target_db.getAllChar().size()==5);
+        assertTrue(target_db.getLessons().size()==3);
+        assertTrue(target_db.getLessonForWord("长", "zhang3", "grow").size()==2);
+        assertTrue(target_db.checkDatabase());
     }
 }

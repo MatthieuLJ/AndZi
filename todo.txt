@@ -10,6 +10,7 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* Better test HanziDB consistency with merges, exports...etc...
 * When Guess is wrong, display "your guess was... (more info)" ... and offer to correct the judgment (all options in the Intent)
 * Move Reset and Replace database into separate threads
 * Speed up export and email when copying the whole database
