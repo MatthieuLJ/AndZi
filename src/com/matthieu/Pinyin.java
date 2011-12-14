@@ -254,6 +254,10 @@ public class Pinyin {
         return html_color_print;
     }
 
+    public boolean equals(Pinyin pinyin) {
+        return (pinyin.get_lame().equals(get_lame())) && (pinyin.get_tone() == get_tone());
+    }
+
     private static final String[] pinyin_list_notone = {
             "a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca", "sa", "zha", "cha", "sha", "ga", "ka", "ha",
             "o", "bo", "po", "mo", "fo",
