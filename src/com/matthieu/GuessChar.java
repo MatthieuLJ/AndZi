@@ -18,7 +18,7 @@ import android.widget.*;
 
 import java.util.ArrayList;
 
-public class CharFinder extends Activity implements TextWatcher {
+public class GuessChar extends Activity implements TextWatcher {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
     private String hanzi;
@@ -27,7 +27,7 @@ public class CharFinder extends Activity implements TextWatcher {
     int show_result;
     boolean first_try=true;
 
-    private final String TAG="CharFinder";
+    private final String TAG="GuessChar";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +50,7 @@ public class CharFinder extends Activity implements TextWatcher {
         words=new ArrayList<Vocabulary>();
         previous_guess=new ArrayList<String>();
 
-        setContentView(R.layout.char_finder);
+        setContentView(R.layout.guess_char);
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.addTextChangedListener(this);
@@ -113,7 +113,7 @@ public class CharFinder extends Activity implements TextWatcher {
             TableRow tr = new TableRow(this);
 
             TextView chinese = new TextView(this);
-            chinese.setTextAppearance(CharFinder.this, android.R.style.TextAppearance_Medium_Inverse);
+            chinese.setTextAppearance(GuessChar.this, android.R.style.TextAppearance_Medium_Inverse);
             chinese.setClickable(false);
             chinese.setText(w.chinese.replaceAll(hanzi, "\\?"));
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -122,7 +122,7 @@ public class CharFinder extends Activity implements TextWatcher {
             tr.addView(chinese);
 
             TextView trans = new TextView(this);
-            trans.setTextAppearance(CharFinder.this, android.R.style.TextAppearance_Medium_Inverse);
+            trans.setTextAppearance(GuessChar.this, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
             String en=new String();
             for (int j=0; j<w.english.size(); j++) {

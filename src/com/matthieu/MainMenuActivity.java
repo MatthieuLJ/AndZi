@@ -35,7 +35,7 @@ public class MainMenuActivity extends Activity {
     }
 
     public void handle_char_finder(View v) {
-        Intent intent = new Intent(this, CharFinder.class);
+        Intent intent = new Intent(this, GuessChar.class);
         startActivity(intent);
     }
 

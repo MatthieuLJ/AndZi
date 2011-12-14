@@ -29,7 +29,7 @@
                 <data android:host="*" />
             </intent-filter>
         </activity>
-        <activity android:name=".CharFinder" />
+        <activity android:name=".GuessChar" />
         <activity android:name=".widget.file_dialog.FileDialog" />
         <activity android:name=".TestResultActivity">
             <intent-filter android:name="android.intent.action.VIEW" />
