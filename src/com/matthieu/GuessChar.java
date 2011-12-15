@@ -18,7 +18,7 @@ import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessChar extends Activity implements TextWatcher {
+public class GuessChar extends TestActivity implements TextWatcher {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
     private String hanzi;
@@ -72,21 +72,7 @@ public class GuessChar extends Activity implements TextWatcher {
         set_next_study();
     }
 
-    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
-        Log.d(TAG, "got return code "+resultCode);
-
-        if (requestCode != 0)
-            return;
-
-        if (resultCode == 1) {
-            update_scores(true);
-        } else {
-            update_scores(false);
-        }
-
-    }
-
-    private void set_next_study() {
+    protected void set_next_study() {
         hanzi = myDB.getNextFilteredToStudy();
         
         if (hanzi == null) {
@@ -143,7 +129,7 @@ public class GuessChar extends Activity implements TextWatcher {
         first_try=true;
     }
 
-    private int check_guess(String guess) {
+    protected int check_guess(String guess) {
         int res=0;
 
         if (guess.equals(hanzi)) {
@@ -201,27 +187,6 @@ public class GuessChar extends Activity implements TextWatcher {
         return res;
     }
 
-    private void show_solution() {
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", hanzi);
-        i.putExtra("Mode", 0);
-        startActivity(i);
-    }
-
-    private void show_solution(String guess, boolean offer_override) {
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", hanzi);
-        i.putExtra("Mode", 0);
-        i.putExtra("WrongGuess", guess);
-        if (offer_override) {
-            i.putExtra("FixAnswer", true);
-            startActivityForResult(i, 0);
-        }
-        else {
-            startActivity(i);
-        }
-    }
-
     protected void update_scores(boolean good) {
         if (good) {
             myDB.betterBox(hanzi);
@@ -255,39 +220,7 @@ public class GuessChar extends Activity implements TextWatcher {
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         String guess = chinese.getText().toString();
 
-        int res = check_guess(guess);
-
-        if (res == -1)
-            return;
-
-        if (((show_result == 2) || (show_result ==1)) && (res == 0)) {
-            if (!guess.equals(""))
-                show_solution(guess, true);
-            else {
-                show_solution(guess, false);
-                update_scores(false);
-            }
-        }
-        else {
-            if (res == 0)
-                update_scores(false);
-            else
-                update_scores(true);
-
-            if (show_result==1) {
-                show_solution();
-            }
-            else {
-                if (res == 0) {
-                    toast = Toast.makeText(this, "Sorry, the correct answer was " + hanzi, 2);
-                }
-                else {
-                    toast = Toast.makeText(this, "Well done !", 2);
-                }
-                toast.show();
-                set_next_study();
-            }
-        }
+        handle_submit(hanzi, guess, show_result);
     }
 
     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

@@ -17,8 +17,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class GuessChineseWord extends Activity {
+public class GuessChineseWord extends TestActivity {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
     private Vocabulary solution;
@@ -57,27 +58,6 @@ public class GuessChineseWord extends Activity {
         set_next_study();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        set_next_study();
-    }
-
-    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
-        Log.d(TAG, "got return code "+resultCode);
-        
-        if (requestCode != 0)
-            return;
-
-        if (resultCode == 1) {
-            update_scores(true);
-        } else {
-            update_scores(false);
-        }
-
-    }
-
     protected void update_scores(boolean good) {
         Log.d(TAG, "updating scores "+(good?"good":"bad"));
         
@@ -108,7 +88,7 @@ public class GuessChineseWord extends Activity {
         }
     }
 
-    private void set_next_study() {
+    protected void set_next_study() {
         String candidate;
         ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         String hanzi;
@@ -182,7 +162,7 @@ public class GuessChineseWord extends Activity {
         edit_guess.setText("");
     }
 
-    private int check_guess(String guess) {
+    protected int check_guess(String guess) {
         if (guess.equals(solution.chinese)) {
             return 1;
         }
@@ -227,37 +207,6 @@ public class GuessChineseWord extends Activity {
         }
     }
 
-    private void show_solution() {
-        ArrayList<String> pinyins = new ArrayList<String>();
-
-        pinyins.add(solution.pinyin);
-
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", solution.chinese);
-		i.putExtra("Pinyins", pinyins);
-		i.putExtra("Mode", 1);
-        startActivity(i);
-    }
-
-    private void show_solution(String bad_guess, boolean offer_override) {
-        ArrayList<String> pinyins = new ArrayList<String>();
-
-        pinyins.add(solution.pinyin);
-
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", solution.chinese);
-		i.putExtra("Pinyins", pinyins);
-		i.putExtra("Mode", 1);
-        i.putExtra("WrongGuess", bad_guess);
-        if (offer_override) {
-            i.putExtra("FixAnswer", true);
-            startActivityForResult(i, 0);
-        }
-        else {
-            startActivity(i);
-        }
-    }
-
     public void handle_ok(View v) {
         Toast toast;
 
@@ -268,41 +217,8 @@ public class GuessChineseWord extends Activity {
         EditText edit_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
         String guess = edit_guess.getText().toString();
 
-        int res = check_guess(guess);
-
-        if (res == -1) {
+        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, show_result) == -1)
             edit_guess.setText("");
-            return;
-        }
-
-        if (((show_result == 2) || (show_result == 1)) && (res == 0)) {
-            if (!guess.equals(""))
-                show_solution(guess, true);
-            else {
-                show_solution(guess, false);
-                update_scores(false);
-            }
-        }
-        else {
-            if (res == 0)
-                update_scores(false);
-            else
-                update_scores(true);
-
-            if (show_result==1) {
-                show_solution();
-            }
-            else {
-                if (res == 0) {
-                    toast = Toast.makeText(this, "Sorry, this is wrong", 2);
-                }
-                else {
-                    toast = Toast.makeText(this, "Well done !", 2);
-                }
-                toast.show();
-                set_next_study();
-            }
-        }
     }
 
 }
