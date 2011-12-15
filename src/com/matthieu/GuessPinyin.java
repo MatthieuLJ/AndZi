@@ -189,7 +189,7 @@ public class GuessPinyin extends TestActivity {
         if (handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, show_result) == -1) {
             update_scores(-1);
             if ((show_result == 2) || (show_result ==1)) {
-                show_solution(1, hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, false);
+                show_solution(0, hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, false);
             }
             else {
                 toast = Toast.makeText(this, "Wrong tone", 2);

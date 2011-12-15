@@ -13,7 +13,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
+/* Class to display results from tests
+ * Intent will contain several fields:
+ *  - mode (int)                            : 0 for pinyin guess, 1 for chinese word guess
+ *  - Hanzi (String)                        : Reference character or chinese string
+ *  - Pinyins (ArrayList<String) / optional : Reference pinyin
+ *  - WrongGuess (String) / optional        : The wrong guess from the user
+ *
+ */
 public class TestResultActivity extends Activity {
     protected HanziDB myDB=null;
     protected String hanzi, wrong_guess;
@@ -54,7 +63,7 @@ public class TestResultActivity extends Activity {
         wrong_guess=getIntent().getStringExtra("WrongGuess");
         if (wrong_guess != null) {
             if (mode == 0)
-                wrong_pinyins = myDB.getPinyinForChar(wrong_guess);
+                wrong_pinyins = new ArrayList<String>(Arrays.asList(wrong_guess));
             else if (mode == 1) {
                 wrong_pinyins = new ArrayList<String>();
                 for (Vocabulary voc : myDB.getTranslations(wrong_guess)) {

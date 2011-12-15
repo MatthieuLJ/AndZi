@@ -1,6 +1,7 @@
 TODO:
+* Check performance when submitting solution of test (until next test is setup)
 * Make "more vocabulary" scrollable (try with 学 or 生)
-* Guess pinyin from character
+* Add Pinyin colors in ReviewList
 * Guess english from Chinese word
 * Guess words based on character
 * Hide IME when not needed
@@ -11,6 +12,7 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* Guess pinyin from character
 * Better test HanziDB consistency with merges, exports.
 * When Guess is wrong, display "your guess was...", and offer to correct the judgment (all options in the Intent)
 * Move Reset and Replace database into separate threads
