@@ -222,7 +222,7 @@ public class GuessChineseWord extends TestActivity {
         
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, show_result) == -1)
+        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, show_result, true) == -1)
             word_guess.setText("");
     }
 

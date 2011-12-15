@@ -220,7 +220,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         String guess = chinese.getText().toString();
 
-        handle_submit(hanzi, guess, show_result);
+        handle_submit(hanzi, guess, show_result, true);
     }
 
     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

@@ -1,6 +1,5 @@
 package com.matthieu;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.gesture.*;
@@ -14,8 +13,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class ToneTester extends Activity implements GestureOverlayView.OnGesturePerformedListener {
+public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
     protected HanziDB myDB=null;
     private String hanzi;
     private Pinyin pinyin;
@@ -23,7 +23,7 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
     private ArrayList<Integer> tones;
     int show_result;
 
-    private final String TAG="ToneTester";
+    private final String TAG="GuessTone";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +43,9 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
             show_result = 3;
         }
 
-        setContentView(R.layout.tone_tester);
+        setContentView(R.layout.guess_tone);
 
-        GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.tone_tester_gestureview);
+        GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.guess_tone_gestureview);
         overlay.addOnGesturePerformedListener(this);
 
         set_next_study();
@@ -58,7 +58,7 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
         set_next_study();
     }
 
-    private void set_next_study() {
+    protected void set_next_study() {
         ArrayList<String> all = myDB.getAllFilteredToStudy();
         ArrayList<String> pinyins;
         hanzi = null;
@@ -99,68 +99,60 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
             }
         }
 
-        TextView tv_hanzi = (TextView) findViewById(R.id.tone_test_chinese);
-        TextView tv_pinyin = (TextView) findViewById(R.id.tone_test_pinyin);
+        TextView tv_hanzi = (TextView) findViewById(R.id.guess_tone_chinese);
+        TextView tv_pinyin = (TextView) findViewById(R.id.guess_tone_pinyin);
 
         tv_hanzi.setText(hanzi);
         tv_pinyin.setText(radical);
 
         CheckBox cb;
-        cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
+        cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
+        cb = (CheckBox) findViewById(R.id.guess_tone_second_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
+        cb = (CheckBox) findViewById(R.id.guess_tone_third_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
+        cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
         cb.setChecked(false);
 
 
         Log.d(TAG, "Expects tones : "+tones.toString());
     }
 
-    private int check_guesses() {
+    protected int check_guess(String guess) {
         CheckBox cb;
         int res=0;
 
         // check if any wrong guess
 
-        cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
-        if (cb.isChecked() && !tones.contains(1)) { myDB.restartStudy(hanzi); return res; }
-        if (tones.contains(1) && !cb.isChecked()) { myDB.restartStudy(hanzi); return res; }
-        cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
-        if (cb.isChecked() && !tones.contains(2)) { myDB.restartStudy(hanzi); return res; }
-        if (tones.contains(2) && !cb.isChecked()) { myDB.restartStudy(hanzi); return res; }
-        cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
-        if (cb.isChecked() && !tones.contains(3)) { myDB.restartStudy(hanzi); return res; }
-        if (tones.contains(3) && !cb.isChecked()) { myDB.restartStudy(hanzi); return res; }
-        cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
-        if (cb.isChecked() && !tones.contains(4)) { myDB.restartStudy(hanzi); return res; }
-        if (tones.contains(4) && !cb.isChecked()) { myDB.restartStudy(hanzi); return res; }
-
-        // if we got here, we're good... :)
-        if (myDB.getBoxForChar(hanzi) == 0) {
-            myDB.betterBox(hanzi);
-        }
-        else {
-            myDB.resetTime(hanzi);
-        }
+        cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
+        if ((guess.contains("1") && !tones.contains(1)) || (tones.contains(1) && !guess.contains("1")))
+            return res;
+        if ((guess.contains("2") && !tones.contains(2)) || (tones.contains(2) && !guess.contains("2")))
+            return res;
+        if ((guess.contains("3") && !tones.contains(3)) || (tones.contains(3) && !guess.contains("3")))
+            return res;
+        if ((guess.contains("4") && !tones.contains(4)) || (tones.contains(4) && !guess.contains("4")))
+            return res;
+        
         res=1;
         return res;
     }
 
-    private void show_solution() {
-        ArrayList<String> pinyins = new ArrayList<String>();
-
-        for (int tone : tones) {
-            pinyins.add(radical + tone);
+    @Override
+    protected void update_scores(int good) {
+        if (good == 1) {
+            if (myDB.getBoxForChar(hanzi) == 0) {
+                myDB.betterBox(hanzi);
+            }
+            else {
+                myDB.resetTime(hanzi);
+            }
         }
-        
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", hanzi);
-		i.putExtra("Pinyins", pinyins);
-        i.putExtra("Mode", 0);
-        startActivity(i);
+        else {
+            myDB.restartStudy(hanzi);
+        }
+
     }
 
     public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
@@ -237,16 +229,16 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
         CheckBox cb=null;
         switch (tone) {
             case 1:
-                cb = (CheckBox) findViewById(R.id.tone_test_first_tone);
+                cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
                 break;
             case 2:
-                cb = (CheckBox) findViewById(R.id.tone_test_second_tone);
+                cb = (CheckBox) findViewById(R.id.guess_tone_second_tone);
                 break;
             case 3:
-                cb = (CheckBox) findViewById(R.id.tone_test_third_tone);
+                cb = (CheckBox) findViewById(R.id.guess_tone_third_tone);
                 break;
             case 4:
-                cb = (CheckBox) findViewById(R.id.tone_test_fourth_tone);
+                cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
                 break;
         }
         if (cb != null)
@@ -260,20 +252,19 @@ public class ToneTester extends Activity implements GestureOverlayView.OnGesture
 
     public void handle_ok(View v) {
         Toast toast;
-        int res = check_guesses();
-        if ((show_result==1) || ((show_result == 2) && (res == 0))) {
-            show_solution();
-        }
-        else {
-            if (res == 0) {
-                toast = Toast.makeText(this, "Sorry, this is wrong", 2);
-            }
-            else {
-                toast = Toast.makeText(this, "Well done !", 2);
-            }
-            toast.show();
-            set_next_study();
-        }
+        String tones_checked="";
+        CheckBox cb;
+
+        cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
+        if (cb.isChecked()) tones_checked+="1";
+        cb = (CheckBox) findViewById(R.id.guess_tone_second_tone);
+        if (cb.isChecked()) tones_checked+="2";
+        cb = (CheckBox) findViewById(R.id.guess_tone_third_tone);
+        if (cb.isChecked()) tones_checked+="3";
+        cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
+        if (cb.isChecked()) tones_checked+="4";
+
+        handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin.get_lame())), tones_checked, show_result, false);
     }
 
 

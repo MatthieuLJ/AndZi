@@ -74,7 +74,8 @@ public abstract class TestActivity extends Activity {
         }
     }
 
-    protected int handle_submit(String correct_answer, String guess, int show_result) {
+    // for Chinese guesses
+    protected int handle_submit(String correct_answer, String guess, int show_result, boolean show_bad_guess) {
         Toast toast;
         int res = check_guess(guess);
 
@@ -82,10 +83,10 @@ public abstract class TestActivity extends Activity {
             return res;
 
         if (((show_result == 2) || (show_result == 1)) && (res == 0)) {
-            if (!guess.equals(""))
+            if ((!guess.equals("")) && (show_bad_guess))
                 show_solution(0, correct_answer, guess, true);
             else {
-                show_solution(0, correct_answer, guess, false);
+                show_solution(0, correct_answer);
                 update_scores(res);
             }
         }
@@ -109,7 +110,7 @@ public abstract class TestActivity extends Activity {
         return res;
     }
 
-    protected int handle_submit(String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin, String guess, int show_result) {
+    protected int handle_submit(String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin, String guess, int show_result, boolean show_bad_guess) {
         Toast toast;
         int res = check_guess(guess);
 
@@ -117,10 +118,10 @@ public abstract class TestActivity extends Activity {
             return res;
 
         if (((show_result == 2) || (show_result ==1)) && (res == 0)) {
-            if (!guess.equals(""))
+            if ((!guess.equals("")) && (show_bad_guess))
                 show_solution(1, correct_answer_hanzi, correct_answer_pinyin, guess, true);
             else {
-                show_solution(1, correct_answer_hanzi, correct_answer_pinyin, guess, false);
+                show_solution(1, correct_answer_hanzi, correct_answer_pinyin);
                 update_scores(res);
             }
         }

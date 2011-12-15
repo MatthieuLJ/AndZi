@@ -2,7 +2,7 @@
 
 <android.gesture.GestureOverlayView
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/tone_tester_gestureview"
+        android:id="@+id/guess_tone_gestureview"
         android:layout_height="fill_parent"
         android:layout_width="fill_parent"
         android:layout_weight="1"
@@ -18,7 +18,7 @@
             android:orientation="vertical"
             android:background="#dddddd">
         <TextView
-                android:id="@+id/tone_test_chinese"
+                android:id="@+id/guess_tone_chinese"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|top"
@@ -26,7 +26,7 @@
                 android:textColor="#000000"
                 />
         <TextView
-                android:id="@+id/tone_test_pinyin"
+                android:id="@+id/guess_tone_pinyin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|top"
@@ -49,7 +49,7 @@
                     android:gravity="center_horizontal"
                     >
                 <CheckBox
-                        android:id="@+id/tone_test_first_tone"
+                        android:id="@+id/guess_tone_first_tone"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:layout_gravity="center"
@@ -76,7 +76,7 @@
                     android:gravity="center_horizontal"
                     >
                 <CheckBox
-                        android:id="@+id/tone_test_second_tone"
+                        android:id="@+id/guess_tone_second_tone"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:layout_gravity="center"
@@ -103,7 +103,7 @@
                     android:gravity="center_horizontal"
                     >
                 <CheckBox
-                        android:id="@+id/tone_test_third_tone"
+                        android:id="@+id/guess_tone_third_tone"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:layout_gravity="center"
@@ -130,7 +130,7 @@
                     android:gravity="center_horizontal"
                     >
                 <CheckBox
-                        android:id="@+id/tone_test_fourth_tone"
+                        android:id="@+id/guess_tone_fourth_tone"
                         android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
                         android:layout_gravity="center"

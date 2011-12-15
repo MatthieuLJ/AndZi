@@ -25,7 +25,7 @@ public class MainMenuActivity extends Activity {
     }
 
     public void handle_tone_tester(View v) {
-        Intent intent = new Intent(this, ToneTester.class);
+        Intent intent = new Intent(this, GuessTone.class);
         startActivity(intent);
     }
 
