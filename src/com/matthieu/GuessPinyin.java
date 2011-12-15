@@ -77,7 +77,8 @@ public class GuessPinyin extends TestActivity {
                     }
                 }
             }
-            show_words=true;
+            if (pinyins.size() > 1)
+                show_words=true;
             pinyin=pinyins.get((int)(Math.random()*(pinyins.size()-1)));
         }
         else {
@@ -139,7 +140,7 @@ public class GuessPinyin extends TestActivity {
             show_words_button.setClickable(false);
         }
         else {
-            tl.setVisibility(View.INVISIBLE);
+            tl.setVisibility(View.GONE);
             show_words_button.setClickable(true);
         }
         tl.invalidate();
