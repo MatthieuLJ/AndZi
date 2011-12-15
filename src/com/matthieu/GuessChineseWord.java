@@ -58,12 +58,12 @@ public class GuessChineseWord extends TestActivity {
         set_next_study();
     }
 
-    protected void update_scores(boolean good) {
-        Log.d(TAG, "updating scores "+(good?"good":"bad"));
+    protected void update_scores(int good) {
+        Log.d(TAG, "updating scores "+good);
 
         int min_box = 5;
 
-        if (good) {
+        if (good == 1) {
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
                 if (new_box < min_box) {
@@ -216,17 +216,14 @@ public class GuessChineseWord extends TestActivity {
     }
 
     public void handle_ok(View v) {
-        Toast toast;
-
         EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
-
-        EditText edit_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
-        String guess = edit_guess.getText().toString();
+        
+        String guess = word_guess.getText().toString();
 
         if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, show_result) == -1)
-            edit_guess.setText("");
+            word_guess.setText("");
     }
 
 }

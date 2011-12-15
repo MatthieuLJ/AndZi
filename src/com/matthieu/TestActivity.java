@@ -14,17 +14,18 @@ public abstract class TestActivity extends Activity {
     }
 
     abstract protected void set_next_study();
+    // returns 0 for failure, 1 for success and -1 for special handling
     abstract protected int check_guess(String guess);
-    abstract protected void update_scores(boolean good);
+    abstract protected void update_scores(int good);
 
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         if (requestCode != 0)
             return;
 
         if (resultCode == 1) {
-            update_scores(true);
+            update_scores(1);
         } else {
-            update_scores(false);
+            update_scores(0);
         }
 
     }
@@ -80,19 +81,16 @@ public abstract class TestActivity extends Activity {
         if (res == -1)
             return res;
 
-        if (((show_result == 2) || (show_result ==1)) && (res == 0)) {
+        if (((show_result == 2) || (show_result == 1)) && (res == 0)) {
             if (!guess.equals(""))
                 show_solution(0, correct_answer, guess, true);
             else {
                 show_solution(0, correct_answer, guess, false);
-                update_scores(false);
+                update_scores(res);
             }
         }
         else {
-            if (res == 0)
-                update_scores(false);
-            else
-                update_scores(true);
+            update_scores(res);
 
             if (show_result==1) {
                 show_solution(0, correct_answer);
@@ -123,14 +121,11 @@ public abstract class TestActivity extends Activity {
                 show_solution(1, correct_answer_hanzi, correct_answer_pinyin, guess, true);
             else {
                 show_solution(1, correct_answer_hanzi, correct_answer_pinyin, guess, false);
-                update_scores(false);
+                update_scores(res);
             }
         }
         else {
-            if (res == 0)
-                update_scores(false);
-            else
-                update_scores(true);
+            update_scores(res);
 
             if (show_result==1) {
                 show_solution(1, correct_answer_hanzi, correct_answer_pinyin);

@@ -187,8 +187,8 @@ public class GuessChar extends TestActivity implements TextWatcher {
         return res;
     }
 
-    protected void update_scores(boolean good) {
-        if (good) {
+    protected void update_scores(int good) {
+        if (good==1) {
             myDB.betterBox(hanzi);
         }
         else {
@@ -202,7 +202,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
                 i+=Character.charCount(v.chinese.codePointAt(i));
                 if (other_hanzi.equals(hanzi))
                     continue;
-                if (good)
+                if (good==1)
                     myDB.resetTime(other_hanzi);
                 else
                     myDB.restartStudy(other_hanzi);
