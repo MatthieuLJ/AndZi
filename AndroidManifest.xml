@@ -37,6 +37,7 @@
         <activity android:name=".AndZiPreferences" />
         <activity android:name=".GuessChineseWord" />
         <activity android:name=".ReviewList" />
+        <activity android:name=".GuessPinyin" />
 
     </application>
     <supports-screens

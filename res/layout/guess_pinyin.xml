@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        android:background="#dddddd">
+    <TextView
+            android:id="@+id/guess_pinyin_chinese"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|top"
+            android:textSize="40sp"
+            android:textColor="#000000"
+            />
+    <Button
+            android:id="@+id/guess_pinyin_show_words"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#00000000"
+            android:text="As in..."
+            />
+    <TableLayout
+            android:id="@+id/guess_pinyin_word_grid"
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:stretchColumns="1"
+            android:visibility="gone"
+            />
+
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+        <EditText
+                android:id="@+id/guess_pinyin_guess"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:capitalize="none"
+                android:singleLine="true"
+                android:imeOptions="actionDone"
+                />
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="OK"
+                android:onClick="handle_ok"
+                />
+    </LinearLayout>
+</LinearLayout>

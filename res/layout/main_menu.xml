@@ -65,6 +65,18 @@
             android:layout_height="fill_parent"
             android:layout_weight="1"
             >
+
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Guess Pinyin"
+                android:onClick="handle_guesspinyin" />
+    </TableRow>
+    <TableRow
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            >
         <Button
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"

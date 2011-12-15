@@ -53,4 +53,9 @@ public class MainMenuActivity extends Activity {
         Intent intent = new Intent(this, ReviewList.class);
         startActivity(intent);
     }
+
+    public void handle_guesspinyin(View v) {
+        Intent intent = new Intent(this, GuessPinyin.class);
+        startActivity(intent);
+    }
 }
