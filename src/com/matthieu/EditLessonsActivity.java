@@ -1,8 +1,6 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.gesture.Gesture;
-import android.gesture.GestureOverlayView;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,7 +23,7 @@ public class EditLessonsActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         super.onCreate(savedInstanceState);
 

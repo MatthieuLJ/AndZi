@@ -35,7 +35,7 @@ public class TestResultActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         Log.d(TAG, "Show results");
 

@@ -24,8 +24,8 @@ public class GuessPinyin extends TestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
-        refDB = ((AndZiApplication) getApplication()).refDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (sp.getString("show_result", "always").equals("always")) {

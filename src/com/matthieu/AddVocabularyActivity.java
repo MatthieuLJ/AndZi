@@ -34,8 +34,8 @@ public class AddVocabularyActivity extends Activity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
-        refDB = ((AndZiApplication) getApplication()).refDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
 
         pinyin_choices = new ArrayList<PinyinChoices>();
         translations_from_ref = new ArrayList<VocabularyItem>();
@@ -62,8 +62,8 @@ public class AddVocabularyActivity extends Activity
         super.onResume();
 
         // in case those changed...
-        myDB = ((AndZiApplication) getApplication()).myDB;
-        refDB = ((AndZiApplication) getApplication()).refDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
     }
 
     // Handle when the content of the chinese word text field changes

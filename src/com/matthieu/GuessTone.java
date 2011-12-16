@@ -29,7 +29,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
         tones=new ArrayList<Integer>();
 
         Log.d(TAG, "Going to show results: "+sp.getString("show_result", "always"));

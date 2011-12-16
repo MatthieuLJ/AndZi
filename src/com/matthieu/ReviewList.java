@@ -22,7 +22,7 @@ public class ReviewList extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         to_study=new ArrayList<String>();
         data_to_study=new HashMap<String, ArrayList<String>>();

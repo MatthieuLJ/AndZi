@@ -61,6 +61,7 @@
                 android:title="Reference Database enabled"
                 android:defaultValue="true"
                 android:summary="Enable the use for reference database"
+                android:key="ref_enabled"
                 />
         <Preference
                 android:title="Download Reference Database"

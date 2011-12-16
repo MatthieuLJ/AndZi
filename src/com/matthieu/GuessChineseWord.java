@@ -1,8 +1,6 @@
 package com.matthieu;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -31,8 +29,8 @@ public class GuessChineseWord extends TestActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
-        refDB = ((AndZiApplication) getApplication()).refDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (sp.getString("show_result", "always").equals("always")) {

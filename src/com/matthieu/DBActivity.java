@@ -32,7 +32,7 @@ public class DBActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
         setContentView(R.layout.db);
 
         if (!myDB.checkDatabase()) {

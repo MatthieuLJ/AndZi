@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.os.StatFs;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 
@@ -11,28 +12,43 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class AndZiApplication extends Application {
-    public HanziDB myDB=null;
-    public HanziDB refDB=null;
+    private HanziDB myDB=null;
+    private HanziDB refDB=null;
+    private boolean ref_enabled=true;
+    private boolean ref_present=false;
 
     private final static String TAG = "AndZiApplication";
-    private final static String PREFERENCES_NAME="AndziPrefs";
     private final static String REF_DB_NAME = "cedict_db";
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
 
     public void onCreate() {
         initialize_my_db();
-
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         refDB = new HanziDB(getApplicationContext(), this,REF_DB_NAME);
         if (refDB.getNumChars()==0) {
             refDB.close();
             ContextWrapper cw = new ContextWrapper(getApplicationContext());
             cw.deleteDatabase(REF_DB_NAME);
             refDB=null;
+            ref_present=false;
+        }
+        else {
+            ref_present=true;
+            ref_enabled=prefs.getBoolean("ref_enabled", true);
         }
     }
 
+    public HanziDB getMyDB() { return myDB; }
+    public HanziDB getRefDB() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        ref_enabled=prefs.getBoolean("ref_enabled", true);
+        Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
+        return (ref_enabled&&ref_present)?refDB:null;
+    }
+    public boolean getRefDBPresent() { return ref_present; }
+
     private void initialize_my_db() {
-        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         myDB = new HanziDB(getApplicationContext(), this, DEFAULT_DATABASE_NAME);
         boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
         ArrayList<String> lesson=new ArrayList<String>();
@@ -47,7 +63,7 @@ public class AndZiApplication extends Application {
     }
 
     public void save_database_filter(boolean on, ArrayList<String> list) {
-        SharedPreferences prefs = getSharedPreferences(PREFERENCES_NAME, 0);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean("Lesson_Filter_On", on);
         try {
@@ -69,7 +85,7 @@ public class AndZiApplication extends Application {
         }
 
         refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
-
+        ref_present=true;
         Log.d(TAG, "Done installing reference db " + dest);
     }
 
@@ -81,6 +97,7 @@ public class AndZiApplication extends Application {
         }
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(REF_DB_NAME);
+        ref_present=false;
     }
 
     public boolean check_exporting_space(String path) {

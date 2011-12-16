@@ -22,7 +22,7 @@ public class EmailDB extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
         addPreferencesFromResource(R.xml.settings_email_db);
 
         Preference email = findPreference("do_email");

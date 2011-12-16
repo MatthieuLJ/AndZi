@@ -9,11 +9,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
 
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class Settings extends PreferenceActivity {
@@ -21,8 +25,8 @@ public class Settings extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
-        addPreferencesFromResource(R.xml.andzipreferences);
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        addPreferencesFromResource(R.xml.settings_main);
 
         Preference reset_db = findPreference("ResetDB");
         reset_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -100,7 +104,47 @@ public class Settings extends PreferenceActivity {
                 return true;
             }
         });
+
+        final Preference enable_ref = findPreference("ref_enabled");
+        final Preference del_ref = findPreference("ClearRef");
+
+        enable_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+        del_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+
+        Preference download_ref = findPreference("DownloadRef");
+        download_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            public boolean onPreferenceClick(Preference preference) {
+                final String params[]= {"http://db.tt/RdRHvoJa" /*"http://172.16.21.2/cedict_db"*/};
+                ref_downloader down = new ref_downloader();
+                down.execute(params);
+                return true;
+            }
+        });
+
+        del_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            public boolean onPreferenceClick(Preference preference) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
+                alert.setMessage("Are you sure you want to delete the reference database?");
+                alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        ((AndZiApplication) getApplication()).eraseRefDB();
+                        enable_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+                        del_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+                        dialog.dismiss();
+                    }
+                });
+                alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                });
+                alert.create();
+                alert.show();
+                return true;
+            }
+        });
     }
+    
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         // should come here after the activity startedin import_database completes
         if (resultCode == Activity.RESULT_OK) {
@@ -162,6 +206,115 @@ public class Settings extends PreferenceActivity {
                 Toast toast = Toast.makeText(Settings.this, "Not enough space on device to impoort database", 5);
                 toast.show();
             }
+        }
+    }
+
+    private class ref_downloader extends AsyncTask<String,Integer,Void> {
+        ProgressDialog mProgressDialog;
+        String PATH, URL;
+        boolean enough_space;
+        private final String TAG="ref_downloader";
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            try {
+                PATH= File.createTempFile("ref", "db").getPath();
+            } catch (IOException e) {
+                e.printStackTrace();
+                //PATH=DBActivity.getApplicationContext().getFilesDir()+"/cedict_ref/";
+            }
+            URL=strings[0];
+
+
+
+            DownloadFromUrl(URL, PATH);
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = new ProgressDialog(Settings.this);
+            mProgressDialog.setMessage("Downloading reference database");
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMax(100);
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if (enough_space) {
+                mProgressDialog.setMessage("Installing...");
+                ((AndZiApplication) getApplication()).installRefDB(PATH, true);
+                Log.d(TAG, "installed");
+            }
+            mProgressDialog.dismiss();
+            if (!enough_space) {
+                Toast toast = Toast.makeText(Settings.this, "Not enough space on device to download and isntall reference database", 5);
+                toast.show();
+            }
+
+            final Preference enable_ref = findPreference("ref_enabled");
+            final Preference del_ref = findPreference("ClearRef");
+
+            if (enable_ref != null) enable_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+            if (del_ref != null) del_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            mProgressDialog.setProgress(values[0]);
+        }
+
+        private void DownloadFromUrl(String download_URL, String fileName) {
+            int count;
+            try {
+                URL url = new URL(download_URL);
+                URLConnection connection = url.openConnection();
+                connection.connect();
+                int lengthOfFile = connection.getContentLength();
+                long startTime = System.currentTimeMillis();
+
+                Log.d(TAG, "download beginning");
+                Log.d(TAG, "download url:" + url);
+                Log.d(TAG, "downloaded file name:" + fileName);
+                Log.d(TAG, "file size:" + lengthOfFile);
+
+                enough_space = ((AndZiApplication) getApplication()).check_ref_download_space(PATH, lengthOfFile);
+                if (!enough_space) {
+                    return;
+                }
+
+                // download the file
+                InputStream input = new BufferedInputStream(url.openStream());
+                OutputStream output = new FileOutputStream(fileName);
+
+                byte data[] = new byte[1024];
+
+                long total = 0;
+
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+                    // publishing the progress....
+                    publishProgress((int)(total*100/lengthOfFile));
+                    output.write(data, 0, count);
+                }
+
+                output.flush();
+                output.close();
+                input.close();
+
+                Log.d(TAG, "download ready after "
+                                        + ((System.currentTimeMillis() - startTime) / 1000)
+                                        + " sec");
+            } catch (IOException e) {
+                Log.d(TAG, "Error: " + e);
+                enough_space = false;
+            }
+
         }
     }
 }

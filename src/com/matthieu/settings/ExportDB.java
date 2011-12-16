@@ -23,7 +23,7 @@ public class ExportDB extends PreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).myDB;
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
         addPreferencesFromResource(R.xml.settings_export_db);
         String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ Calendar.getInstance().get(Calendar.MONTH)+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
 
