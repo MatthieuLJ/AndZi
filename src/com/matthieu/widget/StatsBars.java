@@ -58,6 +58,10 @@ public class StatsBars extends View {
         int bound;
         Paint p=new Paint();
         Rect r=new Rect();
+        
+        if (max == 0)
+            return;
+        
         int good_width = (good * 100) / max;
         int expired_width = (expired * 100) / max;
 
