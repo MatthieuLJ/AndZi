@@ -16,7 +16,7 @@ import com.matthieu.R;
 
 import java.util.ArrayList;
 
-public class AndZiPreferences extends PreferenceActivity {
+public class Settings extends PreferenceActivity {
     protected HanziDB myDB=null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +27,7 @@ public class AndZiPreferences extends PreferenceActivity {
         Preference reset_db = findPreference("ResetDB");
         reset_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(AndZiPreferences.this);
+                AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
                 alert.setMessage("Are you sure you want to restart the study for everything?");
                 alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, int i) {
@@ -37,7 +37,7 @@ public class AndZiPreferences extends PreferenceActivity {
                             protected void onPreExecute() {
                                 super.onPreExecute();
                                 dialog.dismiss();
-                                mProgressDialog = ProgressDialog.show(AndZiPreferences.this, "Reset Database", "", false);
+                                mProgressDialog = ProgressDialog.show(Settings.this, "Reset Database", "", false);
                             }
 
                             @Override
@@ -72,7 +72,7 @@ public class AndZiPreferences extends PreferenceActivity {
         Preference clear_db = findPreference("ClearDB");
         clear_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(AndZiPreferences.this);
+                AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
                 alert.setMessage("Are you sure you want to clear all your database?");
                 alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
@@ -94,7 +94,7 @@ public class AndZiPreferences extends PreferenceActivity {
         Preference import_db = findPreference("ImportDB");
         import_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
-                Intent intent = new Intent(AndZiPreferences.this, com.matthieu.widget.file_dialog.FileDialog.class);
+                Intent intent = new Intent(Settings.this, com.matthieu.widget.file_dialog.FileDialog.class);
                 intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
                 startActivityForResult(intent, 0);
                 return true;
@@ -127,10 +127,10 @@ public class AndZiPreferences extends PreferenceActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             if (myDB.getAllChar().size()==0) {
-                mProgressDialog = ProgressDialog.show(AndZiPreferences.this, "Exporting Database", "Copying...", false);
+                mProgressDialog = ProgressDialog.show(Settings.this, "Exporting Database", "Copying...", false);
             }
             else {
-                mProgressDialog = new ProgressDialog(AndZiPreferences.this);
+                mProgressDialog = new ProgressDialog(Settings.this);
                 mProgressDialog.setMessage("Merging database");
                 mProgressDialog.setIndeterminate(false);
                 mProgressDialog.setMax(100);
@@ -159,7 +159,7 @@ public class AndZiPreferences extends PreferenceActivity {
             super.onPostExecute(aVoid);
             mProgressDialog.dismiss();
             if (!enough_space) {
-                Toast toast = Toast.makeText(AndZiPreferences.this, "Not enough space on device to impoort database", 5);
+                Toast toast = Toast.makeText(Settings.this, "Not enough space on device to impoort database", 5);
                 toast.show();
             }
         }

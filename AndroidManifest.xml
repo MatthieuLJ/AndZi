@@ -40,7 +40,7 @@
 
         <activity android:name=".ReviewList" />
 
-        <activity android:name=".settings.AndZiPreferences" />
+        <activity android:name=".settings.Settings" />
         <activity android:name=".settings.ExportDB">
             <intent-filter android:name="android.intent.action.MAIN" />
         </activity>

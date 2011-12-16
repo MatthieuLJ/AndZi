@@ -5,7 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import com.matthieu.settings.AndZiPreferences;
+import com.matthieu.settings.Settings;
 
 public class MainMenuActivity extends Activity {
     @Override
@@ -41,7 +41,7 @@ public class MainMenuActivity extends Activity {
     }
 
     public void handle_prefs(View v) {
-        Intent intent = new Intent(this, AndZiPreferences.class);
+        Intent intent = new Intent(this, Settings.class);
         startActivity(intent);
     }
 
