@@ -2,8 +2,15 @@
 
 <PreferenceScreen
         xmlns:android="http://schemas.android.com/apk/res/android">
+
     <PreferenceCategory
-            android:title="Test Results">
+            android:title="Appearance">
+        <android.preference.CheckBoxPreference
+                android:title="Enable colored pinyins"
+                android:key="color_pinyin"
+                android:defaultValue="true"
+                android:summary="Show different tones with colors"
+                />
         <ListPreference
                 android:title="Show correct answer"
                 android:summary="Customize when you want to see the correct answer when doing a test"
@@ -12,13 +19,56 @@
                 android:entries="@array/result_preference"
                 android:entryValues="@array/result_preference_values"
                 />
-        <android.preference.CheckBoxPreference
-            android:title="Enable colored pinyins"
-            android:key="color_pinyin"
-            android:defaultValue="true"
-            android:summary="Show different tones with colors"
-            />
-            
     </PreferenceCategory>
-
+    
+    <PreferenceCategory
+            android:title="Database operations">
+        <PreferenceScreen
+                android:title="Export Database to file..."
+                android:key="ExportDB">
+            <intent
+                    android:action="android.intent.action.MAIN"
+                    android:targetPackage="com.matthieu"
+                    android:targetClass="com.matthieu.settings.ExportDB"
+                    />
+        </PreferenceScreen>
+        <PreferenceScreen
+                android:title="Email Database..."
+                android:key="EmailDB">
+            <intent
+                    android:action="android.intent.action.MAIN"
+                    android:targetPackage="com.matthieu"
+                    android:targetClass="com.matthieu.settings.EmailDB"
+                    />
+        </PreferenceScreen>
+        <Preference
+                android:title="Reset scores"
+                android:key="ResetDB"
+                />
+        <Preference
+                android:title="Clear Database"
+                android:key="ClearDB"
+                />
+        <PreferenceScreen
+                android:title="Import Database..."
+                android:key="ImportDB"
+                />
+    </PreferenceCategory>
+    
+    <PreferenceCategory
+            android:title="Reference Database">
+        <CheckBoxPreference
+                android:title="Reference Database enabled"
+                android:defaultValue="true"
+                android:summary="Enable the use for reference database"
+                />
+        <Preference
+                android:title="Download Reference Database"
+                android:key="DownloadRef"
+                />
+        <Preference
+                android:title="Erase Reference Database"
+                android:key="ClearRef"
+                />
+    </PreferenceCategory>
 </PreferenceScreen>

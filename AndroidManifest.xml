@@ -29,15 +29,26 @@
                 <data android:host="*" />
             </intent-filter>
         </activity>
+
         <activity android:name=".GuessChar" />
-        <activity android:name=".widget.file_dialog.FileDialog" />
+        <activity android:name=".GuessChineseWord" />
+        <activity android:name=".GuessPinyin" />
+
         <activity android:name=".TestResultActivity">
             <intent-filter android:name="android.intent.action.VIEW" />
         </activity>
-        <activity android:name=".AndZiPreferences" />
-        <activity android:name=".GuessChineseWord" />
+
         <activity android:name=".ReviewList" />
-        <activity android:name=".GuessPinyin" />
+
+        <activity android:name=".settings.AndZiPreferences" />
+        <activity android:name=".settings.ExportDB">
+            <intent-filter android:name="android.intent.action.MAIN" />
+        </activity>
+        <activity android:name=".settings.EmailDB">
+            <intent-filter android:name="android.intent.action.MAIN" />
+        </activity>
+
+        <activity android:name=".widget.file_dialog.FileDialog" />
 
     </application>
     <supports-screens
@@ -46,7 +57,7 @@
             android:normalScreens="true"
             android:largeScreens="true"
             android:anyDensity="true"/>
-    
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import com.matthieu.settings.AndZiPreferences;
 
 public class MainMenuActivity extends Activity {
     @Override
