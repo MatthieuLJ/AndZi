@@ -1,5 +1,7 @@
-TODO:
+ONGOING:
 * Check performance when submitting solution of test (until next test is setup)
+* Display message in Review List when nothing to review
+* Add Cancel for long operations (download ref database, merge, copy, email)
 * Make "more vocabulary" scrollable (try with 学 or 生)
 * Add Pinyin colors in ReviewList
 * Guess english from Chinese word
@@ -12,6 +14,8 @@ TODO:
 * Voice recognition... ?
 
 DONE:
+* Possibility to add more to study
+* Move Database operations to settings
 * Guess pinyin from character
 * Better test HanziDB consistency with merges, exports.
 * When Guess is wrong, display "your guess was...", and offer to correct the judgment (all options in the Intent)
