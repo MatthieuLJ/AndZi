@@ -226,6 +226,8 @@ public class AddVocabularyActivity extends Activity
             local_db = l_db;
             ref_db = r_db;
             hanzi = h;
+            local_pinyins=new ArrayList<String>();
+            ref_pinyins=new ArrayList<String>();
             this.execute((Void[]) null);
         }
 
