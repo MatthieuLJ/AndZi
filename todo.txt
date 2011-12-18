@@ -1,5 +1,4 @@
 ONGOING:
-* Make "more vocabulary" scrollable (try with 学, 生 or 就)
 * Add Pinyin colors in ReviewList
 * Add Cancel for long operations (download ref database, merge, copy, email)
 * Guess english from Chinese word
@@ -14,6 +13,7 @@ ONGOING:
 * Voice recognition... ?
 
 DONE:
+* Make "more vocabulary" scrollable (try with 学, 生 or 就)
 * Display message in Review List when nothing to review
 * Check performance when submitting solution of test (until next test is setup) => make DB asynchronous
 * Possibility to add more to study

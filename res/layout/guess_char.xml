@@ -7,12 +7,21 @@
         android:orientation="vertical"
         android:background="#dddddd">
 
-    <TableLayout
-            android:id="@+id/char_finder_word_grid"
+    <ScrollView
+            android:scrollbars="vertical"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:stretchColumns="1"
-            />
+            android:layout_weight="1"
+            >
+
+        <TableLayout
+                android:id="@+id/char_finder_word_grid"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:stretchColumns="1"
+                />
+
+    </ScrollView>
 
     <LinearLayout
             android:layout_width="fill_parent"
