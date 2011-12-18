@@ -1668,23 +1668,10 @@ public class HanziDB extends SQLiteOpenHelper {
     // Use to find what character to study
     ////////////////////////////////////////
     public String getNextToStudy() {
-        String res;
-        for (int i = MAX_BOX; i >= 0; i--) {
-            res = getNextToStudy(i);
-            if (res != null) {
-                return res;
-            }
-        }
+        ArrayList<String> all = getAllToStudy();
+        if (all.size() > 0)
+            return all.get((int) (all.size() * Math.pow(Math.random(),2)));
         return null;
-    }
-
-    public String getNextToStudy(int box) {
-        ArrayList<String> choices = getAllToStudy(box);
-        if (choices.size()==0) return null;
-
-        int i = (int) ((choices.size()-1)*Math.random());
-
-        return choices.get(i);
     }
 
     protected ArrayList<String> getAllToStudy() {
@@ -1715,37 +1702,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
     }
 
-    protected ArrayList<String> getAllToStudy(int box) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        ArrayList<String> res = new ArrayList<String>();
-        Cursor cur;
-
-        if (box == 0) {
-            // look for any character where Leitner has not been initialized yet...
-            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner)", null);
-            if (cur.moveToFirst()) {
-                for (int i=0; i<cur.getCount(); i++) {
-                    res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                    cur.moveToNext();
-                }
-            }
-            cur.close();
-        }
-
-        cur = db.rawQuery("SELECT hanzi FROM leitner " +
-                "WHERE box=? AND mod_time<?",
-                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis() - getExpiryTime(box))});
-        if (cur.moveToFirst()) {
-            for (int i=0; i<cur.getCount(); i++) {
-                res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                cur.moveToNext();
-            }
-        }
-        cur.close();
-
-        return res;
-    }
-
     public void getMoreStudy(int how_many) {
         for(int i=how_many; i>0; i--) {
             long delay = getDelayUntilMoreStudy();
@@ -1761,21 +1717,10 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      */
     public String getNextFilteredToStudy() {
-        String res;
-        for (int i = MAX_BOX; i >= 0; i--) {
-            res = getNextFilteredToStudy(i);
-            if (res != null) {
-                return res;
-            }
-        }
+        ArrayList<String> all = getAllFilteredToStudy();
+        if (all.size() > 0)
+            return all.get((int) (all.size() * Math.pow(Math.random(),2)));
         return null;
-    }
-
-    public String getNextFilteredToStudy(int box) {
-        ArrayList<String> choices = getAllFilteredToStudy(box);
-        if (choices.size()==0) return null;
-
-        return choices.get(0);
     }
 
     public ArrayList<String> getAllFilteredToStudy() {
@@ -1794,7 +1739,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "UNION " +
                     "SELECT char_pinyin.hanzi AS hanzi, " +
                     "CASE leitner.box WHEN 0 THEN leitner.mod_time WHEN 1 THEN leitner.mod_time+? WHEN 2 THEN leitner.mod_time+? " +
-                    "WHEN 3 THEN leitner.mod_time+? WHEN 4 THEN leitner.mod_time+? END AS expiring_time" +
+                    "WHEN 3 THEN leitner.mod_time+? WHEN 4 THEN leitner.mod_time+? END AS expiring_time " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
@@ -1803,8 +1748,9 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
                     "WHERE leitner.box=0 OR (leitner.box=1 AND leitner.mod_time<?) " +
                     "OR (leitner.box=2 AND leitner.mod_time<?) OR (leitner.box=3 AND leitner.mod_time<?) " +
-                    "OR (leitner.box=4 AND leitner.mod_time<?)  ORDER BY expiring_time ASC",
-                    new String[] {Long.toString(System.currentTimeMillis() - getExpiryTime(1)),
+                    "OR (leitner.box=4 AND leitner.mod_time<?)  ORDER BY expiring_time DESC",
+                    new String[] {Long.toString(getExpiryTime(1)), Long.toString(getExpiryTime(2)), Long.toString(getExpiryTime(3)), Long.toString(getExpiryTime(4)),
+                            Long.toString(System.currentTimeMillis() - getExpiryTime(1)),
                             Long.toString(System.currentTimeMillis() - getExpiryTime(2)),
                             Long.toString(System.currentTimeMillis() - getExpiryTime(3)),
                             Long.toString(System.currentTimeMillis() - getExpiryTime(4))});
@@ -1819,52 +1765,6 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         else {
             return getAllToStudy();
-        }
-    }
-
-    public ArrayList<String> getAllFilteredToStudy(int box) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ArrayList<String> res = new ArrayList<String>();
-        Cursor cur;
-
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            if (box == 0) {
-                // look for any character where Leitner has not been initialized yet...
-                cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi " +
-                        "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                        "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                        "JOIN cword ON eword.cword_id=cword.cword_id " +
-                        "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                        "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                        "WHERE hanzi NOT IN (SELECT hanzi FROM leitner)", null);
-                if (cur.moveToFirst()) {
-                    for (int i=0; i<cur.getCount(); i++) {
-                        res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                    }
-                }
-                cur.close();
-            }
-
-            cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE leitner.box=? AND leitner.mod_time<?",
-                    new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis() - getExpiryTime(box))});
-            if (cur.moveToFirst()) {
-                for (int i=0; i<cur.getCount(); i++) {
-                    res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                }
-            }
-            cur.close();
-
-            return res;
-        }
-        else {
-            return getAllToStudy(box);
         }
     }
 }

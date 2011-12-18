@@ -345,8 +345,8 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.addVocabulary("good", new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
         target_db.resetTime("你");
         target_db.resetTime("好");
-        assertTrue(target_db.getAllToStudy(0).contains("你"));
-        assertTrue(target_db.getAllToStudy(0).contains("好"));
+        assertTrue(target_db.getAllToStudy().contains("你"));
+        assertTrue(target_db.getAllToStudy().contains("好"));
         target_db.betterBox("好");
         assertTrue(target_db.getNextToStudy().equals("你"));
         target_db.betterBox("你");
@@ -426,25 +426,25 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.enableFilter(true);
         // only 好 is in the filter
         // check when leitner is not initialized for those
-        assertTrue(target_db.getAllFilteredToStudy(0).contains("好"));
-        assertFalse(target_db.getAllFilteredToStudy(0).contains("你"));
+        assertTrue(target_db.getAllFilteredToStudy().contains("好"));
+        assertFalse(target_db.getAllFilteredToStudy().contains("你"));
         target_db.restartStudy("你");
         target_db.restartStudy("好");
         // check when leitner is initialized for those
-        assertTrue(target_db.getAllFilteredToStudy(0).contains("好"));
-        assertFalse(target_db.getAllFilteredToStudy(0).contains("你"));
+        assertTrue(target_db.getAllFilteredToStudy().contains("好"));
+        assertFalse(target_db.getAllFilteredToStudy().contains("你"));
         // check when a character should not be studied anymore (for now)
         target_db.betterBox("好");
-        assertTrue(target_db.getAllFilteredToStudy(0).size()==0);
+        assertTrue(target_db.getAllFilteredToStudy().size()==0);
         // check after the filter is disabled
         target_db.enableFilter(false);
-        assertTrue(target_db.getAllFilteredToStudy(0).contains("你"));
+        assertTrue(target_db.getAllFilteredToStudy().contains("你"));
         // check again after enabling the filter
         target_db.enableFilter(true);
-        assertFalse(target_db.getAllFilteredToStudy(0).contains("你"));
+        assertFalse(target_db.getAllFilteredToStudy().contains("你"));
         // check after adding more into the filtered lessons
         target_db.assignWordLesson("lesson filter", "hello", "你好", "ni3hao3");
-        assertTrue(target_db.getAllFilteredToStudy(0).contains("你"));
+        assertTrue(target_db.getAllFilteredToStudy().contains("你"));
         target_db.checkDatabase();
     }
 
