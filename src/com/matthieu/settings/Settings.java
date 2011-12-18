@@ -171,7 +171,7 @@ public class Settings extends PreferenceActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             if (myDB.getAllChar().size()==0) {
-                mProgressDialog = ProgressDialog.show(Settings.this, "Exporting Database", "Copying...", false);
+                mProgressDialog = ProgressDialog.show(Settings.this, "Importing Database", "Copying...", false);
             }
             else {
                 mProgressDialog = new ProgressDialog(Settings.this);
