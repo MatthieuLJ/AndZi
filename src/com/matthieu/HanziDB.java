@@ -24,6 +24,8 @@ public class HanziDB extends SQLiteOpenHelper {
         super(context, db_name, null, DATABASE_VERSION);
         appContext = context;
         app = application;
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("PRAGMA synchronous=OFF");
     }
 
     ////////////////////////////////////////
