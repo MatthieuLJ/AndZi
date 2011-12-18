@@ -1,6 +1,8 @@
 package com.matthieu;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -96,7 +98,22 @@ public class ReviewList extends ListActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            adap.notifyDataSetChanged();
+            if (to_study.size()==0) {
+                AlertDialog.Builder no_words_dialog = new AlertDialog.Builder(ReviewList.this);
+                no_words_dialog.setCancelable(false);
+                no_words_dialog.setMessage("Nothing to study");
+                no_words_dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                        finish();
+                    }
+                });
+                no_words_dialog.create();
+                no_words_dialog.show();
+            }
+            else {
+                adap.notifyDataSetChanged();
+            }
         }
     }
 
