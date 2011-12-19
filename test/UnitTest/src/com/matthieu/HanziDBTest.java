@@ -5,6 +5,7 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 
 /**
  * User: matthieu
@@ -460,7 +461,13 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.assignWordLesson("lesson 1", "you", "你", "ni3");
         target_db.setBoxForChar("你", 3);
         target_db.setBoxForChar("西", 4);
-        target_db.exportDB(getContext().getDatabasePath("exported_db").getPath());
+        try {
+            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), false, false, false, app, null).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
         HanziDB export_db = new HanziDB(getContext(), app, "exported_db");
         assertTrue(export_db.getAllChar().size()==5);
         assertTrue(export_db.getLessons().size()==2);
@@ -486,7 +493,13 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.assignWordLesson("lesson 1", "well", "好", "hao3");
         target_db.setBoxForChar("你", 3);
         target_db.setBoxForChar("西", 4);
-        target_db.exportDB(getContext().getDatabasePath("exported_db").getPath(), true);
+        try {
+            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), true, false, false, app, null).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
         HanziDB export_db = new HanziDB(getContext(), app, "exported_db");
         assertTrue(export_db.getBoxForChar("你")==3);
         assertTrue(export_db.getNumCharsInBox(0)==3);
@@ -510,7 +523,14 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.assignWordLesson("lesson 1", "you", "你", "ni3");
         target_db.assignWordLesson("lesson 2", "grow", "长", "zhang3");
         target_db.assignWordLesson("lesson 3", "west", "西", "xi1");
-        target_db.exportDB(getContext().getDatabasePath("exported_db").getPath(), new ArrayList<String>(Arrays.asList("lesson 1","lesson 2")));
+        target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson 1", "lesson 2")));
+        try {
+            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), false, true, false, app, null).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
         HanziDB export_db = new HanziDB(getContext(), app, "exported_db");
         assertTrue(export_db.getAllChar().size()==3);
         assertTrue(export_db.getLessons().size()==2);
@@ -542,8 +562,14 @@ public class HanziDBTest extends AndroidTestCase {
         other_db.assignWordLesson("lesson 2", "hello", "你好", "ni3hao3");
         other_db.assignWordLesson("lesson 3", "grow", "长", "zhang3");
         other_db.assignWordLesson("lesson 3", "west", "西", "xi1");
-        
-        target_db.mergeDB(other_db);
+
+        try {
+            target_db.create_merge_task(other_db.getReadableDatabase().getPath(), false, app, null).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
         assertTrue(target_db.getAllChar().size()==5);
         assertTrue(target_db.getLessons().size()==3);
         assertTrue(target_db.getLessonForWord("长", "zhang3", "grow").size()==2);

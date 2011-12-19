@@ -114,7 +114,7 @@ public class Settings extends PreferenceActivity {
         Preference download_ref = findPreference("DownloadRef");
         download_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
-                final String params[]= {"http://db.tt/RdRHvoJa" /*"http://172.16.21.2/cedict_db"*/};
+                final String params[]= {"http://db.tt/RdRHvoJa"};
                 ref_downloader down = new ref_downloader();
                 down.execute(params);
                 return true;
@@ -155,57 +155,15 @@ public class Settings extends PreferenceActivity {
             final String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
 
             if (requestCode == 0) {
-                merger merge_task = new merger();
-                merge_task.execute(filePath);
+                if (((AndZiApplication)getApplication()).check_merging_space(filePath))
+                    myDB.create_merge_task(filePath, true, this, null);
+                else {
+                    Toast toast = Toast.makeText(Settings.this, "Not enough space on device to import database", 5);
+                    toast.show();
+                }
             }
         } else if (resultCode == Activity.RESULT_CANCELED) {
             return;
-        }
-    }
-
-    private class merger extends AsyncTask<String, Void, Void> {
-        ProgressDialog mProgressDialog;
-        boolean enough_space;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            if (myDB.getAllChar().size()==0) {
-                mProgressDialog = ProgressDialog.show(Settings.this, "Importing Database", "Copying...", false);
-            }
-            else {
-                mProgressDialog = new ProgressDialog(Settings.this);
-                mProgressDialog.setMessage("Merging database");
-                mProgressDialog.setIndeterminate(false);
-                mProgressDialog.setMax(100);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.show();
-            }
-        }
-
-        @Override
-        protected Void doInBackground(String... strings) {
-            enough_space = ((AndZiApplication) getApplication()).check_merging_space(strings[0]);
-            if (enough_space) {
-                if (myDB.getAllChar().size()==0) {
-                    // just need to copy
-                    ((AndZiApplication) getApplication()).replaceDataBase(strings[0]);
-                }
-                else {
-                    myDB.mergeDB(strings[0], mProgressDialog);    
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            mProgressDialog.dismiss();
-            if (!enough_space) {
-                Toast toast = Toast.makeText(Settings.this, "Not enough space on device to impoort database", 5);
-                toast.show();
-            }
         }
     }
 

@@ -141,8 +141,10 @@ public class AndZiApplication extends Application {
     public boolean check_merging_space(String path) {
         // merging is a several steps process:
         // copy the database into DB path
+        // create a backup
         // merge it
         // delete the copy
+        // delete the backup
 
         StatFs stats = new StatFs(FileMountPoint.mount_point(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath()));
         int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
@@ -150,7 +152,7 @@ public class AndZiApplication extends Application {
         File f = new File(path);
         long dbSize = f.length();
 
-        if (available_space < 2*dbSize)
+        if (available_space < 3*dbSize)
             return false;
 
         return true;

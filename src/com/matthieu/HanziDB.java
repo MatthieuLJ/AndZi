@@ -3,10 +3,13 @@ package com.matthieu;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.*;
+import android.os.AsyncTask;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -896,106 +899,311 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Merge Database
     ////////////////////////////////////////
-    public void mergeDB(String path, ProgressDialog dialog) {
-        String new_db_name = "tmp_db";
 
-        app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath());
+    public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Context context, final Runnable finishing) {
+        AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
+            ProgressDialog mProgressDialog;
+            boolean backup_ready=false;
+            final String new_db_name = "tmp_db", backup_db_name="backup_db";
 
-        HanziDB new_db = new HanziDB(appContext, app, new_db_name);
-        mergeDB(new_db, dialog);
+            @Override
+            protected Void doInBackground(Void... voids) {
+                if (getAllChar().size()==0) {
+                    // just need to copy
+                    app.replaceDataBase(path);
+                }
+                else {
+                    // copy to the DB directory
+                    app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath());
+                    publishProgress(5);
 
-        appContext.deleteDatabase(new_db_name);
-    }
-    
-    public void mergeDB(HanziDB other_db, ProgressDialog dialog) {
-        ArrayList<String> chars = other_db.getAllChar();
-        for (String c:chars) {
-            ArrayList<Vocabulary> voc = other_db.getWordsWithPinyin(c);
-            for(Vocabulary v:voc)
-                addVocabulary(v);
-            if (other_db.getBoxForChar(c) != 0) {
-                setBoxForChar(c, other_db.getBoxForChar(c));
-                setUpdateTimeForChar(c, other_db.getUpdateTimeForChar(c));
+                    if (isCancelled()) {
+                        clean_up_on_cancel();
+                        return null;
+                    }
+
+                    // copy a backup
+                    app.copyDataBase(getReadableDatabase().getPath(), appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath());
+                    publishProgress(10);
+                    if (isCancelled()) {
+                        clean_up_on_cancel();
+                        return null;
+                    }
+                    backup_ready=true;
+
+                    // merge it
+                    HanziDB other_db = new HanziDB(appContext, app, new_db_name);
+                    ArrayList<String> chars = other_db.getAllChar();
+                    for (int i=0; i<chars.size(); i++) {
+                        publishProgress(10+(i*50)/chars.size());
+                        if (isCancelled()) {
+                            clean_up_on_cancel();
+                            return null;
+                        }
+                        String c=chars.get(i);
+                        ArrayList<Vocabulary> voc = other_db.getWordsWithPinyin(c);
+                        for(Vocabulary v:voc)
+                            addVocabulary(v);
+                        if (other_db.getBoxForChar(c) != 0) {
+                            setBoxForChar(c, other_db.getBoxForChar(c));
+                            setUpdateTimeForChar(c, other_db.getUpdateTimeForChar(c));
+                        }
+
+                    }
+
+                    ArrayList<String> lessons = other_db.getLessons();
+                    for (int i=0; i<lessons.size(); i++) {
+                        publishProgress(60+(i*30)/lessons.size());
+                        if (isCancelled()) {
+                            clean_up_on_cancel();
+                            return null;
+                        }
+                        String l = lessons.get(i);
+                        addLesson(l);
+                        ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
+                        for (Vocabulary v:voc) {
+                            assignWordLesson(l,v);
+                        }
+                    }
+                    other_db.close();
+
+                    backup_ready=false;
+                    // Erase the temporary database
+                    new File(appContext.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
+                    publishProgress(95);
+
+                    // Erase backup
+                    new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
+                    publishProgress(100);
+
+                    if (isCancelled()) { // everything went through anyway...
+                        onPostExecute(null);
+                    }
+                }
+
+                return null;
             }
-        }
 
-        ArrayList<String> lessons = other_db.getLessons();
-        for (String l:lessons) {
-            addLesson(l);
-            ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
-            for (Vocabulary v:voc) {
-                assignWordLesson(l,v);
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+
+                // create the progress dialog if needed
+                if (with_dialog) {
+                    if (getAllChar().size()==0) {
+                        mProgressDialog = ProgressDialog.show(context, "Importing Database", "Copying...", false);
+                        mProgressDialog.setIndeterminate(true);
+                    }
+                    else {
+                        mProgressDialog = new ProgressDialog(context);
+                        mProgressDialog.setMessage("Merging database");
+                        mProgressDialog.setIndeterminate(false);
+                        mProgressDialog.setMax(100);
+                        mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                            public void onCancel(DialogInterface dialogInterface) {
+                                cancel(false);
+                            }
+                        });
+                        mProgressDialog.setCancelable(true);
+                        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                        mProgressDialog.show();
+                    }
+                }
             }
-        }
-        for (String c:chars) {
-            if (other_db.getBoxForChar(c) != 0) {
-                setBoxForChar(c, other_db.getBoxForChar(c));
-                setUpdateTimeForChar(c, other_db.getUpdateTimeForChar(c));
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+                if (with_dialog)
+                    mProgressDialog.setProgress(values[0]);
             }
-        }
-    }
 
-    public void mergeDB(String path) {
-        mergeDB(path, null);
-    }
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
 
-    public void mergeDB(HanziDB other_db) {
-        mergeDB(other_db,null);
+                // Dismiss progress dialog
+                if (with_dialog)
+                    mProgressDialog.dismiss();
+
+                if (finishing != null)
+                    finishing.run();
+            }
+
+            private void clean_up_on_cancel() {
+                // Erase the temporary database
+                new File(appContext.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
+
+                // restore the backup if it is ready
+                if (backup_ready) {
+                    String db_path = getReadableDatabase().getPath();
+                    new File(db_path).delete();
+                    app.copyDataBase(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath(), db_path);
+                }
+                // delete the possible backup
+                new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
+
+                if (with_dialog)
+                    mProgressDialog.dismiss();
+            }
+        };
+
+        res.execute();
+
+        return res;
     }
 
     ////////////////////////////////////////
     // Export Database
     ////////////////////////////////////////
-    public void exportDB(String path) {
-        exportDB(path, false);
-    }
+    public AsyncTask create_export_task(final String path, final boolean with_scores, final boolean filtered_lessons, final boolean with_dialog, final Context context, final Runnable finishing) {
+        AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
+            ProgressDialog mProgressDialog;
+            final String new_db_name = "tmp_db";
+            HanziDB new_db=null;
 
-    public void exportDB(String path, boolean with_score) {
-        ArrayList<String> lessons = getLessons();
-        lessons.add("");
-        exportDB(path, lessons, with_score);
-    }
+            @Override
+            protected Void doInBackground(Void... voids) {
+                if ((with_scores) && (!filtered_lessons)) {
+                    app.copyDataBase(getReadableDatabase().getPath(), path);
+                }
+                else {
+                    new_db = new HanziDB(appContext, app, new_db_name);
 
-    public void exportDB(String path, ArrayList<String> lessons, boolean with_score) {
-        HanziDB new_db = new HanziDB(appContext, app, "tmp_db");
+                    ArrayList<Vocabulary> vocabulary;
+                    if (filtered_lessons)
+                        vocabulary=getVocabularyInLessons(lesson_filter);
+                    else
+                        vocabulary=getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
 
-        ArrayList<Vocabulary> vocabulary = getVocabularyInLessons(lessons);
-        for (Vocabulary v : vocabulary) {
-            new_db.addVocabulary(v);
-            Log.d(TAG, "exporting vocabulary "+v.chinese);
-        }
+                    for (int i=0; i<vocabulary.size(); i++) {
+                        Vocabulary v=vocabulary.get(i);
+                        publishProgress((i*50)/vocabulary.size());
+                        if (isCancelled()) {
+                            Log.d(TAG, "getting out");
+                            clean_up_on_cancel();
+                            return null;
+                        }
 
-        for (String lesson : lessons) {
-            Log.d(TAG, "exporting lesson "+lesson);
-            if (lesson.equals(""))
-                continue;
-            new_db.addLesson(lesson);
+                        new_db.addVocabulary(v);
+                        Log.d(TAG, "exporting vocabulary "+v.chinese);
+                    }
 
-            ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
-            for (Vocabulary v : lesson_voc) {
-                new_db.assignWordLesson(lesson, v);
+                    ArrayList<String> lessons;
+                    if (filtered_lessons)
+                        lessons=lesson_filter;
+                    else
+                        lessons=getLessons();
+
+                    for (int i=0; i<lessons.size(); i++) {
+                        String lesson = lessons.get(i);
+                        if (isCancelled()) {
+                            clean_up_on_cancel();
+                            return null;
+                        }
+                        publishProgress(50+(i*30)/lessons.size());
+                        Log.d(TAG, "exporting lesson "+lesson);
+                        if (lesson.equals(""))
+                            continue;
+                        new_db.addLesson(lesson);
+
+                        ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
+                        for (Vocabulary v : lesson_voc) {
+                            new_db.assignWordLesson(lesson, v);
+                        }
+                    }
+
+                    if (with_scores) {
+                        ArrayList<String> chars = new_db.getAllChar();
+                        for (int i=0; i<chars.size(); i++) {
+                            String c = chars.get(i);
+                            if (isCancelled()) {
+                                clean_up_on_cancel();
+                                return null;
+                            }
+                            publishProgress(80+(i*10)/chars.size());
+                            int b = getBoxForChar(c);
+                            if (b!=0) {
+                                long t = getUpdateTimeForChar(c);
+                                new_db.setBoxForChar(c, b);
+                                new_db.setUpdateTimeForChar(c, t);
+                            }
+                        }
+                    }
+                    new_db.close();
+
+                    app.copyDataBase(new_db.getWritableDatabase().getPath(), path);
+                    publishProgress(90);
+
+                    appContext.deleteDatabase(new_db_name);
+
+                    if (isCancelled()) { // everything went through anyway...
+                        onPostExecute(null);
+                    }
+                }
+                return null;
             }
-        }
 
-        if (with_score) {
-            ArrayList<String> chars = new_db.getAllChar();
-            for (String c:chars) {
-                int b = getBoxForChar(c);
-                long t = getUpdateTimeForChar(c);
-                new_db.setBoxForChar(c, b);
-                new_db.setUpdateTimeForChar(c, t);
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                // create the progress dialog if needed
+                if (with_dialog) {
+                    if ((with_scores) && (!filtered_lessons)) {
+                        mProgressDialog = ProgressDialog.show(context, "Exporting Database", "Copying...", false);
+                        mProgressDialog.setIndeterminate(true);
+                    }
+                    else {
+                        mProgressDialog = new ProgressDialog(context);
+                        mProgressDialog.setMessage("Exporting database");
+                        mProgressDialog.setIndeterminate(false);
+                        mProgressDialog.setMax(100);
+                        mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                            public void onCancel(DialogInterface dialogInterface) {
+                                cancel(false);
+                            }
+                        });
+                        mProgressDialog.setCancelable(true);
+                        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                        mProgressDialog.show();
+                    }
+                }
             }
-        }
 
-        new_db.close();
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                super.onProgressUpdate(values);
+                if (with_dialog)
+                    mProgressDialog.setProgress(values[0]);
+            }
 
-        app.copyDataBase(new_db.getWritableDatabase().getPath(), path);
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
 
-        appContext.deleteDatabase("tmp_db");
-    }
+                if (with_dialog)
+                    mProgressDialog.dismiss();
 
-    public void exportDB(String path, ArrayList<String> lessons) {
-        exportDB(path, lessons, false);
+                if (finishing!= null)
+                    finishing.run();
+            }
+
+            private void clean_up_on_cancel() {
+                Log.d(TAG, "Cancelling export !");
+                if(new_db!=null)
+                    new_db.close();
+
+                appContext.deleteDatabase(new_db_name);
+                new File(path).delete();
+
+                if (with_dialog)
+                    mProgressDialog.dismiss();
+            }
+        };
+
+        res.execute();
+
+        return res;
     }
 
     ////////////////////////////////////////
@@ -1551,6 +1759,7 @@ public class HanziDB extends SQLiteOpenHelper {
     protected long getDelayUntilMoreStudy() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cur;
+        long res;
 
         cur = db.rawQuery("SELECT CASE box WHEN 1 THEN mod_time+? WHEN 2 THEN mod_time+? WHEN 3 THEN mod_time+? WHEN 4 THEN mod_time+? ELSE mod_time END AS delay " +
                 "FROM leitner WHERE (box=1 AND mod_time>?) OR (box=2 AND mod_time>?) OR (box=3 AND mod_time>?) OR (box=4 AND mod_time>?) ORDER BY delay ASC",
@@ -1559,11 +1768,13 @@ public class HanziDB extends SQLiteOpenHelper {
                         Long.toString(System.currentTimeMillis()-getExpiryTime(1)), Long.toString(System.currentTimeMillis()-getExpiryTime(2)),
                         Long.toString(System.currentTimeMillis()-getExpiryTime(3)), Long.toString(System.currentTimeMillis()-getExpiryTime(4))});
         if (cur.moveToNext()) {
-            return cur.getLong(cur.getColumnIndex("delay"));
+            res = cur.getLong(cur.getColumnIndex("delay"));
         }
         else {
-            return 0;
+            res = 0;
         }
+        cur.close();
+        return res;
     }
 
     ////////////////////////////////////////

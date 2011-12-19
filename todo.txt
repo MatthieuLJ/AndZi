@@ -1,11 +1,20 @@
 ONGOING:
-* Add Cancel for long operations (download ref database, merge, copy, email)
-* Implement tone change rules http://www.sinosplice.com/life/archives/2006/03/29/mandarin-tone-changes
+* Add Cancel for long operations :
+  - download ref database
+  X merge
+  X copy
+  X email
+* Handle when copy operation fails
+* Fix database corruption when detected... check when opening.
+* Combine lesson
+* Duplicate lesson
 * Guess english from Chinese word
 * Guess words based on character
 * Add dictionary
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
+* Pick test automatically (and change)
+* Push database from one phone to another (ICS)
 * Add credits
 * Make it pretty
 ---
