@@ -1,6 +1,6 @@
 ONGOING:
-* Add Pinyin colors in ReviewList
 * Add Cancel for long operations (download ref database, merge, copy, email)
+* Implement tone change rules http://www.sinosplice.com/life/archives/2006/03/29/mandarin-tone-changes
 * Guess english from Chinese word
 * Guess words based on character
 * Add dictionary
@@ -13,6 +13,7 @@ ONGOING:
 * Voice recognition... ?
 
 DONE:
+* Add Pinyin colors in ReviewList
 * Make "more vocabulary" scrollable (try with 学, 生 or 就)
 * Display message in Review List when nothing to review
 * Check performance when submitting solution of test (until next test is setup) => make DB asynchronous

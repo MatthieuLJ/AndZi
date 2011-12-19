@@ -3,8 +3,11 @@ package com.matthieu;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +23,7 @@ public class ReviewList extends ListActivity {
     protected HashMap<String, ArrayList<String>> data_to_study;
 
     private static final String TAG="ReviewList";
+    private boolean show_pinyin_color;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +40,16 @@ public class ReviewList extends ListActivity {
         setListAdapter(adapter);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ReviewList.this);
+        show_pinyin_color = sp.getBoolean("color_pinyin", true);
+    }
+
     private class table_filler extends AsyncTask<Void, Void, Void> {
         ArrayAdapter adap;
-        protected ArrayList<String> temp_to_study;
+        ArrayList<String> temp_to_study;
 
         public table_filler(ArrayAdapter a) {
             adap=a;
@@ -117,8 +128,6 @@ public class ReviewList extends ListActivity {
         }
     }
 
-
-
     private class ReviewListAdapter extends ArrayAdapter<Object> {
 
         public ReviewListAdapter() {
@@ -142,7 +151,10 @@ public class ReviewList extends ListActivity {
             chinese.setText(to_study.get(i));
 
             TextView pinyin = (TextView) view.findViewById(R.id.review_item_pinyin);
-            pinyin.setText(PinyinParser.convert_to_pretty_version(data_to_study.get(to_study.get(i)).get(0)));
+            if (show_pinyin_color)
+                pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(data_to_study.get(to_study.get(i)).get(0))));
+            else
+                pinyin.setText(PinyinParser.convert_to_pretty_version(data_to_study.get(to_study.get(i)).get(0)));
 
             TextView english = (TextView) view.findViewById(R.id.review_item_english);
             english.setText(data_to_study.get(to_study.get(i)).get(1));
