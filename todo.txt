@@ -1,5 +1,4 @@
-ONGOING (12):
-* Before exporting, check if file exist and offer to overwrite it
+ONGOING (11):
 * Combine lessons
 * Duplicate lesson
 * Guess english from Chinese word
@@ -17,6 +16,7 @@ ONGOING (12):
 * Voice recognition... ?
 
 DONE:
+* Before exporting, check if file exist and offer to overwrite it
 * Offer to download ref database initially
 * Check database corruption when adding lessons to a word
 * Handle when copy operation fails

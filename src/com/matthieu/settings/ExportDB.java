@@ -1,5 +1,8 @@
 package com.matthieu.settings;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,23 +40,23 @@ public class ExportDB extends PreferenceActivity {
         path.setSummary("Destination: "+file_path);
         Preference export = findPreference("do_export");
         export.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            public boolean onPreferenceClick(Preference preference) {
-                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
-                boolean include_scores = sp.getBoolean("include_scores", false);
-                boolean only_filtered = sp.getBoolean("only_filtered", false);
-                final String destination = sp.getString("export_path", "");
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
+            boolean include_scores = sp.getBoolean("include_scores", false);
+            boolean only_filtered = sp.getBoolean("only_filtered", false);
+            final String destination = sp.getString("export_path", "");
 
+            private void do_export() {
                 File export_db = new File(destination);
                 try {
                     if (!export_db.createNewFile()) {
                         Toast toast = Toast.makeText(ExportDB.this, "There was an error creating the file", 5);
                         toast.show();
-                        return true;
+                        return;
                     }
                 } catch (IOException e) {
                     Toast toast = Toast.makeText(ExportDB.this, "There was an error creating the file", 5);
                     toast.show();
-                    return true;
+                    return;
                 }
                 if (((AndZiApplication) getApplication()).check_exporting_space(destination))
                     myDB.create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
@@ -65,6 +68,31 @@ public class ExportDB extends PreferenceActivity {
                 else {
                     Toast toast = Toast.makeText(ExportDB.this, "Not enough space on device to export database", 5);
                     toast.show();
+                }
+
+                return;
+            }
+            public boolean onPreferenceClick(Preference preference) {
+                if (new File(destination).exists()) {
+                    AlertDialog.Builder alert = new AlertDialog.Builder(ExportDB.this);
+                    alert.setMessage("This file already exists, do you want to overwrite?");
+                    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                        }
+                    });
+                    alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            new File(destination).delete();
+                            do_export();
+                            dialog.dismiss();
+                        }
+                    });
+                    alert.create();
+                    alert.show();
+                }
+                else {
+                    do_export();
                 }
 
                 return true;
