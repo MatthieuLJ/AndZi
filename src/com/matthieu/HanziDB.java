@@ -641,6 +641,19 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    protected ArrayList<Integer> getEWordId(int cword_id) {
+        ArrayList<Integer> res=new ArrayList<Integer>();
+        Cursor cur = db.rawQuery("SELECT eng_id " +
+                "FROM eword " +
+                "WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
+        if (cur.moveToFirst()) {
+            do{
+                res.add(cur.getInt(cur.getColumnIndex("eng_id")));
+            }while(cur.moveToNext());
+        }
+        return res;
+    }
+
     protected ArrayList<Integer> getCwordWithChar(int char_pinyin_id) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword_id " +
@@ -833,7 +846,9 @@ public class HanziDB extends SQLiteOpenHelper {
         cword_id = getWordId(chinese_str,pinyin_str);
 
         for (int cid : cword_id) {
-            db.delete("eword", "cword_id=?", new String[] {Integer.toString(cid)} );
+            ArrayList<Integer> eng_ids = getEWordId(cid);
+            for (int eng_id:eng_ids)
+                delEword(eng_id);
             checkIsolatedCword(cid);
         }
     }
