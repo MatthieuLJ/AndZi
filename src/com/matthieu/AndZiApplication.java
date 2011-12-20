@@ -78,7 +78,10 @@ public class AndZiApplication extends Application {
     public void installRefDB(String path, boolean erase_source) {
         eraseRefDB();
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
-        copyDataBase(path, dest);
+        if (!copyDataBase(path, dest)) {
+            new File(dest).delete();
+            return;
+        }
         if (erase_source) {
             File to_delete= new File(path);
             to_delete.delete();
@@ -191,22 +194,22 @@ public class AndZiApplication extends Application {
         return true;
     }
 
-    public void copyMyDataBase(String destination) {
-        copyDataBase(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
+    public boolean copyMyDataBase(String destination) {
+        return copyDataBase(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
     }
 
-    public void copyDataBase(String source, String destination) {
+    public boolean copyDataBase(String source, String destination) {
         InputStream input;
         try {
             input = new FileInputStream(source);
         }
         catch (IOException e) {
-            Log.d(TAG, "no ref DB in assets");
-            return;
+            Log.d(TAG, "Could not open source");
+            return false;
         }
         if (input == null) {
-            Log.d(TAG, "could not open file at "+source);
-            return;
+            Log.d(TAG, "Could not open file at "+source);
+            return false;
         }
 
         OutputStream output=null;
@@ -227,9 +230,10 @@ public class AndZiApplication extends Application {
         }
         catch (IOException e) {
             Log.d(TAG, "Failed to copy database");
-            return;
+            return false;
         }
 
+        return true;
     }
 
     public void replaceDataBase(String source) {
@@ -237,7 +241,9 @@ public class AndZiApplication extends Application {
         myDB=null;
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(DEFAULT_DATABASE_NAME);
-        copyDataBase(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
+        if (!copyDataBase(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath())) {
+
+        }
         initialize_my_db();
     }
 }

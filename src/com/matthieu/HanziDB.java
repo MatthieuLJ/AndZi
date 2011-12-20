@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -8,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.*;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -980,7 +982,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Merge Database
     ////////////////////////////////////////
 
-    public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Context context, final Runnable finishing) {
+    public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
             boolean backup_ready=false;
@@ -994,19 +996,25 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 else {
                     // copy to the DB directory
-                    app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath());
+                    if (!app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
                     publishProgress(5);
 
                     if (isCancelled()) {
-                        clean_up_on_cancel();
+                        clean_up_on_cancel(false);
                         return null;
                     }
 
                     // copy a backup
-                    app.copyDataBase(db.getPath(), appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath());
+                    if (!app.copyDataBase(db.getPath(), appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
                     publishProgress(10);
                     if (isCancelled()) {
-                        clean_up_on_cancel();
+                        clean_up_on_cancel(false);
                         return null;
                     }
                     backup_ready=true;
@@ -1017,7 +1025,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     for (int i=0; i<chars.size(); i++) {
                         publishProgress(10+(i*50)/chars.size());
                         if (isCancelled()) {
-                            clean_up_on_cancel();
+                            clean_up_on_cancel(false);
                             return null;
                         }
                         String c=chars.get(i);
@@ -1035,7 +1043,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     for (int i=0; i<lessons.size(); i++) {
                         publishProgress(60+(i*30)/lessons.size());
                         if (isCancelled()) {
-                            clean_up_on_cancel();
+                            clean_up_on_cancel(false);
                             return null;
                         }
                         String l = lessons.get(i);
@@ -1110,7 +1118,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     finishing.run();
             }
 
-            private void clean_up_on_cancel() {
+            private void clean_up_on_cancel(final boolean error) {
                 // Erase the temporary database
                 new File(appContext.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
 
@@ -1118,13 +1126,25 @@ public class HanziDB extends SQLiteOpenHelper {
                 if (backup_ready) {
                     String db_path = db.getPath();
                     new File(db_path).delete();
-                    app.copyDataBase(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath(), db_path);
+                    new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).renameTo(new File(db_path));
                 }
-                // delete the possible backup
-                new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
+                else {
+                    // delete the possible backup
+                    new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
+                }
 
-                if (with_dialog)
-                    mProgressDialog.dismiss();
+                context.runOnUiThread(new Runnable() {
+                    public void run() {
+                        if (with_dialog)
+                            mProgressDialog.dismiss();
+
+                        if (error) {
+                            Toast toast = Toast.makeText(context, "An error occured while importing the database", 5);
+                            toast.show();
+                        }
+                    }
+                });
+
             }
         };
 
@@ -1136,7 +1156,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Export Database
     ////////////////////////////////////////
-    public AsyncTask create_export_task(final String path, final boolean with_scores, final boolean filtered_lessons, final boolean with_dialog, final Context context, final Runnable finishing) {
+    public AsyncTask create_export_task(final String path, final boolean with_scores, final boolean filtered_lessons, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
             final String new_db_name = "tmp_db";
@@ -1145,7 +1165,10 @@ public class HanziDB extends SQLiteOpenHelper {
             @Override
             protected Void doInBackground(Void... voids) {
                 if ((with_scores) && (!filtered_lessons)) {
-                    app.copyDataBase(db.getPath(), path);
+                    if (!app.copyDataBase(db.getPath(), path)) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
                 }
                 else {
                     new_db = new HanziDB(appContext, app, new_db_name);
@@ -1161,7 +1184,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         publishProgress((i*50)/vocabulary.size());
                         if (isCancelled()) {
                             Log.d(TAG, "getting out");
-                            clean_up_on_cancel();
+                            clean_up_on_cancel(false);
                             return null;
                         }
 
@@ -1178,7 +1201,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     for (int i=0; i<lessons.size(); i++) {
                         String lesson = lessons.get(i);
                         if (isCancelled()) {
-                            clean_up_on_cancel();
+                            clean_up_on_cancel(false);
                             return null;
                         }
                         publishProgress(50+(i*30)/lessons.size());
@@ -1198,7 +1221,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         for (int i=0; i<chars.size(); i++) {
                             String c = chars.get(i);
                             if (isCancelled()) {
-                                clean_up_on_cancel();
+                                clean_up_on_cancel(false);
                                 return null;
                             }
                             publishProgress(80+(i*10)/chars.size());
@@ -1212,7 +1235,11 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     new_db.close();
 
-                    app.copyDataBase(new_db.getWritableDatabase().getPath(), path);
+                    if (!app.copyDataBase(new_db.getWritableDatabase().getPath(), path)) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
+
                     publishProgress(90);
 
                     appContext.deleteDatabase(new_db_name);
@@ -1268,7 +1295,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     finishing.run();
             }
 
-            private void clean_up_on_cancel() {
+            private void clean_up_on_cancel(final boolean error) {
                 Log.d(TAG, "Cancelling export !");
                 if(new_db!=null)
                     new_db.close();
@@ -1276,8 +1303,18 @@ public class HanziDB extends SQLiteOpenHelper {
                 appContext.deleteDatabase(new_db_name);
                 new File(path).delete();
 
-                if (with_dialog)
-                    mProgressDialog.dismiss();
+                context.runOnUiThread(new Runnable() {
+                    public void run() {
+                        if (with_dialog)
+                            mProgressDialog.dismiss();
+
+                        if (error) {
+                            Toast toast = Toast.makeText(context, "An error occured while exporting the database", 5);
+                            toast.show();
+                        }
+                    }
+                });
+
             }
         };
 

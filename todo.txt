@@ -1,5 +1,5 @@
 ONGOING (13):
-* Handle when copy operation fails
+* Check database corruption when adding lessons to a word
 * Offer to download ref database initially
 * Combine lesson
 * Duplicate lesson
@@ -17,6 +17,7 @@ ONGOING (13):
 * Voice recognition... ?
 
 DONE:
+* Handle when copy operation fails
 * Fix database corruption when detected... check when opening.
 * Add Cancel for long operations :
   X download ref database
