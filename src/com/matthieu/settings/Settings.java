@@ -128,8 +128,8 @@ public class Settings extends PreferenceActivity {
                 alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         ((AndZiApplication) getApplication()).eraseRefDB();
-                        enable_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
-                        del_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
+                        enable_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
+                        del_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
                         dialog.dismiss();
                     }
                 });
@@ -138,13 +138,23 @@ public class Settings extends PreferenceActivity {
                         dialog.dismiss();
                     }
                 });
+
                 alert.create();
                 alert.show();
                 return true;
             }
         });
+
+        int intent_action=getIntent().getIntExtra("Settings_action", -1);
+        switch(intent_action) {
+            case 0: // download reference
+                final String params[]= {"http://db.tt/RdRHvoJa"};
+                ref_downloader down = new ref_downloader();
+                down.execute(params);
+                break;
+        }
     }
-    
+
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         // should come here after the activity startedin import_database completes
         if (resultCode == Activity.RESULT_OK) {
@@ -268,7 +278,7 @@ public class Settings extends PreferenceActivity {
                     }
                     total += count;
                     // publishing the progress....
-                    publishProgress((int)(total*100/lengthOfFile));
+                    publishProgress((int) (total * 100 / lengthOfFile));
                     output.write(data, 0, count);
                 }
 

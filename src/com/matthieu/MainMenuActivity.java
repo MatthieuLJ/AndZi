@@ -5,7 +5,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import com.matthieu.settings.Settings;
 
@@ -26,6 +28,36 @@ public class MainMenuActivity extends Activity {
             });
             alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                }
+            });
+            alert.create();
+            alert.show();
+        }
+
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean offer_to_download_ref=prefs.getBoolean("first_time_ref", true);
+        if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
+            alert.setMessage("Everything would be so much better if you downloaded the reference data...");
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                }
+            });
+            alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    SharedPreferences.Editor edit = prefs.edit();
+                    edit.putBoolean("first_time_ref", false);
+                    edit.commit();
+                    dialog.dismiss();
+                }
+            });
+            alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    Intent in=new Intent(MainMenuActivity.this, Settings.class);
+                    in.putExtra("Settings_action", 0);
+                    startActivity(in);
                     dialog.dismiss();
                 }
             });

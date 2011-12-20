@@ -1,21 +1,23 @@
 ONGOING (12):
-* Offer to download ref database initially
-* Combine lesson
+* Before exporting, check if file exist and offer to overwrite it
+* Combine lessons
 * Duplicate lesson
 * Guess english from Chinese word
 * Guess words based on character
+* Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Add dictionary
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
 * Pick test automatically (and change)
-* Push database from one phone to another (ICS)
 * Add credits
 * Make it pretty
 ---
+* Push database from one phone to another (ICS)
 * Teach to write characters
 * Voice recognition... ?
 
 DONE:
+* Offer to download ref database initially
 * Check database corruption when adding lessons to a word
 * Handle when copy operation fails
 * Fix database corruption when detected... check when opening.
