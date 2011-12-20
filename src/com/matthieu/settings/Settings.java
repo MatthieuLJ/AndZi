@@ -183,8 +183,6 @@ public class Settings extends PreferenceActivity {
             }
             URL=strings[0];
 
-
-
             DownloadFromUrl(URL, PATH);
             return null;
         }
@@ -197,6 +195,12 @@ public class Settings extends PreferenceActivity {
             mProgressDialog.setMessage("Downloading reference database");
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(100);
+            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                public void onCancel(DialogInterface dialogInterface) {
+                    cancel(false);
+                }
+            });
+            mProgressDialog.setCancelable(true);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             mProgressDialog.show();
         }
@@ -255,6 +259,13 @@ public class Settings extends PreferenceActivity {
                 long total = 0;
 
                 while ((count = input.read(data)) != -1) {
+                    if (isCancelled()) {
+                        output.flush();
+                        output.close();
+                        input.close();
+                        new File(fileName).delete();
+                        return;
+                    }
                     total += count;
                     // publishing the progress....
                     publishProgress((int)(total*100/lengthOfFile));

@@ -1,9 +1,4 @@
-ONGOING:
-* Add Cancel for long operations :
-  - download ref database
-  X merge
-  X copy
-  X email
+ONGOING (13):
 * Handle when copy operation fails
 * Fix database corruption when detected... check when opening.
 * Combine lesson
@@ -22,6 +17,11 @@ ONGOING:
 * Voice recognition... ?
 
 DONE:
+* Add Cancel for long operations :
+  X download ref database
+  X merge
+  X copy
+  X email
 * Add Pinyin colors in ReviewList
 * Make "more vocabulary" scrollable (try with 学, 生 or 就)
 * Display message in Review List when nothing to review
