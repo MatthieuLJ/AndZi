@@ -36,8 +36,21 @@ public class DBActivity extends Activity {
         setContentView(R.layout.db);
 
         if (!myDB.checkDatabase()) {
-            Toast toast = Toast.makeText(DBActivity.this, "Database is corrupted... FIXME", 10);
-            toast.show();
+            AlertDialog.Builder alert = new AlertDialog.Builder(DBActivity.this);
+            alert.setMessage("Found some problems in the database, would you like to fix them?");
+            alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    myDB.checkDatabase(true);
+                    dialog.dismiss();
+                }
+            });
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                }
+            });
+            alert.create();
+            alert.show();
         }
 
         update_content();
@@ -62,8 +75,6 @@ public class DBActivity extends Activity {
         TextView tv;
         StatsBars bar;
         int max_num;
-
-
 
         int num_in_box1 = myDB.getNumCharsInBox(0);
         max_num=num_in_box1;

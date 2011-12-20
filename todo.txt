@@ -1,6 +1,6 @@
 ONGOING (13):
 * Handle when copy operation fails
-* Fix database corruption when detected... check when opening.
+* Offer to download ref database initially
 * Combine lesson
 * Duplicate lesson
 * Guess english from Chinese word
@@ -17,6 +17,7 @@ ONGOING (13):
 * Voice recognition... ?
 
 DONE:
+* Fix database corruption when detected... check when opening.
 * Add Cancel for long operations :
   X download ref database
   X merge

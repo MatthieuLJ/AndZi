@@ -2,6 +2,8 @@ package com.matthieu;
 
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -11,6 +13,25 @@ public class MainMenuActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
+
+        if (!myDB.checkDatabase()) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
+            alert.setMessage("Found some problems in the database, would you like to fix them?");
+            alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    myDB.checkDatabase(true);
+                    dialog.dismiss();
+                }
+            });
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                }
+            });
+            alert.create();
+            alert.show();
+        }
 
         setContentView(R.layout.main_menu);
     }
