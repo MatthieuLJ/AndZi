@@ -1371,6 +1371,10 @@ public class HanziDB extends SQLiteOpenHelper {
 
         db.delete("lesson_word", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
         db.delete("lessons", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
+
+        if (lesson_filter.contains(name)) {
+            lesson_filter.remove(name);
+        }
     }
 
     public void renameLesson(String old_name, String new_name) {
@@ -1384,6 +1388,11 @@ public class HanziDB extends SQLiteOpenHelper {
         cv.put("name", new_name);
 
         db.update("lessons", cv, "lesson_id=?", new String[] {Integer.toString(lesson_id)});
+
+        if (lesson_filter.contains(old_name)) {
+            lesson_filter.remove(old_name);
+            lesson_filter.add(new_name);
+        }
     }
 
     public ArrayList<String> getLessons() {
