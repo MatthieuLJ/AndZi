@@ -1,5 +1,4 @@
-ONGOING (11):
-* Combine lessons
+ONGOING (10):
 * Make changes immediately when editing database
   - vocabulary editing
   X lesson editing
@@ -24,7 +23,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (34):
+DONE (35):
+* Combine lessons
 * Duplicate lesson
 * Before exporting, check if file exist and offer to overwrite it
 * Offer to download ref database initially

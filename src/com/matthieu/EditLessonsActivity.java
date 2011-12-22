@@ -274,6 +274,51 @@ public class EditLessonsActivity extends Activity {
                 });
                 break;
             case R.id.combine_lesson:
+                AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                alert.setTitle("Select lessons to combine with "+le.label);
+                final String[] lessons = new String[current_lessons.size()];
+                final boolean[] lesson_checked = new boolean[current_lessons.size()];
+                for (int i=0; i<current_lessons.size(); i++) {
+                    lessons[i] = current_lessons.get(i).label;
+                    lesson_checked[i] = false;
+                }
+                alert.setMultiChoiceItems(lessons, lesson_checked, new DialogInterface.OnMultiChoiceClickListener() {
+                    public void onClick(DialogInterface dialog, int i, boolean b) {
+                        lesson_checked[i]=b;
+                    }
+                });
+                alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int n) {
+                        undo_lesson=le;
+                        undo_new_name=le.label;
+                        undo_old_content=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
+                        undo_num_items=le.num_items;
+                        ArrayList<String> lessons_selected = new ArrayList<String>();
+                        for (int i=0; i<current_lessons.size(); i++) {
+                            if (lesson_checked[i]) {
+                                lessons_selected.add(lessons[i]);
+                            }
+                        }
+                        ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(lessons_selected);
+                        for (Vocabulary v:voc) {
+                            myDB.assignWordLesson(le.label, v);
+                        }
+                        le.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))).size();
+                        undo_operation=4;
+                        dialog.dismiss();
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                    }
+                });
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int n) {
+                        dialog.dismiss();
+                    }
+                });
+                alert.show();
+
+
+
                 break;
             default:
                 return super.onContextItemSelected(item);
@@ -406,13 +451,14 @@ public class EditLessonsActivity extends Activity {
                             lesson_order.add(l.label);
                         myDB.sortLessons(lesson_order);
                         break;
-                    case 4:
+                    case 4: // undo combine
                         for (Vocabulary v:myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(undo_new_name)))) {
                             myDB.removeWordLesson(undo_new_name, v);
                         }
                         for (Vocabulary v:undo_old_content) {
                             myDB.assignWordLesson(undo_new_name, v);
                         }
+                        undo_lesson.num_items=undo_num_items;
                         break;
                 }
                 undo_operation=0;
