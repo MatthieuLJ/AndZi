@@ -1,21 +1,31 @@
 ONGOING (11):
 * Combine lessons
-* Duplicate lesson
+* Make changes immediately when editing database
+  - vocabulary editing
+  X lesson editing
 * Guess english from Chinese word
-* Guess words based on character
+* Suggest words based on character
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Add dictionary
-* Hide IME when not needed
-* Suggest vocabulary based on what is already known, frequency list
-* Pick test automatically (and change)
+* Change TestResult into word/character details and be able to navigate through those (and add definitions from ref)
+* Check everything can be done without a touch screen (wheel or arrow buttons)
+* Check different screen sizes
 * Add credits
 * Make it pretty
----
+
+BUGS (1):
+* Conserve list sorting order across merge/export...
+
+FUTURE (6):
+* Pick test automatically (and change)
+* Hide IME when not needed
+* Suggest vocabulary based on what is already known, frequency list
 * Push database from one phone to another (ICS)
 * Teach to write characters
 * Voice recognition... ?
 
-DONE:
+DONE (34):
+* Duplicate lesson
 * Before exporting, check if file exist and offer to overwrite it
 * Offer to download ref database initially
 * Check database corruption when adding lessons to a word
