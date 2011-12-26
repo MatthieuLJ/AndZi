@@ -109,9 +109,9 @@ public class GuessChineseWord extends TestActivity {
             }
 
             while ((words.size() > 0) && (solution == null)) {
-                candidate = words.remove((int) ((words.size()-1)*Math.random())).chinese;
+                candidate = words.remove((int) (words.size()*Math.random())).chinese;
                 ArrayList<Vocabulary> voc = myDB.getTranslations(candidate);
-                solution = voc.get((int) ((voc.size()-1)*Math.random()));
+                solution = voc.get((int) (voc.size()*Math.random()));
 
                 translations = solution.english;
                 if (refDB != null) {

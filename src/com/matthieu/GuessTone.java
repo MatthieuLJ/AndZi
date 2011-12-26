@@ -69,7 +69,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
             pinyin = null;
             while ((pinyin == null) && (pinyins.size() > 0)) {
-                int j = (int) ((pinyins.size()-1)*Math.random());
+                int j = (int) (pinyins.size()*Math.random());
                 pinyin = new Pinyin(pinyins.remove(j));
                 if (pinyin.get_tone() == 5) {
                     //Log.v(TAG,"Reject study of pinyin "+pinyin.get_pretty());

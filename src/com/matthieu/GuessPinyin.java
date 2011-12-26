@@ -79,7 +79,7 @@ public class GuessPinyin extends TestActivity {
             }
             if (pinyins.size() > 1)
                 show_words=true;
-            pinyin=pinyins.get((int)(Math.random()*(pinyins.size()-1)));
+            pinyin=pinyins.get((int)(Math.random()*pinyins.size()));
         }
         else {
             pinyin = pinyins.get(0);
