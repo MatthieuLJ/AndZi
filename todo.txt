@@ -1,19 +1,28 @@
-ONGOING (10):
+ONGOING (11):
+* Guess english from Chinese word
+* Change review in word / character mode - Display only what to study or everything
 * Make changes immediately when editing database
   - vocabulary editing
   X lesson editing
-* Guess english from Chinese word
-* Suggest words based on character
+* Find Chinese words containing a character
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Add dictionary
 * Change TestResult into word/character details and be able to navigate through those (and add definitions from ref)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 * Add credits
+* Add help (different screens, IME, ref DB)
 * Make it pretty
 
-BUGS (1):
+BUGS (4):
 * Conserve list sorting order across merge/export...
+* Check we are not reusing the same lesson name in lesson editing
+  - Create new
+  - Duplicate
+  - Rename
+* Use AlertDialog.Builder.setSingleChoiceItems for default lesson choice in add vocabulary
+* Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
+
 
 FUTURE (6):
 * Pick test automatically (and change)

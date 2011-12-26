@@ -112,4 +112,9 @@ public class MainMenuActivity extends Activity {
         Intent intent = new Intent(this, GuessPinyin.class);
         startActivity(intent);
     }
+
+    public void handle_guessenglish(View v) {
+        Intent intent = new Intent(this, GuessEnglish.class);
+        startActivity(intent);
+    }
 }

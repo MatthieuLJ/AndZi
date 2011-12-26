@@ -33,6 +33,7 @@
         <activity android:name=".GuessChar" />
         <activity android:name=".GuessChineseWord" />
         <activity android:name=".GuessPinyin" />
+        <activity android:name=".GuessEnglish" />
 
         <activity android:name=".TestResultActivity">
             <intent-filter android:name="android.intent.action.VIEW" />
