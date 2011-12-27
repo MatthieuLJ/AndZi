@@ -11,16 +11,16 @@ import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
+import android.widget.*;
+import com.matthieu.widget.ExtendingLinearLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ReviewList extends ListActivity {
     protected HanziDB myDB=null;
-    protected ArrayList<String> to_study;
-    protected HashMap<String, ArrayList<String>> data_to_study;
+    protected ArrayList<CharPinyin> to_study;
+    protected HashMap<CharPinyin, ArrayList<Vocabulary>> data_to_study;
 
     private static final String TAG="ReviewList";
     private boolean show_pinyin_color;
@@ -30,8 +30,8 @@ public class ReviewList extends ListActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
 
-        to_study=new ArrayList<String>();
-        data_to_study=new HashMap<String, ArrayList<String>>();
+        to_study=new ArrayList<CharPinyin>();
+        data_to_study=new HashMap<CharPinyin, ArrayList<Vocabulary>>();
 
         ArrayAdapter adapter = new ReviewListAdapter();
 
@@ -47,9 +47,18 @@ public class ReviewList extends ListActivity {
         show_pinyin_color = sp.getBoolean("color_pinyin", true);
     }
 
+    private class CharPinyin {
+        public String character=null;
+        public String pinyin=null;
+        public boolean expanded=false;
+        public boolean equals(CharPinyin other) {
+            return ((other.character.equals(character)) && (other.pinyin.equals(pinyin)));
+        }
+    }
+
     private class table_filler extends AsyncTask<Void, Void, Void> {
         ArrayAdapter adap;
-        ArrayList<String> temp_to_study;
+        ArrayList<CharPinyin> temp_to_study;
 
         public table_filler(ArrayAdapter a) {
             adap=a;
@@ -57,38 +66,23 @@ public class ReviewList extends ListActivity {
 
         private void fill_tables() {
             ArrayList<String> chars_to_study = myDB.getAllFilteredToStudy();
-            temp_to_study=new ArrayList<String>();
-            String pinyin, english;
+            temp_to_study=new ArrayList<CharPinyin>();
+            
 
             for (String chinese: chars_to_study) {
-                ArrayList<Vocabulary> voc = myDB.getWordsWithPinyin(chinese);
+                ArrayList<String> pinyins = myDB.getPinyinForChar(chinese);
+                for (String pin:pinyins) {
+                    CharPinyin charpinyin = new CharPinyin();
+                    charpinyin.character=chinese;
+                    charpinyin.pinyin=pin;
 
-                for (Vocabulary v:voc) {
-                    if ((temp_to_study.contains(v.chinese)) || (to_study.contains(v.chinese)))
-                        continue;
-                    ArrayList<String> data = new ArrayList<String>();
-
-                    pinyin = new String();
-                    english = new String();
-                    if (!pinyin.equals("")) {
-                        pinyin += " / ";
-                        english += " / ";
-                    }
-                    pinyin+=v.pinyin;
-                    for (int i=0; i<v.english.size(); i++) {
-                        if (i!=0) english+=", ";
-                        english+=v.english.get(i);
-                    }
-                    data.add(pinyin);
-                    data.add(english);
-
-                    temp_to_study.add(v.chinese);
-                    data_to_study.put(v.chinese, data);
-                    if (temp_to_study.size() > 20) {
-                        to_study.addAll(temp_to_study);
-                        publishProgress();
-                        temp_to_study.clear();
-                    }
+                    temp_to_study.add(charpinyin);
+                    data_to_study.put(charpinyin, myDB.getWordsWithPinyin(chinese, pin));
+                }
+                if (temp_to_study.size() > 20) {
+                    to_study.addAll(temp_to_study);
+                    publishProgress();
+                    temp_to_study.clear();
                 }
             }
             to_study.addAll(temp_to_study);
@@ -143,23 +137,73 @@ public class ReviewList extends ListActivity {
         }
 
         public View getView(int i, View view, ViewGroup viewGroup) {
+            LayoutInflater li = getLayoutInflater();
             if (view == null) {
-                LayoutInflater li = getLayoutInflater();
                 view = li.inflate(R.layout.review_list_item, viewGroup, false);
             }
-            TextView chinese = (TextView) view.findViewById(R.id.review_item_chinese);
-            chinese.setText(to_study.get(i));
-
+            TextView chinese = (TextView) view.findViewById(R.id.review_item_character);
+            chinese.setText(to_study.get(i).character);
             TextView pinyin = (TextView) view.findViewById(R.id.review_item_pinyin);
             if (show_pinyin_color)
-                pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(data_to_study.get(to_study.get(i)).get(0))));
+                pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(to_study.get(i).pinyin)));
             else
-                pinyin.setText(PinyinParser.convert_to_pretty_version(data_to_study.get(to_study.get(i)).get(0)));
+                pinyin.setText(PinyinParser.convert_to_pretty_version(to_study.get(i).pinyin));
 
-            TextView english = (TextView) view.findViewById(R.id.review_item_english);
-            english.setText(data_to_study.get(to_study.get(i)).get(1));
+            Button arrow = (Button) view.findViewById(R.id.review_expand_button);
+            ExtendingLinearLayout words = (ExtendingLinearLayout) view.findViewById(R.id.review_item_words);
+            if (to_study.get(i).expanded) {
+                words.expand_immediate();
+                arrow.setBackgroundResource(R.drawable.expand_arrow_down);
+                arrow.setTag(R.id.review_expanded, "1");
+            }
+            else {
+                words.collapse_immediate();
+                arrow.setBackgroundResource(R.drawable.expand_arrow_right);
+                arrow.setTag(R.id.review_expanded, "0");
+            }
+            arrow.setTag(R.id.review_view_to_expand, words);
+            arrow.setTag(R.id.review_item, to_study.get(i));
+
+            TableLayout word_table = (TableLayout) view.findViewById(R.id.review_item_word_table);
+            word_table.removeAllViews();
+            for (Vocabulary voc : data_to_study.get(to_study.get(i))) {
+                TableRow row = (TableRow) li.inflate(R.layout.review_item_word_row, word_table, false);
+                TextView chinese_word = (TextView) row.findViewById(R.id.review_word_chinese);
+                chinese_word.setText(voc.chinese);
+                TextView english_word = (TextView) row.findViewById(R.id.review_word_english);
+                String english_translations=new String();
+                for (int j=0; j<voc.english.size(); j++) {
+                    english_translations += voc.english.get(j);
+                    if (j < voc.english.size()-1)
+                        english_translations += ", ";
+                }
+                english_word.setText(english_translations);
+                word_table.addView(row);
+            }
             
             return view;
+        }
+    }
+
+    public void expand(View v) {
+        String tag = (String) v.getTag(R.id.review_expanded);
+        CharPinyin charpin = (CharPinyin) v.getTag(R.id.review_item);
+
+        if (tag.equals("0")) {
+            v.setBackgroundResource(R.drawable.expand_arrow_down);
+            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.review_view_to_expand);
+            if (el!=null)
+                el.expand();
+            v.setTag(R.id.review_expanded, "1");
+            charpin.expanded=true;
+        }
+        else {
+            v.setBackgroundResource(R.drawable.expand_arrow_right);
+            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.review_view_to_expand);
+            if (el!=null)
+                el.collapse();
+            v.setTag(R.id.review_expanded, "0");
+            charpin.expanded=false;
         }
     }
 }

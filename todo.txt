@@ -1,6 +1,5 @@
 ONGOING (11):
-* Guess english from Chinese word
-* Change review in word / character mode - Display only what to study or everything
+* Review list, display only what to study or everything
 * Make changes immediately when editing database
   - vocabulary editing
   X lesson editing
@@ -14,12 +13,14 @@ ONGOING (11):
 * Add help (different screens, IME, ref DB)
 * Make it pretty
 
-BUGS (4):
+BUGS (6):
 * Conserve list sorting order across merge/export...
 * Check we are not reusing the same lesson name in lesson editing
   - Create new
   - Duplicate
   - Rename
+* Display lessons progressively in lesson editing
+* In the review list, is a pinyin with no tone also has only one equivalent with a tone, combine those
 * Use AlertDialog.Builder.setSingleChoiceItems for default lesson choice in add vocabulary
 * Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
 
@@ -32,7 +33,9 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (35):
+DONE (37):
+* Change review in word / character mode
+* Guess english from Chinese word
 * Combine lessons
 * Duplicate lesson
 * Before exporting, check if file exist and offer to overwrite it
