@@ -1,14 +1,13 @@
 package com.matthieu.widget;
 
 import android.content.Context;
-import android.content.pm.PackageInfo;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.util.AttributeSet;
-import android.util.Log;
+//import android.util.Log;
 import android.view.View;
 
 public class StatsBars extends View {
@@ -18,7 +17,7 @@ public class StatsBars extends View {
     String good_label=null;
     String expired_label=null;
 
-    private final String TAG="StatsBar";
+    //private final String TAG="StatsBar";
 
     public StatsBars(Context context) {
         super(context);

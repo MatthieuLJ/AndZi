@@ -124,22 +124,21 @@ public class TestResultActivity extends Activity {
         LinearLayout result_section = (LinearLayout) section.findViewById(R.id.test_result_translations);
 
         ArrayList<Vocabulary> trans = myDB.getWordsWithPinyin(han, pin);
-        for (int i=0; i<trans.size(); i++) {
-            String str_trans = new String();
+        for (Vocabulary tran : trans) {
+            String str_trans = "";
             TextView tv_translations = new TextView(this);
-            Vocabulary voc = trans.get(i);
-            str_trans += voc.chinese + "(" + PinyinParser.convert_to_html_version(voc.pinyin) + ") ";
-            for (int j=0; j<voc.english.size(); j++) {
-                String tr=voc.english.get(j);
+            str_trans += tran.chinese + "(" + PinyinParser.convert_to_html_version(tran.pinyin) + ") ";
+            for (int j = 0; j < tran.english.size(); j++) {
+                String tr = tran.english.get(j);
                 str_trans += tr;
-                if (j<voc.english.size()-1)
+                if (j < tran.english.size() - 1)
                     str_trans += ", ";
             }
-            Log.d(TAG, "adding word "+str_trans+" to list");
+            Log.d(TAG, "adding word " + str_trans + " to list");
             tv_translations.setText(Html.fromHtml(str_trans));
             tv_translations.setTextAppearance(this, android.R.attr.textAppearanceMedium);
             tv_translations.setTextColor(0xff000000);
-            tv_translations.setTag(voc.chinese);
+            tv_translations.setTag(tran.chinese);
             tv_translations.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View view) {
                     click_result(view);

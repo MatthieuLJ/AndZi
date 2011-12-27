@@ -209,7 +209,7 @@ public class Pinyin {
 
     public static boolean verify_pinyin(String entry) {
         int i;
-        String temp=new String();
+        String temp="";
 
         if (!map_initialized)
             create_pinyin_map();

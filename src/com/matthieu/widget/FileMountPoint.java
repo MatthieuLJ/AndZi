@@ -37,7 +37,7 @@ public class FileMountPoint {
             Log.d(TAG, "Ran into getting canonical path");
         }
         ArrayList<String> list =  all_mount_points();
-        String res=new String("/");
+        String res="/";
         for (String s:list) {
             if ((path.equals(s) || path.startsWith(s+"/")) && s.length()>res.length())
                 res = s;

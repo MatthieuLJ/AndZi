@@ -196,7 +196,7 @@ public class PinyinParser {
     {
         int i;
         String result = "";
-        if (input == "")
+        if (input.equals(""))
             return result;
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         for (i = 0; i < parsed.size(); i++)
@@ -210,7 +210,7 @@ public class PinyinParser {
     {
         int i;
         String result = "";
-        if (input == "")
+        if (input.equals(""))
             return result;
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         for (i = 0; i < parsed.size(); i++)
@@ -224,7 +224,7 @@ public class PinyinParser {
     {
         int i;
         String result = "";
-        if (input == "")
+        if (input.equals(""))
             return result;
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         for (i = 0; i < parsed.size(); i++)

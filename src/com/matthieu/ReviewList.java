@@ -185,7 +185,7 @@ public class ReviewList extends ListActivity {
                 TextView chinese_word = (TextView) row.findViewById(R.id.review_word_chinese);
                 chinese_word.setText(voc.chinese);
                 TextView english_word = (TextView) row.findViewById(R.id.review_word_english);
-                String english_translations=new String();
+                String english_translations="";
                 for (int j=0; j<voc.english.size(); j++) {
                     english_translations += voc.english.get(j);
                     if (j < voc.english.size()-1)

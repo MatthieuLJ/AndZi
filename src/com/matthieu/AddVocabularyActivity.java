@@ -537,7 +537,7 @@ public class AddVocabularyActivity extends Activity
 
         @Override
         public int getCount() {
-            int res = 0;
+            int res;
 
             my = translations_in_db.size();
             res = my;
@@ -637,7 +637,7 @@ public class AddVocabularyActivity extends Activity
                 bt.setTag(R.id.add_vocabulary_item, voc);
 
                 TextView more = (TextView) row.findViewById(R.id.add_more);
-                String lessons = new String();
+                String lessons = "";
                 if (voc.lessons.size() != 0) {
                     for (String s : voc.lessons) {
                         lessons=lessons.concat(s);
@@ -946,11 +946,7 @@ public class AddVocabularyActivity extends Activity
             edited_word = "";
             ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
         }
-        ((EditText) findViewById(R.id.edit_new_vocabulary)).requestFocus();
-    }
-
-    public void handle_edit_lesson(View v) {
-        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
+        (findViewById(R.id.edit_new_vocabulary)).requestFocus();
     }
 
     public void handle_add_vocabulary(View v) {

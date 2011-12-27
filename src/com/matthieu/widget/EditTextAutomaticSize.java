@@ -44,12 +44,12 @@ public class EditTextAutomaticSize extends EditText {
         Rect currentBounds = new Rect ( );
 
         setTextSize(size);
-        tp.getTextBounds((String) text, 0, text.length(), currentBounds );
+        tp.getTextBounds(text, 0, text.length(), currentBounds );
 
         while ((currentBounds.right > width) && (size > minimum_text_size)) {
             size--;
             setTextSize(size);
-            tp.getTextBounds((String) text, 0, text.length(), currentBounds );
+            tp.getTextBounds(text, 0, text.length(), currentBounds );
         }
     }
 }

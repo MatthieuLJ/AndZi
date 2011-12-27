@@ -3,7 +3,7 @@ package com.matthieu.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.util.Log;
+//import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -14,12 +14,12 @@ import java.util.ArrayList;
 
 
 public class ExtendingLinearLayout extends LinearLayout {
-    private static final String TAG="ExtendingLinearLayout";
+    //private static final String TAG="ExtendingLinearLayout";
     protected ArrayList<View> itemsToHide=null;
     private Interpolator interpolator;
     private int state=0; // -1:collapsing, 1:expanding, 0:nothing
 
-    private int current_height, current_width, new_height;
+    private int current_height, current_width;
     int saved_height;
 
     private LinearLayout.LayoutParams savedParams;
@@ -121,6 +121,7 @@ public class ExtendingLinearLayout extends LinearLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         //Log.d(TAG, "onMeasure..." + MeasureSpec.toString(widthMeasureSpec) +", "+MeasureSpec.toString(heightMeasureSpec));
+        int new_height;
 
         if (state == -1) {
             //Log.d(TAG, "initiate collapse...");

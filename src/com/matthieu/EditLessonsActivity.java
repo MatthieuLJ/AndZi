@@ -84,7 +84,7 @@ public class EditLessonsActivity extends Activity {
             ArrayList<String> existing_lessons = myDB.getLessons();
 
             for (String lesson : existing_lessons) {
-                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new String[] {lesson}))).size();
+                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
                 Lesson new_lesson = new Lesson(lesson);
                 new_lesson.state = Lesson.EXISTING;
                 if (current_lesson_filter.contains(lesson))

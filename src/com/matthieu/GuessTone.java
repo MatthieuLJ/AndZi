@@ -104,12 +104,9 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     }
 
     protected int check_guess(String guess) {
-        CheckBox cb;
         int res=0;
 
         // check if any wrong guess
-
-        cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
         if ((guess.contains("1") && !tones.contains(1)) || (tones.contains(1) && !guess.contains("1")))
             return res;
         if ((guess.contains("2") && !tones.contains(2)) || (tones.contains(2) && !guess.contains("2")))
@@ -235,7 +232,6 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     }
 
     public void handle_ok(View v) {
-        Toast toast;
         String tones_checked="";
         CheckBox cb;
 

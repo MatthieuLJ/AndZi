@@ -30,7 +30,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
 
-        hanzi=new String();
+        hanzi="";
         words=new ArrayList<Vocabulary>();
         previous_guess=new ArrayList<String>();
 
@@ -94,7 +94,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
             TextView trans = new TextView(this);
             trans.setTextAppearance(GuessChar.this, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
-            String en=new String();
+            String en="";
             for (int j=0; j<w.english.size(); j++) {
                 en += w.english.get(j);
                 if (j<w.english.size()-1)
@@ -124,7 +124,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
             if (guess.length()==1) {
                 res=-1;
                 for (Vocabulary w:words) {
-                    String tmp_word = new String(w.chinese);
+                    String tmp_word = w.chinese;
                     tmp_word = tmp_word.replaceAll(hanzi, guess);
 
                     ArrayList<String> tmp_translations=new ArrayList<String>();

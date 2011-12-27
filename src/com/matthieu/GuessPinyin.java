@@ -37,7 +37,7 @@ public class GuessPinyin extends TestActivity {
         else {
             show_result = 3;
         }
-        hanzi=new String();
+        hanzi="";
         words=new ArrayList<Vocabulary>();
 
         setContentView(R.layout.guess_pinyin);
@@ -113,7 +113,7 @@ public class GuessPinyin extends TestActivity {
             TextView trans = new TextView(this);
             trans.setTextAppearance(GuessPinyin.this, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
-            String en=new String();
+            String en="";
             for (int j=0; j<w.english.size(); j++) {
                 en += w.english.get(j);
                 if (j<w.english.size()-1)

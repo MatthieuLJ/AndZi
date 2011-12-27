@@ -155,10 +155,7 @@ public class AndZiApplication extends Application {
         File f = new File(path);
         long dbSize = f.length();
 
-        if (available_space < 3*dbSize)
-            return false;
-
-        return true;
+        return available_space >= 3 * dbSize;
     }
 
     public boolean check_ref_download_space(String path, int size) {
