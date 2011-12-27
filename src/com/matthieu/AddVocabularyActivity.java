@@ -1,7 +1,9 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -845,70 +847,33 @@ public class AddVocabularyActivity extends Activity
     }
 
     private void set_default_lesson() {
-        Dialog dialog = new Dialog(AddVocabularyActivity.this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
         dialog.setTitle("Choose the default lesson");
-        fill_default_lesson_dialog(dialog);
-        dialog.show();
-    }
+        dialog.setCancelable(false);
 
-    private void fill_default_lesson_dialog(final Dialog dialog) {
-        dialog.setContentView(R.layout.add_vocabulary_default_lesson_dialog);
-        ArrayList<String> lessons = myDB.getLessons();
+        final String current_default_lesson=default_lesson;
+        final ArrayList<String> lessons = myDB.getLessons();
         lessons.add(0, "(none)");
+        int selected_index = default_lesson.equals("")?0:lessons.indexOf(default_lesson);
 
-        ListView list = (ListView) dialog.findViewById(R.id.default_lesson_list);
-        ListAdapter adapter = new DefaultLessonArrayAdapter(lessons);
-        list.setAdapter(adapter);
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (i == 0) {
-                    default_lesson = "";
-                } else {
-                    default_lesson = myDB.getLessons().get(i - 1);
-                }
-                //((DefaultLessonArrayAdapter) ((ListView) adapterView).getAdapter()).notifyDataSetChanged();
+        final ArrayAdapter<String> aa=new ArrayAdapter<String>(AddVocabularyActivity.this, R.layout.simple_list_item_single_choice, lessons);
+        dialog.setSingleChoiceItems(aa, selected_index,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        default_lesson=lessons.get(i);
+                        Log.d(TAG, "Set default lesson to "+default_lesson);
+                        if (default_lesson.equals("(none)"))
+                            default_lesson="";
+                        dialog.dismiss();
+                    }
+                });
+        dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+                default_lesson = current_default_lesson;
                 dialog.dismiss();
             }
         });
-
-        Button cancel_button = (Button) dialog.findViewById(R.id.default_lesson_cancel);
-        cancel_button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                dialog.dismiss();
-            }
-        });
-    }
-
-    private class DefaultLessonArrayAdapter extends ArrayAdapter<String> {
-        ArrayList<String> lessons;
-        public DefaultLessonArrayAdapter(ArrayList<String> le) {
-            super(AddVocabularyActivity.this, android.R.layout.simple_list_item_single_choice, le);
-            lessons = le;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            CheckedTextView view;
-            if (convertView == null) {
-                LayoutInflater inflater = getLayoutInflater();
-                view = (CheckedTextView) inflater.inflate(R.layout.add_vocabulary_default_lesson_dialog_item, parent, false);
-            }
-            else {
-                view = (CheckedTextView) convertView;
-            }
-            view.setText(lessons.get(position));
-
-            if ((position == 0) && (default_lesson.equals(""))) {
-                view.setChecked(true);
-            }
-            else if ((position > 0) && (default_lesson.equals(lessons.get(position)))) {
-                view.setChecked(true);
-            }
-            else {
-                view.setChecked(false);
-            }
-            return view;
-        }
+        dialog.show();
     }
 
     public void expand(View v) {
