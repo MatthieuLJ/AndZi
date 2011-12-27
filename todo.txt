@@ -12,14 +12,13 @@ ONGOING (10):
 * Add help (different screens, IME, ref DB)
 * Make it pretty
 
-BUGS (6):
+BUGS (5):
 * Conserve list sorting order across merge/export...
 * Check we are not reusing the same lesson name in lesson editing
   - Create new
   - Duplicate
   - Rename
 * Display lessons progressively in lesson editing
-* In the review list, is a pinyin with no tone also has only one equivalent with a tone, combine those
 * Use AlertDialog.Builder.setSingleChoiceItems for default lesson choice in add vocabulary
 * Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
 
@@ -31,7 +30,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (39):
+DONE (40):
+* In the review list, is a pinyin with no tone also has only one equivalent with a tone, combine those
 * Review list, display only what to study or everything
 * Display a progress bar when loading the review list
 * Change review in word / character mode

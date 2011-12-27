@@ -101,12 +101,59 @@ public class ReviewList extends ListActivity {
                 String chinese = chars_to_study.get(i);
                 ArrayList<String> pinyins = myDB.getPinyinForChar(chinese);
                 for (String pin:pinyins) {
+                    Pinyin this_pinyin=new Pinyin(pin);
+                    if (this_pinyin.get_tone() == 5) {
+                        // no tone, check if there is another one with the same radical
+                        int count=0;
+                        for (String other_pin : pinyins) {
+                            if (other_pin.equals(pin))
+                                continue;
+                            Pinyin other_pinyin=new Pinyin(other_pin);
+                            if (other_pinyin.get_radical().equals(this_pinyin.get_radical()))
+                                count++;
+                        }
+                        if (count == 1)
+                            continue;
+                    }
+
                     CharPinyin charpinyin = new CharPinyin();
                     charpinyin.character=chinese;
                     charpinyin.pinyin=pin;
 
                     temp_to_study.add(charpinyin);
-                    data_to_study.put(charpinyin, myDB.getWordsWithPinyin(chinese, pin));
+                    ArrayList<Vocabulary> data = myDB.getWordsWithPinyin(chinese, pin);
+                    if (this_pinyin.get_tone() != 5) {
+                        // check if there was one that needed to be combined
+                        int combine=0;
+                        for (String other_pin : pinyins) {
+                            if (other_pin.equals(pin))
+                                continue;
+                            Pinyin other_pinyin=new Pinyin(other_pin);
+                            if (other_pinyin.get_radical().equals(this_pinyin.get_radical())) {
+                                if ((other_pinyin.get_tone() == 5) && (combine == 0))
+                                    combine = 1;
+                                if (other_pinyin.get_tone() != 5) {
+                                    combine = -1;
+                                    break;
+                                }
+
+                            }
+                        }
+                        if (combine == 1) {
+                            data.addAll(myDB.getWordsWithPinyin(chinese,this_pinyin.get_radical()+"5"));
+                            // check there is no duplicate
+                            ArrayList<String> chinese_words=new ArrayList<String>();
+                            for (int j=data.size()-1; j>=0; j--) {
+                                Vocabulary v = data.get(j);
+                                if (chinese_words.contains(v.chinese))
+                                    data.remove(j);
+                                else
+                                    chinese_words.add(v.chinese);
+                            }
+                        }
+                    }
+
+                    data_to_study.put(charpinyin, data);
                 }
                 if (temp_to_study.size() > 20) {
                     to_study.addAll(temp_to_study);
