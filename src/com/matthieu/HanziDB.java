@@ -401,7 +401,7 @@ public class HanziDB extends SQLiteOpenHelper {
         String res=input;
 
         while(matcher.matches()) {
-            res = matcher.group(1) + matcher.group(2);
+            res = matcher.group(1) + " " + matcher.group(2);
             matcher = pattern.matcher(res);
         }
         return res.toLowerCase().trim();
