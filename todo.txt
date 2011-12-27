@@ -1,5 +1,4 @@
-ONGOING (11):
-* Review list, display only what to study or everything
+ONGOING (10):
 * Make changes immediately when editing database
   - vocabulary editing
   X lesson editing
@@ -32,7 +31,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (38):
+DONE (39):
+* Review list, display only what to study or everything
 * Display a progress bar when loading the review list
 * Change review in word / character mode
 * Guess english from Chinese word

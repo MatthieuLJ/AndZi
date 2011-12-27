@@ -9,9 +9,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Html;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.ExtendingLinearLayout;
 
@@ -25,6 +23,7 @@ public class ReviewList extends ListActivity {
 
     private static final String TAG="ReviewList";
     private boolean show_pinyin_color;
+    private boolean only_filtered=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +56,7 @@ public class ReviewList extends ListActivity {
         }
     }
 
-    private class table_filler extends AsyncTask<Void, Void, Void> {
+    private class table_filler extends AsyncTask<Void, Integer, Void> {
         ArrayAdapter adap;
         ArrayList<CharPinyin> temp_to_study;
         ArrayList<String> chars_to_study;
@@ -70,18 +69,36 @@ public class ReviewList extends ListActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            chars_to_study = myDB.getAllFilteredToStudy();
+            data_to_study.clear();
+            to_study.clear();
+            
+            if (only_filtered)
+                chars_to_study = myDB.getAllFilteredToStudy();
+            else
+                chars_to_study = myDB.getAllChar();
+
             if (chars_to_study.size() > 10) {
-                mProgressDialog = ProgressDialog.show(ReviewList.this, "Review list", "Loading...", false);
-                mProgressDialog.setIndeterminate(true);
+                mProgressDialog = new ProgressDialog(ReviewList.this);
+                mProgressDialog.setTitle("Review list");
+                mProgressDialog.setMessage("Loading...");
+                mProgressDialog.setCancelable(false);
+                if (chars_to_study.size() > 40) {
+                    mProgressDialog.setIndeterminate(false);
+                    mProgressDialog.setMax(chars_to_study.size());
+                    mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                }
+                else {
+                    mProgressDialog.setIndeterminate(true);
+                }
+                mProgressDialog.show();
             }
         }
 
         private void fill_tables() {
             temp_to_study=new ArrayList<CharPinyin>();
-            
 
-            for (String chinese: chars_to_study) {
+            for (int i=0; i<chars_to_study.size(); i++) {
+                String chinese = chars_to_study.get(i);
                 ArrayList<String> pinyins = myDB.getPinyinForChar(chinese);
                 for (String pin:pinyins) {
                     CharPinyin charpinyin = new CharPinyin();
@@ -93,7 +110,7 @@ public class ReviewList extends ListActivity {
                 }
                 if (temp_to_study.size() > 20) {
                     to_study.addAll(temp_to_study);
-                    publishProgress();
+                    publishProgress(i);
                     temp_to_study.clear();
                 }
             }
@@ -101,9 +118,11 @@ public class ReviewList extends ListActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
+        protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
             adap.notifyDataSetChanged();
+            if (mProgressDialog != null)
+                mProgressDialog.setProgress(values[0]);
         }
 
         @Override
@@ -219,5 +238,37 @@ public class ReviewList extends ListActivity {
             v.setTag(R.id.review_expanded, "0");
             charpin.expanded=false;
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.review, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem display = menu.findItem(R.id.display_selection);
+        if (only_filtered) {
+            display.setTitle("Display all");
+        }
+        else {
+            display.setTitle("Display only filtered");
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.display_selection:
+                only_filtered = !only_filtered;
+                new table_filler((ArrayAdapter)this.getListAdapter()).execute();
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
     }
 }
