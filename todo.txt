@@ -24,7 +24,6 @@ BUGS (6):
 * Use AlertDialog.Builder.setSingleChoiceItems for default lesson choice in add vocabulary
 * Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
 
-
 FUTURE (6):
 * Pick test automatically (and change)
 * Hide IME when not needed
@@ -33,7 +32,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (37):
+DONE (38):
+* Display a progress bar when loading the review list
 * Change review in word / character mode
 * Guess english from Chinese word
 * Combine lessons

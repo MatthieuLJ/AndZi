@@ -2,6 +2,7 @@ package com.matthieu;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -59,13 +60,24 @@ public class ReviewList extends ListActivity {
     private class table_filler extends AsyncTask<Void, Void, Void> {
         ArrayAdapter adap;
         ArrayList<CharPinyin> temp_to_study;
+        ArrayList<String> chars_to_study;
+        ProgressDialog mProgressDialog=null;
 
         public table_filler(ArrayAdapter a) {
             adap=a;
         }
 
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            chars_to_study = myDB.getAllFilteredToStudy();
+            if (chars_to_study.size() > 10) {
+                mProgressDialog = ProgressDialog.show(ReviewList.this, "Review list", "Loading...", false);
+                mProgressDialog.setIndeterminate(true);
+            }
+        }
+
         private void fill_tables() {
-            ArrayList<String> chars_to_study = myDB.getAllFilteredToStudy();
             temp_to_study=new ArrayList<CharPinyin>();
             
 
@@ -117,6 +129,8 @@ public class ReviewList extends ListActivity {
                 no_words_dialog.show();
             }
             else {
+                if (mProgressDialog != null)
+                    mProgressDialog.dismiss();
                 adap.notifyDataSetChanged();
             }
         }
