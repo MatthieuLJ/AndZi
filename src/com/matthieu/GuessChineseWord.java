@@ -1,9 +1,7 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -22,7 +20,6 @@ public class GuessChineseWord extends TestActivity {
     protected HanziDB refDB=null;
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
-    int show_result;
 
     private final String TAG="GuessChineseWord";
 
@@ -31,17 +28,6 @@ public class GuessChineseWord extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (sp.getString("show_result", "always").equals("always")) {
-            show_result = 1;
-        }
-        else if (sp.getString("show_result", "always").equals("sometimes")) {
-            show_result = 2;
-        }
-        else {
-            show_result = 3;
-        }
 
         setContentView(R.layout.guess_chinese_word);
         EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
@@ -101,7 +87,7 @@ public class GuessChineseWord extends TestActivity {
         solution=null;
 
         while ((hanzis.size() >0) && (solution == null)) {
-            hanzi = hanzis.remove(0);
+            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             Log.d(TAG, "will study "+hanzi);
             ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
             if (words.size() == 0) {
@@ -220,7 +206,7 @@ public class GuessChineseWord extends TestActivity {
         
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, show_result, true) == -1)
+        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, true) == -1)
             word_guess.setText("");
     }
 

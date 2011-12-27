@@ -186,7 +186,7 @@ public class GuessPinyin extends TestActivity {
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, show_result, true) == -1) {
+        if (handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, true) == -1) {
             update_scores(-1);
             if ((show_result == 2) || (show_result ==1)) {
                 show_solution(0, hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, false);

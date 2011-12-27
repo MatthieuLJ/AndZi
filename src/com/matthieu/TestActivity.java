@@ -2,6 +2,8 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -75,9 +77,22 @@ public abstract class TestActivity extends Activity {
     }
 
     // for Chinese guesses
-    protected int handle_submit(String correct_answer, String guess, int show_result, boolean show_bad_guess) {
+    protected int handle_submit(String correct_answer, String guess, boolean show_bad_guess) {
         Toast toast;
         int res = check_guess(guess);
+        int show_result;
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if (sp.getString("show_result", "always").equals("always")) {
+            show_result = 1;
+        }
+        else if (sp.getString("show_result", "always").equals("sometimes")) {
+            show_result = 2;
+        }
+        else {
+            show_result = 3;
+        }
 
         if (res == -1)
             return res;
@@ -110,9 +125,22 @@ public abstract class TestActivity extends Activity {
         return res;
     }
 
-    protected int handle_submit(String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin, String guess, int show_result, boolean show_bad_guess) {
+    protected int handle_submit(String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin, String guess, boolean show_bad_guess) {
         Toast toast;
         int res = check_guess(guess);
+        int show_result;
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+
+        if (sp.getString("show_result", "always").equals("always")) {
+            show_result = 1;
+        }
+        else if (sp.getString("show_result", "always").equals("sometimes")) {
+            show_result = 2;
+        }
+        else {
+            show_result = 3;
+        }
 
         if (res == -1)
             return res;

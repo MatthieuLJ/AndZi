@@ -1,9 +1,7 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,7 +20,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
     private String hanzi;
     private ArrayList<Vocabulary> words;
     private ArrayList<String> previous_guess;
-    int show_result;
     boolean first_try=true;
 
     private final String TAG="GuessChar";
@@ -32,17 +29,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (sp.getString("show_result", "always").equals("always")) {
-            show_result = 1;
-        }
-        else if (sp.getString("show_result", "always").equals("sometimes")) {
-            show_result = 2;
-        }
-        else {
-            show_result = 3;
-        }
 
         hanzi=new String();
         words=new ArrayList<Vocabulary>();
@@ -218,7 +204,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         String guess = chinese.getText().toString();
 
-        handle_submit(hanzi, guess, show_result, true);
+        handle_submit(hanzi, guess, true);
     }
 
     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

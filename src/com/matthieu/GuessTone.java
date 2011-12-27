@@ -1,11 +1,8 @@
 package com.matthieu;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.gesture.*;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
@@ -21,27 +18,14 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     private Pinyin pinyin;
     private String radical;
     private ArrayList<Integer> tones;
-    int show_result;
 
     private final String TAG="GuessTone";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         tones=new ArrayList<Integer>();
-
-        Log.d(TAG, "Going to show results: "+sp.getString("show_result", "always"));
-        if (sp.getString("show_result", "always").equals("always")) {
-            show_result = 1;
-        }
-        else if (sp.getString("show_result", "always").equals("sometimes")) {
-            show_result = 2;
-        }
-        else {
-            show_result = 3;
-        }
 
         setContentView(R.layout.guess_tone);
 
@@ -264,7 +248,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
         if (cb.isChecked()) tones_checked+="4";
 
-        handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin.get_lame())), tones_checked, show_result, false);
+        handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin.get_lame())), tones_checked, false);
     }
 
 
