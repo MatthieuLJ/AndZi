@@ -6,8 +6,8 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Html;
@@ -23,26 +23,26 @@ public class AddVocabularyActivity extends Activity
 {
     private static final String TAG="AddVocabularyActivity";
 
-    ArrayList<PinyinChoices> pinyin_choices;
+    ArrayList<PinyinButton> pinyin_choices;
     ArrayList<VocabularyItem> translations_from_ref;
     ArrayList<VocabularyItem> translations_displayed_from_ref;
     ArrayList<VocabularyItem> translations_in_db;
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
 
-    private String edited_word="";
     private String default_lesson="";
+    private String current_chinese_word="";
+    private Handler process_handler=null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
 
-        pinyin_choices = new ArrayList<PinyinChoices>();
+        pinyin_choices = new ArrayList<PinyinButton>();
         translations_from_ref = new ArrayList<VocabularyItem>();
         translations_displayed_from_ref = new ArrayList<VocabularyItem>();
         translations_in_db = new ArrayList<VocabularyItem>();
+        process_handler = new Handler();
 
         setContentView(R.layout.add_vocabulary_top);
 
@@ -81,7 +81,6 @@ public class AddVocabularyActivity extends Activity
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            edited_word="";
 
             // change text size to fit in the box
             tview.adaptTextSize();
@@ -90,11 +89,13 @@ public class AddVocabularyActivity extends Activity
             checkChineseChars();
 
             if (state == 1) {
+                current_chinese_word = ((EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese)).getText().toString();
+
                 // Populate the choices for the pinyin buttons
                 setPinyinButtons(charSequence, i, i1, i2);
 
                 // populate the default values for the pinyin buttons
-                new update_default_pinyins(tview);
+                process_handler.post(new update_default_pinyins());
             }
         }
 
@@ -182,8 +183,8 @@ public class AddVocabularyActivity extends Activity
                         b.setBackgroundColor(0x00000000);
                         b.setTextColor(0xff000000);
                         b.setBackgroundResource(0);
-                        PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(i+j, i+j+1),
-                                myDB, refDB, b);
+                        PinyinButton tmp = new PinyinButton(charSequence.toString().substring(i+j, i+j+1), b);
+                        process_handler.post(new PinyinButtonFiller(tmp));
                         pinyin_choices.add(i + j, tmp);
                         pinyin_button_container.addView(b, i+j,
                                 new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -197,61 +198,70 @@ public class AddVocabularyActivity extends Activity
                     b.setBackgroundColor(0x00000000);
                     b.setTextColor(0xff000000);
                     b.setBackgroundResource(0);
-                    PinyinChoices tmp = new PinyinChoices(charSequence.toString().substring(j, j+1),
-                            myDB, refDB, b);
+                    PinyinButton tmp = new PinyinButton(charSequence.toString().substring(j, j+1), b);
+                    process_handler.post(new PinyinButtonFiller(tmp));
                     pinyin_choices.add(j, tmp);
                     pinyin_button_container.addView(b, j,
                             new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
             }
-
         }
     }
 
-    private class PinyinChoices extends AsyncTask<Void, Void, Void> {
-        private HanziDB local_db;
-        private HanziDB ref_db;
+    private class PinyinButtonFiller implements Runnable {
+        PinyinButton button;
+        public PinyinButtonFiller(PinyinButton b) {
+            button=b;
+        }
+
+        public void run() {
+            String hanzi=button.get_hanzi();
+            ArrayList<String> res=new ArrayList<String>();
+            if (myDB != null)
+                res.addAll(myDB.getPinyinForChar(hanzi));
+
+            if (refDB != null) {
+                for (String pin : refDB.getPinyinForChar(hanzi)) {
+                    if (!res.contains(pin))
+                        res.add(pin);
+                }
+            }
+            button.set_db_pinyins(res);
+        }
+    }
+
+    private class PinyinButton {
         private String hanzi;
-        private ArrayList<String> local_pinyins;
-        private ArrayList<String> ref_pinyins;
+        private ArrayList<String> db_pinyins;
 
         private String new_pinyin="";
         private String default_choice="";
         private String current_choice="";
 
-        private final static String TAG = "PinyinChoices";
+        private final static String TAG = "PinyinButton";
         private Button button;
 
-        public PinyinChoices(String h, HanziDB l_db, HanziDB r_db, Button b) {
+        public PinyinButton(String h, Button b) {
             button = b;
-            Log.d(TAG, "new button [" + h + "]");
-            local_db = l_db;
-            ref_db = r_db;
             hanzi = h;
-            local_pinyins=new ArrayList<String>();
-            ref_pinyins=new ArrayList<String>();
-            this.execute((Void[]) null);
+            db_pinyins=new ArrayList<String>();
         }
 
         public String get_pinyin(int index) {
             if (new_pinyin.length()==0) {
-                if (index < local_pinyins.size())
-                    return local_pinyins.get(index);
-                if (index < local_pinyins.size() + ref_pinyins.size())
-                    return ref_pinyins.get(index-local_pinyins.size());
+                if (index < db_pinyins.size())
+                    return db_pinyins.get(index);
             }
             else {
                 if (index == 0) return new_pinyin;
-                if (index <= local_pinyins.size())
-                    return local_pinyins.get(index-1);
-                if (index <= local_pinyins.size() + ref_pinyins.size())
-                    return ref_pinyins.get(index-local_pinyins.size()-1);
+                if (index <= db_pinyins.size())
+                    return db_pinyins.get(index-1);
             }
             return "";
         }
 
         public int get_number_pinyins() {
-            int res = local_pinyins.size()+ref_pinyins.size();
+            int res = db_pinyins.size();
             if (new_pinyin.equals("")) {
                 return res;
             } else {
@@ -261,31 +271,26 @@ public class AddVocabularyActivity extends Activity
 
         public void set_default_choice(String s) {
             default_choice = s;
-            if ((current_choice.length()==0) || (current_choice.equals("?"))) {
-                Log.d(TAG, "did not have any current choice, set it to the default: "+s);
-                //current_choice=s;
-            }
             update_button();
         }
+
         public void set_current_choice(String s) {
             Log.d(TAG, "pinyin button set current choice"+s);
             current_choice = s;
-            if ((!ref_pinyins.contains(s)) && (!local_pinyins.contains(s)))
+            if (!db_pinyins.contains(s))
                 new_pinyin=s;
             update_button();
         }
+
         public String get_current_choice() {
             String res;
 
             if (current_choice.length()==0) {
-                if ((default_choice.length()!=0) && ((local_pinyins.contains(default_choice)) || (ref_pinyins.contains(default_choice)))) {
+                if ((!default_choice.equals("")) && (db_pinyins.contains(default_choice))) {
                     res=default_choice;
                 }
-                else if ((local_pinyins != null) && (local_pinyins.size()!= 0)) {
-                    res = local_pinyins.get(0);
-                }
-                else if ((ref_pinyins != null) && (ref_pinyins.size() != 0)) {
-                    res = ref_pinyins.get(0);
+                else if (db_pinyins.size()!= 0) {
+                    res = db_pinyins.get(0);
                 }
                 else {
                     res = "";
@@ -301,24 +306,9 @@ public class AddVocabularyActivity extends Activity
             return hanzi;
         }
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            if (local_db != null)
-                local_pinyins = local_db.getPinyinForChar(hanzi);
-            else
-                local_pinyins = new ArrayList<String>();
-
-            if (ref_db != null)
-                ref_pinyins = ref_db.getPinyinForChar(hanzi);
-            else
-                ref_pinyins = new ArrayList<String>();
-
-            for (int i=ref_pinyins.size()-1; i>=0; i--) {
-                if (local_pinyins.contains(ref_pinyins.get(i))) {
-                    ref_pinyins.remove(i);
-                }
-            }
-            return null;
+        public void set_db_pinyins(ArrayList<String> pinyins) {
+            db_pinyins=pinyins;
+            update_button();
         }
 
         private void update_button() {
@@ -340,18 +330,15 @@ public class AddVocabularyActivity extends Activity
             }
             button.invalidate();
             button.setOnClickListener(new PinyinButtonClickListener());
+
+            process_handler.post(new update_vocabulary_list());
         }
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            update_button();
-        }
 
         private class PinyinButtonClickListener implements View.OnClickListener {
             public void onClick(View view) {
                 Dialog dialog = new Dialog(AddVocabularyActivity.this);
-                dialog.setTitle("Pick a pinyin for character "+PinyinChoices.this.get_hanzi());
+                dialog.setTitle("Pick a pinyin for character "+PinyinButton.this.get_hanzi());
                 fill_dialog(dialog);
                 dialog.show();
             }
@@ -360,16 +347,16 @@ public class AddVocabularyActivity extends Activity
                 dial.setContentView(R.layout.add_vocabulary_pinyin_dialog);
 
                 final ListView list = (ListView) dial.findViewById(R.id.pinyin_dialog_choices);
-                String choices[] = new String[PinyinChoices.this.get_number_pinyins()];
-                for (int i=0; i<PinyinChoices.this.get_number_pinyins(); i++) {
-                    choices[i] = new Pinyin(PinyinChoices.this.get_pinyin(i)).get_pretty();
+                String choices[] = new String[PinyinButton.this.get_number_pinyins()];
+                for (int i=0; i<PinyinButton.this.get_number_pinyins(); i++) {
+                    choices[i] = new Pinyin(PinyinButton.this.get_pinyin(i)).get_pretty();
                     //Log.d(TAG, "Add pinyin " + choices[i] +" to the list");
                 }
 
                 list.setAdapter(new ArrayAdapter<String>(dial.getContext(), R.layout.add_vocabulary_pinyin_dialog_item, choices));
                 list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        change_pinyin(new Pinyin(PinyinChoices.this.get_pinyin(i)).get_lame());
+                        change_pinyin(new Pinyin(PinyinButton.this.get_pinyin(i)).get_lame());
                         dial.dismiss();
                     }
                 });
@@ -385,48 +372,23 @@ public class AddVocabularyActivity extends Activity
             }
 
             private void change_pinyin(String new_pinyin) {
-                PinyinChoices.this.set_current_choice(new_pinyin);
-                new update_vocabulary_list((TextView) AddVocabularyActivity.this.findViewById(R.id.add_vocabulary_chinese));
+                PinyinButton.this.set_current_choice(new_pinyin);
             }
         }
     }
 
-    private class update_default_pinyins extends AsyncTask<Void, Void, Void> {
-        ArrayList<String> default_pinyins;
-        TextView tview;
-
-        public update_default_pinyins(TextView tv) {
-            tview = tv;
-            default_pinyins = new ArrayList<String>();
-            this.execute();
-        }
-        
-        @Override
-        protected void onPostExecute(Void aVoid) {
+    private class update_default_pinyins implements Runnable {
+        public void run() {
             int i;
-
-            super.onPostExecute(aVoid);
-            for (i=0; i<default_pinyins.size(); i++) {
-                if (i >= pinyin_choices.size()) break;
-                pinyin_choices.get(i).set_default_choice(default_pinyins.get(i));
-            }
-
-            new update_vocabulary_list(tview);
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            int i;
-            default_pinyins.clear();
-            String text = tview.getText().toString();
+            ArrayList<String>  default_pinyins;
 
             // figure out the default pinyin buttons
-            ArrayList<Vocabulary> vocs = myDB.getTranslations(text);
+            ArrayList<Vocabulary> vocs = myDB.getTranslations(current_chinese_word);
             if ((refDB != null) && (vocs.size() == 0)){
-                vocs= refDB.getTranslations(text);
+                vocs= refDB.getTranslations(current_chinese_word);
             }
             if (vocs.size() == 0)
-                return null;
+                return;
 
             int max_transl=0, best_index=0;
             for (i=0; i<vocs.size(); i++) {
@@ -439,56 +401,74 @@ public class AddVocabularyActivity extends Activity
             
             default_pinyins = PinyinParser.parse_string(vocs.get(best_index).pinyin);
 
-            return null;
+            for (i=0; i<default_pinyins.size(); i++) {
+                if (i >= pinyin_choices.size()) break;
+                pinyin_choices.get(i).set_default_choice(default_pinyins.get(i));
+            }
         }
     }
 
-    private class update_vocabulary_list extends AsyncTask<Void, Void, Void> {
-        TextView tview;
-        public update_vocabulary_list(TextView tv) {
-            tview = tv;
-            this.execute();
+    private String get_current_pinyin() {
+        String pinyin="";
+        for (PinyinButton pc : pinyin_choices) {
+            if (pc.get_current_choice().equals(""))
+                return "";
+            pinyin = pinyin.concat(pc.get_current_choice());
         }
-        
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        return pinyin;
+    }
 
-            hide_duplicates_in_ref(); // this will also notify of the content change
-        }
+    private class update_vocabulary_list implements Runnable {
+        ArrayList<VocabularyItem> tmp_translations_in_db=new ArrayList<VocabularyItem>();
+        ArrayList<VocabularyItem> tmp_translations_from_ref=new ArrayList<VocabularyItem>();
+        ArrayList<VocabularyItem> tmp_translations_displayed_from_ref=new ArrayList<VocabularyItem>();
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            String text = tview.getText().toString();
+        public void run() {
+            String current_pinyin_word;
 
             ArrayList<Vocabulary> tr;
 
-            translations_from_ref.clear();
-            translations_in_db.clear();
+            current_pinyin_word=get_current_pinyin();
+            if (current_pinyin_word.equals(""))
+                return;
 
             // figure out the list of translations based on the current pinyin chosen
-            String pinyin="";
-            for (PinyinChoices pc : pinyin_choices) {
-                pinyin = pinyin.concat(pc.get_current_choice());
-            }
 
-            tr = myDB.getTranslations(text, pinyin);
+            tr = myDB.getTranslations(current_chinese_word, current_pinyin_word);
             for (Vocabulary t : tr) {
                 for (String e : t.english) {
-                    translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(t.chinese, t.pinyin, e), 1));
+                    tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(t.chinese, t.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
                 }
             }
 
             if (refDB != null) {
-                tr = refDB.getTranslations(text, pinyin);
+                tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
                 for (Vocabulary t : tr) {
                     for (String e : t.english) {
-                        translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(t.chinese, t.pinyin, e), 2));
+                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(t.chinese, t.pinyin, e), VocabularyItem.FROM_REF_DB));
                     }
                 }
             }
 
-            return null;
+            ArrayList<String> bare_translations = new ArrayList<String>();
+            for (VocabularyItem v : tmp_translations_in_db) {
+                String bare = HanziDB.bare_translation(v.translation);
+                if (!bare.equals(""))
+                    bare_translations.add(bare);
+            }
+            for (VocabularyItem v : tmp_translations_from_ref) {
+                if (!bare_translations.contains(HanziDB.bare_translation(v.translation)))
+                    tmp_translations_displayed_from_ref.add(v);
+            }
+
+            translations_in_db=tmp_translations_in_db;
+            translations_from_ref=tmp_translations_from_ref;
+            translations_displayed_from_ref=tmp_translations_displayed_from_ref;
+
+            ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+            if (lv != null) {
+                ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            }
         }
     }
 
@@ -514,19 +494,18 @@ public class AddVocabularyActivity extends Activity
     private class VocabularyItem {
         public String translation;
         public ArrayList<String> lessons;
-        public boolean enabled; // true if included, false if excluded
         public int state; // 1 from local database; 2 in ref DB; 3 if edited; 4 if new
-        public boolean visible; // if the view is expanded
+        public boolean expanded; // if the view is expanded
+
+        public static final int FROM_LOCAL_DB=1;
+        public static final int FROM_REF_DB=2;
+        public static final int NEW=4;
 
         public VocabularyItem(String tr, ArrayList<String > ls, int from) {
             translation=tr;
             lessons=ls;
             state=from;
-            if ((state == 1) || (state == 3) || (state == 4))
-                enabled=true;
-            else
-                enabled=false;
-            visible=false;
+            expanded =false;
         }
     }
 
@@ -544,13 +523,15 @@ public class AddVocabularyActivity extends Activity
             my = translations_in_db.size();
             res = my;
             if (my != 0)
-                res ++;
+                res ++; // for the section title
 
             ref = translations_displayed_from_ref.size();
             res += ref;
             if (ref != 0)
-               res ++;
+               res ++; // for the section title
 
+            res++; // for the edit box
+            
             return res;
         }
 
@@ -558,25 +539,19 @@ public class AddVocabularyActivity extends Activity
         public View getView(int position, View convertView, ViewGroup parent) {
             View row;
 
-            if ((position == 0) || ((my != 0) && (position == my+1))) {
+            if ((position == 1) || ((my != 0) && (position == my+2))) {
                 // it is a title view...
-                if (convertView == null) {
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_title)) {
+                    row = convertView;
+                }
+                else {
                     LayoutInflater inflater = getLayoutInflater();
                     row = inflater.inflate(R.layout.add_vocabulary_list_title, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_title);
                 }
-                else {
-                    if ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_title)
-                        row = convertView;
-                    else  {
-                        LayoutInflater inflater = getLayoutInflater();
-                        row = inflater.inflate(R.layout.add_vocabulary_list_title, parent, false);
-                        row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_title);
-                    }
-                }
 
                 TextView title = (TextView) row.findViewById(R.id.add_title);
-                if ((position==0) && (my != 0))
+                if ((position==1) && (my != 0))
                     title.setText("Vocabulary from your DB");
                 else
                     title.setText("Vocabulary from ref DB");
@@ -584,47 +559,66 @@ public class AddVocabularyActivity extends Activity
                 return row;
             }
 
-            if (convertView == null) {
-                LayoutInflater inflater = getLayoutInflater();
-                row = inflater.inflate(R.layout.add_vocabulary_list_item, parent, false);
-                row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_item);
-            }
-            else {
-                if ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_item)
+            if (position == 0) {
+                // it is the edit box for new words
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_new_item)) {
                     row = convertView;
-                else  {
-                    LayoutInflater inflater = getLayoutInflater();
-                    row = inflater.inflate(R.layout.add_vocabulary_list_item, parent, false);
-                    row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_item);
-                }
-            }
-
-            VocabularyItem voc;
-
-            if ((my != 0) && (position<=my+1)) {
-
-                // part of the local DB
-
-                voc = translations_in_db.get(position-1);
-
-                if (convertView == null) {
-                    LayoutInflater inflater = getLayoutInflater();
-                    row = inflater.inflate(R.layout.add_vocabulary_list_item, parent, false);
-                    row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_item);
                 }
                 else {
-                    if ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_item)
-                        row = convertView;
-                    else  {
-                        LayoutInflater inflater = getLayoutInflater();
-                        row = inflater.inflate(R.layout.add_vocabulary_list_item, parent, false);
-                        row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_item);
-                    }
+                    LayoutInflater inflater = getLayoutInflater();
+                    row = inflater.inflate(R.layout.add_vocabulary_list_new_item, parent, false);
+                    row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_new_item);
                 }
+
+                Button add_new_word = (Button) row.findViewById(R.id.add_new_translation_ok);
+                EditText word_field = (EditText) row.findViewById(R.id.add_new_translation);
+                add_new_word.setTag(R.id.add_vocabulary_item, word_field);
+                add_new_word.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        EditText word_field = (EditText) view.getTag(R.id.add_vocabulary_item);
+                        String translation = word_field.getText().toString();
+                        word_field.setText("");
+                        if (translation.equals(""))
+                            return;
+                        // check if it is not a duplicate
+                        for (VocabularyItem v:translations_in_db) {
+                            if (v.translation.equals(translation))
+                                return;
+                        }
+
+                        Vocabulary voc = new Vocabulary(current_chinese_word, get_current_pinyin(), translation);
+                        myDB.addVocabulary(voc);
+                        ArrayList<String> word_lesson = new ArrayList<String>();
+                        if (!default_lesson.equals("")) {
+                            myDB.assignWordLesson(default_lesson, voc);
+                            word_lesson.add(default_lesson);
+                        }
+                        translations_in_db.add(new VocabularyItem(translation, word_lesson, VocabularyItem.NEW));
+                        hide_duplicates_in_ref();
+                    }
+                });
+
+                return row;
+            }
+
+
+            if ((position >1) && (position<my+2)) {
+                // part of the local DB
+                final VocabularyItem voc = translations_in_db.get(position-2);
+
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_item)) {
+                    row = convertView;
+                }
+                else {
+                    LayoutInflater inflater = getLayoutInflater();
+                    row = inflater.inflate(R.layout.add_vocabulary_list_item, parent, false);
+                    row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_item);
+                }
+                
                 ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.add_vocabulary_info);
                 Button bt = (Button) row.findViewById(R.id.add_expand_button);
                 if (el!=null) {
-                    if(voc.visible) {
+                    if(voc.expanded) {
                         el.expand_immediate();
                         bt.setBackgroundResource(R.drawable.expand_arrow_down);
                         bt.setTag(R.id.add_expanded, "1");
@@ -652,7 +646,74 @@ public class AddVocabularyActivity extends Activity
                 }
                 more.setText(lessons);
                 more.setTag(R.id.add_vocabulary_item, voc);
-                more.setOnClickListener(new LessonEdit());
+                more.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
+                        dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
+                        final ArrayList<String> lessons = myDB.getLessons();
+                        final boolean[] selected = new boolean[lessons.size()];
+                        final CharSequence[] labels = new CharSequence[lessons.size()];
+                        for (int i=0; i<lessons.size(); i++) {
+                            labels[i] = lessons.get(i);
+                            selected[i] = voc.lessons.contains(lessons.get(i));
+                        }
+                        dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
+                            public void onClick(DialogInterface dialog, int i, boolean b) {
+                                Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
+                                if (b) {
+                                    voc.lessons.add(lessons.get(i));
+                                    myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                }
+                                else {
+                                    voc.lessons.remove(lessons.get(i));
+                                    myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                }
+                            }
+                        });
+                        dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int i) {
+                                dialog.dismiss();
+                                ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                                if (lv != null) {
+                                    ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                                }
+                            }
+                        });
+                        dialog.show();
+                    }
+                });
+
+                TextView word = (TextView) row.findViewById(R.id.add_word);
+                word.setText(voc.translation);
+                switch(voc.state) {
+                    case VocabularyItem.FROM_LOCAL_DB: // local database
+                        word.setTypeface(null, Typeface.NORMAL);
+                        break;
+                    case VocabularyItem.FROM_REF_DB: // reference database
+                    case VocabularyItem.NEW: // new word
+                        word.setTypeface(null, Typeface.BOLD);
+                        break;
+
+                }
+                word.setTag(R.id.add_vocabulary_item, voc);
+
+                CheckBox cb = (CheckBox) row.findViewById(R.id.add_check);
+                cb.setTag(R.id.add_vocabulary_item, voc);
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                        if (b)
+                            return;
+                        VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
+                        Vocabulary v = new Vocabulary(current_chinese_word, get_current_pinyin(), voc.translation);
+                        myDB.delVocabulary(v);
+                        translations_in_db.remove(voc);
+                        hide_duplicates_in_ref();
+                        Log.d(TAG, "translation "+voc.translation+" is changed");
+                    }
+                });
+                cb.setChecked(true);
+
+                return row;
             }
             else  {
 
@@ -661,168 +722,48 @@ public class AddVocabularyActivity extends Activity
                 if (my != 0) {
                     position -= my + 1;
                 }
-                voc = translations_displayed_from_ref.get(position-1);
 
-                if (convertView == null) {
+                final VocabularyItem voc = translations_displayed_from_ref.get(position-2);
+
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_ref_item)) {
+                    row = convertView;
+                }
+                else {
                     LayoutInflater inflater = getLayoutInflater();
                     row = inflater.inflate(R.layout.add_vocabulary_list_ref_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_ref_item);
                 }
-                else {
-                    if ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_ref_item)
-                        row = convertView;
-                    else  {
-                        LayoutInflater inflater = getLayoutInflater();
-                        row = inflater.inflate(R.layout.add_vocabulary_list_ref_item, parent, false);
-                        row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_ref_item);
-                    }
-                }
-            }
 
-            TextView word = (TextView) row.findViewById(R.id.add_word);
-            word.setText(voc.translation);
-            switch(voc.state) {
-                case 1: // local database
-                    word.setTypeface(null, Typeface.NORMAL);
-                    break;
-                case 2: // reference database
-                    word.setTypeface(null, Typeface.ITALIC);
-                    break;
-                case 3: // edited word
-                case 4: // new word
-                    word.setTypeface(null, Typeface.BOLD);
-                    break;
+                TextView word = (TextView) row.findViewById(R.id.add_word);
+                word.setText(voc.translation);
+                word.setTypeface(null, Typeface.ITALIC);
+                word.setTag(R.id.add_vocabulary_item, voc);
 
-            }
-            word.setTag(R.id.add_vocabulary_item, voc);
-
-            CheckBox cb = (CheckBox) row.findViewById(R.id.add_check);
-            cb.setTag(R.id.add_vocabulary_item, voc);
-            cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
-                    if ((voc.state == 2) && (b)) { // we clicked an item from the reference database
-                        ArrayList<String> lesson = new ArrayList<String>();
-                        if (!(default_lesson.equals(""))) {
-                            lesson.add(default_lesson);
+                CheckBox cb = (CheckBox) row.findViewById(R.id.add_check);
+                cb.setTag(R.id.add_vocabulary_item, voc);
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                        if (!b)
+                            return;
+                        VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
+                        Vocabulary v = new Vocabulary(current_chinese_word, get_current_pinyin(), voc.translation);
+                        myDB.addVocabulary(v);
+                        if (!default_lesson.equals("")) {
+                            myDB.assignWordLesson(default_lesson, v);
+                            voc.lessons.add(default_lesson);
                         }
-                        VocabularyItem item = new VocabularyItem(voc.translation, lesson, 4);
-                        item.enabled=true;
-                        translations_in_db.add(item);
-                        hide_duplicates_in_ref();
-                        return;
-                    }
-                    voc.enabled=b;
-                    Log.d(TAG, "translation "+voc.translation+" is changed");
-                }
-            });
-            cb.setChecked(voc.enabled);
-            
-            return row;
-        }
-
-        private class LessonEdit implements View.OnClickListener {
-            VocabularyItem voc;
-            ArrayList<EnabledLessons> lesson_list;
-
-            private class EnabledLessons {
-                public String lesson;
-                public boolean enabled;
-            }
-
-            public void onClick(View view) {
-                Dialog dialog = new Dialog(AddVocabularyActivity.this);
-                voc = (VocabularyItem) view.getTag(R.id.add_vocabulary_item);
-                dialog.setTitle("Choose the lessons for word "+voc.translation);
-                lesson_list = new ArrayList<EnabledLessons>();
-                fill_dialog(dialog);
-                dialog.show();
-            }
-
-            private void fill_dialog(final Dialog dial) {
-                dial.setContentView(R.layout.add_vocabulary_lesson_dialog);
-
-                final ListView list = (ListView) dial.findViewById(R.id.lesson_dialog_choices);
-
-                for (String l : myDB.getLessons()) {
-                    EnabledLessons elesson = new EnabledLessons();
-                    elesson.lesson=l;
-                    elesson.enabled=false;
-                    for (String vl : voc.lessons) {
-                        if (vl.equals(l)) {
-                            elesson.enabled=true;
-                            break;
-                        }
-                    }
-
-                    lesson_list.add(elesson);
-                }
-
-                list.setAdapter(new LessonArrayAdapter());
-                ((LessonArrayAdapter)list.getAdapter()).notifyDataSetChanged();
-
-                Button OK_button = (Button) dial.findViewById(R.id.lesson_ok);
-                OK_button.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View view) {
-                        voc.lessons.clear();
-                        for (EnabledLessons el : lesson_list) {
-                            if (el.enabled) {
-                                voc.lessons.add(el.lesson);
-                            }
-                        }
-                        dial.dismiss();
+                        translations_in_db.add(voc);
+                        translations_displayed_from_ref.remove(voc);
                         ListView lv = (ListView) findViewById(R.id.vocabulary_list);
-                        ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                    }
-                });
-                Button Cancel_button = (Button) dial.findViewById(R.id.lesson_cancel);
-                Cancel_button.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View view) {
-                        dial.dismiss();
-                    }
-                });
-            }
-
-            private class LessonArrayAdapter extends ArrayAdapter<Object> {
-
-                public LessonArrayAdapter() {
-                    super(AddVocabularyActivity.this, R.layout.add_vocabulary_lesson_dialog, lesson_list.toArray());
-                }
-
-                @Override
-                public int getCount() {
-                    return lesson_list.size();
-                }
-
-                @Override
-                public View getView(int position, View convertView, ViewGroup parent) {
-                    View row;
-                    if (convertView == null) {
-                        LayoutInflater inflater = getLayoutInflater();
-                        row = inflater.inflate(R.layout.add_vocabulary_lesson_dialog_item, parent, false);
-                    }
-                    else {
-                        row = convertView;
-                    }
-
-                    Log.d(TAG, "Checking position "+position);
-                    EnabledLessons lesson = lesson_list.get(position);
-
-                    final TextView tv = (TextView) row.findViewById(R.id.lesson_name);
-                    tv.setText(lesson.lesson);
-
-                    final CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_check);
-                    cb.setTag(R.id.add_vocabulary_lesson, lesson);
-                    cb.setChecked(lesson.enabled);
-                    cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                            EnabledLessons lesson = (EnabledLessons) compoundButton.getTag(R.id.add_vocabulary_lesson);
-                            lesson.enabled = b;
+                        if (lv != null) {
+                            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         }
-                    });
+                        Log.d(TAG, "translation "+voc.translation+" is changed");
+                    }
+                });
+                cb.setChecked(false);
 
-                    return row;
-                }
+                return row;
             }
         }
     }
@@ -885,7 +826,7 @@ public class AddVocabularyActivity extends Activity
             if (el!=null)
                 el.expand();
             v.setTag(R.id.add_expanded, "1");
-            voc.visible=true;
+            voc.expanded =true;
         }
         else {
             v.setBackgroundResource(R.drawable.expand_arrow_right);
@@ -893,100 +834,74 @@ public class AddVocabularyActivity extends Activity
             if (el!=null)
                 el.collapse();
             v.setTag(R.id.add_expanded, "0");
-            voc.visible=false;
+            voc.expanded =false;
         }
     }
 
     public void handle_word_click(View v) {
-        TextView tview = (TextView) v;
-        VocabularyItem voc = (VocabularyItem) tview.getTag(R.id.add_vocabulary_item);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        final TextView view = (TextView) v;
+        final VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
 
-        ((EditText) findViewById(R.id.edit_new_vocabulary)).setText(tview.getText());
+        alert.setTitle("Edit translation for "+current_chinese_word);
+        alert.setMessage("Please enter the new word:");
 
-        if ((voc.state == 1) || (voc.state == 3) || (voc.state == 4)) {
-            edited_word=tview.getText().toString();
-            ((TextView) findViewById(R.id.new_vocabulary_label)).setText("Edit word:");
-        }
-        else {
-            edited_word = "";
-            ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
-        }
-        (findViewById(R.id.edit_new_vocabulary)).requestFocus();
+        final EditText input = new EditText(this);
+        input.setText(view.getText());
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                if ((!value.equals("")) && (!value.equals(view.getText()))) {
+                    for (VocabularyItem v:translations_in_db) {
+                        if (v.translation.equals(value)) {
+                            dialog.dismiss();
+                            return;
+                        }
+                    }
+                    if (translations_in_db.contains(voc)) {
+                        Vocabulary modified_voc = new Vocabulary(current_chinese_word, get_current_pinyin(), voc.translation);
+                        myDB.delVocabulary(modified_voc);
+                        voc.translation=value;
+                        modified_voc.english.remove(0);
+                        modified_voc.english.add(value);
+                        myDB.addVocabulary(modified_voc);
+                        for (String le:voc.lessons)
+                            myDB.assignWordLesson(le, modified_voc);
+                        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                        if (lv != null) {
+                            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                        }
+                    }
+                    else {
+                        Vocabulary modified_voc = new Vocabulary(current_chinese_word, get_current_pinyin(), value);
+                        VocabularyItem voc_item=new VocabularyItem(value, new ArrayList<String>(), VocabularyItem.NEW);
+                        myDB.addVocabulary(modified_voc);
+                        if (!default_lesson.equals("")) {
+                            myDB.assignWordLesson(default_lesson, modified_voc);
+                            voc_item.lessons.add(default_lesson);
+                        }
+                        translations_in_db.add(voc_item);
+                        hide_duplicates_in_ref();
+                    }
+
+                }
+                dialog.dismiss();
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.dismiss();
+            }
+        });
+
+        alert.show();
     }
 
-    public void handle_add_vocabulary(View v) {
-        String new_word= ((EditText) findViewById(R.id.edit_new_vocabulary)).getText().toString();
-
-        // empty string...
-        if (new_word.equals("")) {
-            if (edited_word.equals("")) {
-                ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
-                return;
-            }
-        }
-
-        // check it is not already in the current database
-        for(int i=translations_in_db.size()-1; i>=0; i-- ) {
-            VocabularyItem voc = translations_in_db.get(i);
-            // remove anything from the reference database that would be similar...
-            if (HanziDB.bare_translation(voc.translation).equals(HanziDB.bare_translation(new_word))) {
-                translations_in_db.remove(i);
-            } else if (voc.translation.equals(edited_word)) {
-                translations_in_db.remove(i);
-            }
-        }
-        if (edited_word.equals("")) {
-            ArrayList<String> lesson = new ArrayList<String>();
-            if (!(default_lesson.equals(""))) {
-                lesson.add(default_lesson);
-            }
-            translations_in_db.add(0, new VocabularyItem(new_word, lesson, 4));
-        }
-        else {
-            translations_in_db.add(0, new VocabularyItem(new_word, new ArrayList<String>(), 3));
-        }
-
-        hide_duplicates_in_ref();
-        
-        ((EditText) findViewById(R.id.edit_new_vocabulary)).setText("");
-        ((TextView) findViewById(R.id.new_vocabulary_label)).setText("New word:");
-    }
-
-    public void handle_cancel(View v) {
+    public void handle_add_another(View v) {
         EditText chinese_word = (EditText) findViewById(R.id.add_vocabulary_chinese);
         chinese_word.setText("");
-
-        translations_in_db.clear();
-        translations_from_ref.clear();
-        translations_displayed_from_ref.clear();
-    }
-
-    public void handle_ok(View v) {
-        String chinese = ((EditText) findViewById(R.id.add_vocabulary_chinese)).getText().toString();
-        String pinyin = "";
-        for (PinyinChoices pc : pinyin_choices) {
-            pinyin = pinyin.concat(pc.get_current_choice());
-        }
-        ArrayList<String> translations=new ArrayList<String>();
-        for (VocabularyItem voc: translations_in_db) {
-            if (voc.enabled) {
-                translations.add(voc.translation);
-            }
-        }
-        myDB.delVocabulary(new Vocabulary(chinese, pinyin));
-        myDB.addVocabulary(new Vocabulary(chinese, pinyin, translations));
-
-        for (VocabularyItem voc: translations_in_db) {
-            for (String lesson : voc.lessons) {
-                myDB.assignWordLesson(lesson, voc.translation,chinese,pinyin);
-            }
-        }
-
-        EditText chinese_word = (EditText) findViewById(R.id.add_vocabulary_chinese);
-        chinese_word.setText("");
-
-        translations_in_db.clear();
-        translations_from_ref.clear();
-        translations_displayed_from_ref.clear();
     }
 }

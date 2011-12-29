@@ -100,7 +100,7 @@ public class EditLessonsActivity extends Activity {
     private class Lesson {
         public String label;
         public int num_items;
-        public int state; // 1 is pre-existing, 2 is new
+        public int state;
 
         public String old_label="";
 

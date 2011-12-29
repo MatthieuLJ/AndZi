@@ -1,7 +1,4 @@
-ONGOING (10):
-* Make changes immediately when editing database
-  - vocabulary editing
-  X lesson editing
+ONGOING (9):
 * Find Chinese words containing a character
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Add dictionary
@@ -13,13 +10,13 @@ ONGOING (10):
 * Make it pretty
 
 BUGS (4):
-* Conserve list sorting order across merge/export...
+* Conserve lesson list sorting order across merge/export...
 * Check we are not reusing the same lesson name in lesson editing
   - Create new
   - Duplicate
   - Rename
 * Display lessons progressively in lesson editing
-* Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
+* Adding lesson should set the order right
 
 FUTURE (6):
 * Pick test automatically (and change)
@@ -29,7 +26,11 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (41):
+DONE (43):
+* Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
+* Make changes immediately when editing database
+  X vocabulary editing
+  X lesson editing
 * Use AlertDialog.Builder.setSingleChoiceItems for default lesson choice in add vocabulary
 * In the review list, is a pinyin with no tone also has only one equivalent with a tone, combine those
 * Review list, display only what to study or everything
