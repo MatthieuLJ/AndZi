@@ -290,6 +290,10 @@ public class EditLessonsActivity extends Activity {
                         undo_new_name=param;
                         undo_lesson=new_lesson;
                         current_lessons.add(0, new_lesson);
+                        ArrayList<String> lesson_order=new ArrayList<String>();
+                        for (Lesson l:current_lessons)
+                            lesson_order.add(l.label);
+                        myDB.sortLessons(lesson_order);
                         TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
@@ -445,7 +449,11 @@ public class EditLessonsActivity extends Activity {
                         myDB.addLesson(param);
                         undo_operation=2;
                         undo_new_name=param;
-                        current_lessons.add(new_lesson);
+                        current_lessons.add(0,new_lesson);
+                        ArrayList<String> lesson_order=new ArrayList<String>();
+                        for (Lesson l:current_lessons)
+                            lesson_order.add(l.label);
+                        myDB.sortLessons(lesson_order);
                         TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }

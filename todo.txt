@@ -10,10 +10,9 @@ ONGOING (9):
 * Add splash screen
 * Make it pretty
 
-BUGS (4):
+BUGS (3):
 * Conserve lesson list sorting order across merge/export...
 * Display lessons progressively in lesson editing
-* Adding lesson should set the order right (add on top)
 * Do not change test when rotating the screen
 
 FUTURE (6):
@@ -24,7 +23,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (44):
+DONE (45):
+* Adding lesson should set the order right (add on top)
 * Check we are not reusing the same lesson name in lesson editing
   X Create new
   X Duplicate
