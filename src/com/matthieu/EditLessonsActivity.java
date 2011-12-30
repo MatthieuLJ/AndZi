@@ -208,6 +208,14 @@ public class EditLessonsActivity extends Activity {
         inflater.inflate(R.menu.lesson_item_menu, menu);
     }
 
+    private boolean lesson_exists(String lesson) {
+        for (Lesson le: current_lessons) {
+            if (le.label.equals(lesson))
+                return true;
+        }
+        return false;
+    }
+
     private interface String_action{
         void run(String param);
     }
@@ -237,6 +245,14 @@ public class EditLessonsActivity extends Activity {
 
                 prompt_user_input("Rename lesson "+le.label, "Enter new name:", new String_action() {
                     public void run(String param) {
+                        if (param.equals(""))
+                            return;
+                        if (lesson_exists(param)) {
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
+                            return;
+                        }
+                        if (param.equals(le.label))
+                            return;
                         myDB.renameLesson(le.label, param);
                         undo_operation=1;
                         undo_new_name=param;
@@ -258,6 +274,12 @@ public class EditLessonsActivity extends Activity {
             case R.id.duplicate_lesson:
                 prompt_user_input("Duplicate lesson "+le.label, "Enter new name:", new String_action() {
                     public void run(String param) {
+                        if (param.equals(""))
+                            return;
+                        if (lesson_exists(param)) {
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
+                            return;
+                        }
                         Lesson new_lesson=new Lesson(param);
                         new_lesson.state = Lesson.NEW;
                         new_lesson.num_items = le.num_items;
@@ -411,6 +433,12 @@ public class EditLessonsActivity extends Activity {
             case R.id.lesson_new:
                 prompt_user_input("New lesson", "Please enter the new lesson name:", new String_action() {
                     public void run(String param) {
+                        if (param.equals(""))
+                            return;
+                        if (lesson_exists(param)) {
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
+                            return;
+                        }
                         Lesson new_lesson = new Lesson(param);
                         new_lesson.state = Lesson.NEW;
                         new_lesson.num_items=0;

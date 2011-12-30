@@ -7,16 +7,14 @@ ONGOING (9):
 * Check different screen sizes
 * Add credits
 * Add help (different screens, IME, ref DB)
+* Add splash screen
 * Make it pretty
 
 BUGS (4):
 * Conserve lesson list sorting order across merge/export...
-* Check we are not reusing the same lesson name in lesson editing
-  - Create new
-  - Duplicate
-  - Rename
 * Display lessons progressively in lesson editing
-* Adding lesson should set the order right
+* Adding lesson should set the order right (add on top)
+* Do not change test when rotating the screen
 
 FUTURE (6):
 * Pick test automatically (and change)
@@ -26,7 +24,11 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (43):
+DONE (44):
+* Check we are not reusing the same lesson name in lesson editing
+  X Create new
+  X Duplicate
+  X Rename
 * Use AlertDialog.Builder.setMultipleChoiceItems for word lesson choice in add vocabulary
 * Make changes immediately when editing database
   X vocabulary editing
