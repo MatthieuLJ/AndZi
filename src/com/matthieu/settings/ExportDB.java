@@ -20,18 +20,22 @@ import java.util.Calendar;
 
 public class ExportDB extends PreferenceActivity {
     protected HanziDB myDB=null;
+    String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ Calendar.getInstance().get(Calendar.MONTH)+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
+        
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         addPreferencesFromResource(R.xml.settings_export_db);
-        String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ Calendar.getInstance().get(Calendar.MONTH)+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
-
         EditTextPreference path = (EditTextPreference) findPreference("export_path");
         path.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object o) {
                 String current_text = (String) o;
                 preference.setSummary("Destination: "+current_text);
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
+                SharedPreferences.Editor edit = sp.edit();
+                edit.putString("export_path", current_text);
+                edit.commit();
                 return true;
             }
         });
@@ -39,12 +43,7 @@ public class ExportDB extends PreferenceActivity {
         path.setSummary("Destination: "+file_path);
         Preference export = findPreference("do_export");
         export.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
-            boolean include_scores = sp.getBoolean("include_scores", false);
-            boolean only_filtered = sp.getBoolean("only_filtered", false);
-            final String destination = sp.getString("export_path", "");
-
-            private void do_export() {
+            private void do_export(final String destination, final boolean include_scores, final boolean only_filtered) {
                 File export_db = new File(destination);
                 try {
                     if (!export_db.createNewFile()) {
@@ -72,9 +71,14 @@ public class ExportDB extends PreferenceActivity {
                 return;
             }
             public boolean onPreferenceClick(Preference preference) {
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
+                final boolean include_scores = sp.getBoolean("include_scores", false);
+                final boolean only_filtered = sp.getBoolean("only_filtered", false);
+                final String destination = sp.getString("export_path", file_path);
+
                 if (new File(destination).exists()) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(ExportDB.this);
-                    alert.setMessage("This file already exists, do you want to overwrite?");
+                    alert.setMessage("The file ["+destination+"] already exists, do you want to overwrite?");
                     alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             dialog.dismiss();
@@ -83,7 +87,7 @@ public class ExportDB extends PreferenceActivity {
                     alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             new File(destination).delete();
-                            do_export();
+                            do_export(destination, include_scores, only_filtered);
                             dialog.dismiss();
                         }
                     });
@@ -91,7 +95,7 @@ public class ExportDB extends PreferenceActivity {
                     alert.show();
                 }
                 else {
-                    do_export();
+                    do_export(destination, include_scores, only_filtered);
                 }
 
                 return true;

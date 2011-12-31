@@ -1,6 +1,7 @@
-ONGOING (9):
+ONGOING (11):
 * Find Chinese words containing a character
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
+* Add new lessons with an edit box in the first list row instead of through the menu
 * Add dictionary
 * Change TestResult into word/character details and be able to navigate through those (and add definitions from ref)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
@@ -23,7 +24,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (45):
+DONE (46):
+* Export to file does not use the custom path entered
 * Adding lesson should set the order right (add on top)
 * Check we are not reusing the same lesson name in lesson editing
   X Create new
