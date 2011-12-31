@@ -11,8 +11,7 @@ ONGOING (11):
 * Add splash screen
 * Make it pretty
 
-BUGS (3):
-* Conserve lesson list sorting order across merge/export...
+BUGS (2):
 * Display lessons progressively in lesson editing
 * Do not change test when rotating the screen
 
@@ -24,7 +23,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (46):
+DONE (47):
+* Conserve lesson list sorting order across merge/export...
 * Export to file does not use the custom path entered
 * Adding lesson should set the order right (add on top)
 * Check we are not reusing the same lesson name in lesson editing

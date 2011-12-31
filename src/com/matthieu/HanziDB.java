@@ -1048,6 +1048,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     }
 
+                    ArrayList<String> original_lessons = getLessons();
                     ArrayList<String> lessons = other_db.getLessons();
                     for (int i=0; i<lessons.size(); i++) {
                         publishProgress(60+(i*30)/lessons.size());
@@ -1056,12 +1057,24 @@ public class HanziDB extends SQLiteOpenHelper {
                             return null;
                         }
                         String l = lessons.get(i);
-                        addLesson(l);
+                        if (!original_lessons.contains(l))
+                            addLesson(l);
                         ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
                         for (Vocabulary v:voc) {
                             assignWordLesson(l,v);
                         }
                     }
+
+                    ArrayList<String> all_lessons=new ArrayList<String>();
+                    all_lessons.addAll(lessons);
+                    all_lessons.addAll(0,original_lessons);
+                    // remove duplicate from the end
+                    for (int i=all_lessons.size()-1; i>=0; i--) {
+                        if (all_lessons.indexOf(all_lessons.get(i))<i)
+                            all_lessons.remove(i);
+                    }
+                    sortLessons(all_lessons);
+                    
                     other_db.close();
 
                     backup_ready=false;
@@ -1224,6 +1237,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             new_db.assignWordLesson(lesson, v);
                         }
                     }
+                    new_db.sortLessons(lessons);
 
                     if (with_scores) {
                         ArrayList<String> chars = new_db.getAllChar();
@@ -1242,12 +1256,13 @@ public class HanziDB extends SQLiteOpenHelper {
                             }
                         }
                     }
-                    new_db.close();
 
                     if (!app.copyDataBase(new_db.getWritableDatabase().getPath(), path)) {
                         clean_up_on_cancel(true);
                         return null;
                     }
+
+                    new_db.close();
 
                     publishProgress(90);
 
@@ -1624,7 +1639,11 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void setLessonsToFilter(ArrayList<String> lessons) {
-        lesson_filter = lessons;
+        lesson_filter.clear();
+        for (String lesson: getLessons()) {
+            if (lessons.contains(lesson))
+                lesson_filter.add(lesson);
+        }
         where_filter = buildWhereQuery(lessons);
     }
 
