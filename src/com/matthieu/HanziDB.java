@@ -32,6 +32,7 @@ public class HanziDB extends SQLiteOpenHelper {
         app = application;
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
+        db.acquireReference();
     }
 
     ////////////////////////////////////////

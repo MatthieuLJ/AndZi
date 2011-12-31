@@ -23,7 +23,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (47):
+DONE (48):
+* Clear DB, import on DB, import another DB -> crash "attempt to acquire a reference on a close SQLiteClosable"
 * Conserve lesson list sorting order across merge/export...
 * Export to file does not use the custom path entered
 * Adding lesson should set the order right (add on top)
