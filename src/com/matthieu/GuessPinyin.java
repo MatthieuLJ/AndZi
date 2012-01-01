@@ -41,13 +41,11 @@ public class GuessPinyin extends TestActivity {
         words=new ArrayList<Vocabulary>();
 
         setContentView(R.layout.guess_pinyin);
-
-        set_next_study();
     }
 
     @Override
     protected void set_next_study() {
-        boolean show_words=false;
+        super.set_next_study();
 
         hanzi = myDB.getNextFilteredToStudy();
 
@@ -56,6 +54,12 @@ public class GuessPinyin extends TestActivity {
             this.finish();
             return;
         }
+        display_test();
+    }
+
+    @Override
+    protected void display_test() {
+        boolean show_words=false;
 
         ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
         if (pinyins.size() > 1) {

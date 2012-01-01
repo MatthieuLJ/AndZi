@@ -45,18 +45,10 @@ public class GuessChar extends TestActivity implements TextWatcher {
                 return true;
             }
         });
-       
-        set_next_study();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        set_next_study();
     }
 
     protected void set_next_study() {
+        super.set_next_study();
         hanzi = myDB.getNextFilteredToStudy();
         
         if (hanzi == null) {
@@ -64,7 +56,11 @@ public class GuessChar extends TestActivity implements TextWatcher {
             this.finish();
             return;
         }
+        display_test();
+    }
 
+    @Override
+    protected void display_test() {
         TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
         previous_guess.clear();

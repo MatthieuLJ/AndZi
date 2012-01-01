@@ -37,8 +37,6 @@ public class GuessEnglish extends TestActivity {
                 return true;
             }
         });
-
-        set_next_study();
     }
 
     @Override
@@ -111,6 +109,7 @@ public class GuessEnglish extends TestActivity {
 
     @Override
     protected void set_next_study() {
+        super.set_next_study();
         String candidate;
         ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         String hanzi;
@@ -156,7 +155,11 @@ public class GuessEnglish extends TestActivity {
             this.finish();
             return;
         }
+        display_test();
+    }
 
+    @Override
+    protected void display_test() {
         TextView text = (TextView) findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
 

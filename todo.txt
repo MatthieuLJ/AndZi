@@ -2,8 +2,8 @@ ONGOING (11):
 * Find Chinese words containing a character
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Add new lessons with an edit box in the first list row instead of through the menu
-* Add dictionary
 * Change TestResult into word/character details and be able to navigate through those (and add definitions from ref)
+* Add dictionary
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 * Add credits
@@ -11,9 +11,8 @@ ONGOING (11):
 * Add splash screen
 * Make it pretty
 
-BUGS (2):
+BUGS (1):
 * Display lessons progressively in lesson editing
-* Do not change test when rotating the screen
 
 FUTURE (6):
 * Pick test automatically (and change)
@@ -23,8 +22,10 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (48):
+DONE (49):
+* Do not change test when rotating the screen
 * Clear DB, import on DB, import another DB -> crash "attempt to acquire a reference on a close SQLiteClosable"
+  -http://darutk-oboegaki.blogspot.com/2011/03/sqlitedatabase-is-closed-automatically.html
 * Conserve lesson list sorting order across merge/export...
 * Export to file does not use the custom path entered
 * Adding lesson should set the order right (add on top)

@@ -3,20 +3,38 @@ package com.matthieu;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public abstract class TestActivity extends Activity {
+    protected boolean answered=true;
+
+    final static protected int CORRECT=1;
+    final static protected int INCORRECT=0;
+    final static protected int OTHER=-1;
+
     @Override
     protected void onResume() {
         super.onResume();
-        set_next_study();
+        if (answered) {
+            set_next_study();
+            answered=false;
+        }
     }
 
-    abstract protected void set_next_study();
-    // returns 0 for failure, 1 for success and -1 for special handling
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        display_test();
+    }
+
+    protected void set_next_study() {
+        answered=false;
+    }
+    abstract protected void display_test();
     abstract protected int check_guess(String guess);
     abstract protected void update_scores(int good);
 
@@ -24,10 +42,10 @@ public abstract class TestActivity extends Activity {
         if (requestCode != 0)
             return;
 
-        if (resultCode == 1) {
-            update_scores(1);
+        if (resultCode == CORRECT) {
+            update_scores(CORRECT);
         } else {
-            update_scores(0);
+            update_scores(INCORRECT);
         }
 
     }
@@ -94,10 +112,12 @@ public abstract class TestActivity extends Activity {
             show_result = 3;
         }
 
-        if (res == -1)
+        if (res == OTHER)
             return res;
 
-        if (((show_result == 2) || (show_result == 1)) && (res == 0)) {
+        answered = true;
+
+        if (((show_result == 2) || (show_result == 1)) && (res == INCORRECT)) {
             if ((!guess.equals("")) && (show_bad_guess))
                 show_solution(0, correct_answer, guess, true);
             else {
@@ -112,7 +132,7 @@ public abstract class TestActivity extends Activity {
                 show_solution(0, correct_answer);
             }
             else {
-                if (res == 0) {
+                if (res == INCORRECT) {
                     toast = Toast.makeText(this, "Sorry, the correct answer was " + correct_answer, 2);
                 }
                 else {
@@ -142,10 +162,12 @@ public abstract class TestActivity extends Activity {
             show_result = 3;
         }
 
-        if (res == -1)
+        if (res == OTHER)
             return res;
 
-        if (((show_result == 2) || (show_result ==1)) && (res == 0)) {
+        answered=true;
+
+        if (((show_result == 2) || (show_result ==1)) && (res == INCORRECT)) {
             if ((!guess.equals("")) && (show_bad_guess))
                 show_solution(1, correct_answer_hanzi, correct_answer_pinyin, guess, true);
             else {
@@ -160,7 +182,7 @@ public abstract class TestActivity extends Activity {
                 show_solution(1, correct_answer_hanzi, correct_answer_pinyin);
             }
             else {
-                if (res == 0) {
+                if (res == INCORRECT) {
                     toast = Toast.makeText(this, "Sorry, this is wrong", 2);
                 }
                 else {

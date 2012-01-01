@@ -31,18 +31,10 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
         GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.guess_tone_gestureview);
         overlay.addOnGesturePerformedListener(this);
-
-        set_next_study();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        
-        set_next_study();
     }
 
     protected void set_next_study() {
+        super.set_next_study();
         ArrayList<String> all = myDB.getAllFilteredToStudy();
         ArrayList<String> pinyins;
         hanzi = null;
@@ -71,7 +63,12 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             this.finish();
             return;
         }
-        
+        display_test();
+    }
+
+    @Override
+    protected void display_test() {
+        ArrayList<String> pinyins;
         pinyins = myDB.getPinyinForChar(hanzi);
         radical = pinyin.get_radical();
         tones.clear();

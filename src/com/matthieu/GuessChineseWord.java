@@ -38,8 +38,6 @@ public class GuessChineseWord extends TestActivity {
                 return true;
             }
         });
-
-        set_next_study();
     }
 
     protected void update_scores(int good) {
@@ -81,6 +79,7 @@ public class GuessChineseWord extends TestActivity {
     }
 
     protected void set_next_study() {
+        super.set_next_study();
         String candidate;
         ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         String hanzi;
@@ -118,6 +117,11 @@ public class GuessChineseWord extends TestActivity {
             this.finish();
             return;
         }
+        display_test();
+    }
+
+    @Override
+    protected void display_test() {
         ArrayList<String> bare_translations = new ArrayList<String>();
         for (String s : translations) {
             bare_translations.add(HanziDB.bare_translation(s));

@@ -16,8 +16,7 @@
         </activity>
         <activity android:name=".EditLessonsActivity" />
         <activity android:name=".AddVocabularyActivity" />
-        <intent-filter android:name="android.intent.action.EDIT" />
-        <activity android:name=".GuessTone" />
+
         <activity android:name=".DBActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -30,10 +29,16 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".GuessChar" />
-        <activity android:name=".GuessChineseWord" />
-        <activity android:name=".GuessPinyin" />
-        <activity android:name=".GuessEnglish" />
+        <activity android:name=".GuessTone"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".GuessChar"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".GuessChineseWord"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".GuessPinyin"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".GuessEnglish"
+                  android:configChanges="keyboardHidden|orientation"/>
 
         <activity android:name=".TestResultActivity">
             <intent-filter android:name="android.intent.action.VIEW" />
