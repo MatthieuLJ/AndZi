@@ -26,17 +26,6 @@ public class GuessEnglish extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
-
-        setContentView(R.layout.guess_english);
-
-        EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
-        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
-                return true;
-            }
-        });
     }
 
     @Override
@@ -160,6 +149,17 @@ public class GuessEnglish extends TestActivity {
 
     @Override
     protected void display_test() {
+        setContentView(R.layout.guess_english);
+
+        EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
+        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE)
+                    handle_ok(textView);
+                return true;
+            }
+        });
+
         TextView text = (TextView) findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
 

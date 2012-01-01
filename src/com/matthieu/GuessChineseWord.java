@@ -28,16 +28,6 @@ public class GuessChineseWord extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
-
-        setContentView(R.layout.guess_chinese_word);
-        EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
-        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
-                return true;
-            }
-        });
     }
 
     protected void update_scores(int good) {
@@ -123,6 +113,17 @@ public class GuessChineseWord extends TestActivity {
     @Override
     protected void display_test() {
         ArrayList<String> bare_translations = new ArrayList<String>();
+
+        setContentView(R.layout.guess_chinese_word);
+        EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
+        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE)
+                    handle_ok(textView);
+                return true;
+            }
+        });
+
         for (String s : translations) {
             bare_translations.add(HanziDB.bare_translation(s));
         }

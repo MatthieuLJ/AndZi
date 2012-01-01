@@ -33,18 +33,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
         hanzi="";
         words=new ArrayList<Vocabulary>();
         previous_guess=new ArrayList<String>();
-
-        setContentView(R.layout.guess_char);
-
-        EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
-        guess.addTextChangedListener(this);
-        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
-                return true;
-            }
-        });
     }
 
     protected void set_next_study() {
@@ -61,12 +49,22 @@ public class GuessChar extends TestActivity implements TextWatcher {
 
     @Override
     protected void display_test() {
+        setContentView(R.layout.guess_char);
+
+        EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
+        guess.addTextChangedListener(this);
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE)
+                    handle_ok(textView);
+                return true;
+            }
+        });
+        guess.setText("");
+
         TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
         previous_guess.clear();
-
-        EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
-        guess.setText("");
 
         words = myDB.getWordsWithPinyin(hanzi);
 
