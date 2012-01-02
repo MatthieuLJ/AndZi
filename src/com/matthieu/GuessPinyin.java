@@ -79,6 +79,7 @@ public class GuessPinyin extends TestActivity {
 
         EditText guess = (EditText) findViewById(R.id.guess_pinyin_guess);
         guess.setText("");
+        guess.requestFocus();
 
         words = myDB.getWordsWithPinyin(hanzi, pinyin);
 

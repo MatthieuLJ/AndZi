@@ -61,6 +61,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
             }
         });
         guess.setText("");
+        guess.requestFocus();
 
         TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
         previous.setText("");

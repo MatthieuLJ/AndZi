@@ -132,7 +132,7 @@ public abstract class TestActivity extends Activity {
             }
             else {
                 if (res == INCORRECT) {
-                    toast = Toast.makeText(this, "Sorry, the correct answer was " + correct_answer, 2);
+                    toast = Toast.makeText(this, "Wrong answer " + correct_answer, 2);
                 }
                 else {
                     toast = Toast.makeText(this, "Well done !", 2);

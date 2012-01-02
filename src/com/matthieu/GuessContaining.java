@@ -12,12 +12,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class GuessContaining extends TestActivity {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
     protected String hanzi=null;
+    protected ArrayList<String> correct_answers;
 
     private final String TAG="GuessContaining";
 
@@ -26,6 +26,7 @@ public class GuessContaining extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
+        correct_answers=new ArrayList<String>();
     }
 
     @Override
@@ -71,6 +72,7 @@ public class GuessContaining extends TestActivity {
             }
         });
         word_guess.setText("");
+        word_guess.requestFocus();
 
         TextView clue= (TextView) findViewById(R.id.guess_containing_chinese);
         clue.setText("Find words containing: "+hanzi);
@@ -79,6 +81,7 @@ public class GuessContaining extends TestActivity {
     @Override
     protected int check_guess(String guess) {
         int res = INCORRECT;
+        correct_answers.clear();
         String[] guesses=guess.split("[,， ]");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
@@ -90,13 +93,14 @@ public class GuessContaining extends TestActivity {
             if (guesses[i].codePointCount(0, guesses[i].length())==1)
                 continue;
             if (myDB.getTranslations(guesses[i]).size()==0) {
-                if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0)) {
+                if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0) && (res!=CORRECT)) {
                     res=OTHER;
                 }
             }
             else {
                 Log.d(TAG, "Good answer");
-                return CORRECT;
+                res = CORRECT;
+                correct_answers.add(guesses[i]);
             }
 
         }
@@ -108,6 +112,20 @@ public class GuessContaining extends TestActivity {
     protected void update_scores(int good) {
         switch(good) {
             case CORRECT:
+                ArrayList<String> good_chars=new ArrayList<String>();
+                for (String answers:correct_answers) {
+                    for (int i=0; i<answers.length();) {
+                        String c = answers.substring(i, i+Character.charCount(answers.codePointAt(i)));
+                        if ((!good_chars.contains(c)) && (!c.equals(hanzi)))
+                            good_chars.add(c);
+                        i+=Character.charCount(answers.codePointAt(i));
+                    }
+                }
+                for (String c:good_chars) {
+                    Log.d(TAG, "Reset time for "+c);
+                    myDB.resetTime(c);
+                }
+                Log.d(TAG, "Better box for "+hanzi);
                 myDB.betterBox(hanzi);
                 break;
             case INCORRECT:

@@ -21,7 +21,8 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (53):
+DONE (54):
+* Set focus to edit text in tests
 * Add new lessons with an edit box in the first list row instead of through the menu
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Fix HanziDB testing

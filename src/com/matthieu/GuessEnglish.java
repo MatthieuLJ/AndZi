@@ -57,44 +57,6 @@ public class GuessEnglish extends TestActivity {
         return INCORRECT;
     }
 
-    @Override
-    protected void update_scores(int good) {
-        Log.d(TAG, "updating scores "+good);
-
-        int min_box = 5;
-
-        if (good == CORRECT) {
-            for (int i=0; i<solution.chinese.length();) {
-                int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
-                if (new_box < min_box) {
-                    min_box = new_box;
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                int box = myDB.getBoxForChar(hanzi);
-                if (box == min_box) {
-                    myDB.betterBox(hanzi);
-                    Log.d(TAG, hanzi +" moves up");
-                }
-                else {
-                    myDB.resetTime(hanzi);
-                    Log.d(TAG, hanzi +" will come back later");
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-        }
-        else {
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                myDB.restartStudy(hanzi);
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-        }
-    }
 
     @Override
     protected void set_next_study() {
@@ -160,9 +122,49 @@ public class GuessEnglish extends TestActivity {
             }
         });
         word_guess.setText("");
+        word_guess.requestFocus();
 
         TextView text = (TextView) findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
+    }
+
+    @Override
+    protected void update_scores(int good) {
+        Log.d(TAG, "updating scores "+good);
+
+        int min_box = 5;
+
+        if (good == CORRECT) {
+            for (int i=0; i<solution.chinese.length();) {
+                int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
+                if (new_box < min_box) {
+                    min_box = new_box;
+                }
+
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+            for (int i=0; i<solution.chinese.length();) {
+                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+                int box = myDB.getBoxForChar(hanzi);
+                if (box == min_box) {
+                    myDB.betterBox(hanzi);
+                    Log.d(TAG, hanzi +" moves up");
+                }
+                else {
+                    myDB.resetTime(hanzi);
+                    Log.d(TAG, hanzi +" will come back later");
+                }
+
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+        }
+        else {
+            for (int i=0; i<solution.chinese.length();) {
+                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+                myDB.restartStudy(hanzi);
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+        }
     }
 
     public void handle_ok(View v) {

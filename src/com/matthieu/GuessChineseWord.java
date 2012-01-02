@@ -30,44 +30,6 @@ public class GuessChineseWord extends TestActivity {
         refDB = ((AndZiApplication) getApplication()).getRefDB();
     }
 
-    protected void update_scores(int good) {
-        Log.d(TAG, "updating scores "+good);
-
-        int min_box = 5;
-
-        if (good == CORRECT) {
-            for (int i=0; i<solution.chinese.length();) {
-                int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
-                if (new_box < min_box) {
-                    min_box = new_box;
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                int box = myDB.getBoxForChar(hanzi);
-                if (box == min_box) {
-                    myDB.betterBox(hanzi);
-                    Log.d(TAG, hanzi +" moves up");
-                }
-                else {
-                    myDB.resetTime(hanzi);
-                    Log.d(TAG, hanzi +" will come back later");
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-        }
-        else {
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                myDB.restartStudy(hanzi);
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-        }
-    }
-
     protected void set_next_study() {
         super.set_next_study();
         String candidate;
@@ -124,6 +86,7 @@ public class GuessChineseWord extends TestActivity {
             }
         });
         word_guess.setText("");
+        word_guess.requestFocus();
 
         for (String s : translations) {
             bare_translations.add(HanziDB.bare_translation(s));
@@ -189,6 +152,44 @@ public class GuessChineseWord extends TestActivity {
         }
 
         return INCORRECT;
+    }
+
+    protected void update_scores(int good) {
+        Log.d(TAG, "updating scores "+good);
+
+        int min_box = 5;
+
+        if (good == CORRECT) {
+            for (int i=0; i<solution.chinese.length();) {
+                int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
+                if (new_box < min_box) {
+                    min_box = new_box;
+                }
+
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+            for (int i=0; i<solution.chinese.length();) {
+                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+                int box = myDB.getBoxForChar(hanzi);
+                if (box == min_box) {
+                    myDB.betterBox(hanzi);
+                    Log.d(TAG, hanzi +" moves up");
+                }
+                else {
+                    myDB.resetTime(hanzi);
+                    Log.d(TAG, hanzi +" will come back later");
+                }
+
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+        }
+        else {
+            for (int i=0; i<solution.chinese.length();) {
+                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+                myDB.restartStudy(hanzi);
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+        }
     }
 
     public void more_voc(View v) {
