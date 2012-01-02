@@ -38,7 +38,7 @@ public class HanziDBTest extends AndroidTestCase {
     public void testBareTranslation() {
         assertTrue(HanziDB.bare_translation("abc").equals("abc"));
         assertTrue(HanziDB.bare_translation("a(bc)").equals("a"));
-        assertTrue(HanziDB.bare_translation("a(bc)d(ef)").equals("ad"));
+        assertTrue(HanziDB.bare_translation("a(bc)d(ef)").equals("a d"));
     }
     
     public void testSimpleAdd() {
@@ -375,8 +375,7 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.betterBox("你");
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
-        long delay_millis = target_db.getDelayUntilMoreStudy();
-        assertTrue(delay_millis<target_db.getExpiryTime(1));
+        long delay_millis = target_db.getExpiryTime(1);
         delay(delay_millis);
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 1);
@@ -389,27 +388,31 @@ public class HanziDBTest extends AndroidTestCase {
     public void testAddingMoreStudy() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 2);
-        target_db.betterBox("你");
-        assertTrue(target_db.getNumCharsExpiredInBox(0) == 1);
-        assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
-        long delay = target_db.getDelayUntilMoreStudy();
-        target_db.accelerateTime(delay);
-        assertTrue(target_db.getNumCharsExpiredInBox(1) == 1);
+        target_db.setBoxForChar("好",4);
+        target_db.resetTime("好");
+        target_db.setBoxForChar("你", 3);
         target_db.resetTime("你");
-        assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
+        delay(5*1000); // wait 5 seconds
+        ArrayList<String> expiring=target_db.getMostAdvancedExpiring(2);
+        assertTrue(expiring.size()==2);
+        assertTrue(expiring.get(0).equals("你"));
+        assertTrue(expiring.get(1).equals("好"));
+        target_db.setExpired("好");
+        assertTrue(target_db.getNumCharsExpiredInBox(4) == 1);
+        assertTrue(target_db.getNumCharsExpiredInBox(3) == 0);
         target_db.checkDatabase();
 
         target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
         target_db.addVocabulary("west wind", new ArrayList<String>(Arrays.asList("西", "风")), new ArrayList<String>(Arrays.asList("xi1", "feng1")));
-        target_db.setBoxForChar("你", 4);
+        target_db.setBoxForChar("你", 2);
         delay(1000);
-        target_db.setBoxForChar("好", 4);
+        target_db.setBoxForChar("好", 2);
         delay(1000);
-        target_db.setBoxForChar("长", 4);
+        target_db.setBoxForChar("长", 2);
         delay(1000);
-        target_db.setBoxForChar("西", 4);
+        target_db.setBoxForChar("西", 2);
         delay(1000);
-        target_db.setBoxForChar("风", 4);
+        target_db.setBoxForChar("风", 2);
         delay(1000);
         assertTrue(target_db.getNextToStudy()==null);
         target_db.getMoreStudy(3);
@@ -462,7 +465,7 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.setBoxForChar("你", 3);
         target_db.setBoxForChar("西", 4);
         try {
-            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), false, false, false, app, null).get();
+            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), false, false, false, null, null).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -494,7 +497,7 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.setBoxForChar("你", 3);
         target_db.setBoxForChar("西", 4);
         try {
-            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), true, false, false, app, null).get();
+            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), true, false, false, null, null).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -525,7 +528,7 @@ public class HanziDBTest extends AndroidTestCase {
         target_db.assignWordLesson("lesson 3", "west", "西", "xi1");
         target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson 1", "lesson 2")));
         try {
-            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), false, true, false, app, null).get();
+            target_db.create_export_task(getContext().getDatabasePath("exported_db").getPath(), false, true, false, null, null).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -564,7 +567,7 @@ public class HanziDBTest extends AndroidTestCase {
         other_db.assignWordLesson("lesson 3", "west", "西", "xi1");
 
         try {
-            target_db.create_merge_task(other_db.getReadableDatabase().getPath(), false, app, null).get();
+            target_db.create_merge_task(other_db.getReadableDatabase().getPath(), false, null, null).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {

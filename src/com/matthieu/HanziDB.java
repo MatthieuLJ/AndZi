@@ -12,6 +12,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
+import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -1156,18 +1157,18 @@ public class HanziDB extends SQLiteOpenHelper {
                     new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
                 }
 
-                context.runOnUiThread(new Runnable() {
-                    public void run() {
-                        if (with_dialog)
-                            mProgressDialog.dismiss();
+                if (with_dialog || error)
+                    context.runOnUiThread(new Runnable() {
+                        public void run() {
+                            if (with_dialog)
+                                mProgressDialog.dismiss();
 
-                        if (error) {
-                            Toast toast = Toast.makeText(context, "An error occured while importing the database", 5);
-                            toast.show();
+                            if (error) {
+                                Toast toast = Toast.makeText(context, "An error occured while importing the database", 5);
+                                toast.show();
+                            }
                         }
-                    }
-                });
-
+                    });
             }
         };
 
@@ -1328,17 +1329,18 @@ public class HanziDB extends SQLiteOpenHelper {
                 appContext.deleteDatabase(new_db_name);
                 new File(path).delete();
 
-                context.runOnUiThread(new Runnable() {
-                    public void run() {
-                        if (with_dialog)
-                            mProgressDialog.dismiss();
+                if (with_dialog || error)
+                    context.runOnUiThread(new Runnable() {
+                        public void run() {
+                            if (with_dialog)
+                                mProgressDialog.dismiss();
 
-                        if (error) {
-                            Toast toast = Toast.makeText(context, "An error occured while exporting the database", 5);
-                            toast.show();
+                            if (error) {
+                                Toast toast = Toast.makeText(context, "An error occured while exporting the database", 5);
+                                toast.show();
+                            }
                         }
-                    }
-                });
+                    });
 
             }
         };
@@ -1892,21 +1894,23 @@ public class HanziDB extends SQLiteOpenHelper {
         }
     }
 
-    protected long getDelayUntilMoreStudy() {
+    protected ArrayList<String> getMostAdvancedExpiring(int num) {
         Cursor cur;
-        long res;
+        ArrayList<String> res=new ArrayList<String>();
 
-        cur = db.rawQuery("SELECT CASE box WHEN 1 THEN mod_time+? WHEN 2 THEN mod_time+? WHEN 3 THEN mod_time+? WHEN 4 THEN mod_time+? ELSE mod_time END AS delay " +
-                "FROM leitner WHERE (box=1 AND mod_time>?) OR (box=2 AND mod_time>?) OR (box=3 AND mod_time>?) OR (box=4 AND mod_time>?) ORDER BY delay ASC",
-                new String[] {Long.toString(getExpiryTime(1)-System.currentTimeMillis()), Long.toString(getExpiryTime(2)-System.currentTimeMillis()),
-                        Long.toString(getExpiryTime(3)-System.currentTimeMillis()), Long.toString(getExpiryTime(4)-System.currentTimeMillis()),
+        cur = db.rawQuery("SELECT hanzi, CASE box WHEN 1 THEN (?-mod_time)*? WHEN 2 THEN (?-mod_time)*? WHEN 3 THEN (?-mod_time)*? WHEN 4 THEN (?-mod_time)*? ELSE mod_time END AS delay " +
+                "FROM leitner WHERE (box=1 AND mod_time>?) OR (box=2 AND mod_time>?) OR (box=3 AND mod_time>?) OR (box=4 AND mod_time>?) ORDER BY delay DESC",
+                new String[] {
+                        Long.toString(System.currentTimeMillis()), Long.toString(getExpiryTime(4)/getExpiryTime(1)),
+                        Long.toString(System.currentTimeMillis()), Long.toString(getExpiryTime(4)/getExpiryTime(2)),
+                        Long.toString(System.currentTimeMillis()), Long.toString(getExpiryTime(4)/getExpiryTime(3)),
+                        Long.toString(System.currentTimeMillis()), Long.toString(1),
                         Long.toString(System.currentTimeMillis()-getExpiryTime(1)), Long.toString(System.currentTimeMillis()-getExpiryTime(2)),
                         Long.toString(System.currentTimeMillis()-getExpiryTime(3)), Long.toString(System.currentTimeMillis()-getExpiryTime(4))});
-        if (cur.moveToNext()) {
-            res = cur.getLong(cur.getColumnIndex("delay"));
-        }
-        else {
-            res = 0;
+        if (cur.moveToFirst()) {
+            do {
+                res.add(cur.getString(cur.getColumnIndex("hanzi")));
+            } while ((--num>0) && (cur.moveToNext()));
         }
         cur.close();
         return res;
@@ -2002,8 +2006,8 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    protected void accelerateTime(long millis) {
-        db.execSQL("UPDATE leitner SET mod_time=mod_time-"+millis);
+    protected void setExpired(String hanzi) {
+        setUpdateTimeForChar(hanzi, System.currentTimeMillis()-getExpiryTime(getBoxForChar(hanzi)));
     }
 
     ////////////////////////////////////////
@@ -2044,12 +2048,9 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void getMoreStudy(int how_many) {
-        for(int i=how_many; i>0; i--) {
-            long delay = getDelayUntilMoreStudy();
-            if (delay == 0)
-                return;
-            accelerateTime(delay);
-        }
+        ArrayList<String> chars = getMostAdvancedExpiring(how_many);
+        for (String ch:chars)
+            setExpired(ch);
     }
     /*
      *
