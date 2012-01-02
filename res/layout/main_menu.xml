@@ -53,13 +53,13 @@
                 android:layout_weight="1"
                 android:text="Guess Chinese Word"
                 android:onClick="handle_guesschinese" />
-
         <Button
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:text="Review list"
-                android:onClick="handle_reviewlist" />
+                android:text="Guess Containing"
+                android:onClick="handle_guesscontaining" />
+
     </TableRow>
     <TableRow
             android:layout_height="fill_parent"
@@ -79,6 +79,17 @@
                 android:layout_weight="1"
                 android:text="Guess English"
                 android:onClick="handle_guessenglish" />
+    </TableRow>
+    <TableRow
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            >
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Review list"
+                android:onClick="handle_reviewlist" />
     </TableRow>
     <TableRow
             android:layout_height="fill_parent"

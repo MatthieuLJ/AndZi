@@ -39,6 +39,8 @@
                   android:configChanges="keyboardHidden|orientation"/>
         <activity android:name=".GuessEnglish"
                   android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".GuessContaining"
+                  android:configChanges="keyboardHidden|orientation"/>
 
         <activity android:name=".TestResultActivity">
             <intent-filter android:name="android.intent.action.VIEW" />
