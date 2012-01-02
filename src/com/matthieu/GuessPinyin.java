@@ -18,7 +18,6 @@ public class GuessPinyin extends TestActivity {
     protected HanziDB refDB=null;
     private String hanzi, pinyin;
     private ArrayList<Vocabulary> words;
-    int show_result;
 
     private static final String TAG="GuessPinyin";
     @Override
@@ -26,17 +25,6 @@ public class GuessPinyin extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (sp.getString("show_result", "always").equals("always")) {
-            show_result = 1;
-        }
-        else if (sp.getString("show_result", "always").equals("sometimes")) {
-            show_result = 2;
-        }
-        else {
-            show_result = 3;
-        }
         hanzi="";
         words=new ArrayList<Vocabulary>();
     }
@@ -155,27 +143,27 @@ public class GuessPinyin extends TestActivity {
         Pinyin guess_pinyin = new Pinyin(guess);
         Pinyin solution = new Pinyin(pinyin);
         if (guess_pinyin.get_tone() == -1) // invalid Pinyin
-            return 0;
+            return INCORRECT;
 
         if (guess_pinyin.equals(solution))
-            return 1;
+            return CORRECT;
 
         if (guess_pinyin.get_radical().equals(solution.get_radical()))
-            return -1;
+            return OTHER;
 
-        return 0;
+        return INCORRECT;
     }
 
     @Override
     protected void update_scores(int good) {
         switch(good) {
-            case 0:
+            case INCORRECT:
                 myDB.restartStudy(hanzi);
                 break;
-            case 1:
+            case CORRECT:
                 myDB.betterBox(hanzi);
                 break;
-            case -1:
+            case OTHER:
                 myDB.resetTime(hanzi);
                 break;
         }
@@ -190,10 +178,10 @@ public class GuessPinyin extends TestActivity {
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, true) == -1) {
-            update_scores(-1);
+        if (handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, true) == OTHER) {
+            update_scores(OTHER);
             if ((show_result == 2) || (show_result ==1)) {
-                show_solution(0, hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, false);
+                show_solution(TestResultActivity.MODE_CHARACTER, hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, false);
             }
             else {
                 toast = Toast.makeText(this, "Wrong tone", 2);

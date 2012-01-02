@@ -102,7 +102,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     }
 
     protected int check_guess(String guess) {
-        int res=0;
+        int res=INCORRECT;
 
         // check if any wrong guess
         if ((guess.contains("1") && !tones.contains(1)) || (tones.contains(1) && !guess.contains("1")))
@@ -113,14 +113,13 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             return res;
         if ((guess.contains("4") && !tones.contains(4)) || (tones.contains(4) && !guess.contains("4")))
             return res;
-        
-        res=1;
-        return res;
+
+        return CORRECT;
     }
 
     @Override
     protected void update_scores(int good) {
-        if (good == 1) {
+        if (good == CORRECT) {
             if (myDB.getBoxForChar(hanzi) == 0) {
                 myDB.betterBox(hanzi);
             }

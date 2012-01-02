@@ -108,15 +108,15 @@ public class GuessChar extends TestActivity implements TextWatcher {
     }
 
     protected int check_guess(String guess) {
-        int res=0;
+        int res=INCORRECT;
 
         if (guess.equals(hanzi)) {
-            res=1;
+            res=CORRECT;
         }
         else {
             //check if that character could have been good also...
             if (guess.length()==1) {
-                res=-1;
+                res=OTHER;
                 for (Vocabulary w:words) {
                     String tmp_word = w.chinese;
                     tmp_word = tmp_word.replaceAll(hanzi, guess);
@@ -140,14 +140,14 @@ public class GuessChar extends TestActivity implements TextWatcher {
                         }
                     }
                     if(!found) {
-                        res=0;
+                        res=INCORRECT;
                         break;
                     }
                 }
             }
         }
 
-        if (res == -1) {
+        if (res == OTHER) {
                 if (!previous_guess.contains(guess))
                     previous_guess.add(guess);
                 TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
@@ -166,7 +166,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
     }
 
     protected void update_scores(int good) {
-        if (good==1) {
+        if (good==CORRECT) {
             myDB.betterBox(hanzi);
         }
         else {
@@ -180,7 +180,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
                 i+=Character.charCount(v.chinese.codePointAt(i));
                 if (other_hanzi.equals(hanzi))
                     continue;
-                if (good==1)
+                if (good==CORRECT)
                     myDB.resetTime(other_hanzi);
                 else
                     myDB.restartStudy(other_hanzi);
@@ -189,8 +189,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
     }
 
     public void handle_ok(View v) {
-        Toast toast;
-
         EditText word_guess = (EditText) findViewById(R.id.char_finder_chinese);
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);

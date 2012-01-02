@@ -35,7 +35,7 @@ public class GuessChineseWord extends TestActivity {
 
         int min_box = 5;
 
-        if (good == 1) {
+        if (good == CORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
                 if (new_box < min_box) {
@@ -123,6 +123,7 @@ public class GuessChineseWord extends TestActivity {
                 return true;
             }
         });
+        word_guess.setText("");
 
         for (String s : translations) {
             bare_translations.add(HanziDB.bare_translation(s));
@@ -154,14 +155,11 @@ public class GuessChineseWord extends TestActivity {
         previous_guess = new ArrayList<String>();
         TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
-
-        EditText edit_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
-        edit_guess.setText("");
     }
 
     protected int check_guess(String guess) {
         if (guess.equals(solution.chinese)) {
-            return 1;
+            return CORRECT;
         }
         else {
             // check if the word guessed is in the database and relates somewhat...
@@ -183,14 +181,14 @@ public class GuessChineseWord extends TestActivity {
                                     previous.setText(previous.getText() + ",\n");
                             }
                             previous.invalidate();
-                            return -1;
+                            return OTHER;
                         }
                     }
                 }
             }
         }
 
-        return 0;
+        return INCORRECT;
     }
 
     public void more_voc(View v) {
@@ -211,7 +209,7 @@ public class GuessChineseWord extends TestActivity {
         
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, true) == -1)
+        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, true) == OTHER)
             word_guess.setText("");
     }
 

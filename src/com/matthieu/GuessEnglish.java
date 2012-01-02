@@ -41,7 +41,7 @@ public class GuessEnglish extends TestActivity {
                 en=en.toLowerCase();
                 if (en.equals(guesses[i].trim())) {
                     Log.d(TAG, "got a match "+en+" and "+guesses[i].trim());
-                    return 1;
+                    return CORRECT;
                 }
 
                 String[] ens=HanziDB.bare_translation(en).split(" ");
@@ -49,12 +49,12 @@ public class GuessEnglish extends TestActivity {
                     String tmp=item.replaceAll("[^A-Za-z]", "");
                     if ((tmp.length()>2) && (tmp.equals(guesses[i].trim()))) {
                         Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
-                        return 1;
+                        return CORRECT;
                     }
                 }
             }
         }
-        return 0;
+        return INCORRECT;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class GuessEnglish extends TestActivity {
 
         int min_box = 5;
 
-        if (good == 1) {
+        if (good == CORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
                 if (new_box < min_box) {
@@ -159,12 +159,10 @@ public class GuessEnglish extends TestActivity {
                 return true;
             }
         });
+        word_guess.setText("");
 
         TextView text = (TextView) findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
-
-        EditText edit_guess = (EditText) findViewById(R.id.guess_english_word_guess);
-        edit_guess.setText("");
     }
 
     public void handle_ok(View v) {

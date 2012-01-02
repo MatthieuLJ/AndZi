@@ -32,6 +32,9 @@ public class TestResultActivity extends Activity {
 
     private final String TAG="TestResult";
 
+    public final static int MODE_CHARACTER=0;
+    public final static int MODE_WORD=1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,15 +47,15 @@ public class TestResultActivity extends Activity {
             finish();
         }
 
-        mode = getIntent().getIntExtra("Mode", 1);
+        mode = getIntent().getIntExtra("Mode", MODE_WORD);
 
-        Log.d(TAG, "Character is "+hanzi+" in mode "+((mode==1)?"word":"character"));
+        Log.d(TAG, "Character is "+hanzi+" in mode "+((mode==MODE_WORD)?"word":"character"));
         
         pinyins = getIntent().getStringArrayListExtra("Pinyins");
         if ((pinyins == null) || (pinyins.size() == 0)) {
-            if (mode == 0)
+            if (mode == MODE_CHARACTER)
                 pinyins = myDB.getPinyinForChar(hanzi);
-            else if (mode == 1) {
+            else if (mode == MODE_WORD) {
                 pinyins = new ArrayList<String>();
                 for (Vocabulary voc : myDB.getTranslations(hanzi)) {
                     pinyins.add(voc.pinyin);
@@ -62,9 +65,9 @@ public class TestResultActivity extends Activity {
 
         wrong_guess=getIntent().getStringExtra("WrongGuess");
         if (wrong_guess != null) {
-            if (mode == 0)
+            if (mode == MODE_CHARACTER)
                 wrong_pinyins = new ArrayList<String>(Arrays.asList(wrong_guess));
-            else if (mode == 1) {
+            else if (mode == MODE_WORD) {
                 wrong_pinyins = new ArrayList<String>();
                 for (Vocabulary voc : myDB.getTranslations(wrong_guess)) {
                     wrong_pinyins.add(voc.pinyin);
@@ -78,12 +81,12 @@ public class TestResultActivity extends Activity {
 
         LinearLayout main_layout = (LinearLayout) findViewById(R.id.test_results);
 
-        if (mode == 0) {
+        if (mode == MODE_CHARACTER) {
             for (String pin : pinyins) {
                 add_one_tone(main_layout, hanzi, pin);
             }
         }
-        else if (mode == 1) {
+        else if (mode == MODE_WORD) {
             for (String pin : pinyins) {
                 add_one_word(main_layout, hanzi, pin);
             }
@@ -95,12 +98,12 @@ public class TestResultActivity extends Activity {
             TextView wrong_guess_tv = (TextView) findViewById(R.id.test_result_guess);
             wrong_guess_tv.setText("Your guess was : "+wrong_guess);
             wrong_guess_tv.setVisibility(View.VISIBLE);
-            if (mode == 0) {
+            if (mode == MODE_CHARACTER) {
                 for (String pin : wrong_pinyins) {
                     add_one_tone(wrong_layout, wrong_guess, pin);
                 }
             }
-            else if (mode == 1) {
+            else if (mode == MODE_WORD) {
                 for (String pin : wrong_pinyins) {
                     add_one_word(wrong_layout, wrong_guess, pin);
                 }
