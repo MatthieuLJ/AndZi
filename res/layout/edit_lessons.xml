@@ -15,7 +15,6 @@
             android:layout_weight="1"
             android:drawSelectorOnTop="false"
             tlv:grabber="@+id/edit_lesson_grab"
-            tlv:remove_mode="slideRight"
             />
 
 </LinearLayout>

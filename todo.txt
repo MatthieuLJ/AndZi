@@ -1,5 +1,4 @@
-ONGOING (9):
-* Add new lessons with an edit box in the first list row instead of through the menu
+ONGOING (8):
 * Change TestResult into word/character details and be able to navigate through those (and add definitions from ref)
 * Add dictionary
 * Check everything can be done without a touch screen (wheel or arrow buttons)
@@ -12,15 +11,18 @@ ONGOING (9):
 BUGS (1):
 * Display lessons progressively in lesson editing
 
-FUTURE (6):
+FUTURE (7):
 * Pick test automatically (and change)
+* Add graph of progress (http://www.achartengine.org/)
+* Pre-created lessons
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
 * Push database from one phone to another (ICS)
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (52):
+DONE (53):
+* Add new lessons with an edit box in the first list row instead of through the menu
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)
 * Fix HanziDB testing
 * Find Chinese words containing a character

@@ -13,6 +13,7 @@ import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.StringTokenizer;
 
 public class EditLessonsActivity extends Activity {
     protected HanziDB myDB=null;
@@ -20,16 +21,6 @@ public class EditLessonsActivity extends Activity {
     protected ArrayList<Lesson> current_lessons;
     protected ArrayList<String> current_lesson_filter;
     protected boolean filter_on;
-
-    // Undo data
-    private String undo_old_name;
-    private String undo_new_name;
-    private int undo_num_items;
-    private ArrayList<Vocabulary> undo_old_content;
-    private Lesson undo_lesson;
-    private int undo_old_position;
-    private int undo_lesson_state;
-    private int undo_operation=0; // 0=nothing available, 1=undo rename, 2=undo create new, 3=undo delete, 4=undo combine
 
     private static final String TAG = "EditLessonsActivity";
 
@@ -47,10 +38,14 @@ public class EditLessonsActivity extends Activity {
         list.setAdapter(new LessonArrayAdapter());
         list.setDropListener(new TouchListView.DropListener() {
             public void drop(int from, int to) {
-                Lesson le = current_lessons.get(from);
+                if (from == 0)
+                    return;
+                if (to==0)
+                    to=1;
+                Lesson le = current_lessons.get(from-1);
                 Log.d(TAG, "Moving from " + from + " to " + to);
-                current_lessons.remove(from);
-                current_lessons.add(to, le);
+                current_lessons.remove(from-1);
+                current_lessons.add(to-1, le);
                 ArrayList<String> lesson_order=new ArrayList<String>();
                 for (Lesson l:current_lessons)
                     lesson_order.add(l.label);
@@ -124,72 +119,117 @@ public class EditLessonsActivity extends Activity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View row;
-            if (convertView == null) {
-                LayoutInflater inflater = getLayoutInflater();
-                row = inflater.inflate(R.layout.edit_lesson_list_item, parent, false);
-            }
-            else {
-                row = convertView;
-            }
 
-            Lesson le = current_lessons.get(position);
-
-            String more_info = "";
-            if ((le.state & Lesson.RENAMED) != 0) {
-                more_info = "was : " + le.old_label;
-            }
-            if (le.num_items != 0) {
-                if (!more_info.equals(""))
-                    more_info = more_info + ", ";
-                more_info = more_info + "has " + le.num_items + " chinese word";
-                if (le.num_items > 1)
-                    more_info += "s";
-            }
-            TextView more_tview = (TextView) row.findViewById(R.id.lesson_more_info_label);
-            if (more_info.equals("")) {
-                more_tview.setVisibility(View.GONE);
-            }
-            else {
-                more_tview.setText(more_info);
-                more_tview.setVisibility(View.VISIBLE);
-            }
-
-            TextView label = (TextView) row.findViewById(R.id.lesson_label);
-            label.setText(le.label);
-            if ((le.state & Lesson.NEW) != 0) {
-                label.setPaintFlags(label.getPaintFlags() | Paint.FAKE_BOLD_TEXT_FLAG);
-            }
-            else {
-                label.setPaintFlags(label.getPaintFlags() & ~Paint.FAKE_BOLD_TEXT_FLAG);
-            }
-            label.setTag(R.id.lesson_item, le);
-
-            CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_filter_on);
-            cb.setTag(R.id.lesson_item, le);
-            cb.setChecked((le.state & Lesson.FILTERED_ENABLED) != 0);
-            if (filter_on) {
-                cb.setVisibility(View.VISIBLE);
-            }
-            else {
-                cb.setVisibility(View.GONE);
-            }
-            cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    Lesson lesson = (Lesson) compoundButton.getTag(R.id.lesson_item);
-                    if (b) {
-                        lesson.state |= Lesson.FILTERED_ENABLED;
-                        current_lesson_filter.add(lesson.label);
-                    }
-                    else {
-                        lesson.state &= ~Lesson.FILTERED_ENABLED;
-                        current_lesson_filter.remove(lesson.label);
-                    }
-                    myDB.setLessonsToFilter(current_lesson_filter);
-                    ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
-                    TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                    ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            if (position == 0) {
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.lesson_list_view_inflated)==R.layout.edit_lesson_list_new_item)) {
+                    row = convertView;
                 }
-            });
+                else {
+                    LayoutInflater inflater = getLayoutInflater();
+                    row = inflater.inflate(R.layout.edit_lesson_list_new_item, parent, false);
+                    row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_new_item);
+                }
+
+                Button new_lesson_ok = (Button) row.findViewById(R.id.edit_new_lesson_ok);
+                EditText new_lesson_field = (EditText) row.findViewById(R.id.edit_new_lesson);
+                new_lesson_ok.setTag(R.id.edit_new_lesson, new_lesson_field);
+                new_lesson_ok.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        EditText new_lesson_field = (EditText)view.getTag(R.id.edit_new_lesson);
+                        String new_lesson_label = new_lesson_field.getText().toString();
+                        new_lesson_field.setText("");
+                        if (new_lesson_label.equals(""))
+                            return;
+                        if (lesson_exists(new_lesson_label)) {
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + new_lesson_label + "] already exists", 5).show();
+                            return;
+                        }
+                        Lesson new_lesson = new Lesson(new_lesson_label);
+                        new_lesson.state = Lesson.NEW;
+                        new_lesson.num_items=0;
+                        myDB.addLesson(new_lesson_label);
+                        current_lessons.add(0,new_lesson);
+                        ArrayList<String> lesson_order=new ArrayList<String>();
+                        for (Lesson l:current_lessons)
+                            lesson_order.add(l.label);
+                        myDB.sortLessons(lesson_order);
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                    }
+                });
+
+
+
+            }
+            else {
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.lesson_list_view_inflated)==R.layout.edit_lesson_list_item)) {
+                    row = convertView;
+                }
+                else {
+                    LayoutInflater inflater = getLayoutInflater();
+                    row = inflater.inflate(R.layout.edit_lesson_list_item, parent, false);
+                    row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_item);
+                }
+
+                Lesson le = current_lessons.get(position-1);
+
+                String more_info = "";
+                if ((le.state & Lesson.RENAMED) != 0) {
+                    more_info = "was : " + le.old_label;
+                }
+                if (le.num_items != 0) {
+                    if (!more_info.equals(""))
+                        more_info = more_info + ", ";
+                    more_info = more_info + "has " + le.num_items + " chinese word";
+                    if (le.num_items > 1)
+                        more_info += "s";
+                }
+                TextView more_tview = (TextView) row.findViewById(R.id.lesson_more_info_label);
+                if (more_info.equals("")) {
+                    more_tview.setVisibility(View.GONE);
+                }
+                else {
+                    more_tview.setText(more_info);
+                    more_tview.setVisibility(View.VISIBLE);
+                }
+
+                TextView label = (TextView) row.findViewById(R.id.lesson_label);
+                label.setText(le.label);
+                if ((le.state & Lesson.NEW) != 0) {
+                    label.setPaintFlags(label.getPaintFlags() | Paint.FAKE_BOLD_TEXT_FLAG);
+                }
+                else {
+                    label.setPaintFlags(label.getPaintFlags() & ~Paint.FAKE_BOLD_TEXT_FLAG);
+                }
+                label.setTag(R.id.lesson_item, le);
+
+                CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_filter_on);
+                cb.setTag(R.id.lesson_item, le);
+                cb.setChecked((le.state & Lesson.FILTERED_ENABLED) != 0);
+                if (filter_on) {
+                    cb.setVisibility(View.VISIBLE);
+                }
+                else {
+                    cb.setVisibility(View.GONE);
+                }
+                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                        Lesson lesson = (Lesson) compoundButton.getTag(R.id.lesson_item);
+                        if (b) {
+                            lesson.state |= Lesson.FILTERED_ENABLED;
+                            current_lesson_filter.add(lesson.label);
+                        }
+                        else {
+                            lesson.state &= ~Lesson.FILTERED_ENABLED;
+                            current_lesson_filter.remove(lesson.label);
+                        }
+                        myDB.setLessonsToFilter(current_lesson_filter);
+                        ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                    }
+                });
+            }
 
             return row;
         }
@@ -197,7 +237,7 @@ public class EditLessonsActivity extends Activity {
 
         @Override
         public int getCount() {
-            return current_lessons.size();
+            return current_lessons.size()+1;
         }
     }
 
@@ -223,19 +263,12 @@ public class EditLessonsActivity extends Activity {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         ContextMenu.ContextMenuInfo menuInfo=item.getMenuInfo();
-        final Lesson le = current_lessons.get(((AdapterView.AdapterContextMenuInfo)menuInfo).position);
+        final Lesson le = current_lessons.get(((AdapterView.AdapterContextMenuInfo)menuInfo).position-1);
 
         switch(item.getItemId()) {
             case R.id.delete_lesson:
-                undo_old_content=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
-                undo_new_name=le.label;
-                undo_old_name=le.old_label;
-                undo_num_items=le.num_items;
-                undo_old_position=current_lessons.indexOf(le);
-                undo_lesson_state=le.state;
                 myDB.delLesson(le.label);
                 current_lessons.remove(le);
-                undo_operation=3;
                 TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                 break;
@@ -254,10 +287,6 @@ public class EditLessonsActivity extends Activity {
                         if (param.equals(le.label))
                             return;
                         myDB.renameLesson(le.label, param);
-                        undo_operation=1;
-                        undo_new_name=param;
-                        undo_old_name=le.label;
-                        undo_lesson = le;
                         le.label=param;
                         if (le.old_label.equals(param)) {
                             le.old_label="";
@@ -286,9 +315,6 @@ public class EditLessonsActivity extends Activity {
                         myDB.addLesson(param);
                         for (Vocabulary voc:myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))))
                             myDB.assignWordLesson(param, voc);
-                        undo_operation=2;
-                        undo_new_name=param;
-                        undo_lesson=new_lesson;
                         current_lessons.add(0, new_lesson);
                         ArrayList<String> lesson_order=new ArrayList<String>();
                         for (Lesson l:current_lessons)
@@ -315,10 +341,6 @@ public class EditLessonsActivity extends Activity {
                 });
                 alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int n) {
-                        undo_lesson=le;
-                        undo_new_name=le.label;
-                        undo_old_content=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
-                        undo_num_items=le.num_items;
                         ArrayList<String> lessons_selected = new ArrayList<String>();
                         for (int i=0; i<current_lessons.size(); i++) {
                             if (lesson_checked[i]) {
@@ -330,7 +352,6 @@ public class EditLessonsActivity extends Activity {
                             myDB.assignWordLesson(le.label, v);
                         }
                         le.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))).size();
-                        undo_operation=4;
                         dialog.dismiss();
                         TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
@@ -397,29 +418,6 @@ public class EditLessonsActivity extends Activity {
         else {
             enable.setTitle("Enable Lesson Filter");
         }
-        MenuItem undo = menu.findItem(R.id.lesson_edit_undo);
-        switch(undo_operation) {
-            case 0:
-                undo.setTitle("Undo");
-                undo.setEnabled(false);
-                break;
-            case 1:
-                undo.setTitle("Undo Rename");
-                undo.setEnabled(true);
-                break;
-            case 2:
-                undo.setTitle("Undo New lesson");
-                undo.setEnabled(true);
-                break;
-            case 3:
-                undo.setTitle("Undo Delete");
-                undo.setEnabled(true);
-                break;
-            case 4:
-                undo.setTitle("Undo Combine");
-                undo.setEnabled(true);
-                break;
-        }
 
         return res;
     }
@@ -432,72 +430,6 @@ public class EditLessonsActivity extends Activity {
                 filter_on = !filter_on;
                 myDB.enableFilter(filter_on);
                 ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                break;
-            case R.id.lesson_new:
-                prompt_user_input("New lesson", "Please enter the new lesson name:", new String_action() {
-                    public void run(String param) {
-                        if (param.equals(""))
-                            return;
-                        if (lesson_exists(param)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
-                            return;
-                        }
-                        Lesson new_lesson = new Lesson(param);
-                        new_lesson.state = Lesson.NEW;
-                        new_lesson.num_items=0;
-                        myDB.addLesson(param);
-                        undo_operation=2;
-                        undo_new_name=param;
-                        current_lessons.add(0,new_lesson);
-                        ArrayList<String> lesson_order=new ArrayList<String>();
-                        for (Lesson l:current_lessons)
-                            lesson_order.add(l.label);
-                        myDB.sortLessons(lesson_order);
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                    }
-                });
-                break;
-            case R.id.lesson_edit_undo:
-                switch(undo_operation) {
-                    case 1: // undo rename
-                        myDB.renameLesson(undo_new_name, undo_old_name);
-                        undo_lesson.label=undo_old_name;
-                        if (undo_lesson.old_label.equals(undo_old_name)) {
-                            undo_lesson.state &= ~Lesson.RENAMED;
-                            undo_lesson.old_label="";
-                        }
-                        break;
-                    case 2: // create new or duplicate
-                        myDB.delLesson(undo_new_name);
-                        current_lessons.remove(undo_lesson);
-                        break;
-                    case 3: // undo delete
-                        myDB.addLesson(undo_new_name);
-                        for (Vocabulary voc:undo_old_content)
-                            myDB.assignWordLesson(undo_new_name, voc);
-                        Lesson new_lesson=new Lesson(undo_new_name);
-                        new_lesson.state=undo_lesson_state;
-                        new_lesson.num_items=undo_num_items;
-                        new_lesson.old_label=undo_old_name;
-                        current_lessons.add(undo_old_position, new_lesson);
-                        ArrayList<String> lesson_order=new ArrayList<String>();
-                        for (Lesson l:current_lessons)
-                            lesson_order.add(l.label);
-                        myDB.sortLessons(lesson_order);
-                        break;
-                    case 4: // undo combine
-                        for (Vocabulary v:myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(undo_new_name)))) {
-                            myDB.removeWordLesson(undo_new_name, v);
-                        }
-                        for (Vocabulary v:undo_old_content) {
-                            myDB.assignWordLesson(undo_new_name, v);
-                        }
-                        undo_lesson.num_items=undo_num_items;
-                        break;
-                }
-                undo_operation=0;
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                 break;
             default:
