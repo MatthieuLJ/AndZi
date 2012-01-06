@@ -12,9 +12,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -416,6 +418,39 @@ public class HanziDB extends SQLiteOpenHelper {
                         (HanziDB.bare_translation(ref).equals(guess) ||
                         HanziDB.bare_translation(ref).equals(HanziDB.bare_translation(guess)))
                 );
+    }
+
+    public static ArrayList<Vocabulary> merge_vocabulary(ArrayList<Vocabulary> itemA, ArrayList<Vocabulary> itemB) {
+        if (itemA == null)
+            return itemB;
+        if (itemB == null)
+            return itemA;
+
+        HashMap<String, HashMap<String,Integer>> itemA_map = new HashMap<String, HashMap<String,Integer>>();
+
+        for (int i=0; i<itemA.size(); i++) {
+            Vocabulary vocA=itemA.get(i);
+            if (!itemA_map.containsKey(vocA.chinese)) {
+                itemA_map.put(vocA.chinese, new HashMap<String, Integer>());
+                itemA_map.get(vocA.chinese).put(vocA.pinyin, i);
+            }
+        }
+
+        ArrayList<Vocabulary> res=new ArrayList<Vocabulary>(itemA);
+        for (Vocabulary voc:itemB) {
+            if ((itemA_map.containsKey(voc.chinese)) && (itemA_map.get(voc.chinese).containsKey(voc.pinyin))) {
+                int index = itemA_map.get(voc.chinese).get(voc.pinyin);
+                ArrayList<String> orig_trans = itemA.get(index).english;
+                for (String en:voc.english)
+                    if (!orig_trans.contains(en))
+                        itemA.get(index).english.add(en);
+            }
+            else {
+                res.add(voc);
+            }
+        }
+
+        return res;
     }
 
     /*
@@ -2007,7 +2042,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void setExpired(String hanzi) {
-        setUpdateTimeForChar(hanzi, System.currentTimeMillis()-getExpiryTime(getBoxForChar(hanzi)));
+        setUpdateTimeForChar(hanzi, System.currentTimeMillis() - getExpiryTime(getBoxForChar(hanzi)));
     }
 
     ////////////////////////////////////////

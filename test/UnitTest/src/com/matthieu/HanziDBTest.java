@@ -388,7 +388,7 @@ public class HanziDBTest extends AndroidTestCase {
     public void testAddingMoreStudy() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 2);
-        target_db.setBoxForChar("好",4);
+        target_db.setBoxForChar("好", 4);
         target_db.resetTime("好");
         target_db.setBoxForChar("你", 3);
         target_db.resetTime("你");
@@ -577,5 +577,18 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(target_db.getLessons().size()==3);
         assertTrue(target_db.getLessonForWord("长", "zhang3", "grow").size()==2);
         assertTrue(target_db.checkDatabase());
+    }
+
+    public void testMergeVoc() {
+        ArrayList<Vocabulary> A = new ArrayList<Vocabulary>();
+        A.add(new Vocabulary("长", "zhang3", "grow"));
+        A.add(new Vocabulary("你好", "ni3hao3", "hello"));
+        A.add(new Vocabulary("西", "xi1", "west"));
+        ArrayList<Vocabulary> B = new ArrayList<Vocabulary>();
+        B.add(new Vocabulary("你好", "ni3hao3", "hi"));
+        B.add(new Vocabulary("长", "chang2", "long"));
+
+        ArrayList<Vocabulary> res=HanziDB.merge_vocabulary(A, B);
+        assertTrue(res.size() == 4);
     }
 }
