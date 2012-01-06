@@ -1,12 +1,14 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
@@ -79,6 +81,13 @@ public class GuessPinyin extends TestActivity {
 
         EditText guess = (EditText) findViewById(R.id.guess_pinyin_guess);
         guess.setText("");
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE)
+                    handle_ok(textView);
+                return true;
+            }
+        });
         guess.requestFocus();
 
         words = myDB.getWordsWithPinyin(hanzi, pinyin);
@@ -170,7 +179,6 @@ public class GuessPinyin extends TestActivity {
         }
     }
 
-
     public void handle_ok(View v) {
         Toast toast;
         EditText word_guess = (EditText) findViewById(R.id.guess_pinyin_guess);
@@ -179,16 +187,32 @@ public class GuessPinyin extends TestActivity {
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, true) == OTHER) {
+        if (handle_submit(guess) == OTHER) {
             update_scores(OTHER);
             if ((show_result == 2) || (show_result ==1)) {
-                show_solution(TestResultActivity.MODE_CHARACTER, hanzi, new ArrayList<String>(Arrays.asList(pinyin)), guess, false);
+                show_solution(guess, INCORRECT);
             }
             else {
                 toast = Toast.makeText(this, "Wrong tone", 2);
                 toast.show();
                 set_next_study();
             }
+        }
+    }
+
+    protected void show_solution(String guess, int good) {
+        setContentView(R.layout.test_result);
+        DetailsCharacter.populate_character_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, new ArrayList<String>(Arrays.asList(pinyin)),false);
+        if (good == INCORRECT) {
+            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+            TextView bad_guess_text = new TextView(GuessPinyin.this);
+            bad_guess_text.setText("You guessed: "+guess);
+            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            bad_guess_text.setTextColor(0xffdd0000);
+            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            bad_guess.setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
         }
     }
 }

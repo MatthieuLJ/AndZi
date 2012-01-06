@@ -3,8 +3,11 @@ package com.matthieu;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -210,8 +213,24 @@ public class GuessChineseWord extends TestActivity {
         
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(solution.chinese, new ArrayList<String>(Arrays.asList(solution.pinyin)), guess, true) == OTHER)
+        if (handle_submit(guess) == OTHER)
             word_guess.setText("");
     }
 
+    @Override
+    protected void show_solution(String guess, int good) {
+        setContentView(R.layout.test_result);
+        DetailsWord.populate_word_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false);
+        if (good == INCORRECT) {
+            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+            TextView bad_guess_text = new TextView(GuessChineseWord.this);
+            bad_guess_text.setText("You guessed: "+guess);
+            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            bad_guess_text.setTextColor(0xffdd0000);
+            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            bad_guess.setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
+        }
+    }
 }

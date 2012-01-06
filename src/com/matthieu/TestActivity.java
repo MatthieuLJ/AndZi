@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.preference.PreferenceManager;
+import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public abstract class TestActivity extends Activity {
     abstract protected void display_test();
     abstract protected int check_guess(String guess);
     abstract protected void update_scores(int good);
+    abstract protected void show_solution(String guess, int good);
 
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         if (requestCode != 0)
@@ -62,52 +64,8 @@ public abstract class TestActivity extends Activity {
 
     }
 
-    protected void show_solution(int mode, String correct_answer_hanzi) {
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", correct_answer_hanzi);
-        i.putExtra("Mode", mode);
-        startActivity(i);
-    }
-
-    protected void show_solution(int mode, String correct_answer_hanzi, String guess, boolean offer_override) {
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", correct_answer_hanzi);
-        i.putExtra("Mode", mode);
-        i.putExtra("WrongGuess", guess);
-        if (offer_override) {
-            i.putExtra("FixAnswer", true);
-            startActivityForResult(i, 0);
-        }
-        else {
-            startActivity(i);
-        }
-    }
-
-    protected void show_solution(int mode, String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin) {
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", correct_answer_hanzi);
-        i.putExtra("Pinyins", correct_answer_pinyin);
-        i.putExtra("Mode", mode);
-        startActivity(i);
-    }
-
-    protected void show_solution(int mode, String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin, String guess, boolean offer_override) {
-        Intent i = new Intent(this, TestResultActivity.class);
-		i.putExtra("Hanzi", correct_answer_hanzi);
-        i.putExtra("Pinyins", correct_answer_pinyin);
-        i.putExtra("Mode", mode);
-        i.putExtra("WrongGuess", guess);
-        if (offer_override) {
-            i.putExtra("FixAnswer", true);
-            startActivityForResult(i, 0);
-        }
-        else {
-            startActivity(i);
-        }
-    }
-
     // for Chinese guesses
-    protected int handle_submit(String correct_answer, String guess, boolean show_bad_guess) {
+    protected int handle_submit(String guess) {
         Toast toast;
         int res = check_guess(guess);
 
@@ -117,22 +75,17 @@ public abstract class TestActivity extends Activity {
         answered = true;
 
         if (((show_result == 2) || (show_result == 1)) && (res == INCORRECT)) {
-            if ((!guess.equals("")) && (show_bad_guess))
-                show_solution(TestResultActivity.MODE_CHARACTER, correct_answer, guess, true);
-            else {
-                show_solution(TestResultActivity.MODE_CHARACTER, correct_answer);
-                update_scores(res);
-            }
+                show_solution(guess, res);
         }
         else {
             update_scores(res);
 
             if (show_result==1) {
-                show_solution(TestResultActivity.MODE_CHARACTER, correct_answer);
+                show_solution(guess, res);
             }
             else {
                 if (res == INCORRECT) {
-                    toast = Toast.makeText(this, "Wrong answer " + correct_answer, 2);
+                    toast = Toast.makeText(this, "Wrong answer...", 2);
                 }
                 else {
                     toast = Toast.makeText(this, "Well done !", 2);
@@ -144,40 +97,7 @@ public abstract class TestActivity extends Activity {
         return res;
     }
 
-    protected int handle_submit(String correct_answer_hanzi, ArrayList<String> correct_answer_pinyin, String guess, boolean show_bad_guess) {
-        Toast toast;
-        int res = check_guess(guess);
-
-        if (res == OTHER)
-            return res;
-
-        answered=true;
-
-        if (((show_result == 2) || (show_result ==1)) && (res == INCORRECT)) {
-            if ((!guess.equals("")) && (show_bad_guess))
-                show_solution(TestResultActivity.MODE_WORD, correct_answer_hanzi, correct_answer_pinyin, guess, true);
-            else {
-                show_solution(TestResultActivity.MODE_WORD, correct_answer_hanzi, correct_answer_pinyin);
-                update_scores(res);
-            }
-        }
-        else {
-            update_scores(res);
-
-            if (show_result==1) {
-                show_solution(TestResultActivity.MODE_WORD, correct_answer_hanzi, correct_answer_pinyin);
-            }
-            else {
-                if (res == INCORRECT) {
-                    toast = Toast.makeText(this, "Sorry, this is wrong", 2);
-                }
-                else {
-                    toast = Toast.makeText(this, "Well done !", 2);
-                }
-                toast.show();
-                set_next_study();
-            }
-        }
-        return res;
+    public void handle_next(View v) {
+        set_next_study();
     }
 }

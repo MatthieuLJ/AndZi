@@ -1,5 +1,5 @@
 ONGOING (8):
-* Change TestResult into word/character details and be able to navigate through those (and add definitions from ref)
+* Be able to navigate through Characters / Words details
 * Add dictionary
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
@@ -8,8 +8,10 @@ ONGOING (8):
 * Add splash screen
 * Make it pretty
 
-BUGS (1):
+BUGS (3):
 * Display lessons progressively in lesson editing
+* In add vocabulary, do not use extra info with lessons if there is no lesson present
+* Word details for 呢, could not find any translation...?
 
 FUTURE (7):
 * Pick test automatically (and change)
@@ -21,7 +23,8 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (54):
+DONE (55):
+* Change TestResult into word/character details
 * Set focus to edit text in tests
 * Add new lessons with an edit box in the first list row instead of through the menu
 * Change the way to add more to study (should have more higher boxes rather than expiring low boxes)

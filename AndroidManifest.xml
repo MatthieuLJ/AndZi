@@ -42,10 +42,6 @@
         <activity android:name=".GuessContaining"
                   android:configChanges="keyboardHidden|orientation"/>
 
-        <activity android:name=".TestResultActivity">
-            <intent-filter android:name="android.intent.action.VIEW" />
-        </activity>
-
         <activity android:name=".ReviewList" />
 
         <activity android:name=".settings.Settings" />

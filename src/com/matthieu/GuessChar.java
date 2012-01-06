@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -197,7 +199,24 @@ public class GuessChar extends TestActivity implements TextWatcher {
         EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
         String guess = chinese.getText().toString();
 
-        handle_submit(hanzi, guess, true);
+        handle_submit(guess);
+    }
+
+    @Override
+    protected void show_solution(String guess, int good) {
+        setContentView(R.layout.test_result);
+        DetailsCharacter.populate_character_details_view(GuessChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        if (good == INCORRECT) {
+            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+            TextView bad_guess_text = new TextView(GuessChar.this);
+            bad_guess_text.setText("You guessed: "+guess);
+            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            bad_guess_text.setTextColor(0xffdd0000);
+            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            bad_guess.setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
+        }
     }
 
     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

@@ -4,11 +4,15 @@ package com.matthieu;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.util.ArrayList;
@@ -123,7 +127,10 @@ public class GuessContaining extends TestActivity {
                 }
                 for (String c:good_chars) {
                     Log.d(TAG, "Reset time for "+c);
-                    myDB.resetTime(c);
+                    if (myDB.getBoxForChar(c)==0)
+                        myDB.betterBox(c);
+                    else
+                        myDB.resetTime(c);
                 }
                 Log.d(TAG, "Better box for "+hanzi);
                 myDB.betterBox(hanzi);
@@ -144,15 +151,31 @@ public class GuessContaining extends TestActivity {
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(hanzi, guess, false) == OTHER) {
+        if (handle_submit(guess) == OTHER) {
             update_scores(OTHER);
-            if ((show_result == 2) || (show_result ==1)) {
-                show_solution(TestResultActivity.MODE_CHARACTER, hanzi);
+            if ((show_result == 2) || (show_result == 1)) {
+                show_solution(guess, CORRECT);
             }
             else {
                 Toast.makeText(this, "Wrong tone", 2).show();
                 set_next_study();
             }
+        }
+    }
+
+    public void show_solution(String guess, int good) {
+        setContentView(R.layout.test_result);
+        DetailsCharacter.populate_character_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        if (good == INCORRECT) {
+            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+            TextView bad_guess_text = new TextView(GuessContaining.this);
+            bad_guess_text.setText("You guessed: "+guess);
+            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            bad_guess_text.setTextColor(0xffdd0000);
+            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            bad_guess.setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
         }
     }
 }

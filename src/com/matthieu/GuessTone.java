@@ -4,8 +4,12 @@ import android.gesture.*;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -241,8 +245,37 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
         if (cb.isChecked()) tones_checked+="4";
 
-        handle_submit(hanzi, new ArrayList<String>(Arrays.asList(pinyin.get_lame())), tones_checked, false);
+        handle_submit(tones_checked);
     }
 
-
+    @Override
+    protected void show_solution(String guess, int good) {
+        setContentView(R.layout.test_result);
+        DetailsCharacter.populate_character_details_view(GuessTone.this, (ViewGroup) findViewById(R.id.test_results), hanzi, new ArrayList<String>(Arrays.asList(pinyin.get_lame())),false);
+        if (good == INCORRECT) {
+            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+            TextView bad_guess_text = new TextView(GuessTone.this);
+            if (guess.length() == 0) {
+                bad_guess_text.setText("You did not guess anything");
+            }
+            else if (guess.length() == 1) {
+                bad_guess_text.setText("You guessed tone: "+guess);
+            }
+            else {
+                String label = "You guessed tones: ";
+                for(int i=0; i<guess.length(); i++) {
+                    label += guess.substring(i, i+1);
+                    if (i<guess.length()-1)
+                        label+=", ";
+                }
+                bad_guess_text.setText(label);
+            }
+            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            bad_guess_text.setTextColor(0xffdd0000);
+            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            bad_guess.setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
+        }
+    }
 }
