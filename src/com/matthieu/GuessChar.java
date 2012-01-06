@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-
 import java.util.ArrayList;
 
 public class GuessChar extends TestActivity implements TextWatcher {
