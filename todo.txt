@@ -1,21 +1,22 @@
-ONGOING (8):
+ONGOING (10):
 * Be able to navigate through Characters / Words details
 * Add dictionary
 * Check everything can be done without a touch screen (wheel or arrow buttons)
-* Check different screen sizes
+* Pick test automatically (and change)
+* Add graph of progress (http://www.achartengine.org/)
 * Add credits
-* Add help (different screens, IME, ref DB)
-* Add splash screen
 * Make it pretty
+* Add splash screen
+* Add help (different screens, IME, ref DB)
+* Check different screen sizes
 
-BUGS (3):
+BUGS (4):
 * Display lessons progressively in lesson editing
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Word details for 呢, could not find any translation...?
+* Database operations start to get slow in AddVocabulary or EditLesson... post into the handler ?
 
-FUTURE (7):
-* Pick test automatically (and change)
-* Add graph of progress (http://www.achartengine.org/)
+FUTURE (6):
 * Pre-created lessons
 * Hide IME when not needed
 * Suggest vocabulary based on what is already known, frequency list
