@@ -24,7 +24,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (55):
+DONE (56):
+* Sometimes could not enter text in AddVocabulary (because of layout change when virtual keyboard come up)
 * Change TestResult into word/character details
 * Set focus to edit text in tests
 * Add new lessons with an edit box in the first list row instead of through the menu

@@ -14,8 +14,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".EditLessonsActivity" />
-        <activity android:name=".AddVocabularyActivity" />
+        <activity android:name=".EditLessonsActivity"
+                  android:windowSoftInputMode="stateHidden|adjustPan"
+                />
+        <activity android:name=".AddVocabularyActivity"
+                  android:windowSoftInputMode="stateHidden|adjustPan"
+                />
 
         <activity android:name=".DBActivity">
             <intent-filter>
