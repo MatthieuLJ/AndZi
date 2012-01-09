@@ -8,11 +8,10 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-
 public abstract class TestActivity extends Activity {
     protected boolean answered=true;
     protected int show_result=1;
+    protected int last_result;
 
     final static protected int CORRECT=1;
     final static protected int INCORRECT=0;
@@ -67,24 +66,24 @@ public abstract class TestActivity extends Activity {
     // for Chinese guesses
     protected int handle_submit(String guess) {
         Toast toast;
-        int res = check_guess(guess);
+        last_result = check_guess(guess);
 
-        if (res == OTHER)
-            return res;
+        if (last_result == OTHER)
+            return last_result;
 
         answered = true;
 
-        if (((show_result == 2) || (show_result == 1)) && (res == INCORRECT)) {
-                show_solution(guess, res);
+        if (((show_result == 2) || (show_result == 1)) && (last_result == INCORRECT)) {
+            show_solution(guess, last_result);
         }
         else {
-            update_scores(res);
-
             if (show_result==1) {
-                show_solution(guess, res);
+                show_solution(guess, last_result);
             }
             else {
-                if (res == INCORRECT) {
+                update_scores(last_result);
+
+                if (last_result == INCORRECT) {
                     toast = Toast.makeText(this, "Wrong answer...", 2);
                 }
                 else {
@@ -94,10 +93,11 @@ public abstract class TestActivity extends Activity {
                 set_next_study();
             }
         }
-        return res;
+        return last_result;
     }
 
     public void handle_next(View v) {
+        update_scores(last_result);
         set_next_study();
     }
 }

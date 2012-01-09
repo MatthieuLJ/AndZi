@@ -188,6 +188,7 @@ public class GuessChineseWord extends TestActivity {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 myDB.restartStudy(hanzi);
+                Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
         }
@@ -219,7 +220,7 @@ public class GuessChineseWord extends TestActivity {
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
         DetailsWord.populate_word_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false);
-        if (good == INCORRECT) {
+        if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessChineseWord.this);
             bad_guess_text.setText("You guessed: "+guess);
@@ -229,6 +230,15 @@ public class GuessChineseWord extends TestActivity {
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             bad_guess.setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
         }
+        else {
+            update_scores(good);
+        }
+    }
+
+    public void handle_good(View v) {
+        update_scores(CORRECT);
+        set_next_study();
     }
 }

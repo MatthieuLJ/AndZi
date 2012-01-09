@@ -168,6 +168,8 @@ public class GuessChar extends TestActivity implements TextWatcher {
     }
 
     protected void update_scores(int good) {
+        Log.d(TAG, "updating scores "+good);
+        
         if (good==CORRECT) {
             myDB.betterBox(hanzi);
         }

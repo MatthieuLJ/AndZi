@@ -114,6 +114,8 @@ public class GuessContaining extends TestActivity {
 
     @Override
     protected void update_scores(int good) {
+        Log.d(TAG, "updating scores "+good);
+        
         switch(good) {
             case CORRECT:
                 ArrayList<String> good_chars=new ArrayList<String>();

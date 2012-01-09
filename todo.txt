@@ -24,7 +24,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (56):
+DONE (57):
+* Score is not being updated correctly, and offer to override the result in some cases
 * Sometimes could not enter text in AddVocabulary (because of layout change when virtual keyboard come up)
 * Change TestResult into word/character details
 * Set focus to edit text in tests
