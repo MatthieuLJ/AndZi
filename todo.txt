@@ -1,20 +1,22 @@
-ONGOING (10):
+ONGOING (11):
 * Be able to navigate through Characters / Words details
 * Add dictionary
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Pick test automatically (and change)
 * Add graph of progress (http://www.achartengine.org/)
 * Add credits
+* Test performance with huge database
 * Make it pretty
 * Add splash screen
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (4):
+BUGS (5):
+* Layout in test result is not right (View in the middle is taking too much space when solution has more info)
 * Display lessons progressively in lesson editing
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Word details for 呢, could not find any translation...?
-* Database operations start to get slow in AddVocabulary or EditLesson... post into the handler ?
+* Characters in box 0 always come first, should be based on modification time
 
 FUTURE (6):
 * Pre-created lessons
@@ -24,7 +26,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (57):
+DONE (58):
+* Database operations start to get slow in AddVocabulary or EditLesson... post into the handler ?
 * Score is not being updated correctly, and offer to override the result in some cases
 * Sometimes could not enter text in AddVocabulary (because of layout change when virtual keyboard come up)
 * Change TestResult into word/character details
