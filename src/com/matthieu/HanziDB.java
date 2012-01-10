@@ -519,14 +519,6 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    public static ArrayList<String> combineListOfTranslations(ArrayList<Vocabulary> vocs) {
-        ArrayList<String> res=new ArrayList<String>();
-        for (Vocabulary voc : vocs) {
-            res.addAll(voc.english);
-        }
-        return res;
-    }
-
     protected ArrayList<Integer> getWordIdWithPinyin(String hanzi) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT DISTINCT cword.cword_id AS cword_id " +
