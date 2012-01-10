@@ -1,6 +1,7 @@
-ONGOING (11):
+ONGOING (12):
 * Be able to navigate through Characters / Words details
 * Add dictionary
+* Can change what to see in Review List
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Pick test automatically (and change)
 * Add graph of progress (http://www.achartengine.org/)
@@ -11,12 +12,11 @@ ONGOING (11):
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (5):
+BUGS (4):
 * Layout in test result is not right (View in the middle is taking too much space when solution has more info)
 * Display lessons progressively in lesson editing
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
-* Word details for 呢, could not find any translation...?
-* Characters in box 0 always come first, should be based on modification time
+* Cannot really access Review list if there is nothing to study
 
 FUTURE (6):
 * Pre-created lessons

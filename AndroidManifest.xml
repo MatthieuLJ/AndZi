@@ -47,6 +47,7 @@
                   android:configChanges="keyboardHidden|orientation"/>
 
         <activity android:name=".ReviewList" />
+        <activity android:name=".DetailsCharacter"/>
 
         <activity android:name=".settings.Settings" />
         <activity android:name=".settings.ExportDB">
