@@ -216,21 +216,21 @@ public class ReviewList extends ListActivity {
             return data_to_study.get(to_study.get(i));
         }
 
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public View getView(int i, View convertView, ViewGroup viewGroup) {
             LayoutInflater li = getLayoutInflater();
-            if (view == null) {
-                view = li.inflate(R.layout.review_list_item, viewGroup, false);
+            if (convertView == null) {
+                convertView = li.inflate(R.layout.review_list_item, viewGroup, false);
             }
-            TextView chinese = (TextView) view.findViewById(R.id.review_item_character);
+            TextView chinese = (TextView) convertView.findViewById(R.id.review_item_character);
             chinese.setText(to_study.get(i).character);
-            TextView pinyin = (TextView) view.findViewById(R.id.review_item_pinyin);
+            TextView pinyin = (TextView) convertView.findViewById(R.id.review_item_pinyin);
             if (show_pinyin_color)
                 pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(to_study.get(i).pinyin)));
             else
                 pinyin.setText(PinyinParser.convert_to_pretty_version(to_study.get(i).pinyin));
 
-            Button arrow = (Button) view.findViewById(R.id.review_expand_button);
-            ExtendingLinearLayout words = (ExtendingLinearLayout) view.findViewById(R.id.review_item_words);
+            Button arrow = (Button) convertView.findViewById(R.id.review_expand_button);
+            ExtendingLinearLayout words = (ExtendingLinearLayout) convertView.findViewById(R.id.review_item_words);
             if (to_study.get(i).expanded) {
                 words.expand_immediate();
                 arrow.setBackgroundResource(R.drawable.expand_arrow_down);
@@ -244,7 +244,7 @@ public class ReviewList extends ListActivity {
             arrow.setTag(R.id.review_view_to_expand, words);
             arrow.setTag(R.id.review_item, to_study.get(i));
 
-            TableLayout word_table = (TableLayout) view.findViewById(R.id.review_item_word_table);
+            TableLayout word_table = (TableLayout) convertView.findViewById(R.id.review_item_word_table);
             word_table.removeAllViews();
             for (Vocabulary voc : data_to_study.get(to_study.get(i))) {
                 TableRow row = (TableRow) li.inflate(R.layout.review_item_word_row, word_table, false);
@@ -261,7 +261,7 @@ public class ReviewList extends ListActivity {
                 word_table.addView(row);
             }
             
-            return view;
+            return convertView;
         }
     }
 
