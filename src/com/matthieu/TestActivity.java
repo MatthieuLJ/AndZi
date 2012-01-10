@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 public abstract class TestActivity extends Activity {
@@ -20,6 +21,9 @@ public abstract class TestActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
         if (answered) {
             set_next_study();
             answered=false;
