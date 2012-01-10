@@ -1,13 +1,11 @@
 package com.matthieu;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 public class PinyinParser {
     private final static String TAG = "PinyinParser";
-
-    public PinyinParser()
-    {
-    }
 
     static public ArrayList<String> parse_string(String pinyin_string)
     {
@@ -15,7 +13,6 @@ public class PinyinParser {
         ArrayList<String> result = new ArrayList<String>();
         ArrayList<String> temp;
         int i=0;
-
 
         // Try to find strophe to split the string
         split_index = pinyin_string.indexOf("'");
@@ -232,5 +229,34 @@ public class PinyinParser {
             result += parsed.get(i).get_lame();
         }
         return result;
+    }
+
+    public static String convert_chinese_to_html_version(String input, ArrayList<Pinyin> pinyins) {
+        String res="";
+        int index=0;
+        for (int i=0; i<input.length();) {
+            String hanzi = input.substring(i, i+Character.charCount(input.codePointAt(i)));
+            if (pinyins.size() < index+1)
+                return "";
+            switch(pinyins.get(index).get_tone()) {
+                case 1:
+                    res+="<font color=\"red\">"+hanzi+"</font>";
+                    break;
+                case 2:
+                    res+="<font color=\"#ff8000\">"+hanzi+"</font>";
+                    break;
+                case 3:
+                    res+="<font color=\"green\">"+hanzi+"</font>";
+                    break;
+                case 4:
+                    res+="<font color=\"blue\">"+hanzi+"</font>";
+                    break;
+                case 5:
+                    res+=hanzi;
+                    break;
+            }
+            i+=Character.charCount(input.codePointAt(i));
+        }
+        return res;
     }
 }
