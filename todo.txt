@@ -1,9 +1,9 @@
 ONGOING (11):
 * Add dictionary
-* Can change what to see in Review List
-* Check everything can be done without a touch screen (wheel or arrow buttons)
 * Pick test automatically (and change)
 * Add graph of progress (http://www.achartengine.org/)
+* Can change what to see in Review List
+* Check everything can be done without a touch screen (wheel or arrow buttons)
 * Add credits
 * Test performance with huge database
 * Make it pretty
@@ -11,7 +11,10 @@ ONGOING (11):
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (3):
+BUGS (6):
+* Find a way to hilight the character sequence in Details list
+* Use lesson filter in Details (if not using ref)
+* Let it go back once in Details activity
 * Display lessons progressively in lesson editing
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Cannot really access Review list if there is nothing to study
