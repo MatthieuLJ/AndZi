@@ -168,7 +168,7 @@ public class GuessContaining extends TestActivity {
     public void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
         DetailsCharacter.populate_character_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
-        if (good == INCORRECT) {
+        if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessContaining.this);
             bad_guess_text.setText("You guessed: "+guess);
@@ -176,8 +176,7 @@ public class GuessContaining extends TestActivity {
             bad_guess_text.setTextColor(0xffdd0000);
             bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            bad_guess.setVisibility(View.VISIBLE);
-            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
         }
     }
 }

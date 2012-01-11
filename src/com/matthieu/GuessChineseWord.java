@@ -228,8 +228,7 @@ public class GuessChineseWord extends TestActivity {
             bad_guess_text.setTextColor(0xffdd0000);
             bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            bad_guess.setVisibility(View.VISIBLE);
-            (findViewById(R.id.test_result_separator)).setVisibility(View.VISIBLE);
+            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
         }
         else {
