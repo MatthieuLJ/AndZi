@@ -6,14 +6,18 @@
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:background="#dddddd">
-    <TextView
-            android:id="@+id/details_title"
+    <HorizontalScrollView
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:gravity="center_horizontal"
-            android:textSize="32sp"
-            android:textColor="#000000"
-            />
+            android:fillViewport="true">
+        <LinearLayout
+                android:id="@+id/details_title"
+                android:orientation="horizontal"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:gravity="center_horizontal|top"
+                />
+    </HorizontalScrollView>
     <TextView
             android:id="@+id/details_info"
             android:layout_height="wrap_content"

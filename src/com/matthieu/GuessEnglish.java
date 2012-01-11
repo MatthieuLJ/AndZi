@@ -184,7 +184,7 @@ public class GuessEnglish extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        DetailsWord.populate_word_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false);
+        Details.populate_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessEnglish.this);

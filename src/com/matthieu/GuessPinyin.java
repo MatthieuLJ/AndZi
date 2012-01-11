@@ -202,7 +202,7 @@ public class GuessPinyin extends TestActivity {
 
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        DetailsCharacter.populate_character_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, new ArrayList<String>(Arrays.asList(pinyin)),false);
+        Details.populate_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessPinyin.this);

@@ -1,5 +1,4 @@
-ONGOING (12):
-* Be able to navigate through Characters / Words details
+ONGOING (11):
 * Add dictionary
 * Can change what to see in Review List
 * Check everything can be done without a touch screen (wheel or arrow buttons)
@@ -25,7 +24,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (59):
+DONE (60):
+* Be able to navigate through Characters / Words details
 * Layout in test result is not right (View in the middle is taking too much space when solution has more info)
 * Database operations start to get slow in AddVocabulary or EditLesson... post into the handler ?
 * Score is not being updated correctly, and offer to override the result in some cases

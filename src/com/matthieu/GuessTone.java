@@ -251,7 +251,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        DetailsCharacter.populate_character_details_view(GuessTone.this, (ViewGroup) findViewById(R.id.test_results), hanzi, new ArrayList<String>(Arrays.asList(pinyin.get_lame())),false);
+        Details.populate_details_view(GuessTone.this, (ViewGroup) findViewById(R.id.test_results), hanzi,false);
         if (good == INCORRECT) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessTone.this);
