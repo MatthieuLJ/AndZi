@@ -23,4 +23,7 @@ public class Vocabulary {
         pinyin = pi;
         english = en;
     }
+    public boolean same_word(Vocabulary other) {
+        return (other.chinese.equals(chinese)) && (other.pinyin.equals(pinyin));
+    }
 }

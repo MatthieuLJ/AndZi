@@ -426,27 +426,32 @@ public class HanziDB extends SQLiteOpenHelper {
         if (itemB == null)
             return itemA;
 
-        HashMap<String, HashMap<String,Integer>> itemA_map = new HashMap<String, HashMap<String,Integer>>();
+        boolean a_smaller = itemA.size() < itemB.size();
+        ArrayList<Vocabulary> smaller = a_smaller ? itemA : itemB;
+        ArrayList<Vocabulary> larger =  a_smaller ? itemB : itemA;
 
-        for (int i=0; i<itemA.size(); i++) {
-            Vocabulary vocA=itemA.get(i);
-            if (!itemA_map.containsKey(vocA.chinese)) {
-                itemA_map.put(vocA.chinese, new HashMap<String, Integer>());
-                itemA_map.get(vocA.chinese).put(vocA.pinyin, i);
+        ArrayList<Vocabulary> res=new ArrayList<Vocabulary>(larger);
+        for (int j=a_smaller?smaller.size()-1:0;a_smaller?(j>=0):(j<smaller.size());j=a_smaller?(j-1):(j+1)) {
+            Vocabulary voc = smaller.get(j);
+            boolean found = false;
+            for (int i=0; i<res.size(); i++) {
+                if (res.get(i).same_word(voc)) {
+                    for (String en:voc.english)
+                        if (!res.get(i).english.contains(en))
+                            res.get(i).english.add(en);
+                    found=true;
+                    if (a_smaller) {
+                        Vocabulary tmp=res.remove(i);
+                        res.add(0, tmp);
+                    }
+                    break;
+                }
             }
-        }
-
-        ArrayList<Vocabulary> res=new ArrayList<Vocabulary>(itemA);
-        for (Vocabulary voc:itemB) {
-            if ((itemA_map.containsKey(voc.chinese)) && (itemA_map.get(voc.chinese).containsKey(voc.pinyin))) {
-                int index = itemA_map.get(voc.chinese).get(voc.pinyin);
-                ArrayList<String> orig_trans = itemA.get(index).english;
-                for (String en:voc.english)
-                    if (!orig_trans.contains(en))
-                        itemA.get(index).english.add(en);
-            }
-            else {
-                res.add(voc);
+            if (!found) {
+                if (a_smaller)
+                    res.add(0, voc);
+                else
+                    res.add(voc);
             }
         }
 

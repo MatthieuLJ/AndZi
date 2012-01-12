@@ -80,7 +80,6 @@ public class Details extends Activity {
             final boolean local_db_first = sp.getBoolean("local_db_first", true);
             loading=1;
 
-            //noinspection unchecked
             new AsyncTask<Void, Void, Void>() {
                 ArrayList<Vocabulary> voc;
 
@@ -93,18 +92,33 @@ public class Details extends Activity {
                         i+=Character.charCount(hanzi.codePointAt(i));
                     }
 
-                    voc=sort_vocabulary_list(myDB.getWordsWithSequence(elements), hanzi);
+                    voc=myDB.getWordsWithSequence(elements,1);
 
-                    publishProgress();
+                    publishProgress((Void[])null);
 
-                    if ((use_ref) && (refDB != null)) {
-                        voc = HanziDB.merge_vocabulary(voc, sort_vocabulary_list(refDB.getWordsWithSequence(elements), hanzi));
+                    if (local_db_first) {
+                        voc.addAll(myDB.getWordsWithSequence(elements,0));
+
+                        publishProgress((Void[])null);
+
+                        if ((use_ref) && (refDB != null)) {
+                            voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,1));
+                        }
+
+                        publishProgress((Void[])null);
+                    } else {
+                        if ((use_ref) && (refDB != null)) {
+                            voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,1));
+                        }
+
+                        publishProgress((Void[])null);
+                        voc.addAll(myDB.getWordsWithSequence(elements,0));
+
+                        publishProgress((Void[])null);
                     }
 
-                    publishProgress();
-
-                    if (! local_db_first) {
-                        voc=sort_vocabulary_list(voc, hanzi);
+                    if ((use_ref) && (refDB != null)) {
+                        voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,0));
                     }
                     return null;
                 }
@@ -122,26 +136,7 @@ public class Details extends Activity {
                     loading=0;
                     DetailsWordAdapter.this.notifyDataSetChanged();
                 }
-            }.execute();
-        }
-
-        private ArrayList<Vocabulary> sort_vocabulary_list(ArrayList<Vocabulary> to_sort, String hanzi) {
-            int got_match=0;
-
-            for (int index=0; index<to_sort.size();index++) {
-                if ((index > 0) && (to_sort.get(index).chinese.length()==hanzi.length())) {
-                    Vocabulary tmp = to_sort.remove(index);
-                    to_sort.add(0, tmp);
-                    got_match++;
-                    continue;
-                }
-                if ((index > got_match) && (to_sort.get(index).chinese.startsWith(hanzi))) {
-                    Vocabulary tmp = to_sort.remove(index);
-                    to_sort.add(got_match, tmp);
-                    continue;
-                }
-            }
-            return to_sort;
+            }.execute((Void []) null);
         }
 
         public int getCount() {
