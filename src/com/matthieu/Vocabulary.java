@@ -11,7 +11,7 @@ public class Vocabulary {
     public Vocabulary(String ch, String pi) {
         chinese = ch;
         pinyin = pi;
-        english = null;
+        english = new ArrayList<String>();
     }
     public Vocabulary(String ch, String pi, String en) {
         chinese = ch;

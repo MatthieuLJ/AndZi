@@ -53,11 +53,11 @@ public class GuessChineseWord extends TestActivity {
 
                 translations = solution.english;
                 if (refDB != null) {
-                    if (refDB.getTranslations(candidate, solution.pinyin).size() == 0) {
+                    if (refDB.getTranslations(candidate, solution.pinyin) == null) {
                         more_translations = new ArrayList<String>();
                     }
                     else {
-                        more_translations = refDB.getTranslations(candidate, solution.pinyin).get(0).english;
+                        more_translations = refDB.getTranslations(candidate, solution.pinyin).english;
                     }
                 }
                 else {

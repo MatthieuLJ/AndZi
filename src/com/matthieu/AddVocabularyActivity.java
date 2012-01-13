@@ -426,7 +426,7 @@ public class AddVocabularyActivity extends Activity
         public void run() {
             String current_pinyin_word;
 
-            ArrayList<Vocabulary> tr;
+            Vocabulary tr;
 
             current_pinyin_word=get_current_pinyin();
             if (current_pinyin_word.equals(""))
@@ -435,19 +435,19 @@ public class AddVocabularyActivity extends Activity
             // figure out the list of translations based on the current pinyin chosen
 
             tr = myDB.getTranslations(current_chinese_word, current_pinyin_word);
-            for (Vocabulary t : tr) {
-                for (String e : t.english) {
-                    tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(t.chinese, t.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
+
+            if (tr != null)
+                for (String e : tr.english) {
+                    tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
                 }
-            }
 
             if (refDB != null) {
                 tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
-                for (Vocabulary t : tr) {
-                    for (String e : t.english) {
-                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(t.chinese, t.pinyin, e), VocabularyItem.FROM_REF_DB));
+
+                if (tr != null)
+                    for (String e : tr.english) {
+                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
                     }
-                }
             }
 
             ArrayList<String> bare_translations = new ArrayList<String>();

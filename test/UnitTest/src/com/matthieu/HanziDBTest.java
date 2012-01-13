@@ -705,5 +705,11 @@ public class HanziDBTest extends AndroidTestCase {
         }
         return res;
     }
-    
+    private static ArrayList<String> combineListOfTranslations(Vocabulary voc) {
+        if (voc == null)
+            return new ArrayList<String>();
+        else
+            return voc.english;
+    }
+
 }

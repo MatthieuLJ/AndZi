@@ -12,11 +12,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
-import java.lang.reflect.Array;
-import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -472,17 +469,18 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         ArrayList<Integer> cword_ids = getWordId(chinese);
         for (int id : cword_ids) {
-            res.addAll(getTranslations(id));
+            Vocabulary to_add = getTranslations(id);
+            if (to_add != null)
+                res.add(to_add);
         }
         return res;
     }
 
-    public ArrayList<Vocabulary> getTranslations(String chinese, String pinyin) {
-        ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        ArrayList<Integer> cword_ids = getWordId(chinese, pinyin);
-        for (int id : cword_ids) {
-            res.addAll(getTranslations(id));
-        }
+    public Vocabulary getTranslations(String chinese, String pinyin) {
+        Vocabulary res = null;
+        int cword_id = getWordId(chinese, pinyin);
+        if (cword_id != -1)
+            res = getTranslations(cword_id);
         return res;
     }
 
@@ -510,7 +508,9 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
         ArrayList<Integer> cword_ids = getWordIdWithPinyin(hanzi);
         for (int id : cword_ids) {
-            res.addAll(getTranslations(id));
+            Vocabulary to_add = getTranslations(id);
+            if (to_add != null)
+                res.add(to_add);
         }
         return res;
     }
@@ -519,7 +519,9 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
         ArrayList<Integer> cword_ids = getWordIdWithPinyin(hanzi, pinyin);
         for (int id : cword_ids) {
-            res.addAll(getTranslations(id));
+            Vocabulary to_add = getTranslations(id);
+            if (to_add != null)
+                res.add(to_add);
         }
         return res;
     }
@@ -578,21 +580,14 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    protected ArrayList<Integer> getWordId(String chinese, String pinyin) {
-        ArrayList<Integer> res = new ArrayList<Integer>();
+    protected int getWordId(String chinese, String pinyin) {
+        int res=-1;
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=? AND pinyin=?", new String[] {chinese, pinyin});
         if (cur.moveToFirst()) {
-            do{
-                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id"))
-                //        + " for word " + chinese + "/" + pinyin);
-                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
-            }while(cur.moveToNext());
-        }
-        else {
-            //Log.d(TAG, "no record found for word "+chinese+"/"+pinyin);
+            res=cur.getInt(cur.getColumnIndex("cword_id"));
         }
 
-        if (res.size() > 1) {
+        if (cur.moveToNext()) {
             Log.w(TAG, "Warning, getWordId("+chinese+","+pinyin+") returns more than one id");
         }
 
@@ -639,9 +634,8 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    protected ArrayList<Vocabulary> getTranslations(int cword_id) {
-        ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        Vocabulary tmp=null;
+    protected Vocabulary getTranslations(int cword_id) {
+        Vocabulary res=null;
 
         Cursor cur = db.rawQuery("SELECT * " +
                 "FROM eword " +
@@ -649,20 +643,14 @@ public class HanziDB extends SQLiteOpenHelper {
                 "WHERE cword.cword_id=? ORDER BY cword.cword_id ASC", new String[] {Integer.toString(cword_id)});
 
         if (cur.moveToFirst()) {
-            do{
-                String chinese = cur.getString(cur.getColumnIndex("chinese"));
-                String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
-                if (tmp == null)
-                    tmp = new Vocabulary(
-                            chinese, pinyin,
-                            cur.getString(cur.getColumnIndex("translation")));
-                else {
-                    tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
-                }
-            }while(cur.moveToNext());
-            res.add(tmp);
-        }
+            String chinese = cur.getString(cur.getColumnIndex("chinese"));
+            String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
 
+            res = new Vocabulary(chinese, pinyin);
+            do{
+                res.english.add(cur.getString(cur.getColumnIndex("translation")));
+            }while(cur.moveToNext());
+        }
         cur.close();
         return res;
     }
@@ -735,13 +723,11 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
         ArrayList<Integer> cword_ids = getWordIdWithSequence(elements, start);
         for (int id : cword_ids) {
-            res.addAll(getTranslations(id));
+            Vocabulary to_add = getTranslations(id);
+            if (to_add != null)
+                res.add(to_add);
         }
         return res;
-    }
-
-    protected ArrayList<Integer> getWordIdWithSequence(ArrayList<StringElement> elements) {
-        return getWordIdWithSequence(elements, -1);
     }
 
     protected ArrayList<Integer> getWordIdWithSequence(ArrayList<StringElement> elements, int start) {
@@ -969,7 +955,6 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int addCword(ArrayList<String> chinese, ArrayList<String> pinyin) {
-        ArrayList<Integer> cword_id_lst;
         int cword_id, char_pinyin_id;
         int i;
         String chinese_str = "", pinyin_str = "";
@@ -986,10 +971,9 @@ public class HanziDB extends SQLiteOpenHelper {
         db.insert("cword", null, cv);
         //db.insertWithOnConflict("cword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
 
-        cword_id_lst = getWordId(chinese_str, pinyin_str);
-        cword_id = cword_id_lst.get(0);
-        if (cword_id_lst.size() > 1) {
-            Log.w(TAG, "Add a cword id, but got " + cword_id_lst.size() + " items");
+        cword_id = getWordId(chinese_str, pinyin_str);
+        if (cword_id == -1) {
+            Log.w(TAG, "Add a cword id, but got no ID");
         }
 
         for (i = 0; i<chinese.size(); i++) {
@@ -1029,7 +1013,6 @@ public class HanziDB extends SQLiteOpenHelper {
     protected int addVocabularyReturnId(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
         int i;
         String chinese_str = "", pinyin_str = "";
-        ArrayList<Integer> cword_id_lst;
         Integer cword_id;
 
         for (i = 0; i < chinese.size(); i++)
@@ -1038,11 +1021,8 @@ public class HanziDB extends SQLiteOpenHelper {
             pinyin_str += pinyin.get(i);
         }
 
-        cword_id_lst = getWordId(chinese_str, pinyin_str);
-        if (cword_id_lst.size() > 0) {
-            cword_id = cword_id_lst.get(0);
-        }
-        else {
+        cword_id = getWordId(chinese_str, pinyin_str);
+        if (cword_id == -1) {
             cword_id = addCword(chinese, pinyin);
         }
 
@@ -1066,7 +1046,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     public void delVocabulary(ArrayList<String> chinese, ArrayList<String> pinyin) {
         int i;
-        ArrayList<Integer> cword_id;
+        int cword_id;
         String chinese_str="", pinyin_str="";
 
         if (pinyin.size() != chinese.size()) {
@@ -1081,11 +1061,11 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         cword_id = getWordId(chinese_str,pinyin_str);
 
-        for (int cid : cword_id) {
-            ArrayList<Integer> eng_ids = getEWordId(cid);
+        if (cword_id != -1) {
+            ArrayList<Integer> eng_ids = getEWordId(cword_id);
             for (int eng_id:eng_ids)
                 delEword(eng_id);
-            checkIsolatedCword(cid);
+            checkIsolatedCword(cword_id);
         }
     }
 
@@ -1203,7 +1183,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void checkIsolatedCword(int cword_id) {
-        if (getTranslations(cword_id).isEmpty()) {
+        if (getTranslations(cword_id) == null) {
             delCword(cword_id);
         }
     }
@@ -1412,7 +1392,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         };
 
-        res.execute();
+        res.execute((Void[])null);
 
         return res;
     }
@@ -1721,14 +1701,15 @@ public class HanziDB extends SQLiteOpenHelper {
     public void assignWordLesson(String lesson, Vocabulary voc) {
         Vocabulary new_voc;
         if (voc.english == null) {
-            new_voc = getTranslations(voc.chinese, voc.pinyin).get(0);
+            new_voc = getTranslations(voc.chinese, voc.pinyin);
         }
         else {
             new_voc = voc;
         }
-        for (String english : new_voc.english) {
-            assignWordLesson(lesson, english, voc.chinese, voc.pinyin);
-        }
+        if (new_voc != null)
+            for (String english : new_voc.english) {
+                assignWordLesson(lesson, english, voc.chinese, voc.pinyin);
+            }
     }
 
     public void removeWordLesson(String lesson, String english, String chinese, String pinyin) {
@@ -1761,21 +1742,22 @@ public class HanziDB extends SQLiteOpenHelper {
     public void removeWordLesson(String lesson, Vocabulary voc) {
         Vocabulary new_voc;
         if (voc.english == null) {
-            new_voc = getTranslations(voc.chinese, voc.pinyin).get(0);
+            new_voc = getTranslations(voc.chinese, voc.pinyin);
         }
         else {
             new_voc = voc;
         }
-        for (String english : new_voc.english) {
-            removeWordLesson(lesson, english, voc.chinese, voc.pinyin);
-        }
+        if (new_voc != null)
+            for (String english : new_voc.english) {
+                removeWordLesson(lesson, english, voc.chinese, voc.pinyin);
+            }
     }
 
     public ArrayList<String> getLessonForWord(String chinese, String pinyin, String english) {
         ArrayList<String> res=new ArrayList<String>();
-        ArrayList<Integer> cword_id = getWordId(chinese, pinyin);
+        int cword_id = getWordId(chinese, pinyin);
 
-        if (cword_id.size() == 0)
+        if (cword_id == -1)
             return res;
 
         Cursor cur = db.rawQuery("SELECT l.name AS name " +
@@ -1891,7 +1873,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<String> getLessonsToFilter() {
-        return (ArrayList<String>) lesson_filter.clone();
+        return lesson_filter;
     }
 
     ////////////////////////////////////////
@@ -1902,7 +1884,7 @@ public class HanziDB extends SQLiteOpenHelper {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
             ArrayList<Integer> cword_ids = getFilteredWordId(chinese);
             for (int id : cword_ids) {
-                res.addAll(getFilteredTranslations(id));
+                res.add(getFilteredTranslations(id));
             }
             return res;
         }
@@ -1910,14 +1892,11 @@ public class HanziDB extends SQLiteOpenHelper {
             return getTranslations(chinese);
     }
 
-    public ArrayList<Vocabulary> getFilteredTranslations(String chinese, String pinyin) {
+    public Vocabulary getFilteredTranslations(String chinese, String pinyin) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            ArrayList<Integer> cword_ids = getFilteredWordId(chinese, pinyin);
-            for (int id : cword_ids) {
-                res.addAll(getFilteredTranslations(id));
-            }
-            return res;
+            int cword_id = getFilteredWordId(chinese, pinyin);
+
+            return getFilteredTranslations(cword_id);
         }
         else
             return getTranslations(chinese, pinyin);
@@ -1968,29 +1947,22 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    protected ArrayList<Integer> getFilteredWordId(String chinese, String pinyin) {
-        ArrayList<Integer> res = new ArrayList<Integer>();
+    protected int getFilteredWordId(String chinese, String pinyin) {
+        int res = -1;
         Cursor cur = db.rawQuery("SELECT * " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                 "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                 "JOIN cword ON cword.cword_id=eword.cword_id " +
                 "WHERE cword.chinese=? AND cword.pinyin=?", new String[] {chinese, pinyin});
         if (cur.moveToFirst()) {
-            do{
-                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
-                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
-            }while(cur.moveToNext());
-        }
-        else {
-            //Log.d(TAG, "no record found for word "+chinese+" in filtered db");
+            res = cur.getInt(cur.getColumnIndex("cword_id"));
         }
         cur.close();
         return res;
     }
 
-    protected ArrayList<Vocabulary> getFilteredTranslations(int cword_id) {
-        ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        Vocabulary tmp=null;
+    protected Vocabulary getFilteredTranslations(int cword_id) {
+        Vocabulary res = null;
 
         Cursor cur = db.rawQuery("SELECT * " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
@@ -1999,24 +1971,12 @@ public class HanziDB extends SQLiteOpenHelper {
                 "WHERE cword.cword_id=? ORDER BY cword.cword_id ASC", new String[] {Integer.toString(cword_id)});
 
         if (cur.moveToFirst()) {
+            String chinese = cur.getString(cur.getColumnIndex("chinese"));
+            String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
+            res = new Vocabulary(chinese, pinyin,cur.getString(cur.getColumnIndex("translation")));
             do{
-                String chinese = cur.getString(cur.getColumnIndex("chinese"));
-                String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
-                if (tmp == null)
-                    tmp = new Vocabulary(
-                            chinese, pinyin,
-                            cur.getString(cur.getColumnIndex("translation")));
-                else {
-                    if (tmp.chinese.equals(chinese) && tmp.pinyin.equals(pinyin))
-                        tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
-                    else {
-                        res.add(tmp);
-                        tmp = new Vocabulary(chinese, pinyin,
-                                cur.getString(cur.getColumnIndex("translation")));
-                    }
-                }
+                res.english.add(cur.getString(cur.getColumnIndex("translation")));
             }while(cur.moveToNext());
-            res.add(tmp);
         }
 
         cur.close();
