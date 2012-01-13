@@ -188,11 +188,11 @@ public class GuessPinyin extends TestActivity {
         String guess = word_guess.getText().toString();
 
         if (handle_submit(guess) == OTHER) {
-            update_scores(OTHER);
             if ((show_result == 2) || (show_result ==1)) {
                 show_solution(guess, INCORRECT);
             }
             else {
+                update_scores(OTHER);
                 toast = Toast.makeText(this, "Wrong tone", 2);
                 toast.show();
                 set_next_study();

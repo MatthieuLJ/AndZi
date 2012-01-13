@@ -154,11 +154,11 @@ public class GuessContaining extends TestActivity {
         String guess = word_guess.getText().toString();
 
         if (handle_submit(guess) == OTHER) {
-            update_scores(OTHER);
             if ((show_result == 2) || (show_result == 1)) {
                 show_solution(guess, CORRECT);
             }
             else {
+                update_scores(OTHER);
                 Toast.makeText(this, "Wrong tone", 2).show();
                 set_next_study();
             }

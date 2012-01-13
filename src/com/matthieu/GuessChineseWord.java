@@ -231,9 +231,6 @@ public class GuessChineseWord extends TestActivity {
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
         }
-        else {
-            update_scores(good);
-        }
     }
 
     public void handle_good(View v) {
