@@ -22,8 +22,9 @@ public class Pinyin {
         int i,j;
         String temp;
 
-        if (!map_initialized)
-            create_pinyin_map();
+
+        if (!verify_pinyin(entry))
+            return;
 
         for (i = 0; i < 6; i++) {
             if (entry.endsWith(""+i)) {
@@ -86,15 +87,42 @@ public class Pinyin {
             }
         }
 
-
         for (i = 0; i < pinyin_list_notone.length; i++) {
             if (entry.equals(pinyin_list_notone[i])) {
                 this.lame=entry+"5";
                 this.radical=entry;
-                this.tone=5;
+                this.tone=0;
                 this.print=entry;
                 this.html_color_print=entry;
                 return;
+            }
+        }
+    }
+
+    public Pinyin(String entry, boolean incomplete) {
+        if (entry.length()==0)
+            return;
+
+        if (!map_initialized)
+            create_pinyin_map();
+
+        String initial = entry.substring(0,1);
+        if (!pinyin_by_first_letter.containsKey(initial))
+            return;
+
+        for (String candidate:pinyin_by_first_letter.get(initial)) {
+            if (candidate.startsWith(entry)) {
+                for (String v:vowels_to_tone.keySet()) {
+                    if (entry.contains(v)) {
+                        this.tone = vowels_to_tone.get(v);
+                        this.lame = entry.replaceAll(v, lame_vowels.get(v));
+                        return;
+                    }
+                }
+                this.tone=0;
+                this.lame=entry;
+                return;
+
             }
         }
     }
@@ -219,11 +247,11 @@ public class Pinyin {
 
         for (i = 0; i < 6; i++) {
             if (entry.endsWith(""+i)) {
-                temp=entry.substring(0, entry.length()-1);
+                temp=entry.substring(0, entry.length()-1).toLowerCase();
             }
         }
         if (temp.equals(""))
-            temp=entry;
+            temp=entry.toLowerCase();
 
         if (!pinyin_by_first_letter.containsKey(temp.substring(0,1)))
             return false;
@@ -235,7 +263,7 @@ public class Pinyin {
     }
 
     public int get_tone () {
-        return tone;
+        return tone==0?5:tone;
     }
 
     public String get_lame() {
@@ -256,6 +284,10 @@ public class Pinyin {
 
     public boolean equals(Pinyin pinyin) {
         return (pinyin.get_lame().equals(get_lame())) && (pinyin.get_tone() == get_tone());
+    }
+
+    public boolean tone_is_given() {
+        return !(tone==0);
     }
 
     private static final String[] pinyin_list_notone = {
