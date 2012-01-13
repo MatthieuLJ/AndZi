@@ -11,13 +11,14 @@ ONGOING (11):
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (6):
+BUGS (7):
 * Find a way to hilight the character sequence in Details list
 * Use lesson filter in Details (if not using ref)
 * Let it go back once in Details activity
 * Display lessons progressively in lesson editing
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Cannot really access Review list if there is nothing to study
+* Make the layout of tests consistent (especially with position of the edit box)
 
 FUTURE (6):
 * Pre-created lessons

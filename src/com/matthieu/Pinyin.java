@@ -1,7 +1,6 @@
 package com.matthieu;
 
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +20,6 @@ public class Pinyin {
     public  Pinyin(String entry) {
         int i,j;
         String temp;
-
 
         if (!verify_pinyin(entry))
             return;
@@ -234,7 +232,6 @@ public class Pinyin {
         map_initialized=true;
     }
 
-
     public static boolean verify_pinyin(String entry) {
         int i;
         String temp="";
@@ -256,10 +253,8 @@ public class Pinyin {
         if (!pinyin_by_first_letter.containsKey(temp.substring(0,1)))
             return false;
 
-        if (pinyin_by_first_letter.get(temp.substring(0,1)).contains(temp))
-            return true;
+        return pinyin_by_first_letter.get(temp.substring(0, 1)).contains(temp);
 
-        return false;
     }
 
     public int get_tone () {
