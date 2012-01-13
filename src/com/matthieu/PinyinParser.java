@@ -1,7 +1,5 @@
 package com.matthieu;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 
 public class PinyinParser {
@@ -10,33 +8,32 @@ public class PinyinParser {
     static public ArrayList<String> parse_string(String pinyin_string)
     {
         int split_index;
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result=null;
         ArrayList<String> temp;
-        int i=0;
-
+        
         // Try to find strophe to split the string
         split_index = pinyin_string.indexOf("'");
         if (split_index != -1)
         {
             if (split_index == 0)
             {
-                return parse_string(pinyin_string.substring(1, pinyin_string.length()));
+                return null;
             }
             if (split_index == pinyin_string.length())
             {
                 return parse_string(pinyin_string.substring(0, pinyin_string.length() - 1));
             }
             temp = parse_string(pinyin_string.substring(0, split_index - 1));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result = temp;
 
             temp = parse_string(pinyin_string.substring(split_index + 1, pinyin_string.length()));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result.addAll(temp);
 
@@ -44,6 +41,7 @@ public class PinyinParser {
         }
 
         // digits are tones at the end of pinyins... can split there too
+        int i=0;
         while ((split_index == -1) && (i<6)) {
             split_index = pinyin_string.indexOf(Integer.toString(i));
             i++;
@@ -56,16 +54,16 @@ public class PinyinParser {
             }
 
             temp = parse_string(pinyin_string.substring(0, split_index+1));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result = temp;
 
             temp = parse_string(pinyin_string.substring(split_index + 1, pinyin_string.length()));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result.addAll(temp);
 
@@ -75,35 +73,37 @@ public class PinyinParser {
         for (i = Math.min(6, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 6 characters...
         // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
         {
-            String try_pinyin = pinyin_string.substring(0, i);
-            if (Pinyin.verify_pinyin(try_pinyin))
+            Pinyin try_pinyin = new Pinyin(pinyin_string.substring(0, i));
+            if (!try_pinyin.get_lame().equals(""))
             {
                 if (i < pinyin_string.length())
                 {
                     String next_step=pinyin_string.substring(i, pinyin_string.length());
                     temp = parse_string(next_step);
-                    if (temp.size() == 0)
+                    if (temp == null)
                     {
                         continue;
                     }
                     result = temp;
                 }
+                else {
+                    result = new ArrayList<String>();
+                }
 
-                result.add(0, new Pinyin(try_pinyin).get_lame());
+                result.add(0, try_pinyin.get_lame());
                 return result;
             }
         }
 
-        return result;
+        return null;
     }
 
     static public ArrayList<Pinyin> parse_string_to_pinyin(String pinyin_string)
     {
         int split_index;
-        ArrayList<Pinyin> result = new ArrayList<Pinyin>();
+        ArrayList<Pinyin> result;
         ArrayList<Pinyin> temp;
         int i=0;
-
 
         // Try to find strophe to split the string
         split_index = pinyin_string.indexOf("'");
@@ -111,23 +111,23 @@ public class PinyinParser {
         {
             if (split_index == 0)
             {
-                return parse_string_to_pinyin(pinyin_string.substring(1, pinyin_string.length()));
+                return null;
             }
             if (split_index == pinyin_string.length())
             {
                 return parse_string_to_pinyin(pinyin_string.substring(0, pinyin_string.length() - 1));
             }
             temp = parse_string_to_pinyin(pinyin_string.substring(0, split_index - 1));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result = temp;
 
             temp = parse_string_to_pinyin(pinyin_string.substring(split_index + 1, pinyin_string.length()));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result.addAll(temp);
 
@@ -143,20 +143,20 @@ public class PinyinParser {
         {
             if (split_index == 0)
             {
-                return parse_string_to_pinyin(pinyin_string.substring(1, pinyin_string.length()));
+                return null;
             }
 
-            temp = parse_string_to_pinyin(pinyin_string.substring(0, split_index+1));
-            if (temp.size() == 0)
+            temp = parse_string_to_pinyin(pinyin_string.substring(0, split_index + 1));
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result = temp;
 
             temp = parse_string_to_pinyin(pinyin_string.substring(split_index + 1, pinyin_string.length()));
-            if (temp.size() == 0)
+            if (temp == null)
             {
-                return result;
+                return null;
             }
             result.addAll(temp);
 
@@ -171,13 +171,16 @@ public class PinyinParser {
             {
                 if (i < pinyin_string.length())
                 {
-                    String next_step=pinyin_string.substring(i, pinyin_string.length());
+                    String next_step=pinyin_string.substring(i+1, pinyin_string.length());
                     temp = parse_string_to_pinyin(next_step);
-                    if (temp.size() == 0)
+                    if (temp == null)
                     {
                         continue;
                     }
                     result = temp;
+                }
+                else {
+                    result = new ArrayList<Pinyin>();
                 }
 
                 result.add(0, new Pinyin(try_pinyin));
@@ -185,9 +188,149 @@ public class PinyinParser {
             }
         }
 
-        return result;
+        return null;
     }
 
+    static public ArrayList<HanziDB.StringElement> parse_string_to_elements(String pinyin_string)
+    {
+        int split_index;
+        ArrayList<HanziDB.StringElement> result;
+        ArrayList<HanziDB.StringElement> temp;
+        int i=0;
+
+        if (!pinyin_string.matches("[bpmfdtnlgkhzcsrjqxaoeiuvāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ0-5]*"))
+            return null;
+
+        // Try to find strophe to split the string
+        split_index = pinyin_string.indexOf("'");
+        if (split_index != -1)
+        {
+            if (split_index == 0)
+            {
+                return null;
+            }
+            if (split_index == pinyin_string.length())
+            {
+                return parse_string_to_elements(pinyin_string.substring(0, pinyin_string.length() - 1));
+            }
+            temp = parse_string_to_elements(pinyin_string.substring(0, split_index - 1));
+            if ((temp == null) || (temp.get(temp.size()-1).type==HanziDB.StringElement.INCOMPLETE_PINYIN))
+            {
+                return null;
+            }
+            result = temp;
+
+            temp = parse_string_to_elements(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            if (temp == null)
+            {
+                return null;
+            }
+            result.addAll(temp);
+
+            return result;
+        }
+
+        // digits are tones at the end of pinyins... can split there too
+        while ((split_index == -1) && (i<6)) {
+            split_index = pinyin_string.indexOf(Integer.toString(i));
+            i++;
+        }
+        if ((split_index != -1) && (split_index != pinyin_string.length()-1))
+        {
+            if (split_index == 0)
+            {
+                return null;
+            }
+
+            temp = parse_string_to_elements(pinyin_string.substring(0, split_index + 1));
+            if (temp == null)
+            {
+                return null;
+            }
+            result = temp;
+
+            temp = parse_string_to_elements(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            if (temp == null)
+            {
+                return null;
+            }
+            result.addAll(temp);
+
+            return result;
+        }
+
+        for (i = Math.min(6, pinyin_string.length()); i > 0; i--) // the maximum size with tone is 6 characters...
+        // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
+        {
+            Pinyin try_pinyin = new Pinyin(pinyin_string.substring(0, i));
+            if (!try_pinyin.get_lame().equals(""))
+            {
+                if (i < pinyin_string.length())
+                {
+                    String next_step=pinyin_string.substring(i, pinyin_string.length());
+                    temp = parse_string_to_elements(next_step);
+                    if (temp == null)
+                    {
+                        continue;
+                    }
+                    result = temp;
+                }
+                else {
+                    result = new ArrayList<HanziDB.StringElement>();
+                }
+                
+                if (try_pinyin.tone_is_given()) {
+                    result.add(0, new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, try_pinyin.get_lame()));
+                }
+                else {
+                    result.add(0, new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, try_pinyin.get_radical()));
+                }
+                return result;
+            }
+        }
+        if ((i == 0) && (pinyin_string.length()<6)) {
+            Pinyin incomplete_pinyin=new Pinyin(pinyin_string,true);
+            if (!incomplete_pinyin.get_lame().equals("")) {
+                result = new ArrayList<HanziDB.StringElement>();
+                result.add(new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, incomplete_pinyin.get_lame()));
+                return result;
+            }
+        }
+
+        return null;
+    }
+
+    static public ArrayList<HanziDB.StringElement> parse_mixed_string(String input) {
+        ArrayList<HanziDB.StringElement> res = new ArrayList<HanziDB.StringElement>();
+        for (int i=0; i<input.length(); ) {
+            int entry=input.codePointAt(i);
+            if (((entry >= 0x4E00) && (entry <= 0x9fff)) // main CJK
+                    || ((entry >= 0x2e00) && (entry <= 0x31ff)) // additional punctuation
+                    || ((entry >= 0x3400) && (entry <= 0x4dbf)) // extension A
+                    ) {
+                res.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE, input.substring(i, i+Character.charCount(entry))));
+                i+=Character.charCount(entry);
+            }
+            else {
+                if (!input.substring(i, i+1).toLowerCase().matches("[bpmfdtnlgkhzcsrjqxaoeiuvāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ0-5]")) {
+                    res.clear();
+                    return res;
+                }
+                int j=i+1;
+                while ((j<=input.length()) && (input.substring(i, j).toLowerCase().matches("[bpmfdtnlgkhzcsrjqxaoeiuvāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ0-5]*"))) {
+                    j++;
+                }
+                String pinyins=input.substring(i, j-1);
+                ArrayList<HanziDB.StringElement> more = parse_string_to_elements(pinyins);
+                if (more == null)
+                    return null;
+                res.addAll(more);
+                i=j-1;
+
+            }
+        }
+        return res;
+    }
 
     public static String convert_to_pretty_version(String input)
     {
@@ -210,6 +353,8 @@ public class PinyinParser {
         if (input.equals(""))
             return result;
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
+        if (parsed == null)
+            return input;
         for (i = 0; i < parsed.size(); i++)
         {
             result += parsed.get(i).get_color();
@@ -224,6 +369,8 @@ public class PinyinParser {
         if (input.equals(""))
             return result;
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
+        if (parsed == null)
+            return input;
         for (i = 0; i < parsed.size(); i++)
         {
             result += parsed.get(i).get_lame();

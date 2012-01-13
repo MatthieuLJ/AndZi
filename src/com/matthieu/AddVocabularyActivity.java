@@ -400,6 +400,8 @@ public class AddVocabularyActivity extends Activity
             Log.d(TAG, "Setting default pinyins to "+vocs.get(best_index).pinyin);
             
             default_pinyins = PinyinParser.parse_string(vocs.get(best_index).pinyin);
+            if (default_pinyins == null)
+                return;
 
             for (i=0; i<default_pinyins.size(); i++) {
                 if (i >= pinyin_choices.size()) break;

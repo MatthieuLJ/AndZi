@@ -950,6 +950,8 @@ public class HanziDB extends SQLiteOpenHelper {
             chinese.add(voc.chinese.substring(from, to));
         }
         pinyin = PinyinParser.parse_string(voc.pinyin);
+        if (pinyin == null)
+            return;
 
         addVocabulary(voc.english,chinese,pinyin);
     }
@@ -1123,6 +1125,8 @@ public class HanziDB extends SQLiteOpenHelper {
             chinese.add(voc.chinese.substring(from, to));
         }
         pinyin = PinyinParser.parse_string(voc.pinyin);
+        if (pinyin == null)
+            return;
 
         if (voc.english == null) {
             delVocabulary(chinese, pinyin);

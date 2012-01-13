@@ -34,4 +34,39 @@ public class PinyinParserTest extends AndroidTestCase {
         assertTrue(res.get(0).equals("ni5"));
         assertTrue(res.get(1).equals("hao5"));
     }
+
+    public void testTrickier() {
+        ArrayList<String> res=PinyinParser.parse_string("nangong");
+        assertTrue(res.size() == 2 );
+        assertTrue(res.get(0).equals("nan5"));
+        assertTrue(res.get(1).equals("gong5"));
+    }
+
+    public void testElementsSimple() {
+        ArrayList<HanziDB.StringElement> res;
+        res = PinyinParser.parse_string_to_elements("zènfajian2");
+        assertTrue(res != null);
+        assertTrue(res.size()==3);
+        assertTrue(res.get(0).type==HanziDB.StringElement.PINYIN_WITH_TONE);
+        assertTrue(res.get(0).content.equals("zen4"));
+        assertTrue(res.get(1).type==HanziDB.StringElement.PINYIN_WITHOUT_TONE);
+        assertTrue(res.get(1).content.equals("fa"));
+        assertTrue(res.get(2).type==HanziDB.StringElement.PINYIN_WITH_TONE);
+        assertTrue(res.get(2).content.equals("jian2"));
+    }
+
+    public void testMixedElements() {
+        ArrayList<HanziDB.StringElement> res;
+        res = PinyinParser.parse_mixed_string("中guo2不见dianhuazuiting不dong3fengfe");
+        assertTrue(res != null);
+        assertTrue(res.size() == 12);
+        assertTrue(res.get(0).type==HanziDB.StringElement.CHINESE);
+        assertTrue(res.get(0).content.equals("中"));
+        assertTrue(res.get(5).type==HanziDB.StringElement.PINYIN_WITHOUT_TONE);
+        assertTrue(res.get(5).content.equals("hua"));
+        assertTrue(res.get(9).type==HanziDB.StringElement.PINYIN_WITH_TONE);
+        assertTrue(res.get(9).content.equals("dong3"));
+        assertTrue(res.get(11).type==HanziDB.StringElement.INCOMPLETE_PINYIN);
+        assertTrue(res.get(11).content.equals("fe"));
+    }
 }
