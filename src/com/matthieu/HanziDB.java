@@ -485,19 +485,59 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<Vocabulary> getCTranslations(String english) {
+        return getCTranslations(english, 2);
+    }
+    
+    public ArrayList<Vocabulary> getCTranslations(String english, int start) {
+        // start is 2 for exactly the same sequence
+        //          1 for starting with this sequence (but not the same)
+        //          0 for not starting with this sequence
+        //         -1 for don't care
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        Cursor cur = db.rawQuery("SELECT c.chinese AS chinese,c.pinyin AS pinyin " +
-                "FROM eword " +
-                "JOIN cword AS c ON c.cword_id=eword.cword_id " +
-                "WHERE translation=?", new String[] {english});
+        String query;
+        ArrayList<String> query_arg=new ArrayList<String>();
+
+        switch (start) {
+            case 2:
+                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
+                        "FROM eword " +
+                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
+                        "WHERE translation=?";
+                query_arg.add(english);
+                break;
+            case 1:
+                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
+                        "FROM eword " +
+                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
+                        "WHERE translation LIKE ? AND translation!=?";
+                query_arg.add(english+"%");
+                query_arg.add(english);
+                break;
+            case 0:
+                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
+                        "FROM eword " +
+                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
+                        "WHERE translation LIKE ? AND translation NOT LIKE ?";
+                query_arg.add("%"+english+"%");
+                query_arg.add(english+"%");
+                break;
+            case -1:
+                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
+                        "FROM eword " +
+                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
+                        "WHERE translation LIKE ?";
+                query_arg.add("%"+english+"%");
+                break;
+            default:
+                return res;
+        }
+        Cursor cur = db.rawQuery(query, query_arg.toArray(new String[0]));
         if (cur.moveToFirst()) {
             do{
-                res.add(new Vocabulary
-                        (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")),english));
+                res.add(new Vocabulary(cur.getString(cur.getColumnIndex("chinese")),
+                        cur.getString(cur.getColumnIndex("pinyin")),
+                        cur.getString(cur.getColumnIndex("translation"))));
             }while(cur.moveToNext());
-        }
-        else {
-            //Log.d(TAG, "no record found for word "+english);
         }
 
         cur.close();
@@ -1942,6 +1982,10 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<Vocabulary> getFilteredCTranslations(String english) {
+        return getFilteredCTranslations(english, 2);
+    }
+
+    public ArrayList<Vocabulary> getFilteredCTranslations(String english, int start) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
             Cursor cur = db.rawQuery("SELECT cword.chinese AS chinese,cword.pinyin AS pinyin " +
@@ -1963,7 +2007,7 @@ public class HanziDB extends SQLiteOpenHelper {
             return res;
         }
         else
-            return getCTranslations(english);
+            return getCTranslations(english, start);
     }
 
     protected ArrayList<Integer> getFilteredWordId(String chinese) {

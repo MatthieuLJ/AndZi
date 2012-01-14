@@ -48,7 +48,9 @@
 
         <activity android:name=".ReviewList" />
         <activity android:name=".Details"
-                android:launchMode="singleTop"/>
+                android:launchMode="singleTop" />
+        <activity android:name=".Dictionary"
+                  android:windowSoftInputMode="stateHidden|adjustPan" />
 
         <activity android:name=".settings.Settings" />
         <activity android:name=".settings.ExportDB">

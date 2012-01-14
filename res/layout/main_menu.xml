@@ -90,6 +90,12 @@
                 android:layout_weight="1"
                 android:text="Review list"
                 android:onClick="handle_reviewlist" />
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Dictionary"
+                android:onClick="handle_dictionary" />
     </TableRow>
     <TableRow
             android:layout_height="fill_parent"
