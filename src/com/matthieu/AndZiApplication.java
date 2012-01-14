@@ -42,7 +42,7 @@ public class AndZiApplication extends Application {
     public HanziDB getRefDB() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         ref_enabled=prefs.getBoolean("ref_enabled", true);
-        Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
+        //Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
         return (ref_enabled&&ref_present)?refDB:null;
     }
     public boolean getRefDBPresent() { return ref_present; }

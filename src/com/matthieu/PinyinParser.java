@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.util.Log;
 import java.util.ArrayList;
 
 public class PinyinParser {
@@ -42,8 +43,10 @@ public class PinyinParser {
 
         // digits are tones at the end of pinyins... can split there too
         int i=0;
-        while ((split_index == -1) && (i<6)) {
-            split_index = pinyin_string.indexOf(Integer.toString(i));
+        while (i<6) {
+            int tmp_split_index = pinyin_string.indexOf(Integer.toString(i));
+            if ((tmp_split_index != -1) && ((split_index == -1) || (tmp_split_index < split_index)))
+                split_index = tmp_split_index;
             i++;
         }
         if ((split_index != -1) && (split_index != pinyin_string.length()-1))
@@ -135,8 +138,10 @@ public class PinyinParser {
         }
 
         // digits are tones at the end of pinyins... can split there too
-        while ((split_index == -1) && (i<6)) {
-            split_index = pinyin_string.indexOf(Integer.toString(i));
+        while (i<6) {
+            int tmp_split_index = pinyin_string.indexOf(Integer.toString(i));
+            if ((tmp_split_index != -1) && ((split_index == -1) || (tmp_split_index < split_index)))
+                split_index = tmp_split_index;
             i++;
         }
         if ((split_index != -1) && (split_index != pinyin_string.length()-1))
@@ -171,7 +176,7 @@ public class PinyinParser {
             {
                 if (i < pinyin_string.length())
                 {
-                    String next_step=pinyin_string.substring(i+1, pinyin_string.length());
+                    String next_step=pinyin_string.substring(i, pinyin_string.length());
                     temp = parse_string_to_pinyin(next_step);
                     if (temp == null)
                     {
@@ -231,8 +236,10 @@ public class PinyinParser {
         }
 
         // digits are tones at the end of pinyins... can split there too
-        while ((split_index == -1) && (i<6)) {
-            split_index = pinyin_string.indexOf(Integer.toString(i));
+        while (i<6) {
+            int tmp_split_index = pinyin_string.indexOf(Integer.toString(i));
+            if ((tmp_split_index != -1) && ((split_index == -1) || (tmp_split_index < split_index)))
+                split_index = tmp_split_index;
             i++;
         }
         if ((split_index != -1) && (split_index != pinyin_string.length()-1))
@@ -322,13 +329,19 @@ public class PinyinParser {
                 }
                 String pinyins=input.substring(i, j-1);
                 ArrayList<HanziDB.StringElement> more = parse_string_to_elements(pinyins);
-                if (more == null)
-                    return null;
+                if (more == null) {
+                    res = null;
+                    break;
+                }
                 res.addAll(more);
                 i=j-1;
 
             }
         }
+        if (res == null)
+            Log.d(TAG, "Failed to parse string [\"+input+\"]\"");
+        else
+            Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
         return res;
     }
 
