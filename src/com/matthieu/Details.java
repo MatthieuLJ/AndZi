@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import com.matthieu.widget.UpdatableListAdapter;
 
 import java.util.ArrayList;
 
@@ -24,6 +25,7 @@ public class Details extends Activity {
 
     private String current_hanzi;
     private boolean current_use_ref;
+    private DetailsWordAdapter current_adapter=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +43,7 @@ public class Details extends Activity {
         current_use_ref = use_ref;
 
         FrameLayout frame = new FrameLayout(this);
-        populate_details_view(this, frame, hanzi, use_ref);
+        current_adapter=populate_details_view(this, frame, hanzi, use_ref);
         setContentView(frame);
     }
 
@@ -57,68 +59,98 @@ public class Details extends Activity {
         if ((current_use_ref==use_ref) && (current_hanzi.equals(hanzi)))
             return;
 
+        current_adapter.cancel();
+
         FrameLayout frame = new FrameLayout(this);
-        populate_details_view(this, frame, hanzi, use_ref);
+        current_adapter=populate_details_view(this, frame, hanzi, use_ref);
         setContentView(frame);
     }
 
-    private static class DetailsWordAdapter extends BaseAdapter {
-        ArrayList<Vocabulary> voc_list;
-        String seed;
+    public static class DetailsWordAdapter extends BaseAdapter implements UpdatableListAdapter {
+        ArrayList<Vocabulary> voc_list = new ArrayList<Vocabulary>();
         int loading;
         Activity act;
+        AsyncTask<Void, Void, Void> filler=null;
+        boolean use_ref=true;
+        Activity context;
 
         public DetailsWordAdapter(final String hanzi, final boolean use_ref, Activity context) {
+            ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
+            for (int i=0; i<hanzi.length(); ) {
+                elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
+                        hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))));
+                i+=Character.charCount(hanzi.codePointAt(i));
+            }
+            this.use_ref=use_ref;
+            this.context=context;
+            start_it(elements);
+        }
+
+        public DetailsWordAdapter(final ArrayList<HanziDB.StringElement> elements, final boolean use_ref, Activity context) {
+            this.use_ref=use_ref;
+            this.context=context;
+            start_it(elements);
+        }
+
+        public void update_content(ArrayList<HanziDB.StringElement> elements) {
+            cancel();
+            start_it(elements);
+        }
+
+        public void update_content(String element) {
+        }
+
+        private void start_it(final ArrayList<HanziDB.StringElement> elements) {
             final HanziDB myDB=((AndZiApplication)context.getApplication()).getMyDB();
             final HanziDB refDB=((AndZiApplication)context.getApplication()).getRefDB();
 
             act=context;
-            voc_list = new ArrayList<Vocabulary>();
-            seed=hanzi;
 
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-            final boolean local_db_first = sp.getBoolean("local_db_first", true);
+            if (elements==null)
+                return;
+
             loading=1;
 
-            new AsyncTask<Void, Void, Void>() {
+            filler = new AsyncTask<Void, Void, Void>() {
                 ArrayList<Vocabulary> voc;
 
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
-                    for (int i=0; i<hanzi.length(); ) {
-                        elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
-                                hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))));
-                        i+=Character.charCount(hanzi.codePointAt(i));
-                    }
 
-                    voc=myDB.getWordsWithSequence(elements,1);
+                    voc=myDB.getWordsWithSequence(elements,2);
+                    if (isCancelled())
+                        return null;
 
                     publishProgress((Void[])null);
 
-                    if (local_db_first) {
-                        voc.addAll(myDB.getWordsWithSequence(elements,0));
+                    voc.addAll(myDB.getWordsWithSequence(elements,1));
+                    if (isCancelled())
+                        return null;
 
-                        publishProgress((Void[])null);
+                    publishProgress((Void[])null);
 
-                        if ((use_ref) && (refDB != null)) {
-                            voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,1));
-                        }
-
-                        publishProgress((Void[])null);
-                    } else {
-                        if ((use_ref) && (refDB != null)) {
-                            voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,1));
-                        }
-
-                        publishProgress((Void[])null);
-                        voc.addAll(myDB.getWordsWithSequence(elements,0));
-
-                        publishProgress((Void[])null);
-                    }
+                    voc.addAll(myDB.getWordsWithSequence(elements,0));
+                    if (isCancelled())
+                        return null;
 
                     if ((use_ref) && (refDB != null)) {
+                        publishProgress((Void[])null);
+
+                        voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,2));
+                        if (isCancelled())
+                            return null;
+
+                        publishProgress((Void[])null);
+
+                        voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,1));
+                        if (isCancelled())
+                            return null;
+
+                        publishProgress((Void[])null);
+
                         voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(elements,0));
+                        if (isCancelled())
+                            return null;
                     }
                     return null;
                 }
@@ -132,11 +164,19 @@ public class Details extends Activity {
 
                 @Override
                 protected void onPostExecute(Void aVoid) {
+                    filler = null;
                     voc_list=voc;
                     loading=0;
                     DetailsWordAdapter.this.notifyDataSetChanged();
                 }
-            }.execute((Void []) null);
+            };
+
+            filler.execute((Void []) null);
+        }
+
+        public void cancel() {
+            if (filler != null)
+                filler.cancel(false);
         }
 
         public int getCount() {
@@ -172,7 +212,7 @@ public class Details extends Activity {
             else {
                 final Vocabulary voc=voc_list.get(i);
                 TextView details_chinese = (TextView) convertView.findViewById(R.id.details_chinese_word);
-                details_chinese.setText(Html.fromHtml(voc.chinese.replace(seed, "<b>"+seed+"</b>")));
+                details_chinese.setText(voc.chinese);
                 TextView details_pinyin = (TextView) convertView.findViewById(R.id.details_pinyin_word);
                 if (show_pinyin_color)
                     details_pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(voc.pinyin)));
@@ -199,7 +239,7 @@ public class Details extends Activity {
         }
     }
 
-    static void populate_details_view(final Activity context, ViewGroup section, final String hanzi, boolean include_ref) {
+    static DetailsWordAdapter populate_details_view(final Activity context, ViewGroup section, final String hanzi, boolean include_ref) {
         HanziDB myDB = ((AndZiApplication) context.getApplication()).getMyDB();
         HanziDB refDB = ((AndZiApplication) context.getApplication()).getRefDB();
 
@@ -244,9 +284,10 @@ public class Details extends Activity {
             i+=Character.charCount(hanzi.codePointAt(i));
         }
 
+        DetailsWordAdapter res = new DetailsWordAdapter(hanzi, include_ref, context);
         ListView list= (ListView) new_view.findViewById(R.id.details_list);
-        list.setAdapter(new DetailsWordAdapter(hanzi, include_ref, context));
+        list.setAdapter(res);
 
-        //section.addView(new_view);
+        return res;
     }
 }
