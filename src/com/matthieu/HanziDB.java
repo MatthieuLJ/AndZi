@@ -2203,6 +2203,8 @@ public class HanziDB extends SQLiteOpenHelper {
     // Update data
     ////////////////////////////////////////
     public void resetTime(String hanzi) {
+        if (getBoxForChar(hanzi)==0)
+            betterBox(hanzi);
 
         Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});

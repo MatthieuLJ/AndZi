@@ -123,18 +123,10 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
     @Override
     protected void update_scores(int good) {
-        if (good == CORRECT) {
-            if (myDB.getBoxForChar(hanzi) == 0) {
-                myDB.betterBox(hanzi);
-            }
-            else {
-                myDB.resetTime(hanzi);
-            }
-        }
-        else {
+        if (good == CORRECT)
+            myDB.resetTime(hanzi);
+        else
             myDB.restartStudy(hanzi);
-        }
-
     }
 
     public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {

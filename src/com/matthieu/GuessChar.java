@@ -184,8 +184,9 @@ public class GuessChar extends TestActivity implements TextWatcher {
                 i+=Character.charCount(v.chinese.codePointAt(i));
                 if (other_hanzi.equals(hanzi))
                     continue;
-                if (good==CORRECT)
+                if (good==CORRECT) {
                     myDB.resetTime(other_hanzi);
+                }
                 else
                     myDB.restartStudy(other_hanzi);
             }

@@ -129,10 +129,7 @@ public class GuessContaining extends TestActivity {
                 }
                 for (String c:good_chars) {
                     Log.d(TAG, "Reset time for "+c);
-                    if (myDB.getBoxForChar(c)==0)
-                        myDB.betterBox(c);
-                    else
-                        myDB.resetTime(c);
+                    myDB.resetTime(c);
                 }
                 Log.d(TAG, "Better box for "+hanzi);
                 myDB.betterBox(hanzi);
