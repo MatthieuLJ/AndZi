@@ -10,18 +10,15 @@ ONGOING (10):
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (11):
-* Find a way to hilight the character sequence in Details list
+BUGS (8):
 * Let it go back once in Details activity
-* Display lessons progressively in lesson editing
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Cannot really access Review list if there is nothing to study
 * Make the layout of tests consistent (especially with position of the edit box)
 * Link review list and Details
 * Some test results should be restricted to only words (not all the words with some character sequence)
-* Don't let a lesson filtered without any lesson selected
-* Don't let a lesson with name "(none)"
 * Check layout of items in Details list (when translation is too long)
+* Find a way to hilight the character sequence in Details list
 
 FUTURE (6):
 * Pre-created lessons
@@ -31,7 +28,10 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (63):
+DONE (66):
+* Don't let a lesson filtered without any lesson selected
+* Don't let a lesson with name "(none)"
+* Display lessons progressively in lesson editing
 * Use lesson filter in Details (if not using ref)
 * Reset time for char in box 0 automatically moves up
 * Add dictionary

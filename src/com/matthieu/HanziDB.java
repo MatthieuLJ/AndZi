@@ -1952,7 +1952,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public ArrayList<String> getLessonsToFilter() {
-        return lesson_filter;
+        return (ArrayList<String>) lesson_filter.clone();
     }
 
     ////////////////////////////////////////

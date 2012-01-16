@@ -23,6 +23,7 @@ public class EditLessonsActivity extends Activity {
     protected ArrayList<String> current_lesson_filter;
     protected boolean filter_on;
     private Handler process_handler=null;
+    private boolean loading;
 
     private static final String TAG = "EditLessonsActivity";
 
@@ -42,6 +43,8 @@ public class EditLessonsActivity extends Activity {
         list.setDropListener(new TouchListView.DropListener() {
             public void drop(int from, int to) {
                 if (from == 0)
+                    return;
+                if (loading)
                     return;
                 if (to==0)
                     to=1;
@@ -63,7 +66,16 @@ public class EditLessonsActivity extends Activity {
         });
         registerForContextMenu(list);
 
-        new InitLessons().execute();
+        new InitLessons().execute((Void[])null);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (filter_on && (current_lesson_filter.size()==0)) {
+            filter_on = false;
+            myDB.enableFilter(filter_on);
+        }
     }
 
     private class InitLessons extends AsyncTask<Void, Void, Void> {
@@ -77,6 +89,13 @@ public class EditLessonsActivity extends Activity {
             if (lv != null) {
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
+            loading=false;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            loading=true;
         }
 
         @Override
@@ -85,7 +104,8 @@ public class EditLessonsActivity extends Activity {
             tmp_lessons = new ArrayList<Lesson>();
             ArrayList<String> existing_lessons = myDB.getLessons();
 
-            for (String lesson : existing_lessons) {
+            for (int i=0; i<existing_lessons.size(); i++) {
+                String lesson = existing_lessons.get(i);
                 int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
                 Lesson new_lesson = new Lesson(lesson);
                 new_lesson.state = Lesson.EXISTING;
@@ -93,9 +113,21 @@ public class EditLessonsActivity extends Activity {
                     new_lesson.state|=Lesson.FILTERED_ENABLED;
                 new_lesson.num_items=num;
                 tmp_lessons.add(new_lesson);
+                if ((i>0) && (i%10==0))
+                    publishProgress((Void[])null);
             }
 
             return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            current_lessons= (ArrayList<Lesson>) tmp_lessons.clone();
+            TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+            if (lv != null) {
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            }
         }
     }
 
@@ -142,10 +174,14 @@ public class EditLessonsActivity extends Activity {
                 new_lesson_ok.setTag(R.id.edit_new_lesson, new_lesson_field);
                 new_lesson_ok.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
+                        if (loading)
+                            return;
                         EditText new_lesson_field = (EditText)view.getTag(R.id.edit_new_lesson);
                         final String new_lesson_label = new_lesson_field.getText().toString();
                         new_lesson_field.setText("");
                         if (new_lesson_label.equals(""))
+                            return;
+                        if (new_lesson_label.equals("(none)"))
                             return;
                         if (lesson_exists(new_lesson_label)) {
                             Toast.makeText(EditLessonsActivity.this, "The lesson [" + new_lesson_label + "] already exists", 5).show();
@@ -169,9 +205,6 @@ public class EditLessonsActivity extends Activity {
 
                     }
                 });
-
-
-
             }
             else {
                 if ((convertView != null) && ((Integer)convertView.getTag(R.id.lesson_list_view_inflated)==R.layout.edit_lesson_list_item)) {
@@ -242,6 +275,7 @@ public class EditLessonsActivity extends Activity {
                                 ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
                                 TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                                Log.d(TAG, "Done saving filter");
                             }
                         });
 
@@ -280,6 +314,9 @@ public class EditLessonsActivity extends Activity {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        if (loading)
+            return false;
+
         ContextMenu.ContextMenuInfo menuInfo=item.getMenuInfo();
         final Lesson le = current_lessons.get(((AdapterView.AdapterContextMenuInfo)menuInfo).position-1);
 
@@ -302,6 +339,8 @@ public class EditLessonsActivity extends Activity {
                 prompt_user_input("Rename lesson "+le.label, "Enter new name:", new String_action() {
                     public void run(final String param) {
                         if (param.equals(""))
+                            return;
+                        if (param.equals("(none)"))
                             return;
                         if (lesson_exists(param)) {
                             Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
@@ -330,6 +369,8 @@ public class EditLessonsActivity extends Activity {
                 prompt_user_input("Duplicate lesson "+le.label, "Enter new name:", new String_action() {
                     public void run(final String param) {
                         if (param.equals(""))
+                            return;
+                        if (param.equals("(none)"))
                             return;
                         if (lesson_exists(param)) {
                             Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
@@ -408,7 +449,6 @@ public class EditLessonsActivity extends Activity {
 
         return true;
     }
-
 
     private void prompt_user_input(String title, String message, final String_action action) {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
