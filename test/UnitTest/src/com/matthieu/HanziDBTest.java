@@ -590,8 +590,8 @@ public class HanziDBTest extends AndroidTestCase {
         B.add(new Vocabulary("你好", "ni3hao3", "hi"));
         B.add(new Vocabulary("长", "chang2", "long"));
 
-        ArrayList<Vocabulary> res=HanziDB.merge_vocabulary(A, B);
-        assertTrue(res.size() == 4);
+        HanziDB.merge_vocabulary(A, B);
+        assertTrue(A.size() == 4);
     }
 
     public void testGetSequence() {

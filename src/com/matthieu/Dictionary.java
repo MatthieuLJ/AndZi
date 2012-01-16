@@ -78,7 +78,7 @@ public class Dictionary extends Activity {
     }
 
     private void update_list(final String orig, final ArrayList<HanziDB.StringElement> elements) {
-        updater.post(new Runnable() {
+        Runnable to_run = new Runnable() {
             public void run() {
                 EditText query = (EditText) findViewById(R.id.dict_query);
                 if (query == null)
@@ -86,16 +86,21 @@ public class Dictionary extends Activity {
                 if (!query.getText().toString().equals(orig))
                     return;
 
-                if (current_adapter==null) {
-                    create_new_adapter(orig, elements);
-                } else {
-                    if (mode == 0)
-                        current_adapter.update_content(elements);
-                    else
-                        current_adapter.update_content(orig);
-                }
+                Log.d(TAG, "Starting a new query "+orig);
+
+                create_new_adapter(orig, elements);
             }
-        });
+        };
+
+        if ((current_adapter==null) || (current_adapter.is_finished())) {
+            Log.d(TAG, "Starting right away");
+            updater.post(to_run);
+        }
+        else {
+            current_adapter.cancel();
+            Log.d(TAG, "Starting a bit later");
+            updater.postDelayed(to_run, 1000); // give some time to breath (or change the text further)
+        }
     }
 
     private class Dictionary_query_parse implements TextWatcher {
@@ -133,15 +138,6 @@ public class Dictionary extends Activity {
             start_it();
         }
 
-        public void update_content(String english) {
-            cancel();
-            current_english=english;
-            start_it();
-        }
-
-        public void update_content(ArrayList<HanziDB.StringElement> elements) {
-        }
-
         private void start_it() {
             final HanziDB myDB=((AndZiApplication)context.getApplication()).getMyDB();
             final HanziDB refDB=((AndZiApplication)context.getApplication()).getRefDB();
@@ -160,7 +156,7 @@ public class Dictionary extends Activity {
                     voc=new ArrayList<Vocabulary>();
                     publishProgress((Void[])null);
 
-                    voc=myDB.getCTranslations(current_english,2);
+                    voc.addAll(myDB.getCTranslations(current_english,2));
                     if (isCancelled())
                         return null;
 
@@ -179,19 +175,19 @@ public class Dictionary extends Activity {
                     if ((use_ref) && (refDB != null)) {
                         publishProgress((Void[])null);
 
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,2));
+                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,2));
                         if (isCancelled())
                             return null;
 
                         publishProgress((Void[])null);
 
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,1));
+                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,1));
                         if (isCancelled())
                             return null;
 
                         publishProgress((Void[])null);
 
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,0));
+                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,0));
                         if (isCancelled())
                             return null;
                     }
@@ -237,6 +233,10 @@ public class Dictionary extends Activity {
         public void resume() {
             if (is_cancelled)
                 start_it();
+        }
+
+        public boolean is_finished() {
+            return (filler==null);
         }
 
         public int getCount() {

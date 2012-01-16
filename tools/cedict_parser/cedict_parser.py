@@ -100,6 +100,8 @@ def check_translations(translations):
             continue
         if (re.match("also written", t) is not None):
             continue
+        if (re.match("also pr.", t) is not None):
+            continue
         m = re.match("see (.).+", t)
         if (m is not None) and check_chinese_character(m.groups()[0]):
             continue

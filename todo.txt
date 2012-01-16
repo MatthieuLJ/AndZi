@@ -11,12 +11,11 @@ ONGOING (10):
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (5):
+BUGS (4):
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Cannot really access Review list if there is nothing to study
 * Some test results should be restricted to only words (not all the words with some character sequence)
 * Find a way to hilight the character sequence in Details list
-* Optimize DB response in Details (show results progressively, be able to cancel / move faster)
 
 FUTURE (6):
 * Pre-created lessons
@@ -26,7 +25,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (69):
+DONE (70):
+* Optimize DB response in Details (show results progressively, be able to cancel / move faster)
 * Link review list and Details
 * Check layout of items in Review list (when translation is too long)
 * Let it go back once in Details activity

@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import com.matthieu.widget.DBVocabularyResultsHandler;
 import com.matthieu.widget.UpdatableListAdapter;
 import java.util.ArrayList;
 
@@ -93,7 +94,7 @@ public class Details extends Activity {
             current_hanzi=old_hanzi;
             old_hanzi="";
             FrameLayout frame = new FrameLayout(this);
-            populate_details_view(this, frame, current_hanzi, current_use_ref, current_adapter);
+            populate_details_view(this, frame, current_hanzi, current_use_ref);
             setContentView(frame);
             return true;
         }
@@ -103,7 +104,7 @@ public class Details extends Activity {
     public static class DetailsWordAdapter extends BaseAdapter implements UpdatableListAdapter {
         ArrayList<Vocabulary> voc_list = new ArrayList<Vocabulary>();
         boolean loading;
-        AsyncTask<Void, Void, Void> filler=null;
+        AsyncTask<Void, ArrayList<Vocabulary>, Void> filler=null;
         boolean use_ref=true;
         Activity context;
         boolean is_cancelled=false;
@@ -129,143 +130,126 @@ public class Details extends Activity {
             start_it();
         }
 
-        public void update_content(ArrayList<HanziDB.StringElement> elements) {
-            cancel();
-            current_elements=elements;
-            start_it();
-        }
-
-        public void update_content(String element) {
-            ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
-            for (int i=0; i<element.length(); ) {
-                elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
-                        element.substring(i, i+Character.charCount(element.codePointAt(i)))));
-                i+=Character.charCount(element.codePointAt(i));
-            }
-            cancel();
-            current_elements=elements;
-            start_it();
-        }
-
         private void start_it() {
             final HanziDB myDB=((AndZiApplication)context.getApplication()).getMyDB();
             final HanziDB refDB=((AndZiApplication)context.getApplication()).getRefDB();
 
-            if (current_elements==null)
-                return;
-
             loading=true;
             is_cancelled=false;
 
-            filler = new AsyncTask<Void, Void, Void>() {
-                ArrayList<Vocabulary> voc;
+            if (current_elements==null) {
+                loading=false;
+                voc_list.clear();
+                DetailsWordAdapter.this.notifyDataSetChanged();
+                return;
+            }
+            final ArrayList<Vocabulary> voc=new ArrayList<Vocabulary>();
+
+            final DBVocabularyResultsHandler ref_handler = new DBVocabularyResultsHandler() {
+                int step=0;
 
                 @Override
-                protected Void doInBackground(Void... voids) {
-                    voc=new ArrayList<Vocabulary>();
-                    publishProgress((Void[])null);
-                    
-                    if (use_ref)
-                        voc=myDB.getWordsWithSequence(current_elements,2);
-                    else
-                        voc=myDB.getFilteredWordsWithSequence(current_elements,2);
-                    if (isCancelled()) {
-                        Log.d(TAG, "Details filling is cancelled (1)");
-                        return null;
-                    }
-
-                    publishProgress((Void[])null);
-
-                    if (use_ref)
-                        voc.addAll(myDB.getWordsWithSequence(current_elements,1));
-                    else
-                        voc.addAll(myDB.getFilteredWordsWithSequence(current_elements,1));
-                    if (isCancelled()) {
-                        Log.d(TAG, "Details filling is cancelled (2)");
-                        return null;
-                    }
-
-                    publishProgress((Void[])null);
-
-                    if (use_ref)
-                        voc.addAll(myDB.getWordsWithSequence(current_elements,0));
-                    else
-                        voc.addAll(myDB.getFilteredWordsWithSequence(current_elements,0));
-                    if (isCancelled()) {
-                        Log.d(TAG, "Details filling is cancelled (3)");
-                        return null;
-                    }
-
-                    if ((use_ref) && (refDB != null)) {
-                        publishProgress((Void[])null);
-
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(current_elements,2));
-                        if (isCancelled()) {
-                            Log.d(TAG, "Details filling is cancelled (4)");
-                            return null;
-                        }
-
-                        publishProgress((Void[])null);
-
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(current_elements,1));
-                        if (isCancelled()) {
-                            Log.d(TAG, "Details filling is cancelled  (5)");
-                            return null;
-                        }
-
-                        publishProgress((Void[])null);
-
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getWordsWithSequence(current_elements,0));
-                        if (isCancelled()) {
-                            Log.d(TAG, "Details filling is cancelled (6)");
-                            return null;
-                        }
-                    }
-                    return null;
-                }
-
-                @Override
-                protected void onCancelled() {
-                    super.onCancelled();
-                    Log.d(TAG, "Details filling is being cancelled");
-                    is_cancelled=true;
-                }
-
-                @Override
-                protected void onProgressUpdate(Void... values) {
-                    super.onProgressUpdate(values);
+                public void handle_more_results(ArrayList<Vocabulary> data) {
+                    if (is_cancelled)
+                        return;
+                    Log.d(TAG, "Received "+data.size()+" items from ref");
+                    HanziDB.merge_vocabulary(voc, data);
                     voc_list= (ArrayList<Vocabulary>) voc.clone();
                     DetailsWordAdapter.this.notifyDataSetChanged();
                 }
 
                 @Override
-                protected void onPostExecute(Void aVoid) {
-                    filler = null;
-                    voc_list=voc;
-                    loading=false;
-                    DetailsWordAdapter.this.notifyDataSetChanged();
+                public void handle_end_of_results() {
+                    if (is_cancelled)
+                        return;
+                    switch(step) {
+                        case 0:
+                            if (use_ref)
+                                filler = refDB.getWordsWithSequence(current_elements, 1, this);
+                            else
+                                filler = refDB.getFilteredWordsWithSequence(current_elements, 1, this);
+                            break;
+                        case 1:
+                            if (use_ref)
+                                filler = refDB.getWordsWithSequence(current_elements, 0, this);
+                            else
+                                filler = refDB.getFilteredWordsWithSequence(current_elements, 0, this);
+                            break;
+                        case 2:
+                            loading=false;
+                            filler=null;
+                            voc_list= voc;
+                            DetailsWordAdapter.this.notifyDataSetChanged();
+                            break;
+                    }
+                    step++;
                 }
             };
 
-            filler.execute((Void []) null);
+            final DBVocabularyResultsHandler my_handler = new DBVocabularyResultsHandler() {
+                int step=0;
+
+                @Override
+                public void handle_more_results(ArrayList<Vocabulary> data) {
+                    if (is_cancelled)
+                        return;
+                    Log.d(TAG, "Received "+data.size()+" items from my");
+                    HanziDB.merge_vocabulary(voc, data);
+                    voc_list= (ArrayList<Vocabulary>) voc.clone();
+                    DetailsWordAdapter.this.notifyDataSetChanged();
+                }
+
+                @Override
+                public void handle_end_of_results() {
+                    if (is_cancelled)
+                        return;
+                    switch(step) {
+                        case 0:
+                            if (use_ref)
+                                filler = myDB.getWordsWithSequence(current_elements, 1, this);
+                            else
+                                filler = myDB.getFilteredWordsWithSequence(current_elements, 1, this);
+                            break;
+                        case 1:
+                            if (use_ref)
+                                filler = myDB.getWordsWithSequence(current_elements, 0, this);
+                            else
+                                filler = myDB.getFilteredWordsWithSequence(current_elements, 0, this);
+                            break;
+                        case 2:
+                            Log.d(TAG, "Switching to REF");
+                            if (use_ref)
+                                filler = refDB.getWordsWithSequence(current_elements, 2, ref_handler);
+                            else
+                                filler = refDB.getFilteredWordsWithSequence(current_elements, 2, ref_handler);
+                            break;
+                    }
+                    step++;
+                }
+            };
+
+            if (use_ref)
+                filler = myDB.getWordsWithSequence(current_elements, 2, my_handler);
+            else
+                filler = myDB.getFilteredWordsWithSequence(current_elements, 2, my_handler);
         }
 
         public void cancel() {
-            Log.d(TAG, "Cancelling Details filler");
             if (filler != null) {
-                new Thread( new Runnable() {
-                    public void run() {
-                        filler.cancel(true);
-                    }
-                }).run();
+                Log.d(TAG, "Cancelling Details filler");
+                filler.cancel(false);
                 is_cancelled=true;
+                filler=null;
             }
-            Log.d(TAG, "Continuing");
         }
 
         public void resume() {
             if (is_cancelled)
                 start_it();
+        }
+
+        public boolean is_finished() {
+            return (filler==null);
         }
 
         public int getCount() {
@@ -379,59 +363,5 @@ public class Details extends Activity {
             list.setAdapter(res);
 
         return res;
-    }
-
-    static DetailsWordAdapter populate_details_view(final Activity context, ViewGroup section, final String hanzi, boolean include_ref, DetailsWordAdapter adapter) {
-        HanziDB myDB = ((AndZiApplication) context.getApplication()).getMyDB();
-        HanziDB refDB = ((AndZiApplication) context.getApplication()).getRefDB();
-
-        View new_view = View.inflate(context, R.layout.details, section);
-
-        if (hanzi.codePointCount(0, hanzi.length()) == 1) {
-            TextView info = (TextView) new_view.findViewById(R.id.details_info);
-            ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
-            if ((include_ref) && (refDB != null)) {
-                for (String pin:refDB.getPinyinForChar(hanzi)) {
-                    if (!pinyins.contains(pin))
-                        pinyins.add(pin);
-                }
-            }
-            String info_pinyins="(";
-            for (int i=0; i<pinyins.size(); i++) {
-                String pin=pinyins.get(i);
-                info_pinyins+=PinyinParser.convert_to_pretty_version(pin);
-                if (i < pinyins.size()-1)
-                    info_pinyins+=", ";
-            }
-            info_pinyins+=")";
-            info.setText(info_pinyins);
-        }
-
-        // first write the word at the top
-        LinearLayout top_word = (LinearLayout) new_view.findViewById(R.id.details_title);
-        for (int i=0; i<hanzi.length(); ) {
-            TextView character = new TextView(context);
-            final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
-            character.setTextAppearance(context, android.R.style.TextAppearance_Large_Inverse);
-            character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
-            character.setText(character_label);
-            character.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View view) {
-                    Intent intent=new Intent(context, Details.class);
-                    intent.putExtra("hanzi", character_label);
-                    context.startActivity(intent);
-                }
-            });
-            top_word.addView(character);
-            i+=Character.charCount(hanzi.codePointAt(i));
-        }
-
-        ListView list= (ListView) new_view.findViewById(R.id.details_list);
-        if (list != null) {
-            adapter.update_content(hanzi);
-            list.setAdapter(adapter);
-        }
-
-        return adapter;
     }
 }
