@@ -2010,6 +2010,25 @@ public class HanziDB extends SQLiteOpenHelper {
             return getCTranslations(english, start);
     }
 
+    public ArrayList<Vocabulary> getFilteredWordsWithSequence(ArrayList<StringElement> elements) {
+        return getFilteredWordsWithSequence(elements, -1);
+    }
+
+    public ArrayList<Vocabulary> getFilteredWordsWithSequence(ArrayList<StringElement> elements, int start) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
+            ArrayList<Integer> cword_ids = getWordIdWithSequence(elements, start);
+            for (int id : cword_ids) {
+                Vocabulary to_add = getFilteredTranslations(id);
+                if (to_add != null)
+                    res.add(to_add);
+            }
+            return res;
+        }
+        else
+            return getWordsWithSequence(elements, start);
+    }
+
     protected ArrayList<Integer> getFilteredWordId(String chinese) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +

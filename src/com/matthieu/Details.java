@@ -117,19 +117,28 @@ public class Details extends Activity {
                 @Override
                 protected Void doInBackground(Void... voids) {
 
-                    voc=myDB.getWordsWithSequence(elements,2);
+                    if (use_ref)
+                        voc=myDB.getWordsWithSequence(elements,2);
+                    else
+                        voc=myDB.getFilteredWordsWithSequence(elements,2);
                     if (isCancelled())
                         return null;
 
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getWordsWithSequence(elements,1));
+                    if (use_ref)
+                        voc.addAll(myDB.getWordsWithSequence(elements,1));
+                    else
+                        voc.addAll(myDB.getFilteredWordsWithSequence(elements,1));
                     if (isCancelled())
                         return null;
 
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getWordsWithSequence(elements,0));
+                    if (use_ref)
+                        voc.addAll(myDB.getWordsWithSequence(elements,0));
+                    else
+                        voc.addAll(myDB.getFilteredWordsWithSequence(elements,0));
                     if (isCancelled())
                         return null;
 

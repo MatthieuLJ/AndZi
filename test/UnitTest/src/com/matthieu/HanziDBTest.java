@@ -727,6 +727,146 @@ public class HanziDBTest extends AndroidTestCase {
         assertTrue(res.size()==1);
     }
 
+    public void testGetFilteredSequence() {
+        target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
+        target_db.addVocabulary("to be", new ArrayList<String>(Arrays.asList("是")), new ArrayList<String>(Arrays.asList("shi4")));
+        target_db.addVocabulary("good", new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("not", new ArrayList<String>(Arrays.asList("不")), new ArrayList<String>(Arrays.asList("bu4")));
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addVocabulary("how are you?", new ArrayList<String>(Arrays.asList("你", "好", "吗")), new ArrayList<String>(Arrays.asList("ni3", "hao3", "ma")));
+        target_db.addVocabulary("no good", new ArrayList<String>(Arrays.asList("不", "好")), new ArrayList<String>(Arrays.asList("bu4", "hao3")));
+        target_db.addVocabulary("you no good", new ArrayList<String>(Arrays.asList("你", "不", "好")), new ArrayList<String>(Arrays.asList("ni3", "bu4", "hao3")));
+        target_db.addVocabulary("tasty", new ArrayList<String>(Arrays.asList("好", "吃")), new ArrayList<String>(Arrays.asList("hao3", "chi1")));
+        target_db.addVocabulary("all right?", new ArrayList<String>(Arrays.asList("好", "不", "好")), new ArrayList<String>(Arrays.asList("hao3", "bu4", "hao3")));
+        target_db.addVocabulary("no good", new ArrayList<String>(Arrays.asList("不", "太", "好")), new ArrayList<String>(Arrays.asList("bu4", "tai4", "hao3")));
+        target_db.addVocabulary("unattractive", new ArrayList<String>(Arrays.asList("不", "好", "看")), new ArrayList<String>(Arrays.asList("bu4", "hao3", "kan4")));
+        target_db.addVocabulary("hard to say", new ArrayList<String>(Arrays.asList("不", "好", "说")), new ArrayList<String>(Arrays.asList("bu4", "hao3", "shuo1")));
+        target_db.addVocabulary("easy to use", new ArrayList<String>(Arrays.asList("好", "使")), new ArrayList<String>(Arrays.asList("hao3", "shi3")));
+        target_db.addVocabulary("difficult to use", new ArrayList<String>(Arrays.asList("不", "好", "使")), new ArrayList<String>(Arrays.asList("bu4", "hao3", "shi3")));
+        target_db.addVocabulary("yes or no", new ArrayList<String>(Arrays.asList("是", "不", "是")), new ArrayList<String>(Arrays.asList("shi4", "bu4", "shi4")));
+        target_db.addVocabulary("hershey's", new ArrayList<String>(Arrays.asList("好", "时")), new ArrayList<String>(Arrays.asList("hao3", "shi2")));
+        target_db.addVocabulary("eager to be first", new ArrayList<String>(Arrays.asList("好", "强")), new ArrayList<String>(Arrays.asList("hao3", "qiang2")));
+        target_db.addVocabulary("inside", new ArrayList<String>(Arrays.asList("里", "边")), new ArrayList<String>(Arrays.asList("li3", "bian5")));
+        target_db.addVocabulary("already", new ArrayList<String>(Arrays.asList("便", "已")), new ArrayList<String>(Arrays.asList("bian4", "yi1")));
+        target_db.addLesson("lesson filter");
+        target_db.assignWordLesson("lesson filter", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson filter", "you", "你", "ni3");
+        target_db.assignWordLesson("lesson filter", "you no good", "你不好", "ni3bu4hao3");
+        target_db.assignWordLesson("lesson filter", "yes or no", "是不是", "shi4bu4shi4");
+        target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
+        target_db.enableFilter(true);
+        ArrayList<Vocabulary> res;
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+
+        // ** test only one element
+        // * start -1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)));
+        assertTrue(res.size()==2);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)));
+        assertTrue(res.size()==2);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)));
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)));
+        assertTrue(res.size()==2);
+        // * start 1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)),1);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)),1);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)),1);
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)),1);
+        assertTrue(res.size()==0);
+        // * start 0
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)),0);
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)),0);
+        assertTrue(res.size()==2);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)),0);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)),0);
+        assertTrue(res.size()==2);
+        // * start 2
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)),2);
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(ni_pinyin)),2);
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)),2);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)),2);
+        assertTrue(res.size()==0);
+
+
+        // ** Only Chinese
+        // * start -1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)));
+        assertTrue(res.size()==1);
+        // * start 1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)),1);
+        assertTrue(res.size()==0);
+        // * start 0
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)),0);
+        assertTrue(res.size()==1);
+        // * start 2
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)),2);
+        assertTrue(res.size()==0);
+
+        // ** Only Pinyins
+        // * start -1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)));
+        assertTrue(res.size()==1);
+        // * start 1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)),1);
+        assertTrue(res.size()==0);
+        // * start 0
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)),0);
+        assertTrue(res.size()==1);
+        // * start 0
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)),2);
+        assertTrue(res.size()==0);
+
+
+        // ** Mixed
+        // * start -1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)));
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)));
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)));
+        assertTrue(res.size()==1);
+
+        // * start 1
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)),1);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)),1);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)),1);
+        assertTrue(res.size()==0);
+
+        // * start 0
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)),0);
+        assertTrue(res.size()==1);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)),0);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)),0);
+        assertTrue(res.size()==1);
+
+        // * start 2
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)),2);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, chi_no_tone_pinyin)),2);
+        assertTrue(res.size()==0);
+        res = target_db.getFilteredWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)),2);
+        assertTrue(res.size()==0);
+    }
+
     private static ArrayList<String> combineListOfTranslations(ArrayList<Vocabulary> vocs) {
         ArrayList<String> res=new ArrayList<String>();
         for (Vocabulary voc : vocs) {
