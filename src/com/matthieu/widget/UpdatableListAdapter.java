@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public interface UpdatableListAdapter extends ListAdapter {
     public abstract void cancel();
+    public abstract void resume();
     public abstract void update_content(ArrayList<HanziDB.StringElement> elements);
     public abstract void update_content(String element);
 }

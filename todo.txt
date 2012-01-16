@@ -11,7 +11,6 @@ ONGOING (10):
 * Check different screen sizes
 
 BUGS (8):
-* Let it go back once in Details activity
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Cannot really access Review list if there is nothing to study
 * Make the layout of tests consistent (especially with position of the edit box)
@@ -19,6 +18,7 @@ BUGS (8):
 * Some test results should be restricted to only words (not all the words with some character sequence)
 * Check layout of items in Details list (when translation is too long)
 * Find a way to hilight the character sequence in Details list
+* Optimize DB response in Details (show results progressively, be able to cancel / move faster)
 
 FUTURE (6):
 * Pre-created lessons
@@ -28,7 +28,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (66):
+DONE (67):
+* Let it go back once in Details activity
 * Don't let a lesson filtered without any lesson selected
 * Don't let a lesson with name "(none)"
 * Display lessons progressively in lesson editing

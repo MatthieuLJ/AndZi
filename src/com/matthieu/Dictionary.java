@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,8 @@ public class Dictionary extends Activity {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Handler updater=null;
     UpdatableListAdapter current_adapter=null;
+
+    private static final String TAG="Dictionary";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,79 +119,89 @@ public class Dictionary extends Activity {
 
     public static class EnglishWordAdapter extends BaseAdapter implements UpdatableListAdapter {
         ArrayList<Vocabulary> voc_list = new ArrayList<Vocabulary>();
-        int loading;
-        Activity act;
+        boolean loading;
         AsyncTask<Void, Void, Void> filler=null;
         boolean use_ref=true;
         Activity context;
+        boolean is_cancelled=false;
+        String current_english="";
 
         public EnglishWordAdapter(final String english, final boolean use_ref, Activity context) {
             this.use_ref=use_ref;
             this.context=context;
-            start_it(english);
+            current_english=english;
+            start_it();
         }
 
         public void update_content(String english) {
             cancel();
-            start_it(english);
+            current_english=english;
+            start_it();
         }
 
         public void update_content(ArrayList<HanziDB.StringElement> elements) {
         }
 
-        private void start_it(final String english) {
+        private void start_it() {
             final HanziDB myDB=((AndZiApplication)context.getApplication()).getMyDB();
             final HanziDB refDB=((AndZiApplication)context.getApplication()).getRefDB();
 
-            act=context;
-
-            if (english.length()==0)
+            if (current_english.length()==0)
                 return;
 
-            loading=1;
+            loading=true;
+            is_cancelled=false;
 
             filler = new AsyncTask<Void, Void, Void>() {
                 ArrayList<Vocabulary> voc;
 
                 @Override
                 protected Void doInBackground(Void... voids) {
+                    voc=new ArrayList<Vocabulary>();
+                    publishProgress((Void[])null);
 
-                    voc=myDB.getCTranslations(english,2);
+                    voc=myDB.getCTranslations(current_english,2);
                     if (isCancelled())
                         return null;
 
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getCTranslations(english,1));
+                    voc.addAll(myDB.getCTranslations(current_english,1));
                     if (isCancelled())
                         return null;
 
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getCTranslations(english,0));
+                    voc.addAll(myDB.getCTranslations(current_english,0));
                     if (isCancelled())
                         return null;
 
                     if ((use_ref) && (refDB != null)) {
                         publishProgress((Void[])null);
 
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(english,2));
+                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,2));
                         if (isCancelled())
                             return null;
 
                         publishProgress((Void[])null);
 
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(english,1));
+                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,1));
                         if (isCancelled())
                             return null;
 
                         publishProgress((Void[])null);
 
-                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(english,0));
+                        voc = HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,0));
                         if (isCancelled())
                             return null;
                     }
                     return null;
+                }
+
+                @Override
+                protected void onCancelled() {
+                    super.onCancelled();
+                    is_cancelled=true;
                 }
 
                 @Override
@@ -202,21 +215,32 @@ public class Dictionary extends Activity {
                 protected void onPostExecute(Void aVoid) {
                     filler = null;
                     voc_list=voc;
-                    loading=0;
+                    loading=false;
                     EnglishWordAdapter.this.notifyDataSetChanged();
                 }
             };
+
 
             filler.execute((Void []) null);
         }
 
         public void cancel() {
+            Log.d(TAG, "Cancelling Dictionary filler");
             if (filler != null)
-                filler.cancel(false);
+                new Thread( new Runnable() {
+                    public void run() {
+                        filler.cancel(true);
+                    }
+                }).run();
+        }
+
+        public void resume() {
+            if (is_cancelled)
+                start_it();
         }
 
         public int getCount() {
-            return loading==1?voc_list.size()+1:voc_list.size();
+            return loading==true?voc_list.size()+1:voc_list.size();
         }
 
         public Object getItem(int i) {
@@ -229,11 +253,11 @@ public class Dictionary extends Activity {
 
         public View getView(int i, View convertView, ViewGroup viewGroup) {
             if (convertView == null) {
-                LayoutInflater li = (LayoutInflater)act.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = li.inflate(R.layout.details_list_item, viewGroup, false);
             }
 
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(act);
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
             boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
             if (i==voc_list.size()) {
@@ -264,9 +288,9 @@ public class Dictionary extends Activity {
                 details_translations.setText(trans);
                 convertView.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
-                        Intent intent=new Intent(act, Details.class);
+                        Intent intent=new Intent(context, Details.class);
                         intent.putExtra("hanzi", voc.chinese);
-                        act.startActivity(intent);
+                        context.startActivity(intent);
                     }
                 });
             }
