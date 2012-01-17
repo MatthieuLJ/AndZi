@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -60,7 +61,6 @@ public class ReviewList extends ListActivity {
         ArrayAdapter adap;
         ArrayList<CharPinyin> temp_to_study;
         ArrayList<String> chars_to_study;
-        ProgressDialog mProgressDialog=null;
 
         public table_filler(ArrayAdapter a) {
             adap=a;
@@ -76,22 +76,6 @@ public class ReviewList extends ListActivity {
                 chars_to_study = myDB.getAllFilteredToStudy();
             else
                 chars_to_study = myDB.getAllChar();
-
-            if (chars_to_study.size() > 10) {
-                mProgressDialog = new ProgressDialog(ReviewList.this);
-                mProgressDialog.setTitle("Review list");
-                mProgressDialog.setMessage("Loading...");
-                mProgressDialog.setCancelable(false);
-                if (chars_to_study.size() > 40) {
-                    mProgressDialog.setIndeterminate(false);
-                    mProgressDialog.setMax(chars_to_study.size());
-                    mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                }
-                else {
-                    mProgressDialog.setIndeterminate(true);
-                }
-                mProgressDialog.show();
-            }
         }
 
         private void fill_tables() {
@@ -168,8 +152,6 @@ public class ReviewList extends ListActivity {
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
             adap.notifyDataSetChanged();
-            if (mProgressDialog != null)
-                mProgressDialog.setProgress(values[0]);
         }
 
         @Override
@@ -195,8 +177,6 @@ public class ReviewList extends ListActivity {
                 no_words_dialog.show();
             }
             else {
-                if (mProgressDialog != null)
-                    mProgressDialog.dismiss();
                 adap.notifyDataSetChanged();
             }
         }
@@ -222,7 +202,15 @@ public class ReviewList extends ListActivity {
                 convertView = li.inflate(R.layout.review_list_item, viewGroup, false);
             }
             TextView chinese = (TextView) convertView.findViewById(R.id.review_item_character);
-            chinese.setText(to_study.get(i).character);
+            final String hanzi = to_study.get(i).character;
+            chinese.setText(hanzi);
+            chinese.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    Intent intent=new Intent(ReviewList.this, Details.class);
+                    intent.putExtra("hanzi", hanzi);
+                    startActivity(intent);
+                }
+            });
             TextView pinyin = (TextView) convertView.findViewById(R.id.review_item_pinyin);
             if (show_pinyin_color)
                 pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(to_study.get(i).pinyin)));
@@ -249,7 +237,8 @@ public class ReviewList extends ListActivity {
             for (Vocabulary voc : data_to_study.get(to_study.get(i))) {
                 TableRow row = (TableRow) li.inflate(R.layout.review_item_word_row, word_table, false);
                 TextView chinese_word = (TextView) row.findViewById(R.id.review_word_chinese);
-                chinese_word.setText(voc.chinese);
+                final String chinese_label = voc.chinese;
+                chinese_word.setText(chinese_label);
                 TextView english_word = (TextView) row.findViewById(R.id.review_word_english);
                 String english_translations="";
                 for (int j=0; j<voc.english.size(); j++) {
@@ -258,6 +247,13 @@ public class ReviewList extends ListActivity {
                         english_translations += ", ";
                 }
                 english_word.setText(english_translations);
+                row.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        Intent intent=new Intent(ReviewList.this, Details.class);
+                        intent.putExtra("hanzi", chinese_label);
+                        startActivity(intent);
+                    }
+                });
                 word_table.addView(row);
             }
             

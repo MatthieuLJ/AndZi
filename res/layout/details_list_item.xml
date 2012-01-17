@@ -9,9 +9,9 @@
         >
     <LinearLayout
             android:orientation="vertical"
-            android:layout_width="fill_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight=".75">
+            android:layout_weight=".25">
         <TextView
                 android:id="@+id/details_chinese_word"
                 android:layout_height="wrap_content"
@@ -29,8 +29,8 @@
     <TextView
             android:id="@+id/details_translations"
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
-            android:layout_weight=".25"
+            android:layout_width="0dp"
+            android:layout_weight=".75"
             android:gravity="top"
             android:singleLine="false"
             android:textColor="#000000"

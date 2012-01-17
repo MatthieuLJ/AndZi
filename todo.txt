@@ -6,17 +6,15 @@ ONGOING (10):
 * Add credits
 * Test performance with huge database
 * Make it pretty
+   * Make the layout of tests consistent (especially with position of the edit box)
 * Add splash screen
 * Add help (different screens, IME, ref DB)
 * Check different screen sizes
 
-BUGS (8):
+BUGS (5):
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Cannot really access Review list if there is nothing to study
-* Make the layout of tests consistent (especially with position of the edit box)
-* Link review list and Details
 * Some test results should be restricted to only words (not all the words with some character sequence)
-* Check layout of items in Details list (when translation is too long)
 * Find a way to hilight the character sequence in Details list
 * Optimize DB response in Details (show results progressively, be able to cancel / move faster)
 
@@ -28,7 +26,9 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (67):
+DONE (69):
+* Link review list and Details
+* Check layout of items in Review list (when translation is too long)
 * Let it go back once in Details activity
 * Don't let a lesson filtered without any lesson selected
 * Don't let a lesson with name "(none)"
