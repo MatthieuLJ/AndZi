@@ -67,13 +67,13 @@ public class Dictionary extends Activity {
         if (current_adapter!= null)
             current_adapter.cancel();
 
+        ListView results = (ListView) findViewById(R.id.dict_results);
         if (mode == 0) {
-            current_adapter=new Details.DetailsWordAdapter(elements, true, Dictionary.this);
+            current_adapter=new Details.DetailsWordAdapter(elements, true, Dictionary.this, results);
         }
         else {
             current_adapter=new EnglishWordAdapter(orig, true, Dictionary.this);
         }
-        ListView results = (ListView) findViewById(R.id.dict_results);
         results.setAdapter(current_adapter);
     }
 

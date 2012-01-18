@@ -114,10 +114,11 @@ public class Details extends Activity {
         boolean use_ref;
         boolean only_exact;
         Activity context;
+        ListView list;
         boolean is_cancelled=false;
         ArrayList<HanziDB.StringElement> current_elements;
 
-        public DetailsWordAdapter(final String hanzi, final boolean use_ref, final boolean only_exact, Activity context) {
+        public DetailsWordAdapter(final String hanzi, final boolean use_ref, final boolean only_exact, Activity context, ListView list) {
             ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
             for (int i=0; i<hanzi.length(); ) {
                 elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
@@ -126,25 +127,41 @@ public class Details extends Activity {
             }
             this.use_ref=use_ref;
             this.context=context;
+            this.list=list;
             this.only_exact=only_exact;
             current_elements=elements;
             start_it();
         }
 
-        public DetailsWordAdapter(final String hanzi, final boolean use_ref, Activity context) {
-            this(hanzi,use_ref,false,context);
+        public DetailsWordAdapter(final String hanzi, final boolean use_ref, Activity context, ListView list) {
+            this(hanzi,use_ref,false,context, list);
         }
 
-        public DetailsWordAdapter(final ArrayList<HanziDB.StringElement> elements, final boolean use_ref, final boolean only_exact, Activity context) {
+        public DetailsWordAdapter(final ArrayList<HanziDB.StringElement> elements, final boolean use_ref, final boolean only_exact, Activity context, ListView list) {
             this.use_ref=use_ref;
             this.context=context;
+            this.list=list;
             current_elements=elements;
             this.only_exact=only_exact;
             start_it();
         }
 
-        public DetailsWordAdapter(final ArrayList<HanziDB.StringElement> elements, final boolean use_ref, Activity context) {
-            this(elements,use_ref,false,context);
+        public DetailsWordAdapter(final ArrayList<HanziDB.StringElement> elements, final boolean use_ref, Activity context, ListView list) {
+            this(elements,use_ref,false,context, list);
+        }
+
+        private void finished(ArrayList<Vocabulary> voc) {
+            loading=false;
+            filler=null;
+            voc_list= voc;
+            DetailsWordAdapter.this.notifyDataSetChanged();
+            if (voc.size()<=1) {
+                list.setDividerHeight(0);
+            }
+            else {
+                list.setDividerHeight(1);
+            }
+
         }
 
         private void start_it() {
@@ -154,13 +171,11 @@ public class Details extends Activity {
             loading=true;
             is_cancelled=false;
 
+            final ArrayList<Vocabulary> voc=new ArrayList<Vocabulary>();
             if (current_elements==null) {
-                loading=false;
-                voc_list.clear();
-                DetailsWordAdapter.this.notifyDataSetChanged();
+                finished(voc);
                 return;
             }
-            final ArrayList<Vocabulary> voc=new ArrayList<Vocabulary>();
 
             final DBVocabularyResultsHandler ref_handler = new DBVocabularyResultsHandler() {
                 int step=0;
@@ -182,10 +197,7 @@ public class Details extends Activity {
                     switch(step) {
                         case 0:
                             if (only_exact) {
-                                loading=false;
-                                filler=null;
-                                voc_list= voc;
-                                DetailsWordAdapter.this.notifyDataSetChanged();
+                                finished(voc);
                             }
                             else {
                                 filler = refDB.getWordsWithSequence(current_elements, 1, this);
@@ -195,10 +207,7 @@ public class Details extends Activity {
                             filler = refDB.getWordsWithSequence(current_elements, 0, this);
                             break;
                         case 2:
-                            loading=false;
-                            filler=null;
-                            voc_list= voc;
-                            DetailsWordAdapter.this.notifyDataSetChanged();
+                            finished(voc);
                             break;
                     }
                     step++;
@@ -230,10 +239,7 @@ public class Details extends Activity {
                                     filler = refDB.getWordsWithSequence(current_elements, 2, ref_handler);
                                 }
                                 else {
-                                    loading=false;
-                                    filler=null;
-                                    voc_list= voc;
-                                    DetailsWordAdapter.this.notifyDataSetChanged();
+                                    finished(voc);
                                 }
                             }
                             else {
@@ -255,10 +261,7 @@ public class Details extends Activity {
                                 filler = refDB.getWordsWithSequence(current_elements, 2, ref_handler);
                             }
                             else {
-                                loading=false;
-                                filler=null;
-                                voc_list= voc;
-                                DetailsWordAdapter.this.notifyDataSetChanged();
+                                finished(voc);
                             }
                             break;
                     }
@@ -401,8 +404,8 @@ public class Details extends Activity {
             i+=Character.charCount(hanzi.codePointAt(i));
         }
 
-        DetailsWordAdapter res = new DetailsWordAdapter(hanzi, include_ref, only_exact, context);
         UpdatableListView list= (UpdatableListView) new_view.findViewById(R.id.details_list);
+        DetailsWordAdapter res = new DetailsWordAdapter(hanzi, include_ref, only_exact, context, list);
         if (list != null)
             list.setAdapter(res);
 
