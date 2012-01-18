@@ -1,20 +1,20 @@
 ONGOING (10):
 * Pick test automatically (and change)
 * Add graph of progress (http://www.achartengine.org/)
-* Can change what to see in Review List
-* Check everything can be done without a touch screen (wheel or arrow buttons)
+* Can change what to see in Review List (?)
+   * Cannot really access Review list if there is nothing to study
 * Add credits
 * Test performance with huge database
 * Make it pretty
    * Make the layout of tests consistent (especially with position of the edit box)
 * Add splash screen
 * Add help (different screens, IME, ref DB)
+* Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (4):
-* In add vocabulary, do not use extra info with lessons if there is no lesson present
-* Cannot really access Review list if there is nothing to study
+BUGS (3):
 * Some test results should be restricted to only words (not all the words with some character sequence)
+* When giving a wrong answer, try to show the meaning of it.
 * Find a way to hilight the character sequence in Details list
 
 FUTURE (6):
@@ -25,7 +25,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (70):
+DONE (71):
+* In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Optimize DB response in Details (show results progressively, be able to cancel / move faster)
 * Link review list and Details
 * Check layout of items in Review list (when translation is too long)

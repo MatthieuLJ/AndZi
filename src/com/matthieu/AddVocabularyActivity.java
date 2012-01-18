@@ -608,92 +608,99 @@ public class AddVocabularyActivity extends Activity
                 return row;
             }
 
-
             if ((position >1) && (position<my+2)) {
                 // part of the local DB
                 final VocabularyItem voc = translations_in_db.get(position-2);
+                boolean has_lessons= !(myDB.getLessons().size() == 0);
+                int desired_layout;
+                if (has_lessons)
+                    desired_layout = R.layout.add_vocabulary_list_item;
+                else
+                    desired_layout = R.layout.add_vocabulary_list_ref_item;
 
-                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==R.layout.add_vocabulary_list_item)) {
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==desired_layout)) {
                     row = convertView;
                 }
                 else {
                     LayoutInflater inflater = getLayoutInflater();
-                    row = inflater.inflate(R.layout.add_vocabulary_list_item, parent, false);
-                    row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_item);
+                    row = inflater.inflate(desired_layout, parent, false);
+                    row.setTag(R.id.add_list_view_inflated, desired_layout);
                 }
-                
-                ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.add_vocabulary_info);
-                Button bt = (Button) row.findViewById(R.id.add_expand_button);
-                if (el!=null) {
-                    if(voc.expanded) {
-                        el.expand_immediate();
-                        bt.setBackgroundResource(R.drawable.expand_arrow_down);
-                        bt.setTag(R.id.add_expanded, "1");
+
+                if (has_lessons) {
+                    ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.add_vocabulary_info);
+                    Button bt = (Button) row.findViewById(R.id.add_expand_button);
+                    if (el!=null) {
+                        if(voc.expanded) {
+                            el.expand_immediate();
+                            bt.setBackgroundResource(R.drawable.expand_arrow_down);
+                            bt.setTag(R.id.add_expanded, "1");
+                        }
+                        else {
+                            el.collapse_immediate();
+                            bt.setBackgroundResource(R.drawable.expand_arrow_right);
+                            bt.setTag(R.id.add_expanded, "0");
+                        }
+                    }
+                    bt.setTag(R.id.add_view_to_expand, el);
+                    bt.setTag(R.id.add_vocabulary_item, voc);
+
+                    TextView more = (TextView) row.findViewById(R.id.add_more);
+                    String lessons = "";
+                    if (voc.lessons.size() != 0) {
+                        for (String s : voc.lessons) {
+                            lessons=lessons.concat(s);
+                            lessons=lessons.concat("\n");
+                        }
+                        lessons=lessons.concat("Edit lessons");
                     }
                     else {
-                        el.collapse_immediate();
-                        bt.setBackgroundResource(R.drawable.expand_arrow_right);
-                        bt.setTag(R.id.add_expanded, "0");
+                        lessons = "Assign to lesson";
                     }
-                }
-                bt.setTag(R.id.add_view_to_expand, el);
-                bt.setTag(R.id.add_vocabulary_item, voc);
-
-                TextView more = (TextView) row.findViewById(R.id.add_more);
-                String lessons = "";
-                if (voc.lessons.size() != 0) {
-                    for (String s : voc.lessons) {
-                        lessons=lessons.concat(s);
-                        lessons=lessons.concat("\n");
-                    }
-                    lessons=lessons.concat("Edit lessons");
-                }
-                else {
-                    lessons = "Assign to lesson";
-                }
-                more.setText(lessons);
-                more.setTag(R.id.add_vocabulary_item, voc);
-                more.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View view) {
-                        AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
-                        dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
-                        final ArrayList<String> lessons = myDB.getLessons();
-                        final boolean[] selected = new boolean[lessons.size()];
-                        final CharSequence[] labels = new CharSequence[lessons.size()];
-                        for (int i=0; i<lessons.size(); i++) {
-                            labels[i] = lessons.get(i);
-                            selected[i] = voc.lessons.contains(lessons.get(i));
-                        }
-                        dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
-                            public void onClick(DialogInterface dialog, final int i, final boolean b) {
-                                Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
-                                process_handler.post(new Runnable() {
-                                    public void run() {
-                                        if (b) {
-                                            voc.lessons.add(lessons.get(i));
-                                            myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
-                                        }
-                                        else {
-                                            voc.lessons.remove(lessons.get(i));
-                                            myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
-                                        }
-                                    }
-                                });
-
+                    more.setText(lessons);
+                    more.setTag(R.id.add_vocabulary_item, voc);
+                    more.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View view) {
+                            AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
+                            dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
+                            final ArrayList<String> lessons = myDB.getLessons();
+                            final boolean[] selected = new boolean[lessons.size()];
+                            final CharSequence[] labels = new CharSequence[lessons.size()];
+                            for (int i=0; i<lessons.size(); i++) {
+                                labels[i] = lessons.get(i);
+                                selected[i] = voc.lessons.contains(lessons.get(i));
                             }
-                        });
-                        dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int i) {
-                                dialog.dismiss();
-                                ListView lv = (ListView) findViewById(R.id.vocabulary_list);
-                                if (lv != null) {
-                                    ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                            dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
+                                public void onClick(DialogInterface dialog, final int i, final boolean b) {
+                                    Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
+                                    process_handler.post(new Runnable() {
+                                        public void run() {
+                                            if (b) {
+                                                voc.lessons.add(lessons.get(i));
+                                                myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                            }
+                                            else {
+                                                voc.lessons.remove(lessons.get(i));
+                                                myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                            }
+                                        }
+                                    });
+
                                 }
-                            }
-                        });
-                        dialog.show();
-                    }
-                });
+                            });
+                            dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int i) {
+                                    dialog.dismiss();
+                                    ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                                    if (lv != null) {
+                                        ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                                    }
+                                }
+                            });
+                            dialog.show();
+                        }
+                    });
+                }
 
                 TextView word = (TextView) row.findViewById(R.id.add_word);
                 word.setText(voc.translation);
