@@ -1247,7 +1247,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 do {
                     if (isCancelled()) {
                         Log.d(TAG, "getWordIdWithSequence cancelled");
-                        finish_it();
                         return null;
                     }
 
@@ -1288,15 +1287,12 @@ public class HanziDB extends SQLiteOpenHelper {
                     
                     if (isCancelled()) {
                         Log.d(TAG, "getWordIdWithSequence cancelled");
-                        finish_it();
                         return null;
                     }
                     
                     current_offset+=limit_size;
                     publishProgress(query_results);
                 } while (num_records==limit_size);
-
-                finish_it();
 
                 return (Void) null;
             }
@@ -1307,7 +1303,8 @@ public class HanziDB extends SQLiteOpenHelper {
                     handler.handle_more_results((ArrayList<Vocabulary>) query_results.clone());
             }
 
-            private void finish_it() {
+            @Override
+            protected void onPostExecute(Void aVoid) {
                 handler.handle_end_of_results();
             }
         };

@@ -12,8 +12,7 @@ ONGOING (10):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (3):
-* Some test results should be restricted to only words (not all the words with some character sequence)
+BUGS (2):
 * When giving a wrong answer, try to show the meaning of it.
 * Find a way to hilight the character sequence in Details list
 
@@ -25,7 +24,8 @@ FUTURE (6):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (71):
+DONE (72):
+* Some test results should be restricted to only words (not all the words with some character sequence)
 * In add vocabulary, do not use extra info with lessons if there is no lesson present
 * Optimize DB response in Details (show results progressively, be able to cancel / move faster)
 * Link review list and Details

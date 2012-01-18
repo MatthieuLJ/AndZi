@@ -219,7 +219,7 @@ public class GuessChineseWord extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false);
+        Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false, true);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessChineseWord.this);
