@@ -156,7 +156,7 @@ public class GuessContaining extends TestActivity {
             else {
                 update_scores(OTHER);
                 Toast.makeText(this, "Wrong tone", 2).show();
-                set_next_study();
+                another_test_or_quit();
             }
         }
     }

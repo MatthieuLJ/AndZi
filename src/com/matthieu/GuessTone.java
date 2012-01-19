@@ -218,11 +218,6 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             cb.setChecked(true);
     }
 
-    public void handle_cancel(View v) {
-        myDB.restartStudy(hanzi);
-        set_next_study();
-    }
-
     public void handle_ok(View v) {
         String tones_checked="";
         CheckBox cb;

@@ -6,15 +6,18 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 public abstract class TestActivity extends Activity {
-    protected boolean answered=true;
+    protected int answered=-1;
     protected int show_result=1;
     protected int last_result;
     protected boolean single_test;
+
+    private static final String TAG="TestActivity";
 
     final static protected int CORRECT=1;
     final static protected int INCORRECT=0;
@@ -25,6 +28,10 @@ public abstract class TestActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         single_test=getIntent().getBooleanExtra("SingleTest", false);
+        if (single_test)
+            Log.d(TAG, "Running single test");
+        else
+            Log.d(TAG, "Running continuous test");
     }
 
     @Override
@@ -33,9 +40,11 @@ public abstract class TestActivity extends Activity {
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
-        if (answered) {
+        if (answered==1) {
+            another_test_or_quit();
+        }
+        else if (answered==-1) {
             set_next_study();
-            answered=false;
         }
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -57,7 +66,7 @@ public abstract class TestActivity extends Activity {
     }
 
     protected void set_next_study() {
-        answered=false;
+        answered=0;
     }
     protected void nothing_to_test() {
         if (single_test) {
@@ -93,7 +102,7 @@ public abstract class TestActivity extends Activity {
         if (last_result == OTHER)
             return last_result;
 
-        answered = true;
+        answered = 1;
 
         if (((show_result == 2) || (show_result == 1)) && (last_result == INCORRECT)) {
             show_solution(guess, last_result);
@@ -112,14 +121,13 @@ public abstract class TestActivity extends Activity {
                     toast = Toast.makeText(this, "Well done !", 2);
                 }
                 toast.show();
-                set_next_study();
+                another_test_or_quit();
             }
         }
         return last_result;
     }
 
-    public void handle_next(View v) {
-        update_scores(last_result);
+    public void another_test_or_quit() {
         if (single_test) {
             setResult(last_result);
             finish();
@@ -128,13 +136,13 @@ public abstract class TestActivity extends Activity {
             set_next_study();
     }
 
+    public void handle_next(View v) {
+        update_scores(last_result);
+        another_test_or_quit();
+    }
+
     public void handle_good(View v) {
         update_scores(CORRECT);
-        if (single_test) {
-            setResult(CORRECT);
-            finish();
-        }
-        else
-            set_next_study();
+        another_test_or_quit();
     }
 }

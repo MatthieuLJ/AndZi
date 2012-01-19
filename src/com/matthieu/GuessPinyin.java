@@ -195,7 +195,7 @@ public class GuessPinyin extends TestActivity {
                 update_scores(OTHER);
                 Toast toast = Toast.makeText(this, "Wrong tone", 2);
                 toast.show();
-                set_next_study();
+                another_test_or_quit();
             }
         }
     }

@@ -3,6 +3,7 @@ package com.matthieu;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,12 +39,15 @@ public class Test extends Activity {
         int current_index=0;
         Collections.shuffle(tests);
         Class target = tests.get(current_index);
-        while((tests_with_nothing.contains(target)) && (current_index<tests.size())) {
+        while(tests_with_nothing.contains(target)) {
             current_index++;
+            if (current_index >= tests.size())
+                break;
             target = tests.get(current_index);
         }
 
         if (current_index == tests.size()) {
+            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
             finish();
             return;
         }
