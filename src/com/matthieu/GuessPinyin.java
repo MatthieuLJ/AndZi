@@ -37,8 +37,7 @@ public class GuessPinyin extends TestActivity {
         hanzi = myDB.getNextFilteredToStudy();
 
         if (hanzi == null) {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-            this.finish();
+            nothing_to_test();
             return;
         }
         display_test();
@@ -180,8 +179,9 @@ public class GuessPinyin extends TestActivity {
     }
 
     public void handle_ok(View v) {
-        Toast toast;
         EditText word_guess = (EditText) findViewById(R.id.guess_pinyin_guess);
+        if (word_guess==null)
+            return;
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
@@ -193,7 +193,7 @@ public class GuessPinyin extends TestActivity {
             }
             else {
                 update_scores(OTHER);
-                toast = Toast.makeText(this, "Wrong tone", 2);
+                Toast toast = Toast.makeText(this, "Wrong tone", 2);
                 toast.show();
                 set_next_study();
             }

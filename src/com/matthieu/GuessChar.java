@@ -41,8 +41,7 @@ public class GuessChar extends TestActivity implements TextWatcher {
         hanzi = myDB.getNextFilteredToStudy();
         
         if (hanzi == null) {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-            this.finish();
+            nothing_to_test();
             return;
         }
         display_test();
@@ -195,6 +194,8 @@ public class GuessChar extends TestActivity implements TextWatcher {
 
     public void handle_ok(View v) {
         EditText word_guess = (EditText) findViewById(R.id.char_finder_chinese);
+        if (word_guess==null)
+            return;
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 

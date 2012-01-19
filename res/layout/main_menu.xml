@@ -23,6 +23,7 @@
                 android:text="Edit Lessons"
                 android:onClick="handle_edit_lessons" />
     </TableRow>
+
     <TableRow
             android:layout_height="fill_parent"
             android:layout_weight="1"
@@ -32,53 +33,9 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:text="Tone tester"
-                android:onClick="handle_tone_tester" />
+                android:text="Test me!"
+                android:onClick="handle_test" />
 
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Char Finder"
-                android:onClick="handle_char_finder" />
-    </TableRow>
-    <TableRow
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            >
-
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Guess Chinese Word"
-                android:onClick="handle_guesschinese" />
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Guess Containing"
-                android:onClick="handle_guesscontaining" />
-
-    </TableRow>
-    <TableRow
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            >
-
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Guess Pinyin"
-                android:onClick="handle_guesspinyin" />
-
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Guess English"
-                android:onClick="handle_guessenglish" />
     </TableRow>
     <TableRow
             android:layout_height="fill_parent"

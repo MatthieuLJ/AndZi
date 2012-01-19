@@ -33,6 +33,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".Test"/>
         <activity android:name=".GuessTone"
                   android:configChanges="keyboardHidden|orientation"/>
         <activity android:name=".GuessChar"
@@ -48,7 +49,7 @@
 
         <activity android:name=".ReviewList" />
         <activity android:name=".Details"
-                android:launchMode="singleTop" />
+                  android:launchMode="singleTop" />
         <activity android:name=".Dictionary"
                   android:windowSoftInputMode="stateHidden|adjustPan" />
 

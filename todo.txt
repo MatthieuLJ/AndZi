@@ -1,7 +1,6 @@
-ONGOING (10):
-* Pick test automatically (and change)
+ONGOING (9):
 * Add graph of progress (http://www.achartengine.org/)
-* Can change what to see in Review List (?)
+* Can change what to see in Review List (?) - or be able to see the content of lessons (?)
    * Cannot really access Review list if there is nothing to study
 * Add credits
 * Test performance with huge database
@@ -15,15 +14,17 @@ ONGOING (10):
 BUGS (1):
 * Find a way to hilight the character sequence in Details list
 
-FUTURE (6):
+FUTURE (7):
 * Pre-created lessons
 * Hide IME when not needed
+* Find characters based on the composition
 * Suggest vocabulary based on what is already known, frequency list
 * Push database from one phone to another (ICS)
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (73):
+DONE (74):
+* Pick test automatically (and change)
 * When giving a wrong answer, try to show the meaning of it.
 * Some test results should be restricted to only words (not all the words with some character sequence)
 * In add vocabulary, do not use extra info with lessons if there is no lesson present

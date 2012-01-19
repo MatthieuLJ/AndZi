@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.WindowManager;
@@ -13,10 +14,18 @@ public abstract class TestActivity extends Activity {
     protected boolean answered=true;
     protected int show_result=1;
     protected int last_result;
+    protected boolean single_test;
 
     final static protected int CORRECT=1;
     final static protected int INCORRECT=0;
     final static protected int OTHER=-1;
+    final static protected int NOTHING_TO_TEST=-2;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        single_test=getIntent().getBooleanExtra("SingleTest", false);
+    }
 
     @Override
     protected void onResume() {
@@ -49,6 +58,15 @@ public abstract class TestActivity extends Activity {
 
     protected void set_next_study() {
         answered=false;
+    }
+    protected void nothing_to_test() {
+        if (single_test) {
+            setResult(NOTHING_TO_TEST);
+        }
+        else {
+            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
+        }
+        finish();
     }
     abstract protected void display_test();
     abstract protected int check_guess(String guess);
@@ -102,6 +120,21 @@ public abstract class TestActivity extends Activity {
 
     public void handle_next(View v) {
         update_scores(last_result);
-        set_next_study();
+        if (single_test) {
+            setResult(last_result);
+            finish();
+        }
+        else
+            set_next_study();
+    }
+
+    public void handle_good(View v) {
+        update_scores(CORRECT);
+        if (single_test) {
+            setResult(CORRECT);
+            finish();
+        }
+        else
+            set_next_study();
     }
 }

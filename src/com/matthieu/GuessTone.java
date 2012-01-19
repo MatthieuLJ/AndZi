@@ -58,8 +58,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         }
 
         if (hanzi == null) {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-            this.finish();
+            nothing_to_test();
             return;
         }
         display_test();

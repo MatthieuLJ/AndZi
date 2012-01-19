@@ -54,8 +54,7 @@ public class GuessContaining extends TestActivity {
 
         }
         if (hanzi == null) {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-            this.finish();
+            nothing_to_test();
             return;
         }
         display_test();
@@ -143,6 +142,8 @@ public class GuessContaining extends TestActivity {
 
     public void handle_ok(View v) {
         EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+        if (word_guess==null)
+            return;
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 

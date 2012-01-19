@@ -104,8 +104,7 @@ public class GuessEnglish extends TestActivity {
             }
         }
         if (solution == null) {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-            this.finish();
+            nothing_to_test();
             return;
         }
         display_test();
@@ -172,6 +171,8 @@ public class GuessEnglish extends TestActivity {
 
     public void handle_ok(View v) {
         EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
+        if (word_guess==null)
+            return;
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
@@ -196,10 +197,5 @@ public class GuessEnglish extends TestActivity {
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
         }
-    }
-
-    public void handle_good(View v) {
-        update_scores(CORRECT);
-        set_next_study();
     }
 }

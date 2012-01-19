@@ -77,18 +77,8 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
-    public void handle_tone_tester(View v) {
-        Intent intent = new Intent(this, GuessTone.class);
-        startActivity(intent);
-    }
-
     public void handle_stats(View v) {
         Intent intent = new Intent(this, DBActivity.class);
-        startActivity(intent);
-    }
-
-    public void handle_char_finder(View v) {
-        Intent intent = new Intent(this, GuessChar.class);
         startActivity(intent);
     }
 
@@ -97,28 +87,13 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
-    public void handle_guesschinese(View v) {
-        Intent intent = new Intent(this, GuessChineseWord.class);
-        startActivity(intent);
-    }
-
     public void handle_reviewlist(View v) {
         Intent intent = new Intent(this, ReviewList.class);
         startActivity(intent);
     }
-
-    public void handle_guesspinyin(View v) {
-        Intent intent = new Intent(this, GuessPinyin.class);
-        startActivity(intent);
-    }
-
-    public void handle_guessenglish(View v) {
-        Intent intent = new Intent(this, GuessEnglish.class);
-        startActivity(intent);
-    }
     
-    public void handle_guesscontaining(View v) {
-        Intent intent = new Intent(this, GuessContaining.class);
+    public void handle_test(View v) {
+        Intent intent = new Intent(this, Test.class);
         startActivity(intent);
     }
 
