@@ -14,6 +14,7 @@ public class MainMenuActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         if (!myDB.checkDatabase()) {
@@ -65,6 +66,12 @@ public class MainMenuActivity extends Activity {
         }
 
         setContentView(R.layout.main_menu);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ((AndZiApplication) getApplication()).getProgress().add_data();
     }
 
     public void handle_add_vocabulary(View v) {

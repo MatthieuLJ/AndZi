@@ -14,12 +14,14 @@ import java.util.ArrayList;
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
+    private ProgressDB prog=null;
     private boolean ref_enabled=true;
     private boolean ref_present=false;
 
     private final static String TAG = "AndZiApplication";
     private final static String REF_DB_NAME = "cedict_db";
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
+    private static final String PROGRESS_DB_NAME = "progress_db";
 
     public void onCreate() {
         initialize_my_db();
@@ -36,6 +38,13 @@ public class AndZiApplication extends Application {
             ref_present=true;
             ref_enabled=prefs.getBoolean("ref_enabled", true);
         }
+        prog = new ProgressDB(getApplicationContext(), this, PROGRESS_DB_NAME);
+    }
+
+    @Override
+    public void onTerminate() {
+        prog.add_data();
+        super.onTerminate();
     }
 
     public HanziDB getMyDB() { return myDB; }
@@ -46,6 +55,16 @@ public class AndZiApplication extends Application {
         return (ref_enabled&&ref_present)?refDB:null;
     }
     public boolean getRefDBPresent() { return ref_present; }
+    public ProgressDB getProgress() { return prog; }
+    public ProgressDB.ProgressData getCurrentProgress() {
+        ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
+        for (int i=0; i<5; i++) {
+            new_data.num_chars_in_box[i]=myDB.getNumCharsInBox(i);
+            new_data.num_chars_expired_in_box[i]=myDB.getNumCharsExpiredInBox(i);
+        }
+        new_data.date = System.currentTimeMillis();
+        return new_data;
+    }
 
     private void initialize_my_db() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -93,7 +112,6 @@ public class AndZiApplication extends Application {
     }
 
     public void eraseRefDB() {
-
         if (refDB != null) {
             refDB.close();
             refDB = null;

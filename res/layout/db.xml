@@ -8,16 +8,10 @@
         android:background="#dddddd"
         >
     <TableLayout
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:layout_weight="1"
             android:stretchColumns="1"
             >
-        <View
-                android:layout_height="fill_parent"
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                />
         <TableRow>
             <TextView
                     android:textColor="#000000"
@@ -29,11 +23,6 @@
                     android:textColor="#000000"
                     />
         </TableRow>
-        <View
-                android:layout_height="fill_parent"
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                />
         <TableRow>
             <TextView
                     android:textColor="#000000"
@@ -45,111 +34,30 @@
                     android:textColor="#000000"
                     />
         </TableRow>
-        <View
-                android:layout_height="fill_parent"
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                />
     </TableLayout>
-    <LinearLayout
-            android:layout_height="fill_parent"
+    <com.matthieu.widget.ProgressGraph
+            android:id="@+id/graph"
+            android:layout_height="0dp"
             android:layout_width="fill_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-        <TextView
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="#000000"
-                android:text="Box 1:"
-                />
-        <com.matthieu.widget.StatsBars
-                android:id="@+id/stats_box1graph"
-                android:layout_height="wrap_content"
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                android:layout_margin="5sp"
-                />
-    </LinearLayout>
+            android:layout_weight="1" />
+
     <LinearLayout
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-        <TextView
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="#000000"
-                android:text="Box 2:"
-                />
-        <com.matthieu.widget.StatsBars
-                android:id="@+id/stats_box2graph"
-                android:layout_height="wrap_content"
+            android:orientation="horizontal">
+        <Button
+                android:id="@+id/graph_in"
                 android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:layout_margin="5sp"
-                />
-    </LinearLayout>
-    <LinearLayout
-            android:layout_height="fill_parent"
-            android:layout_width="fill_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-        <TextView
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="#000000"
-                android:text="Box 3:"
-                />
-        <com.matthieu.widget.StatsBars
-                android:id="@+id/stats_box3graph"
-                android:layout_height="wrap_content"
+                android:text="zoom-in" />
+        <Button
+                android:id="@+id/graph_out"
                 android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:layout_margin="5sp"
-                />
+                android:text="zoom-out" />
     </LinearLayout>
-    <LinearLayout
-            android:layout_height="fill_parent"
-            android:layout_width="fill_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-        <TextView
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="#000000"
-                android:text="Box 4:"
-                />
-        <com.matthieu.widget.StatsBars
-                android:id="@+id/stats_box4graph"
-                android:layout_height="wrap_content"
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                android:layout_margin="5sp"
-                />
-    </LinearLayout>
-    <LinearLayout
-            android:layout_height="fill_parent"
-            android:layout_width="fill_parent"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-        <TextView
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="#000000"
-                android:text="Box 5:"
-                />
-        <com.matthieu.widget.StatsBars
-                android:id="@+id/stats_box5graph"
-                android:layout_height="wrap_content"
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                android:layout_margin="5sp"
-                />
-    </LinearLayout>
+
 
 </LinearLayout>
