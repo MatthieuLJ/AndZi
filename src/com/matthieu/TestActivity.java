@@ -20,9 +20,9 @@ public abstract class TestActivity extends Activity {
     private static final String TAG="TestActivity";
 
     final static protected int CORRECT=1;
-    final static protected int INCORRECT=0;
-    final static protected int OTHER=-1;
-    final static protected int NOTHING_TO_TEST=-2;
+    final static protected int INCORRECT=2;
+    final static protected int OTHER=3;
+    final static protected int NOTHING_TO_TEST=4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

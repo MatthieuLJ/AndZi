@@ -23,7 +23,8 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (74):
+DONE (75):
+* Can go out of tests with the back key
 * Pick test automatically (and change)
 * When giving a wrong answer, try to show the meaning of it.
 * Some test results should be restricted to only words (not all the words with some character sequence)

@@ -23,7 +23,11 @@ public class Test extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == TestActivity.NOTHING_TO_TEST) {
+        if (resultCode==0) {
+            super.onActivityResult(requestCode,resultCode,data);
+            finish();
+        }
+        else if (resultCode == TestActivity.NOTHING_TO_TEST) {
             tests_with_nothing.add(tests.get(requestCode));
             start_test();
         } else if (resultCode == TestActivity.CORRECT) {
@@ -54,6 +58,6 @@ public class Test extends Activity {
 
         Intent i=new Intent(this, target);
         i.putExtra("SingleTest", true);
-        this.startActivityForResult(i, current_index);
+        this.startActivityForResult(i, current_index+1);
     }
 }
