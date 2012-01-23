@@ -42,78 +42,78 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase database) {
         Log.v(TAG, "onCreate HanziDB...");
 
         // basics
-        db.execSQL("DROP TABLE IF EXISTS eword");
-        db.execSQL("DROP TABLE IF EXISTS cword_segment");
-        db.execSQL("DROP TABLE IF EXISTS cword");
-        db.execSQL("DROP TABLE IF EXISTS char_pinyin");
+        database.execSQL("DROP TABLE IF EXISTS eword");
+        database.execSQL("DROP TABLE IF EXISTS cword_segment");
+        database.execSQL("DROP TABLE IF EXISTS cword");
+        database.execSQL("DROP TABLE IF EXISTS char_pinyin");
 
         // lesson stuff
-        db.execSQL("DROP TABLE IF EXISTS lesson_word");
-        db.execSQL("DROP TABLE IF EXISTS lessons");
+        database.execSQL("DROP TABLE IF EXISTS lesson_word");
+        database.execSQL("DROP TABLE IF EXISTS lessons");
 
         // leitner stuff
-        db.execSQL("DROP TABLE IF EXISTS leitner");
+        database.execSQL("DROP TABLE IF EXISTS leitner");
 
         // basics
-        db.execSQL("CREATE TABLE char_pinyin (" +
+        database.execSQL("CREATE TABLE char_pinyin (" +
                 "char_pinyin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "hanzi VARCHAR(2) NOT NULL," +
                 "pinyin VARCHAR(10) NOT NULL," +
                 "UNIQUE(hanzi, pinyin))");
-        db.execSQL("CREATE INDEX char_pinyin_id ON char_pinyin(char_pinyin_id)");
-        db.execSQL("CREATE INDEX char_pinyin_hanzi ON char_pinyin(hanzi)");
-        db.execSQL("CREATE INDEX char_pinyin_pinyin ON char_pinyin(pinyin)");
-        db.execSQL("CREATE TABLE cword (" +
+        database.execSQL("CREATE INDEX char_pinyin_id ON char_pinyin(char_pinyin_id)");
+        database.execSQL("CREATE INDEX char_pinyin_hanzi ON char_pinyin(hanzi)");
+        database.execSQL("CREATE INDEX char_pinyin_pinyin ON char_pinyin(pinyin)");
+        database.execSQL("CREATE TABLE cword (" +
                 "cword_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "chinese VARCHAR(50) NOT NULL," +
                 "pinyin VARCHAR(150) NOT NULL," +
                 "UNIQUE(chinese,pinyin))");
-        db.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
-        db.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
-        db.execSQL("CREATE INDEX cword_pinyin ON cword(pinyin)");
-        db.execSQL("CREATE TABLE cword_segment (" +
+        database.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
+        database.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
+        database.execSQL("CREATE INDEX cword_pinyin ON cword(pinyin)");
+        database.execSQL("CREATE TABLE cword_segment (" +
                 "cword_id INTEGER NOT NULL," +
                 "char_pinyin_id INTEGER NOT NULL," +
                 "pos INTEGER NOT NULL," +
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "FOREIGN KEY (char_pinyin_id) REFERENCES char_pinyin(char_pinyin_id)," +
                 "UNIQUE(cword_id, pos))");
-        db.execSQL("CREATE INDEX cword_segment_cword_id ON cword_segment(cword_id)");
-        db.execSQL("CREATE INDEX cword_segment_char_pinyin_id ON cword_segment(char_pinyin_id)");
-        db.execSQL("CREATE INDEX cword_segment_pos ON cword_segment(pos)");
-        db.execSQL("CREATE TABLE eword (" +
+        database.execSQL("CREATE INDEX cword_segment_cword_id ON cword_segment(cword_id)");
+        database.execSQL("CREATE INDEX cword_segment_char_pinyin_id ON cword_segment(char_pinyin_id)");
+        database.execSQL("CREATE INDEX cword_segment_pos ON cword_segment(pos)");
+        database.execSQL("CREATE TABLE eword (" +
                 "eng_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "cword_id INTEGER NOT NULL," +
                 "translation VARCHAR(250) NOT NULL," +
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "UNIQUE(cword_id, translation))");
-        db.execSQL("CREATE INDEX eword_translation ON eword(translation)");
+        database.execSQL("CREATE INDEX eword_translation ON eword(translation)");
 
         // lesson stuff
-        db.execSQL("CREATE TABLE lessons (" +
+        database.execSQL("CREATE TABLE lessons (" +
                 "lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "list_order INTEGER DEFAULT 0," +
                 "name VARCHAR(64) NOT NULL UNIQUE)");
-        db.execSQL("CREATE INDEX lessons_name ON lessons(name)");
-        db.execSQL("CREATE TABLE lesson_word (" +
+        database.execSQL("CREATE INDEX lessons_name ON lessons(name)");
+        database.execSQL("CREATE TABLE lesson_word (" +
                 "eng_id INTEGER NOT NULL," +
                 "lesson_id INTEGER NOT NULL," +
                 "FOREIGN KEY (eng_id) REFERENCES eword(eng_id)," +
                 "FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id)," +
                 "UNIQUE(eng_id,lesson_id))");
-        db.execSQL("CREATE INDEX lesson_word_eng_id ON lesson_word(eng_id)");
-        db.execSQL("CREATE INDEX lesson_word_lesson_id ON lesson_word(lesson_id)");
+        database.execSQL("CREATE INDEX lesson_word_eng_id ON lesson_word(eng_id)");
+        database.execSQL("CREATE INDEX lesson_word_lesson_id ON lesson_word(lesson_id)");
 
         // leitner stuff
-        db.execSQL("CREATE TABLE leitner (" +
+        database.execSQL("CREATE TABLE leitner (" +
                         "hanzi VARCHAR(2) PRIMARY KEY NOT NULL," +
                         "box INTEGER NOT NULL," +
                         "mod_time INTEGER NOT NULL)");
-        db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
+        database.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
 
     }
 
@@ -437,6 +437,7 @@ public class HanziDB extends SQLiteOpenHelper {
         if ((itemA == null) || (itemB == null))
             return;
 
+        itemA.ensureCapacity(itemA.size()+itemB.size());
         ArrayList<Vocabulary> original_A = (ArrayList<Vocabulary>) itemA.clone();
         for (Vocabulary voc : itemB) {
             boolean found = false;
@@ -538,6 +539,7 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         Cursor cur = db.rawQuery(query, query_arg.toArray(new String[0]));
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 res.add(new Vocabulary(cur.getString(cur.getColumnIndex("chinese")),
                         cur.getString(cur.getColumnIndex("pinyin")),
@@ -578,6 +580,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                 "WHERE char_pinyin.hanzi=?", new String[] {hanzi});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
@@ -597,6 +600,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                 "WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?", new String[] {hanzi, pinyin});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
@@ -613,6 +617,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=?", new String[] {chinese});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
@@ -641,32 +646,31 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int getCharPinyinId(String hanzi, String pinyin) {
-        ArrayList<Integer> res = new ArrayList<Integer>();
+        int res;
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=? AND pinyin=?", new String[] {hanzi, pinyin});
         if (cur.moveToFirst()) {
-            do{
-                //Log.d(TAG, "got record "+cur.getInt(cur.getColumnIndex("char_pinyin_id")) +
-                //        " for character " + hanzi + "/" + pinyin);
-                res.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
-            }while(cur.moveToNext());
+            //Log.d(TAG, "got record "+cur.getInt(cur.getColumnIndex("char_pinyin_id")) +
+            //        " for character " + hanzi + "/" + pinyin);
+            res=cur.getInt(cur.getColumnIndex("char_pinyin_id"));
         }
         else {
             //Log.d(TAG, "no record found for character "+hanzi+"/"+pinyin);
-            res.add(-1);
+            res=-1;
         }
 
-        if (res.size() > 1) {
+        if (cur.getCount() > 1) {
             Log.w(TAG, "Warning, getCharPinyinId("+hanzi+","+pinyin+") returns more than one id");
         }
 
         cur.close();
-        return res.get(0);
+        return res;
     }
 
     public ArrayList<String> getPinyinForChar(String hanzi) {
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?", new String[] {hanzi});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getString(cur.getColumnIndex("pinyin")));
             }while(cur.moveToNext());
@@ -692,6 +696,7 @@ public class HanziDB extends SQLiteOpenHelper {
             String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
 
             res = new Vocabulary(chinese, pinyin);
+            res.english.ensureCapacity(cur.getCount());
             do{
                 res.english.add(cur.getString(cur.getColumnIndex("translation")));
             }while(cur.moveToNext());
@@ -706,6 +711,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FROM eword " +
                 "WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getInt(cur.getColumnIndex("eng_id")));
             }while(cur.moveToNext());
@@ -719,6 +725,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FROM cword_segment " +
                 "WHERE char_pinyin_id=?", new String[] {Integer.toString(char_pinyin_id)});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
             }while(cur.moveToNext());
@@ -734,6 +741,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FROM char_pinyin",null);
 
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getString(cur.getColumnIndex("hanzi")));
             }while(cur.moveToNext());
@@ -978,6 +986,7 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery(query, query_args.toArray(new String[0]));
 
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
@@ -1259,6 +1268,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     Cursor cur = db.rawQuery(tmp_query, query_args.toArray(new String[0]));
 
                     if (cur.moveToFirst()) {
+                        query_results.ensureCapacity(cur.getCount());
                         do{
                             int cword_id = cur.getInt(cur.getColumnIndex("cword_id"));
                             String english=cur.getString(cur.getColumnIndex("english"));
@@ -2045,6 +2055,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         Cursor cur = db.rawQuery("SELECT name FROM lessons ORDER BY list_order ASC", null);
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getString(cur.getColumnIndex("name")));
             }while(cur.moveToNext());
@@ -2167,6 +2178,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 , new String[] {english, chinese, pinyin});
 
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
                 res.add(cur.getString(cur.getColumnIndex("name")));
@@ -2203,6 +2215,7 @@ public class HanziDB extends SQLiteOpenHelper {
         }
 
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 String chinese = cur.getString(cur.getColumnIndex("chinese"));
                 String pinyin = cur.getString(cur.getColumnIndex("pinyin"));
@@ -2314,6 +2327,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN cword ON cword.cword_id=eword.cword_id "
                     , new String[] {english});
             if (cur.moveToFirst()) {
+                res.ensureCapacity(cur.getCount());
                 do{
                     res.add(new Vocabulary
                             (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")),english));
@@ -2361,6 +2375,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "JOIN cword ON cword.cword_id=eword.cword_id " +
                 "WHERE cword.chinese=?", new String[] {chinese});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do{
                 //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
                 res.add(cur.getInt(cur.getColumnIndex("cword_id")));
@@ -2400,6 +2415,7 @@ public class HanziDB extends SQLiteOpenHelper {
             String chinese = cur.getString(cur.getColumnIndex("chinese"));
             String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
             res = new Vocabulary(chinese, pinyin,cur.getString(cur.getColumnIndex("translation")));
+            res.english.ensureCapacity(cur.getCount());
             do{
                 res.english.add(cur.getString(cur.getColumnIndex("translation")));
             }while(cur.moveToNext());
@@ -2534,6 +2550,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         Long.toString(System.currentTimeMillis()-getExpiryTime(1)), Long.toString(System.currentTimeMillis()-getExpiryTime(2)),
                         Long.toString(System.currentTimeMillis()-getExpiryTime(3)), Long.toString(System.currentTimeMillis()-getExpiryTime(4))});
         if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
             do {
                 res.add(cur.getString(cur.getColumnIndex("hanzi")));
             } while ((--num>0) && (cur.moveToNext()));
@@ -2664,10 +2681,10 @@ public class HanziDB extends SQLiteOpenHelper {
                         Long.toString(System.currentTimeMillis() - getExpiryTime(3)),
                         Long.toString(System.currentTimeMillis() - getExpiryTime(4))});
         if (cur.moveToFirst()) {
-            for (int i=0; i<cur.getCount(); i++) {
+            res.ensureCapacity(cur.getCount());
+            do {
                 res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                cur.moveToNext();
-            }
+            } while(cur.moveToNext());
         }
         cur.close();
         
@@ -2724,10 +2741,10 @@ public class HanziDB extends SQLiteOpenHelper {
                             Long.toString(System.currentTimeMillis() - getExpiryTime(3)),
                             Long.toString(System.currentTimeMillis() - getExpiryTime(4))});
             if (cur.moveToFirst()) {
-                for (int i=0; i<cur.getCount(); i++) {
+                res.ensureCapacity(cur.getCount());
+                do {
                     res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                    cur.moveToNext();
-                }
+                } while(cur.moveToNext());
             }
             cur.close();
             return res;
