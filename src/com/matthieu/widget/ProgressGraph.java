@@ -58,7 +58,7 @@ public class ProgressGraph extends View {
         max_scale = (int) ((1+ (int)floor(max_score/pow(10, scale_magnitude)))*pow(10, scale_magnitude));
 
         left_scale=null;
-        max_zoom=data.size()/5;
+        max_zoom=Math.min(data.size()/5, 3);
     }
 
     private int current_zoom=0; // the power of 2, so 0 is normal zoom (show everything), 1 is 2x, 2 is 4x...
