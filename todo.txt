@@ -1,6 +1,4 @@
-ONGOING (8):
-* Can change what to see in Review List (?) - or be able to see the content of lessons (?)
-   * Cannot really access Review list if there is nothing to study
+ONGOING (7):
 * Add credits
 * Test performance with huge database
 * Make it pretty
@@ -23,7 +21,9 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (78):
+DONE (79):
+* Can change what to see in Review List (?) - or be able to see the content of lessons (?)
+   * Cannot really access Review list if there is nothing to study
 * Only do guess character when there are other characters to display
 * Do not shortcut enter in guess character
 * Add graph of progress

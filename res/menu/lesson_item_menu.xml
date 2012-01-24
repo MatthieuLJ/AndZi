@@ -10,4 +10,6 @@
           android:title="Duplicate"/>
     <item android:id="@+id/combine_lesson"
           android:title="Combine"/>
+    <item android:id="@+id/content_lesson"
+          android:title="Check content"/>
 </menu>

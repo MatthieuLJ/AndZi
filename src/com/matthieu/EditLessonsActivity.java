@@ -3,6 +3,7 @@ package com.matthieu;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -439,9 +440,11 @@ public class EditLessonsActivity extends Activity {
                     }
                 });
                 alert.show();
-
-
-
+                break;
+            case R.id.content_lesson:
+                Intent i=new Intent(this, ReviewList.class);
+                i.putExtra("lesson", le.label);
+                startActivity(i);
                 break;
             default:
                 return super.onContextItemSelected(item);

@@ -2,7 +2,6 @@ package com.matthieu;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,6 +14,7 @@ import android.widget.*;
 import com.matthieu.widget.ExtendingLinearLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class ReviewList extends ListActivity {
@@ -24,7 +24,8 @@ public class ReviewList extends ListActivity {
 
     private static final String TAG="ReviewList";
     private boolean show_pinyin_color;
-    private boolean only_filtered=true;
+
+    private String lesson=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,11 +35,17 @@ public class ReviewList extends ListActivity {
         to_study=new ArrayList<CharPinyin>();
         data_to_study=new HashMap<CharPinyin, ArrayList<Vocabulary>>();
 
-        ArrayAdapter adapter = new ReviewListAdapter();
-
-        new table_filler(adapter).execute();
-
-        setListAdapter(adapter);
+        lesson=getIntent().getStringExtra("lesson");
+        if (lesson == null) {
+            ArrayAdapter adapter = new ReviewListAdapter();
+            new table_filler(adapter).execute();
+            setListAdapter(adapter);
+        }
+        else {
+            ArrayAdapter adapter = new ReviewLessonAdapter();
+            setListAdapter(adapter);
+            
+        }
     }
 
     @Override
@@ -71,11 +78,8 @@ public class ReviewList extends ListActivity {
             super.onPreExecute();
             data_to_study.clear();
             to_study.clear();
-            
-            if (only_filtered)
-                chars_to_study = myDB.getAllFilteredToStudy();
-            else
-                chars_to_study = myDB.getAllChar();
+
+            chars_to_study = myDB.getAllFilteredToStudy();
         }
 
         private void fill_tables() {
@@ -283,35 +287,49 @@ public class ReviewList extends ListActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.review, menu);
-        return true;
-    }
+    private class ReviewLessonAdapter extends ArrayAdapter<Object> {
+        ArrayList<Vocabulary> lesson_voc;
+        public ReviewLessonAdapter() {
+            super(ReviewList.this, R.layout.details_list_item);
+            lesson_voc=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
+        }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem display = menu.findItem(R.id.display_selection);
-        if (only_filtered) {
-            display.setTitle("Display all");
+        @Override
+        public int getCount() {
+            return lesson_voc.size();
         }
-        else {
-            display.setTitle("Display only filtered");
-        }
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.display_selection:
-                only_filtered = !only_filtered;
-                new table_filler((ArrayAdapter)this.getListAdapter()).execute();
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+        @Override
+        public View getView(int position, View convertView, ViewGroup viewGroup) {
+            LayoutInflater li = getLayoutInflater();
+            if (convertView == null) {
+                convertView = li.inflate(R.layout.details_list_item, viewGroup, false);
+            }
+            final Vocabulary voc=lesson_voc.get(position);
+            TextView chinese = (TextView) convertView.findViewById(R.id.details_chinese_word);
+            chinese.setText(voc.chinese);
+            TextView pinyin = (TextView) convertView.findViewById(R.id.details_pinyin_word);
+            if (show_pinyin_color)
+                pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(voc.pinyin)));
+            else
+                pinyin.setText(PinyinParser.convert_to_pretty_version(voc.pinyin));
+            TextView translation = (TextView) convertView.findViewById(R.id.details_translations);
+            String trans="";
+            for (int j=0; j<voc.english.size();j++) {
+                trans+=voc.english.get(j);
+                if (j<voc.english.size()-1)
+                    trans+=", ";
+            }
+            translation.setText(trans);
+            convertView.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    Intent intent=new Intent(ReviewList.this, Details.class);
+                    intent.putExtra("hanzi", voc.chinese);
+                    startActivity(intent);
+                }
+            });
+
+            return convertView;
         }
-        return true;
     }
 }
