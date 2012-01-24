@@ -6,6 +6,17 @@
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:background="#dddddd">
+    <View
+        android:layout_height="0dp"
+        android:layout_width="fill_parent"
+        android:layout_weight="1" />
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:gravity="center_horizontal"
+        android:textColor="#000000"
+        android:text="Find the Chinese translation for:" />
     <TextView
             android:id="@+id/guess_chinese_word_voc"
             android:layout_width="fill_parent"
@@ -13,7 +24,10 @@
             android:textSize="24sp"
             android:textColor="#000000"
             />
-
+    <View
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+        android:layout_weight="1" />
     <LinearLayout
             android:id="@+id/guess_chinese_word_more_voc_linear"
             android:layout_width="fill_parent"
@@ -48,6 +62,10 @@
                 android:textSize="20sp"
                 android:textColor="#000000" />
     </ScrollView>
+    <View
+        android:layout_height="0dp"
+        android:layout_width="fill_parent"
+        android:layout_weight="1" />
     <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -75,5 +93,9 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="#000000" />
+    <View
+        android:layout_height="0dp"
+        android:layout_width="fill_parent"
+        android:layout_weight="1" />
 
 </LinearLayout>

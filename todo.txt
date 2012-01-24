@@ -1,10 +1,10 @@
 ONGOING (7):
 * Add credits
 * Test performance with huge database
-* Make it pretty
-   * Make the layout of tests consistent (especially with position of the edit box)
+* Offer to delete old history of stats
 * Add splash screen
 * Add help (different screens, IME, ref DB)
+* Make it pretty
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
@@ -21,7 +21,8 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (79):
+DONE (80):
+* Make the layout of tests consistent (especially with position of the edit box)
 * Can change what to see in Review List (?) - or be able to see the content of lessons (?)
    * Cannot really access Review list if there is nothing to study
 * Only do guess character when there are other characters to display

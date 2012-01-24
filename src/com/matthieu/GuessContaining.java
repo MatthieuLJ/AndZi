@@ -76,7 +76,7 @@ public class GuessContaining extends TestActivity {
         word_guess.requestFocus();
 
         TextView clue= (TextView) findViewById(R.id.guess_containing_chinese);
-        clue.setText("Find words containing: "+hanzi);
+        clue.setText(hanzi);
     }
 
     @Override
