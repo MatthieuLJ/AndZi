@@ -15,13 +15,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.util.ArrayList;
 
-public class GuessChar extends TestActivity implements TextWatcher {
+public class GuessChar extends TestActivity {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
     private String hanzi;
     private ArrayList<Vocabulary> words;
     private ArrayList<String> previous_guess;
-    boolean first_try=true;
 
     private final String TAG="GuessChar";
 
@@ -52,7 +51,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
         setContentView(R.layout.guess_char);
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
-        guess.addTextChangedListener(this);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -104,8 +102,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
             tl.addView(tr);
         }
         tl.invalidate();
-
-        first_try=true;
     }
 
     protected int check_guess(String guess) {
@@ -218,23 +214,6 @@ public class GuessChar extends TestActivity implements TextWatcher {
             bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
-        }
-    }
-
-    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-    }
-
-    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-    }
-
-    public void afterTextChanged(Editable editable) {
-        String current_guess = editable.toString();
-        if (first_try) {
-            if ((current_guess.codePointCount(0, current_guess.length()) == 1) && (current_guess.codePointAt(0) == hanzi.codePointAt(0))) {
-                handle_ok(null);
-            }
-            else if (!current_guess.equals(""))
-                first_try=false;
         }
     }
 }
