@@ -10,10 +10,9 @@ ONGOING (8):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (3):
+BUGS (2):
 * Find a way to hilight the character sequence in Details list
 * Keep current answers when turning screen in test
-* Only do guess character when there are other characters to display
 
 FUTURE (7):
 * Pre-created lessons
@@ -24,7 +23,8 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (77):
+DONE (78):
+* Only do guess character when there are other characters to display
 * Do not shortcut enter in guess character
 * Add graph of progress
 * Can go out of tests with the back key

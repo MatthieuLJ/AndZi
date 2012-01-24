@@ -47,11 +47,11 @@ public class GuessContaining extends TestActivity {
             }
             while ((words.size() > 0) && (hanzi == null)) {
                 candidate_word=words.remove(0).chinese;
-                if (candidate_word.codePointCount(0, candidate_word.length())>1) {
+                String without_hanzi=candidate_word.replace(candidate, "");
+                if (without_hanzi.codePointCount(0, without_hanzi.length())>0) {
                     hanzi=candidate;
                 }
             }
-
         }
         if (hanzi == null) {
             nothing_to_test();
