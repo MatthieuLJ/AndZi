@@ -58,6 +58,6 @@ public class Test extends Activity {
 
         Intent i=new Intent(this, target);
         i.putExtra("SingleTest", true);
-        this.startActivityForResult(i, current_index+1);
+        this.startActivityForResult(i, current_index);
     }
 }
