@@ -108,4 +108,9 @@ public class MainMenuActivity extends Activity {
         Intent intent = new Intent(this, Dictionary.class);
         startActivity(intent);
     }
+
+    public void handle_credits(View v) {
+        Intent intent = new Intent(this, Credits.class);
+        startActivity(intent);
+    }
 }

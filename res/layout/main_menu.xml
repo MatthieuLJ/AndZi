@@ -35,6 +35,12 @@
                 android:layout_weight="1"
                 android:text="Test me!"
                 android:onClick="handle_test" />
+        <Button
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:text="Credits"
+                android:onClick="handle_credits" />
 
     </TableRow>
     <TableRow
