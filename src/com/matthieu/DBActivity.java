@@ -41,15 +41,16 @@ public class DBActivity extends Activity {
         zoomin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 graph.zoom_in();
+                update_buttons();
             }
         });
         Button zoomout= (Button) findViewById(R.id.graph_out);
         zoomout.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 graph.zoom_out();
+                update_buttons();
             }
         });
-
 
         if (!myDB.checkDatabase()) {
             AlertDialog.Builder alert = new AlertDialog.Builder(DBActivity.this);
@@ -74,6 +75,25 @@ public class DBActivity extends Activity {
         timer = new Timer();
         long two_minutes_delay = 2*60*1000;
         timer.schedule(new updater(), two_minutes_delay, two_minutes_delay);
+    }
+
+    private void update_buttons() {
+        Button zoomin= (Button) findViewById(R.id.graph_in);
+        Button zoomout= (Button) findViewById(R.id.graph_out);
+        ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
+        if (graph.can_zoom_in()) {
+            zoomin.setEnabled(true);
+        }
+        else {
+            zoomin.setEnabled(false);
+        }
+        if (graph.can_zoom_out()) {
+            zoomout.setEnabled(true);
+        }
+        else {
+            zoomout.setEnabled(false);
+        }
+
     }
 
     @Override
@@ -115,6 +135,4 @@ public class DBActivity extends Activity {
         }
         return true;
     }
-
-
 }

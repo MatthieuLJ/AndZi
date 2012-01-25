@@ -58,7 +58,6 @@ public class ProgressGraph extends View {
         max_scale = (int) ((1+ (int)floor(max_score/pow(10, scale_magnitude)))*pow(10, scale_magnitude));
 
         left_scale=null;
-        max_zoom=Math.min(data.size()/5, 3);
     }
 
     private int current_zoom=0; // the power of 2, so 0 is normal zoom (show everything), 1 is 2x, 2 is 4x...
@@ -68,10 +67,10 @@ public class ProgressGraph extends View {
     private float x_down_event;
 
     public boolean can_zoom_in() {
-        return !(current_zoom==max_zoom);
+        return ((max_zoom==0) || !(current_zoom==max_zoom));
     }
     public void zoom_in() {
-        if (current_zoom<max_zoom) {
+        if ((max_zoom==0) ||(current_zoom<max_zoom)) {
             current_zoom++;
             current_offset_x=0;
             this.invalidate();
@@ -118,7 +117,6 @@ public class ProgressGraph extends View {
 
     private double log_scale(double y) {
         return (Math.pow(10,y/max_scale)-1)/9;
-        //return Math.log(1+(y/max_scale))/Math.log(2);
     }
 
     @Override
@@ -191,7 +189,15 @@ public class ProgressGraph extends View {
         int right_size = (getMeasuredWidth()-left_size)*((int)pow(2, current_zoom));
 
         if ((graph == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth()) || (cached_zoom != current_zoom)) {
-            graph=Bitmap.createBitmap(right_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            try {
+                graph=Bitmap.createBitmap(right_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            } catch (OutOfMemoryError e) {
+                Log.e(TAG, "Not enough memory...");
+                current_zoom--;
+                max_zoom=current_zoom;
+                this.invalidate();
+                return;
+            }
             Canvas graph_canvas = new Canvas(graph);
             Path graph_path=new Path();
 
@@ -241,7 +247,7 @@ public class ProgressGraph extends View {
                 value[i] = data.get(i).num_chars_in_box[0]+data.get(i).num_chars_in_box[1]+data.get(i).num_chars_in_box[2]+data.get(i).num_chars_in_box[3]+data.get(i).num_chars_in_box[4];
                 float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
                 float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
-                Log.d(TAG, "Line to "+x+", "+y);
+                //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
             graph_path.lineTo(right_size, getMeasuredHeight()-bottom_size);
@@ -255,7 +261,7 @@ public class ProgressGraph extends View {
                 value[i] -= data.get(i).num_chars_in_box[0]+data.get(i).num_chars_expired_in_box[1]+data.get(i).num_chars_expired_in_box[2]+data.get(i).num_chars_expired_in_box[3]+data.get(i).num_chars_expired_in_box[4];
                 float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
                 float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
-                Log.d(TAG, "Line to "+x+", "+y);
+                //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
             graph_path.lineTo(right_size, getMeasuredHeight()-bottom_size);
@@ -269,7 +275,7 @@ public class ProgressGraph extends View {
                 value[i] -= data.get(i).num_chars_in_box[1]-data.get(i).num_chars_expired_in_box[1];
                 float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
                 float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
-                Log.d(TAG, "Line to "+x+", "+y);
+                //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
             graph_path.lineTo(right_size, getMeasuredHeight()-bottom_size);
@@ -283,7 +289,7 @@ public class ProgressGraph extends View {
                 value[i] -= data.get(i).num_chars_in_box[2]-data.get(i).num_chars_expired_in_box[2];
                 float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
                 float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
-                Log.d(TAG, "Line to "+x+", "+y);
+                //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
             graph_path.lineTo(right_size, getMeasuredHeight()-bottom_size);
@@ -297,7 +303,7 @@ public class ProgressGraph extends View {
                 value[i] -= data.get(i).num_chars_in_box[3]-data.get(i).num_chars_expired_in_box[3];
                 float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
                 float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
-                Log.d(TAG, "Line to "+x+", "+y);
+                //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
             graph_path.lineTo(right_size, getMeasuredHeight()-bottom_size);
