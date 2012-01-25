@@ -1,6 +1,7 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,8 +22,11 @@ public class GuessChar extends TestActivity {
     private String hanzi;
     private ArrayList<Vocabulary> words;
     private ArrayList<String> previous_guess;
+    private String last_guess="";
+    private int last_good=0;
 
     private final String TAG="GuessChar";
+    private int current_view=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,24 @@ public class GuessChar extends TestActivity {
         hanzi="";
         words=new ArrayList<Vocabulary>();
         previous_guess=new ArrayList<String>();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        if (current_view==R.layout.guess_char) {
+            EditText word_guess = (EditText) findViewById(R.id.char_finder_chinese);
+            if (word_guess==null)
+                return;
+            String guess = word_guess.getText().toString();
+            super.onConfigurationChanged(newConfig);
+            word_guess = (EditText) findViewById(R.id.char_finder_chinese);
+            word_guess.setText(guess);
+        } else if (current_view == R.layout.test_result) {
+            super.onConfigurationChanged(newConfig);
+            show_solution(last_guess, last_good);
+        } else {
+            super.onConfigurationChanged(newConfig);
+        }
     }
 
     protected void set_next_study() {
@@ -68,6 +90,7 @@ public class GuessChar extends TestActivity {
     @Override
     protected void display_test() {
         setContentView(R.layout.guess_char);
+        current_view = R.layout.guess_char;
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -214,8 +237,7 @@ public class GuessChar extends TestActivity {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
-        EditText chinese = (EditText) findViewById(R.id.char_finder_chinese);
-        String guess = chinese.getText().toString();
+        String guess = word_guess.getText().toString();
 
         handle_submit(guess);
     }
@@ -223,6 +245,9 @@ public class GuessChar extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
+        current_view=R.layout.test_result;
+        last_guess=guess;
+        last_good=good;
         Details.populate_details_view(GuessChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);

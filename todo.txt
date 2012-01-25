@@ -8,9 +8,8 @@ ONGOING (7):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
+BUGS (1):
 * Find a way to hilight the character sequence in Details list
-* Keep current answers when turning screen in test
 
 FUTURE (7):
 * Pre-created lessons
@@ -21,7 +20,8 @@ FUTURE (7):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (80):
+DONE (81):
+* Keep current answers when turning screen in test
 * Make the layout of tests consistent (especially with position of the edit box)
 * Can change what to see in Review List (?) - or be able to see the content of lessons (?)
    * Cannot really access Review list if there is nothing to study

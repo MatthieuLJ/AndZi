@@ -1,6 +1,7 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -19,6 +20,9 @@ public class GuessChineseWord extends TestActivity {
     protected HanziDB refDB=null;
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
+    private int current_view=0;
+    private String last_guess="";
+    private int last_good=0;
 
     private final String TAG="GuessChineseWord";
 
@@ -27,6 +31,22 @@ public class GuessChineseWord extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        if (current_view == R.layout.guess_chinese_word) {
+            EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
+            String guess = word_guess.getText().toString();
+            super.onConfigurationChanged(newConfig);
+            word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
+            word_guess.setText(guess);
+        } else if (current_view == R.layout.test_result) {
+            super.onConfigurationChanged(newConfig);
+            show_solution(last_guess, last_good);
+        } else {
+            super.onConfigurationChanged(newConfig);
+        }
     }
 
     protected void set_next_study() {
@@ -75,6 +95,7 @@ public class GuessChineseWord extends TestActivity {
         ArrayList<String> bare_translations = new ArrayList<String>();
 
         setContentView(R.layout.guess_chinese_word);
+        current_view=R.layout.guess_chinese_word;
         EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -218,6 +239,9 @@ public class GuessChineseWord extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
+        current_view=R.layout.test_result;
+        last_guess=guess;
+        last_good=good;
         Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false, true);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);

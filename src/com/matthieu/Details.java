@@ -362,6 +362,8 @@ public class Details extends Activity {
     static DetailsWordAdapter populate_details_view(final Activity context, ViewGroup section, final String hanzi, boolean include_ref, boolean only_exact) {
         HanziDB myDB = ((AndZiApplication) context.getApplication()).getMyDB();
         HanziDB refDB = ((AndZiApplication) context.getApplication()).getRefDB();
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
         View new_view = View.inflate(context, R.layout.details, section);
 
@@ -377,12 +379,19 @@ public class Details extends Activity {
             String info_pinyins="(";
             for (int i=0; i<pinyins.size(); i++) {
                 String pin=pinyins.get(i);
-                info_pinyins+=PinyinParser.convert_to_pretty_version(pin);
+
+                if (show_pinyin_color)
+                    info_pinyins+=PinyinParser.convert_to_html_version(pin);
+                else
+                    info_pinyins+=PinyinParser.convert_to_pretty_version(pin);
                 if (i < pinyins.size()-1)
                     info_pinyins+=", ";
             }
             info_pinyins+=")";
-            info.setText(info_pinyins);
+            if (show_pinyin_color)
+                info.setText(Html.fromHtml(info_pinyins));
+            else
+                info.setText(info_pinyins);
         }
 
         // first write the word at the top

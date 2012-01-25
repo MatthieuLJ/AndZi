@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="horizontal"
+        android:background="#dddddd">
+    <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight=".3"
+            android:orientation="vertical">
+        <HorizontalScrollView
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:fillViewport="true">
+            <LinearLayout
+                    android:id="@+id/details_title"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent"
+                    android:gravity="center_horizontal|top"
+                    />
+        </HorizontalScrollView>
+        <TextView
+                android:id="@+id/details_info"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:gravity="center_horizontal"
+                android:textSize="24sp"
+                android:textColor="#000000"
+                />
+    </LinearLayout>
+    <com.matthieu.widget.UpdatableListView
+            android:id="@+id/details_list"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight=".7"
+            />
+</LinearLayout>

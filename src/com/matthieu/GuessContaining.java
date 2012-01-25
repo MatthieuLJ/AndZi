@@ -2,6 +2,7 @@ package com.matthieu;
 
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
@@ -20,6 +21,9 @@ public class GuessContaining extends TestActivity {
     protected HanziDB refDB=null;
     protected String hanzi=null;
     protected ArrayList<String> correct_answers;
+    private int current_view=0;
+    private String last_guess="";
+    private int last_good=0;
 
     private final String TAG="GuessContaining";
 
@@ -29,6 +33,22 @@ public class GuessContaining extends TestActivity {
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
         correct_answers=new ArrayList<String>();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        if (current_view == R.layout.guess_containing) {
+            EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+            String guess = word_guess.getText().toString();
+            super.onConfigurationChanged(newConfig);
+            word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+            word_guess.setText(guess);
+        } else if (current_view == R.layout.test_result) {
+            super.onConfigurationChanged(newConfig);
+            show_solution(last_guess, last_good);
+        } else {
+            super.onConfigurationChanged(newConfig);
+        }
     }
 
     @Override
@@ -63,6 +83,7 @@ public class GuessContaining extends TestActivity {
     @Override
     protected void display_test() {
         setContentView(R.layout.guess_containing);
+        current_view=R.layout.guess_containing;
 
         EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -163,6 +184,9 @@ public class GuessContaining extends TestActivity {
 
     public void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
+        current_view=R.layout.test_result;
+        last_guess=guess;
+        last_good=good;
         Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
