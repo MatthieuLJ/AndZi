@@ -148,6 +148,10 @@ public class ProgressGraph extends View {
         left_size= (int) ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + left_axis_r.width();
 
         if ((left_scale == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth())) {
+            if (left_scale != null) {
+                left_scale.recycle();
+                left_scale=null;
+            }
             left_scale=Bitmap.createBitmap(left_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
             Canvas left_scale_canvas = new Canvas(left_scale);
             p.setTextAlign(Paint.Align.RIGHT);
@@ -189,6 +193,10 @@ public class ProgressGraph extends View {
         int right_size = (getMeasuredWidth()-left_size)*((int)pow(2, current_zoom));
 
         if ((graph == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth()) || (cached_zoom != current_zoom)) {
+            if(graph != null) {
+                graph.recycle();
+                graph=null;
+            }
             try {
                 graph=Bitmap.createBitmap(right_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
             } catch (OutOfMemoryError e) {
