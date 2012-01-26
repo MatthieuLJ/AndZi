@@ -1,6 +1,8 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -51,8 +53,26 @@ public class Test extends Activity {
         }
 
         if (current_index == tests.size()) {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-            finish();
+            AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(Test.this);
+            nothing_to_study.setCancelable(false);
+            nothing_to_study.setMessage("You master everything, do you want to continue ?");
+            nothing_to_study.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                    HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
+                    myDB.getMoreStudy(5);
+                    tests_with_nothing.clear();
+                    start_test();
+                }
+            });
+            nothing_to_study.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                    finish();
+                }
+            });
+            nothing_to_study.create();
+            nothing_to_study.show();
             return;
         }
 
