@@ -70,11 +70,7 @@ public class DBActivity extends Activity {
             alert.show();
         }
 
-        update_content();
-
-        timer = new Timer();
-        long two_minutes_delay = 2*60*1000;
-        timer.schedule(new updater(), two_minutes_delay, two_minutes_delay);
+        update_buttons();
     }
 
     private void update_buttons() {
@@ -93,27 +89,6 @@ public class DBActivity extends Activity {
         else {
             zoomout.setEnabled(false);
         }
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        update_content();
-    }
-
-    private void update_content() {
-    }
-
-    private class updater extends TimerTask {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    update_content();
-                }
-            });
-        }
     }
 
     @Override
@@ -128,7 +103,6 @@ public class DBActivity extends Activity {
         switch(item.getItemId()) {
             case R.id.add_more_study:
                 myDB.getMoreStudy(5);
-                update_content();
                 break;
             default:
                 return super.onOptionsItemSelected(item);
