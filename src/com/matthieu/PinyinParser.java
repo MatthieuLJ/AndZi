@@ -1,3 +1,6 @@
+/******************************
+ * Class to parse a string into a list of Pinyins
+ */
 package com.matthieu;
 
 import android.util.Log;

@@ -1,3 +1,6 @@
+/******************************
+ * Basic structure for Vocabulary with Chinese, Pinyin and translations
+ */
 package com.matthieu;
 
 import java.util.ArrayList;

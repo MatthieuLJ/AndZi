@@ -1,3 +1,6 @@
+/******************************
+ * Activity to edit lessons and lesson filter
+ */
 package com.matthieu;
 
 import android.app.Activity;
@@ -15,7 +18,6 @@ import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.StringTokenizer;
 
 public class EditLessonsActivity extends Activity {
     protected HanziDB myDB=null;

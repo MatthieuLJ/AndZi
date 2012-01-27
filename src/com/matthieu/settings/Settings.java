@@ -1,3 +1,6 @@
+/******************************
+ * Main settings activity
+ */
 package com.matthieu.settings;
 
 import android.app.Activity;

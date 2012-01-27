@@ -1,3 +1,7 @@
+/******************************
+ * Dictionary activity to either use Details for Chinese to English or have its own functions for English translations
+ */
+
 package com.matthieu;
 
 import android.app.Activity;

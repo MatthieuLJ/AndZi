@@ -1,3 +1,6 @@
+/******************************
+ * Activity to export the database to a file
+ */
 package com.matthieu.settings;
 
 import android.app.AlertDialog;

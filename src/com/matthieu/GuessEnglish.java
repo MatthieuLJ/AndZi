@@ -1,3 +1,6 @@
+/******************************
+ * Activity to guess the English translation from the Chinese word
+ */
 package com.matthieu;
 
 import android.content.Context;

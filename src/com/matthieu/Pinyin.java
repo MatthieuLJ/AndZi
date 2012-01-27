@@ -1,3 +1,8 @@
+/******************************
+ * Class for Pinyin, holds basic Pinyin structures
+ * and provides different formatting of the same pinyin
+ * Also offers static function to verify a pinyin
+ */
 package com.matthieu;
 
 import java.util.ArrayList;

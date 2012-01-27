@@ -1,3 +1,6 @@
+/******************************
+ * Activity to guess Chinese words containing a particular character
+ */
 package com.matthieu;
 
 

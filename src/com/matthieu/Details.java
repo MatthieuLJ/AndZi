@@ -1,3 +1,8 @@
+/******************************
+ * Details activity to show everything we know of a word or character
+ * Also offers static function to populate a ViewGroup with those details
+ */
+
 package com.matthieu;
 
 import android.app.Activity;

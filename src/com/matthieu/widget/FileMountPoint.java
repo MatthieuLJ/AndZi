@@ -1,3 +1,7 @@
+/******************************
+ * Quick class to find the mounting point of a particular folder
+ * Useful when looking for available space before doing a copy or a move
+ */
 package com.matthieu.widget;
 
 import android.util.Log;

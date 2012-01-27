@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.matthieu;
+package com.matthieu.widget;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

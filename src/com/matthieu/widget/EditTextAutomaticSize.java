@@ -1,3 +1,7 @@
+/******************************
+ * Widget to replace an EditText that will automatically
+ * tune the size of the text to fit as much as possible in the box
+ */
 package com.matthieu.widget;
 
 import android.content.Context;

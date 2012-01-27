@@ -1,3 +1,6 @@
+/******************************
+ * Parent class for all tests
+ */
 package com.matthieu;
 
 import android.app.Activity;

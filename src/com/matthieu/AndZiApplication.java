@@ -1,3 +1,8 @@
+/******************************
+ * Main application
+ * Keeps references to local, reference and progress database
+ * Also offers some helper functions for some preferences and move / copy / checking for available space
+ */
 package com.matthieu;
 
 import android.app.Application;
@@ -7,6 +12,7 @@ import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
+import com.matthieu.widget.ObjectSerializer;
 
 import java.io.*;
 import java.util.ArrayList;

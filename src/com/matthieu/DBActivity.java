@@ -1,3 +1,6 @@
+/******************************
+ * Simple activity, mostly with some stats and the ProgressGraph
+ */
 package com.matthieu;
 
 import android.app.Activity;

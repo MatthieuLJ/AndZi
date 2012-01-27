@@ -1,3 +1,6 @@
+/******************************
+ * Chinese vocabulary database
+ */
 package com.matthieu;
 
 import android.app.Activity;

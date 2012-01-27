@@ -1,3 +1,13 @@
+/******************************
+ * Activity to add more vocabulary in the database
+ *
+ * ChineseTextWatcher    checks if the input is Chinese or not and trigger the rest of the processing when there is some change
+ * PinyinButtonFiller    gets all the available pinyins for a particular character
+ * PinyinButton          holds the current value / default value and other possible values for each pinyin button
+ * UpdateDefaultPinyint  tries to find the word in the database to set the default pinyin values for each button
+ * UpdateVocabularyList   gets the translations in the local database and in the reference database
+ * VocabularyArrayAdapter is the adapter for the list of translations
+ */
 package com.matthieu;
 
 import android.app.Activity;
@@ -95,7 +105,7 @@ public class AddVocabularyActivity extends Activity
                 setPinyinButtons(charSequence, i, i1, i2);
 
                 // populate the default values for the pinyin buttons
-                process_handler.post(new update_default_pinyins());
+                process_handler.post(new UpdateDefaultPinyin());
             }
         }
 
@@ -331,7 +341,7 @@ public class AddVocabularyActivity extends Activity
             button.invalidate();
             button.setOnClickListener(new PinyinButtonClickListener());
 
-            process_handler.post(new update_vocabulary_list());
+            process_handler.post(new UpdateVocabularyList());
         }
 
 
@@ -377,7 +387,7 @@ public class AddVocabularyActivity extends Activity
         }
     }
 
-    private class update_default_pinyins implements Runnable {
+    private class UpdateDefaultPinyin implements Runnable {
         public void run() {
             int i;
             ArrayList<String>  default_pinyins;
@@ -420,7 +430,7 @@ public class AddVocabularyActivity extends Activity
         return pinyin;
     }
 
-    private class update_vocabulary_list implements Runnable {
+    private class UpdateVocabularyList implements Runnable {
         ArrayList<VocabularyItem> tmp_translations_in_db=new ArrayList<VocabularyItem>();
         ArrayList<VocabularyItem> tmp_translations_from_ref=new ArrayList<VocabularyItem>();
         ArrayList<VocabularyItem> tmp_translations_displayed_from_ref=new ArrayList<VocabularyItem>();

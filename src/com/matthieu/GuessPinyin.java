@@ -1,3 +1,6 @@
+/******************************
+ * Activity to guess the pinyin of a character
+ */
 package com.matthieu;
 
 import android.content.Context;
@@ -13,7 +16,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class GuessPinyin extends TestActivity {
     protected HanziDB myDB=null;

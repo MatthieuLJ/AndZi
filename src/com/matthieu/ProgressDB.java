@@ -1,3 +1,6 @@
+/******************************
+ * Class holding a database of the progress made during the study
+ */
 package com.matthieu;
 
 import android.content.ContentValues;

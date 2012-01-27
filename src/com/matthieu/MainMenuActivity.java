@@ -1,3 +1,6 @@
+/******************************
+ * MainMenu, entry activity into the application
+ */
 package com.matthieu;
 
 import android.app.Activity;

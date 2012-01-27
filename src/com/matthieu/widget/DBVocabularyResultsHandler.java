@@ -1,3 +1,9 @@
+/******************************
+ * Interface for anything that want to process
+ * results from the database as it comes
+ *
+ * To be used with getWordsWithSequence in HanziDB
+ */
 package com.matthieu.widget;
 
 import com.matthieu.Vocabulary;

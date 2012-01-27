@@ -1,3 +1,6 @@
+/******************************
+ * Graph showing progress, allow to zoom in and out and slide around
+ */
 package com.matthieu.widget;
 
 import android.content.Context;

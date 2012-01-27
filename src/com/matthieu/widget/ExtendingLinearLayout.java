@@ -1,9 +1,11 @@
+/******************************
+ * A linear layout that can extends and collapse with some animation
+ */
 package com.matthieu.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-//import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -14,7 +16,6 @@ import java.util.ArrayList;
 
 
 public class ExtendingLinearLayout extends LinearLayout {
-    //private static final String TAG="ExtendingLinearLayout";
     protected ArrayList<View> itemsToHide=null;
     private Interpolator interpolator;
     private int state=0; // -1:collapsing, 1:expanding, 0:nothing

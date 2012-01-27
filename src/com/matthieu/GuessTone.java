@@ -1,3 +1,6 @@
+/******************************
+ * Activity to guess the tone of a character
+ */
 package com.matthieu;
 
 import android.content.res.Configuration;
@@ -12,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
     protected HanziDB myDB=null;

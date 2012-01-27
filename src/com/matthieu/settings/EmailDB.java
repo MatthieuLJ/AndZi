@@ -1,3 +1,6 @@
+/******************************
+ * Activity to Email the database
+ */
 package com.matthieu.settings;
 
 import android.content.Intent;
