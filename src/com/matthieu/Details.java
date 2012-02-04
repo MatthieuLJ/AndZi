@@ -205,11 +205,11 @@ public class Details extends Activity {
                                 finished(voc);
                             }
                             else {
-                                filler = refDB.getWordsWithSequence(current_elements, 1, this);
+                                filler = refDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_START, this);
                             }
                             break;
                         case 1:
-                            filler = refDB.getWordsWithSequence(current_elements, 0, this);
+                            filler = refDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_NO_START, this);
                             break;
                         case 2:
                             finished(voc);
@@ -241,7 +241,7 @@ public class Details extends Activity {
                             if (only_exact) {
                                 if ((use_ref) && (refDB != null)) {
                                     Log.d(TAG, "Switching to REF");
-                                    filler = refDB.getWordsWithSequence(current_elements, 2, ref_handler);
+                                    filler = refDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_EXACT, ref_handler);
                                 }
                                 else {
                                     finished(voc);
@@ -249,21 +249,21 @@ public class Details extends Activity {
                             }
                             else {
                                 if (use_ref)
-                                    filler = myDB.getWordsWithSequence(current_elements, 1, this);
+                                    filler = myDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_START, this);
                                 else
-                                    filler = myDB.getFilteredWordsWithSequence(current_elements, 1, this);
+                                    filler = myDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_START, true, this);
                             }
                             break;
                         case 1:
                             if (use_ref)
-                                filler = myDB.getWordsWithSequence(current_elements, 0, this);
+                                filler = myDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_NO_START, this);
                             else
-                                filler = myDB.getFilteredWordsWithSequence(current_elements, 0, this);
+                                filler = myDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_NO_START, true, this);
                             break;
                         case 2:
                             if ((use_ref) && (refDB != null)) {
                                 Log.d(TAG, "Switching to REF");
-                                filler = refDB.getWordsWithSequence(current_elements, 2, ref_handler);
+                                filler = refDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_EXACT, ref_handler);
                             }
                             else {
                                 finished(voc);
@@ -275,9 +275,9 @@ public class Details extends Activity {
             };
 
             if (use_ref)
-                filler = myDB.getWordsWithSequence(current_elements, 2, my_handler);
+                filler = myDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_EXACT, my_handler);
             else
-                filler = myDB.getFilteredWordsWithSequence(current_elements, 2, my_handler);
+                filler = myDB.getWordsWithSequence(current_elements, HanziDB.SEQUENCE_EXACT, true, my_handler);
         }
 
         public void cancel() {

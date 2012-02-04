@@ -160,38 +160,38 @@ public class Dictionary extends Activity {
                     voc=new ArrayList<Vocabulary>();
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getCTranslations(current_english,2));
+                    voc.addAll(myDB.getCTranslations(current_english,HanziDB.SEQUENCE_EXACT));
                     if (isCancelled())
                         return null;
 
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getCTranslations(current_english,1));
+                    voc.addAll(myDB.getCTranslations(current_english,HanziDB.SEQUENCE_START));
                     if (isCancelled())
                         return null;
 
                     publishProgress((Void[])null);
 
-                    voc.addAll(myDB.getCTranslations(current_english,0));
+                    voc.addAll(myDB.getCTranslations(current_english,HanziDB.SEQUENCE_NO_START));
                     if (isCancelled())
                         return null;
 
                     if ((use_ref) && (refDB != null)) {
                         publishProgress((Void[])null);
 
-                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,2));
+                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,HanziDB.SEQUENCE_EXACT));
                         if (isCancelled())
                             return null;
 
                         publishProgress((Void[])null);
 
-                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,1));
+                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,HanziDB.SEQUENCE_START));
                         if (isCancelled())
                             return null;
 
                         publishProgress((Void[])null);
 
-                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,0));
+                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,HanziDB.SEQUENCE_NO_START));
                         if (isCancelled())
                             return null;
                     }
