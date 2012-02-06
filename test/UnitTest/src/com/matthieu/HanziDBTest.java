@@ -346,8 +346,7 @@ public class HanziDBTest extends AndroidTestCase {
     public void testNextToStudy() {
         target_db.addVocabulary("you", new ArrayList<String>(Arrays.asList("你")), new ArrayList<String>(Arrays.asList("ni3")));
         target_db.addVocabulary("good", new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
-        target_db.resetTime("你");
-        target_db.resetTime("好");
+        target_db.restartStudy("你");
         assertTrue(target_db.getAllToStudy().contains("你"));
         assertTrue(target_db.getAllToStudy().contains("好"));
         target_db.betterBox("好");
