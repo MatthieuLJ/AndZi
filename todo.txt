@@ -10,9 +10,10 @@ ONGOING (7):
 BUGS (1):
 * Find a way to hilight the character sequence in Details list
 
-FUTURE (7):
+FUTURE (8):
 * Pre-created lessons
 * Hide IME when not needed
+* Adaptive delays to how often the app is used
 * Find characters based on the composition
 * Suggest vocabulary based on what is already known, frequency list
 * Push database from one phone to another (ICS)

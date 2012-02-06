@@ -2294,10 +2294,10 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      */
 
-    protected long box1_delay = (long) 2 * 60 * 60 * 1000; // 2 hours
-    protected long box2_delay = (long) 2 * 24 * 60 * 60 * 1000; // 2 days
-    protected long box3_delay = (long) 1 * 7 * 24 * 60 * 60 * 1000; // 1 week
-    protected long box4_delay = (long) 3 * 7 * 24 * 60 * 60 * 1000; // 3 weeks
+    protected long box1_delay = (long) 24 * 60 * 60 * 1000; // 1 day
+    protected long box2_delay = (long) 5 * 24 * 60 * 60 * 1000; // 5 days
+    protected long box3_delay = (long) 2 * 7 * 24 * 60 * 60 * 1000; // 2 weeks
+    protected long box4_delay = (long) 2 * 4 * 7 * 24 * 60 * 60 * 1000; // 2 months
 
     private static final int MAX_BOX=4;
 
