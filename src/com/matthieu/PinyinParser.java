@@ -76,7 +76,7 @@ public class PinyinParser {
             return result;
         }
 
-        for (i = Math.min(6, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 6 characters...
+        for (i = Math.min(7, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 7 characters with the tone...
         // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
         {
             Pinyin try_pinyin = new Pinyin(pinyin_string.substring(0, i));
@@ -171,7 +171,7 @@ public class PinyinParser {
             return result;
         }
 
-        for (i = Math.min(6, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 6 characters...
+        for (i = Math.min(7, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 7 characters with the tone...
         // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
         {
             String try_pinyin = pinyin_string.substring(0, i);
@@ -269,7 +269,7 @@ public class PinyinParser {
             return result;
         }
 
-        for (i = Math.min(6, pinyin_string.length()); i > 0; i--) // the maximum size with tone is 6 characters...
+        for (i = Math.min(7, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 7 characters with the tone...
         // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
         {
             Pinyin try_pinyin = new Pinyin(pinyin_string.substring(0, i));
@@ -298,7 +298,7 @@ public class PinyinParser {
                 return result;
             }
         }
-        if ((i == 0) && (pinyin_string.length()<6)) {
+        if ((i == 0) && (pinyin_string.length()<7)) {
             Pinyin incomplete_pinyin=new Pinyin(pinyin_string,true);
             if (!incomplete_pinyin.get_lame().equals("")) {
                 result = new ArrayList<HanziDB.StringElement>();
