@@ -29,6 +29,8 @@ public class AndZiApplication extends Application {
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     private static final String PROGRESS_DB_NAME = "progress_db";
 
+    private static final String VERSION="0.1.0";
+
     public void onCreate() {
         initialize_my_db();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -72,6 +74,10 @@ public class AndZiApplication extends Application {
         return new_data;
     }
 
+    public String get_version() {
+        return VERSION;
+    }
+    
     private void initialize_my_db() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         myDB = new HanziDB(getApplicationContext(), this, DEFAULT_DATABASE_NAME);

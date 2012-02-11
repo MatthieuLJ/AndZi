@@ -13,6 +13,7 @@ import android.database.sqlite.*;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
+import com.matthieu.widget.DBCheckProgressHandler;
 import com.matthieu.widget.DBVocabularyResultsHandler;
 
 import java.io.File;
@@ -126,286 +127,324 @@ public class HanziDB extends SQLiteOpenHelper {
         Log.v(TAG, "onUpgrade ("+i+","+i1+")");
     }
 
-    public boolean checkDatabase() {
-        return checkDatabase(false);
-    }
+    public AsyncTask<Void, Integer, Boolean> checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
+        AsyncTask<Void, Integer, Boolean> res = new AsyncTask<Void, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                boolean res = true;
 
-    public boolean checkDatabase(boolean fixme) {
-        boolean res = true;
+                final int num_steps=12;
+                int current_step=0;
 
-        Log.v(TAG, "checkDatabase");
+                try {
+                    //
+                    // Basics
+                    //
 
-        try {
-
-            //
-            // Basics
-            //
-
-            // check chinese and pinyin fields in cword
-            Cursor c= db.rawQuery("SELECT cword_id, chinese, pinyin, GROUP_CONCAT(t1_chinese,'') AS t_chinese, GROUP_CONCAT(t1_pinyin,'') AS t_pinyin FROM " +
-                    "(SELECT cw.cword_id AS cword_id,  cw.chinese AS chinese, cw.pinyin AS pinyin, " +
-                    "cp.hanzi AS t1_chinese, cp.pinyin AS t1_pinyin "+
-                    "FROM cword_segment AS cs "+
-                    "JOIN cword AS cw ON cw.cword_id=cs.cword_id "+
-                    "JOIN char_pinyin AS cp ON cp.char_pinyin_id=cs.char_pinyin_id "+
-                    "ORDER BY cs.pos ASC) "+
-                    "GROUP BY cword_id", null);
-            if (c.moveToFirst()) {
-                do{
-                    int cword_id = c.getInt(c.getColumnIndex("cword_id"));
-                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                    String t_pinyin = c.getString(c.getColumnIndex("t_pinyin"));
-                    if (!pinyin.equals(t_pinyin)) {
-                        res = false;
-                        Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id+ " : " + pinyin + " != " + t_pinyin);
-                        if (fixme) {
-                            db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
-                        }
-                    }
-                    String chinese = c.getString(c.getColumnIndex("chinese"));
-                    String t_chinese = c.getString(c.getColumnIndex("t_chinese"));
-                    if (!chinese.equals(t_chinese)) {
-                        res = false;
-                        Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id + " : " + chinese + " != " + t_chinese);
-                        if (fixme) {
-                            db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
-                        }
-                    }
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check every cword has at least one translation
-            c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
-            if (c.moveToFirst()) {
-                do{
-                    res = false;
-                    Log.w(TAG, "cword_id "+c.getInt(c.getColumnIndex("cword_id"))+", does not have translation");
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("cword_id"));
-                        db.delete("cword", "cword_id=?", new String[]{Integer.toString(id)});
-                    }
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check foreign key from cword_segment to cword_id
-            c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
-            if (c.moveToFirst()) {
-                Log.w(TAG, "Foreign key cword_id not respected from cword_segment");
-                res = false;
-                do{
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("cword_id"));
-                        db.delete("cword_segment", "cword_id=?", new String[]{Integer.toString(id)});
-                    }
-                    Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check foreign key from cword_segment to char_pinyin_id
-            c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
-            if (c.moveToFirst()) {
-                res = false;
-                Log.w(TAG, "Foreign key char_pinyin_id not respected from cword_segment");
-                do{
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
-                        db.delete("cword_segment", "char_pinyin_id=?", new String[]{Integer.toString(id)});
-                    }
-                    Log.w(TAG, "bad char_pinyin_id " + c.getString(c.getColumnIndex("char_pinyin_id")));
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check all char_pinyins are used
-            c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
-            if (c.moveToFirst()) {
-                res = false;
-                do{
-                    Log.w(TAG, "char_pinyin_id " + c.getInt(c.getColumnIndex("char_pinyin_id")) + "not used in cword_segment");
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
-                        db.delete("char_pinyin", "char_pinyin_id=?", new String[]{Integer.toString(id)});
-                    }
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check foreign key from eword to cword_id
-            c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
-            if (c.moveToFirst()) {
-                res = false;
-                Log.w(TAG, "Foreign key cword_id not respected from eword");
-                do{
-                    Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("cword_id"));
-                        db.delete("eword", "cword_id=?", new String[]{Integer.toString(id)});
-                    }
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check for unique char/pinyin pairs in char_pinyin
-            c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
-                    "ORDER BY count DESC", null);
-            if (c.moveToFirst()) {
-                do{
-                    if (c.getInt(c.getColumnIndex("count")) != 1) {
-                        res = false;
-                        Log.w(TAG, "hanzi, pinyin not unique in char_pinyin table");
-
-                        if (fixme) {
-                            // pick one id
-                            String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                            String hanzi = c.getString(c.getColumnIndex("hanzi"));
-                            c = db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE hanzi=? AND pinyin=?",
-                                    new String[] {hanzi, pinyin});
-                            c.moveToFirst();
-                            int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
-
-                            // replace in the other tables
-                            ContentValues cv = new ContentValues();
-                            cv.put("char_pinyin_id", id);
-                            db.update("cword_segment", cv, "char_pinyin_id IN (SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id!=? AND hanzi=? AND pinyin=?)",
-                                    new String[]{Integer.toString(id), hanzi, pinyin});
-
-                            // remove the others
-                            db.delete("char_pinyin", "char_pinyin_id!=? AND hanzi=? AND pinyin=?", new String[]{Integer.toString(id), hanzi, pinyin});
-                        }
-                    }
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check for unique chinese/pinyin in cword
-            c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
-                    "ORDER BY count DESC", null);
-            if (c.moveToFirst()) {
-                do{
-                    if (c.getInt(c.getColumnIndex("count")) != 1) {
-                        res = false;
-                        Log.w(TAG, "chinese, pinyin not unique in cword table");
-
-                        if (fixme) {
-                            // pick one id
-                            String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                            String chinese = c.getString(c.getColumnIndex("chinese"));
-                            c = db.rawQuery("SELECT cword_id FROM cword WHERE chinese=? AND pinyin=?",
-                                    new String[] {chinese, pinyin});
-                            c.moveToFirst();
-                            int id=c.getInt(c.getColumnIndex("cword_id"));
-
-                            // replace in the other tables
-                            ContentValues cv = new ContentValues();
-                            cv.put("cword_id", id);
-                            db.update("cword_segment", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
-                                    new String[]{Integer.toString(id), chinese, pinyin});
-                            db.update("eword", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
-                                    new String[]{Integer.toString(id), chinese, pinyin});
-
-                            // remove the others
-                            db.delete("cword", "cword_id!=? AND chinese=? AND pinyin=?", new String[]{Integer.toString(id), chinese, pinyin});
-                        }
-                    }
-                }while(c.moveToNext());
-            }
-            c.close();
-
-            // check for unique cword/translation in eword
-            c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
-                    "ORDER BY count DESC", null);
-            if (c.moveToFirst()) {
-                do{
-                    if (c.getInt(c.getColumnIndex("count")) != 1) {
-                        res = false;
-                        Log.w(TAG, "cword_id, translation not unique in eword table");
-
-                        if (fixme) {
-                            // pick one id
-                            String translation = c.getString(c.getColumnIndex("translation"));
+                    // check chinese and pinyin fields in cword
+                    Cursor c= db.rawQuery("SELECT cword_id, chinese, pinyin, GROUP_CONCAT(t1_chinese,'') AS t_chinese, GROUP_CONCAT(t1_pinyin,'') AS t_pinyin FROM " +
+                            "(SELECT cw.cword_id AS cword_id,  cw.chinese AS chinese, cw.pinyin AS pinyin, " +
+                            "cp.hanzi AS t1_chinese, cp.pinyin AS t1_pinyin "+
+                            "FROM cword_segment AS cs "+
+                            "JOIN cword AS cw ON cw.cword_id=cs.cword_id "+
+                            "JOIN char_pinyin AS cp ON cp.char_pinyin_id=cs.char_pinyin_id "+
+                            "ORDER BY cs.pos ASC) "+
+                            "GROUP BY cword_id", null);
+                    if (c.moveToFirst()) {
+                        do{
                             int cword_id = c.getInt(c.getColumnIndex("cword_id"));
-                            c = db.rawQuery("SELECT eng_id FROM eword WHERE cword_id=? AND translation=?",
-                                    new String[] {Integer.toString(cword_id), translation});
-                            c.moveToFirst();
-                            int id=c.getInt(c.getColumnIndex("eng_id"));
-
-                            // replace in the other tables
-                            ContentValues cv = new ContentValues();
-                            cv.put("eng_id", id);
-                            db.update("lesson_word", cv, "eng_id IN (SELECT eng_id FROM eword WHERE eng_id!=? AND cword_id=? AND translation=?)",
-                                    new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
-
-                            // remove the others
-                            db.delete("eword", "eng_id!=? AND cword_id=? AND translation=?",
-                                    new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
-                        }
+                            String pinyin = c.getString(c.getColumnIndex("pinyin"));
+                            String t_pinyin = c.getString(c.getColumnIndex("t_pinyin"));
+                            if (!pinyin.equals(t_pinyin)) {
+                                res = false;
+                                Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id+ " : " + pinyin + " != " + t_pinyin);
+                                if (fixme) {
+                                    db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
+                                }
+                            }
+                            String chinese = c.getString(c.getColumnIndex("chinese"));
+                            String t_chinese = c.getString(c.getColumnIndex("t_chinese"));
+                            if (!chinese.equals(t_chinese)) {
+                                res = false;
+                                Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id + " : " + chinese + " != " + t_chinese);
+                                if (fixme) {
+                                    db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
+                                }
+                            }
+                        }while(c.moveToNext());
                     }
-                }while(c.moveToNext());
-            }
-            c.close();
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
 
-            //
-            // Lessons
-            //
-
-            // check foreign key from lesson_word to lessons
-            c = db.rawQuery("SELECT DISTINCT lesson_id FROM lesson_word WHERE lesson_id NOT IN (SELECT lesson_id FROM lessons)", null);
-            if (c.moveToFirst()) {
-                Log.w(TAG, "Foreign key lesson_id not respected from lesson_word");
-                res = false;
-                do{
-                    Log.w(TAG, "bad lesson_id " + c.getString(c.getColumnIndex("lesson_id")));
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("lesson_id"));
-                        db.delete("lesson_word", "lesson_id=?", new String[]{Integer.toString(id)});
+                    // check every cword has at least one translation
+                    c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
+                    if (c.moveToFirst()) {
+                        do{
+                            res = false;
+                            Log.w(TAG, "cword_id "+c.getInt(c.getColumnIndex("cword_id"))+", does not have translation");
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("cword_id"));
+                                db.delete("cword", "cword_id=?", new String[]{Integer.toString(id)});
+                            }
+                        }while(c.moveToNext());
                     }
-                }while(c.moveToNext());
-            }
-            c.close();
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
 
-            // check foreign key from lesson_word to eword
-            c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
-            if (c.moveToFirst()) {
-                Log.w(TAG, "Foreign key eng_id not respected from lesson_word");
-                res = false;
-                do{
-                    Log.w(TAG, "bad eng_id " + c.getString(c.getColumnIndex("eng_id")));
-                    if (fixme) {
-                        int id=c.getInt(c.getColumnIndex("eng_id"));
-                        db.delete("lesson_word", "eng_id=?", new String[]{Integer.toString(id)});
+                    // check foreign key from cword_segment to cword_id
+                    c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
+                    if (c.moveToFirst()) {
+                        Log.w(TAG, "Foreign key cword_id not respected from cword_segment");
+                        res = false;
+                        do{
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("cword_id"));
+                                db.delete("cword_segment", "cword_id=?", new String[]{Integer.toString(id)});
+                            }
+                            Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
+                        }while(c.moveToNext());
                     }
-                }while(c.moveToNext());
-            }
-            c.close();
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
 
-            //
-            // Leitner
-            //
-
-            // check all characters in leitner table are in DB
-            c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE hanzi NOT IN (SELECT hanzi FROM char_pinyin)", null);
-            if (c.moveToFirst()) {
-                Log.w(TAG, "Character in leitner table is not in database");
-                res = false;
-                do{
-                    Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
-                    if (fixme) {
-                        String hanzi=c.getString(c.getColumnIndex("hanzi"));
-                        db.delete("leitner", "hanzi=?", new String[]{hanzi});
+                    // check foreign key from cword_segment to char_pinyin_id
+                    c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
+                    if (c.moveToFirst()) {
+                        res = false;
+                        Log.w(TAG, "Foreign key char_pinyin_id not respected from cword_segment");
+                        do{
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
+                                db.delete("cword_segment", "char_pinyin_id=?", new String[]{Integer.toString(id)});
+                            }
+                            Log.w(TAG, "bad char_pinyin_id " + c.getString(c.getColumnIndex("char_pinyin_id")));
+                        }while(c.moveToNext());
                     }
-                }while(c.moveToNext());
-            }
-            c.close();
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
 
-        }
-        catch (SQLiteException exp) {
-            Log.d(TAG, "Ran into a problem while opening database");
-            Log.d(TAG, exp.toString());
-            res=false;
-        }
+                    // check all char_pinyins are used
+                    c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
+                    if (c.moveToFirst()) {
+                        res = false;
+                        do{
+                            Log.w(TAG, "char_pinyin_id " + c.getInt(c.getColumnIndex("char_pinyin_id")) + "not used in cword_segment");
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
+                                db.delete("char_pinyin", "char_pinyin_id=?", new String[]{Integer.toString(id)});
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    // check foreign key from eword to cword_id
+                    c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
+                    if (c.moveToFirst()) {
+                        res = false;
+                        Log.w(TAG, "Foreign key cword_id not respected from eword");
+                        do{
+                            Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("cword_id"));
+                                db.delete("eword", "cword_id=?", new String[]{Integer.toString(id)});
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    // check for unique char/pinyin pairs in char_pinyin
+                    c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
+                            "ORDER BY count DESC", null);
+                    if (c.moveToFirst()) {
+                        do{
+                            if (c.getInt(c.getColumnIndex("count")) != 1) {
+                                res = false;
+                                Log.w(TAG, "hanzi, pinyin not unique in char_pinyin table");
+
+                                if (fixme) {
+                                    // pick one id
+                                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
+                                    String hanzi = c.getString(c.getColumnIndex("hanzi"));
+                                    c = db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE hanzi=? AND pinyin=?",
+                                            new String[] {hanzi, pinyin});
+                                    c.moveToFirst();
+                                    int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
+
+                                    // replace in the other tables
+                                    ContentValues cv = new ContentValues();
+                                    cv.put("char_pinyin_id", id);
+                                    db.update("cword_segment", cv, "char_pinyin_id IN (SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id!=? AND hanzi=? AND pinyin=?)",
+                                            new String[]{Integer.toString(id), hanzi, pinyin});
+
+                                    // remove the others
+                                    db.delete("char_pinyin", "char_pinyin_id!=? AND hanzi=? AND pinyin=?", new String[]{Integer.toString(id), hanzi, pinyin});
+                                }
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    // check for unique chinese/pinyin in cword
+                    c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
+                            "ORDER BY count DESC", null);
+                    if (c.moveToFirst()) {
+                        do{
+                            if (c.getInt(c.getColumnIndex("count")) != 1) {
+                                res = false;
+                                Log.w(TAG, "chinese, pinyin not unique in cword table");
+
+                                if (fixme) {
+                                    // pick one id
+                                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
+                                    String chinese = c.getString(c.getColumnIndex("chinese"));
+                                    c = db.rawQuery("SELECT cword_id FROM cword WHERE chinese=? AND pinyin=?",
+                                            new String[] {chinese, pinyin});
+                                    c.moveToFirst();
+                                    int id=c.getInt(c.getColumnIndex("cword_id"));
+
+                                    // replace in the other tables
+                                    ContentValues cv = new ContentValues();
+                                    cv.put("cword_id", id);
+                                    db.update("cword_segment", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
+                                            new String[]{Integer.toString(id), chinese, pinyin});
+                                    db.update("eword", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
+                                            new String[]{Integer.toString(id), chinese, pinyin});
+
+                                    // remove the others
+                                    db.delete("cword", "cword_id!=? AND chinese=? AND pinyin=?", new String[]{Integer.toString(id), chinese, pinyin});
+                                }
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    // check for unique cword/translation in eword
+                    c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
+                            "ORDER BY count DESC", null);
+                    if (c.moveToFirst()) {
+                        do{
+                            if (c.getInt(c.getColumnIndex("count")) != 1) {
+                                res = false;
+                                Log.w(TAG, "cword_id, translation not unique in eword table");
+
+                                if (fixme) {
+                                    // pick one id
+                                    String translation = c.getString(c.getColumnIndex("translation"));
+                                    int cword_id = c.getInt(c.getColumnIndex("cword_id"));
+                                    c = db.rawQuery("SELECT eng_id FROM eword WHERE cword_id=? AND translation=?",
+                                            new String[] {Integer.toString(cword_id), translation});
+                                    c.moveToFirst();
+                                    int id=c.getInt(c.getColumnIndex("eng_id"));
+
+                                    // replace in the other tables
+                                    ContentValues cv = new ContentValues();
+                                    cv.put("eng_id", id);
+                                    db.update("lesson_word", cv, "eng_id IN (SELECT eng_id FROM eword WHERE eng_id!=? AND cword_id=? AND translation=?)",
+                                            new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
+
+                                    // remove the others
+                                    db.delete("eword", "eng_id!=? AND cword_id=? AND translation=?",
+                                            new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
+                                }
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    //
+                    // Lessons
+                    //
+
+                    // check foreign key from lesson_word to lessons
+                    c = db.rawQuery("SELECT DISTINCT lesson_id FROM lesson_word WHERE lesson_id NOT IN (SELECT lesson_id FROM lessons)", null);
+                    if (c.moveToFirst()) {
+                        Log.w(TAG, "Foreign key lesson_id not respected from lesson_word");
+                        res = false;
+                        do{
+                            Log.w(TAG, "bad lesson_id " + c.getString(c.getColumnIndex("lesson_id")));
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("lesson_id"));
+                                db.delete("lesson_word", "lesson_id=?", new String[]{Integer.toString(id)});
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    // check foreign key from lesson_word to eword
+                    c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
+                    if (c.moveToFirst()) {
+                        Log.w(TAG, "Foreign key eng_id not respected from lesson_word");
+                        res = false;
+                        do{
+                            Log.w(TAG, "bad eng_id " + c.getString(c.getColumnIndex("eng_id")));
+                            if (fixme) {
+                                int id=c.getInt(c.getColumnIndex("eng_id"));
+                                db.delete("lesson_word", "eng_id=?", new String[]{Integer.toString(id)});
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                    //
+                    // Leitner
+                    //
+
+                    // check all characters in leitner table are in DB
+                    c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE hanzi NOT IN (SELECT hanzi FROM char_pinyin)", null);
+                    if (c.moveToFirst()) {
+                        Log.w(TAG, "Character in leitner table is not in database");
+                        res = false;
+                        do{
+                            Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
+                            if (fixme) {
+                                String hanzi=c.getString(c.getColumnIndex("hanzi"));
+                                db.delete("leitner", "hanzi=?", new String[]{hanzi});
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
+
+                }
+                catch (SQLiteException exp) {
+                    Log.d(TAG, "Ran into a problem while opening database");
+                    Log.d(TAG, exp.toString());
+                    res=false;
+                }
+                return res;
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                handler.progress(values[0]);
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                handler.finish(aBoolean);
+            }
+        };
+
+        res.execute((Void[]) null);
 
         return res;
     }
@@ -994,7 +1033,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             else {
                                 query += "WHERE ";
                             }
-                            query += "WHERE chinese LIKE ? AND chinese NOT LIKE ? " +
+                            query += "chinese LIKE ? AND chinese NOT LIKE ? " +
                                     "ORDER BY cword.pinyin, cword.cword_id";
                             query_args.add("%"+concat+"%");
                             query_args.add(concat+"%");

@@ -1,14 +1,14 @@
-ONGOING (7):
+ONGOING (6):
 * Test performance with huge database
 * Offer to delete old history of stats
-* Add splash screen
 * Add help (different screens, IME, ref DB)
 * Make it pretty
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
+BUGS (2):
 * Find a way to hilight the character sequence in Details list
+* Be able to see vocabulary not in any lesson
 
 FUTURE (8):
 * Pre-created lessons
@@ -20,7 +20,8 @@ FUTURE (8):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (82):
+DONE (83):
+* Add splash screen
 * Add credits
 * Keep current answers when turning screen in test
 * Make the layout of tests consistent (especially with position of the edit box)
