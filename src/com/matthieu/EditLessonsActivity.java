@@ -515,6 +515,12 @@ public class EditLessonsActivity extends Activity {
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
                 });
+                break;
+            
+            case R.id.no_lesson_list:
+                Intent i=new Intent(this, ReviewList.class);
+                i.putExtra("lesson", "");
+                startActivity(i);
 
                 break;
             default:

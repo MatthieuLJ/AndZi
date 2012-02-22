@@ -2122,11 +2122,11 @@ public class HanziDB extends SQLiteOpenHelper {
             cur = db.rawQuery("SELECT e.translation AS translation, " +
                     "c.chinese AS chinese, " +
                     "c.pinyin AS pinyin " +
-                    "FROM  eword AS e " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id "
+                    "FROM eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word)"
                     ,null);
-        }
-        else {
+        } else {
             String whereQuery = buildWhereQuery(lessons);
 
             cur = db.rawQuery("SELECT e.translation AS translation, " +

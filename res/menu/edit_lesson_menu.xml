@@ -4,4 +4,6 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/lesson_enable_filter"
           android:title="Enable Lesson Filter"/>
+    <item android:id="@+id/no_lesson_list"
+          android:title="Show unassigned words"/>
 </menu>
