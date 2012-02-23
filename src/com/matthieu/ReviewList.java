@@ -39,6 +39,13 @@ public class ReviewList extends ListActivity {
         if (lesson == null) {
             ArrayAdapter adapter = new ReviewListAdapter();
             new table_filler(adapter).execute();
+            LayoutInflater inflater = getLayoutInflater();
+            TextView header = (TextView) inflater.inflate(R.layout.review_list_header, getListView(), false);
+
+            int expired = myDB.getNumCharsInBox(0) + myDB.getNumCharsExpiredInBox(1) +
+                    myDB.getNumCharsExpiredInBox(2) + myDB.getNumCharsExpiredInBox(3) + myDB.getNumCharsExpiredInBox(4);
+            header.setText("TYou have "+ expired +" characters to study");
+            getListView().addHeaderView(header, null, false);
             setListAdapter(adapter);
         }
         else {
