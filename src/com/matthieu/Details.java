@@ -15,10 +15,7 @@ import android.preference.PreferenceManager;
 import android.text.Html;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.DBVocabularyResultsHandler;
 import com.matthieu.widget.UpdatableListAdapter;
@@ -425,5 +422,40 @@ public class Details extends Activity {
             list.setAdapter(res);
 
         return res;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.details_menu, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem add_word = menu.findItem(R.id.details_add_word);
+        if (myDB.getTranslations(current_hanzi).size()>0) {
+            add_word.setTitle("Edit word in vocabulary list");
+        }
+        else {
+            add_word.setTitle("Add word to vocabulary list");
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.details_add_word:
+                Intent i=new Intent(this, AddVocabularyActivity.class);
+                i.putExtra("Hanzi", current_hanzi);
+                startActivity(i);
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
     }
 }
