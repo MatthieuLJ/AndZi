@@ -407,13 +407,14 @@ public class Details extends Activity {
             character.setTextAppearance(context, android.R.style.TextAppearance_Large_Inverse);
             character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
             character.setText(character_label);
-            character.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View view) {
-                    Intent intent=new Intent(context, Details.class);
-                    intent.putExtra("hanzi", character_label);
-                    context.startActivity(intent);
-                }
-            });
+            if (hanzi.codePointCount(0, hanzi.length())!= 1)
+                character.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        Intent intent=new Intent(context, Details.class);
+                        intent.putExtra("hanzi", character_label);
+                        context.startActivity(intent);
+                    }
+                });
             top_word.addView(character);
             i+=Character.charCount(hanzi.codePointAt(i));
         }

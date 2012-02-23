@@ -20,7 +20,8 @@ FUTURE (8):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (85):
+DONE (86):
+* If details word is only one character, do not link to anything...
 * Show the number of characters to study on top of the review list
 * Be able to see vocabulary not in any lesson
 * Add splash screen
