@@ -44,7 +44,7 @@ public class ReviewList extends ListActivity {
 
             int expired = myDB.getNumCharsInBox(0) + myDB.getNumCharsExpiredInBox(1) +
                     myDB.getNumCharsExpiredInBox(2) + myDB.getNumCharsExpiredInBox(3) + myDB.getNumCharsExpiredInBox(4);
-            header.setText("TYou have "+ expired +" characters to study");
+            header.setText("You have "+ expired +" characters to study");
             getListView().addHeaderView(header, null, false);
             setListAdapter(adapter);
         }
