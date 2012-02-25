@@ -60,14 +60,14 @@
                 android:layout_margin="@dimen/separation_line_thickness"
                 android:background="@color/separation_line_color"
                 android:visibility="gone"
-                expandable:hide_on_collapse="true"
+                expandable:hidable="true"
                 />
         <TableLayout
                 android:id="@+id/review_item_word_table"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
-                expandable:hide_on_collapse="true"
+                expandable:hidable="true"
                 />
     </com.matthieu.widget.ExtendingLinearLayout>
 </LinearLayout>

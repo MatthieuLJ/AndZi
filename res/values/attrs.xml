@@ -1,5 +1,6 @@
 <resources>
-    <declare-styleable name="VocabularyItemView">
-        <attr name="hide_on_collapse" format="boolean" />
+    <declare-styleable name="ModifiableLinearLayout">
+        <attr name="hidable" format="boolean" />
+        <attr name="scroll" format="boolean" />
     </declare-styleable>
 </resources>

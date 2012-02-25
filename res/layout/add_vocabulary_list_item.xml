@@ -45,7 +45,7 @@
                 android:layout_margin="@dimen/separation_line_thickness"
                 android:background="@color/separation_line_color"
                 android:visibility="gone"
-                expandable:hide_on_collapse="true" />
+                expandable:hidable="true" />
         <TextView
                 android:id="@+id/add_more"
                 android:layout_width="wrap_content"
@@ -55,7 +55,7 @@
                 android:textSize="12sp"
                 android:visibility="gone"
                 android:clickable="true"
-                expandable:hide_on_collapse="true"/>
+                expandable:hidable="true"/>
     </com.matthieu.widget.ExtendingLinearLayout>
     <View
             android:layout_height="fill_parent"

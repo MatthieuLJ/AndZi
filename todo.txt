@@ -6,9 +6,8 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
+BUGS (1):
 * Find a way to hilight the character sequence in Details list
-* Fix layout of tests
 
 FUTURE (8):
 * Pre-created lessons
@@ -20,7 +19,8 @@ FUTURE (8):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (87):
+DONE (88):
+* Fix layout of tests
 * Can edit word from list of vocabulary in lesson (context menu) -> change to edit word from details list
 * If details word is only one character, do not link to anything...
 * Show the number of characters to study on top of the review list

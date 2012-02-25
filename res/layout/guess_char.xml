@@ -1,28 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<com.matthieu.widget.AdaptiveLinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:background="#dddddd">
 
     <View
-        android:layout_height="0dp"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
+            android:id="@+id/spacer"
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"
+            app:hidable="true" />
     <TextView
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:gravity="center_horizontal"
-        android:textColor="#000000"
-        android:text="Find the missing character:" />
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:gravity="center_horizontal"
+            android:textColor="#000000"
+            android:text="Find the missing character:" />
+    <View
+                android:layout_height="0dp"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                app:hidable="true" />
     <ScrollView
             android:scrollbars="vertical"
             android:layout_height="0dp"
             android:layout_width="fill_parent"
-            android:layout_weight="5"
+            android:layout_weight="4"
+            app:scroll="true"
             >
 
         <TableLayout
@@ -33,9 +42,9 @@
                 />
     </ScrollView>
     <View
-        android:layout_height="0dp"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"/>
 
     <LinearLayout
             android:layout_width="fill_parent"
@@ -54,7 +63,7 @@
         <Button
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:text="OK"
                 android:onClick="handle_ok"/>
     </LinearLayout>
@@ -63,9 +72,11 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
-            android:textColor="#000000" />
+            android:textColor="#000000"
+            app:hidable="true" />
     <View
-        android:layout_height="0dp"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
-</LinearLayout>
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"
+            app:hidable="true" />
+</com.matthieu.widget.AdaptiveLinearLayout>

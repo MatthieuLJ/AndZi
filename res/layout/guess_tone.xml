@@ -16,6 +16,11 @@
             android:layout_height="fill_parent"
             android:orientation="vertical"
             android:background="#dddddd">
+        <View
+                android:layout_height="0dp"
+                android:layout_width="fill_parent"
+                android:layout_weight="1"
+                />
         <TextView
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"

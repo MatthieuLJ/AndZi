@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.matthieu.widget.HideParams;
 
 import java.util.ArrayList;
 
@@ -26,6 +27,7 @@ public class GuessChineseWord extends TestActivity {
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
+    private boolean showing_more_voc;
 
     private final String TAG="GuessChineseWord";
 
@@ -90,6 +92,7 @@ public class GuessChineseWord extends TestActivity {
             nothing_to_test();
             return;
         }
+        showing_more_voc=false;
         display_test();
     }
 
@@ -125,17 +128,29 @@ public class GuessChineseWord extends TestActivity {
             if (i<translations.size()-1)
                 text.setText(text.getText()+"\n");
         }
-        TextView more_text = (TextView) findViewById(R.id.guess_chinese_word_more_voc);
-        more_text.setText("");
+        if (!showing_more_voc) {
+            TextView more_text = (TextView) findViewById(R.id.guess_chinese_word_more_voc);
+            more_text.setText("");
 
-        LinearLayout more = (LinearLayout) findViewById(R.id.guess_chinese_word_more_voc_linear);
-        if (more_translations.size() == 0) {
-            more.setVisibility(View.GONE);
+            ScrollView scroll = (ScrollView) findViewById(R.id.guess_chinese_word_more_voc_scroll);
+            scroll.setVisibility(View.GONE);
+            ((HideParams)scroll.getLayoutParams()).setHidable(false);
+
+            Button more = (Button) findViewById(R.id.guess_chinese_word_more_voc_button);
+            View more_spacer = findViewById(R.id.guess_chinese_word_more_spacer);
+            if (more_translations.size() == 0) {
+                more.setVisibility(View.GONE);
+                more_spacer.setVisibility(View.GONE);
+                ((HideParams)more_spacer.getLayoutParams()).setHidable(false);
+            }
+            else {
+                more.setVisibility(View.VISIBLE);
+                more_spacer.setVisibility(View.VISIBLE);
+            }
         }
         else {
-            more.setVisibility(View.VISIBLE);
+            more_voc(null);
         }
-        more.invalidate();
         
         previous_guess = new ArrayList<String>();
         TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
@@ -216,14 +231,20 @@ public class GuessChineseWord extends TestActivity {
     }
 
     public void more_voc(View v) {
-        LinearLayout more = (LinearLayout) findViewById(R.id.guess_chinese_word_more_voc_linear);
+        Button more = (Button) findViewById(R.id.guess_chinese_word_more_voc_button);
         more.setVisibility(View.GONE);
+
         TextView more_text = (TextView) findViewById(R.id.guess_chinese_word_more_voc);
+        more_text.setText("");
         for (int i=0; i<more_translations.size(); i++) {
             more_text.setText(more_text.getText()+more_translations.get(i));
             if (i<more_translations.size()-1)
                 more_text.setText(more_text.getText()+"\n");
         }
+        ScrollView scroll = (ScrollView) findViewById(R.id.guess_chinese_word_more_voc_scroll);
+        scroll.setVisibility(View.VISIBLE);
+        ((HideParams)scroll.getLayoutParams()).setHidable(true);
+        showing_more_voc=true;
     }
 
     public void handle_ok(View v) {

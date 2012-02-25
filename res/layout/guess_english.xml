@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<com.matthieu.widget.AdaptiveLinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:expandable="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
         android:background="#dddddd">
     <View
-        android:layout_height="0dp"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
+            android:id="@+id/spacer"
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"
+            expandable:hidable="true"
+            />
     <TextView
-        android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:gravity="center_horizontal"
-        android:textColor="#000000"
-        android:text="Find the English translation for:" />
+            android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:gravity="center_horizontal"
+            android:textColor="#000000"
+            android:text="Find the English translation for:"
+            />
     <TextView
             android:id="@+id/guess_english_word_voc"
             android:layout_width="fill_parent"
@@ -24,11 +29,13 @@
             android:textSize="24sp"
             android:textColor="#000000"
             android:gravity="center_horizontal"
+            expandable:hidable="true"
             />
     <View
-        android:layout_height="0dp"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"
+            />
 
     <LinearLayout
             android:layout_width="fill_parent"
@@ -52,7 +59,9 @@
                 android:onClick="handle_ok"/>
     </LinearLayout>
     <View
-        android:layout_height="0dp"
-        android:layout_width="fill_parent"
-        android:layout_weight="1" />
-</LinearLayout>
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:layout_weight="1"
+            expandable:hidable="true"
+            />
+</com.matthieu.widget.AdaptiveLinearLayout>

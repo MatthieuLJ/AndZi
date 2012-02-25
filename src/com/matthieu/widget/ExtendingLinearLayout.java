@@ -4,14 +4,13 @@
 package com.matthieu.widget;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.os.Handler;
-import com.matthieu.R;
+
 import java.util.ArrayList;
 
 
@@ -51,7 +50,7 @@ public class ExtendingLinearLayout extends LinearLayout {
             if (child == null) continue;
 
             final HideParams hp = (HideParams) child.getLayoutParams();
-            if (hp.hide_on_collapse) {
+            if (hp.hidable) {
                 itemsToHide.add(child);
             }
         }
@@ -276,28 +275,5 @@ public class ExtendingLinearLayout extends LinearLayout {
     @Override
     public boolean checkLayoutParams(ViewGroup.LayoutParams p) {
         return p instanceof HideParams;
-    }
-
-    public static class HideParams extends LinearLayout.LayoutParams {
-        public boolean hide_on_collapse=false;
-
-        public HideParams(Context c, AttributeSet attrs) {
-            super(c, attrs);
-            TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.VocabularyItemView);
-
-            hide_on_collapse = a.getBoolean(R.styleable.VocabularyItemView_hide_on_collapse, false);
-            
-            a.recycle();
-
-        }
-
-        public HideParams(int width, int height, boolean hide) {
-            super(width, height);
-            hide_on_collapse = hide;
-        }
-
-        public HideParams(ViewGroup.LayoutParams p) {
-            super(p);
-        }
     }
 }
