@@ -120,6 +120,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         "mod_time INTEGER NOT NULL)");
         database.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
 
+        cached_num_chars=0;
     }
 
     @Override
@@ -514,6 +515,8 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Querying for data
     ////////////////////////////////////////
+    int cached_num_chars=-1;
+
     public ArrayList<Vocabulary> getTranslations(String chinese) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         ArrayList<Integer> cword_ids = getWordId(chinese);
@@ -1375,6 +1378,8 @@ public class HanziDB extends SQLiteOpenHelper {
             addVocabulary(english, cword_id);
         }
 
+        cached_num_chars=-1;
+
         return cword_id;
     }
 
@@ -1523,7 +1528,6 @@ public class HanziDB extends SQLiteOpenHelper {
             if (getCwordWithChar(cpid).size() == 0) {
                 delCharPinyin(cpid);
             }
-
         }
 
         cur.close();
@@ -1532,6 +1536,7 @@ public class HanziDB extends SQLiteOpenHelper {
     protected void checkIsolatedCword(int cword_id) {
         if (getTranslations(cword_id) == null) {
             delCword(cword_id);
+            cached_num_chars=-1;
         }
     }
 
@@ -1549,8 +1554,11 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public int getNumChars() {
         int res;
+        if (cached_num_chars != -1)
+            return cached_num_chars;
         Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin GROUP BY hanzi", null);
         res= cur.getCount();
+        cached_num_chars=res;
 
         cur.close();
         return res;
@@ -2333,10 +2341,7 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      */
 
-    protected long box1_delay = (long) 24 * 60 * 60 * 1000; // 1 day
-    protected long box2_delay = (long) 5 * 24 * 60 * 60 * 1000; // 5 days
-    protected long box3_delay = (long) 2 * 7 * 24 * 60 * 60 * 1000; // 2 weeks
-    protected long box4_delay = (long) 2 * 4 * 7 * 24 * 60 * 60 * 1000; // 2 months
+
 
     private static final int MAX_BOX=4;
 
@@ -2421,20 +2426,16 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected long getExpiryTime (int box) {
-        switch (box) {
-            case 0 :
-                return 0;
-            case 1:
-                return box1_delay;
-            case 2:
-                return box2_delay;
-            case 3:
-                return box3_delay;
-            case 4:
-                return box4_delay;
-            default:
-                return 0;
-        }
+        if (box == 0)
+            return 0;
+
+        long box_delay = (long) 6 * 60 * 60 * 1000;
+
+        int multiplicator = Math.max((int) Math.log10(getNumChars()), 1);
+        long res = (long) (box_delay * Math.pow(Math.pow(2, box), multiplicator));
+
+        //System.out.println("With "+getNumChars()+" characters, mult is "+multiplicator+", so delay is "+(res/(1000*60*60)+" hours for box "+box));
+        return res;
     }
 
     protected ArrayList<String> getMostAdvancedExpiring(int num) {

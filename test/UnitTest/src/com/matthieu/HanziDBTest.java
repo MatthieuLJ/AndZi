@@ -381,8 +381,8 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<MainMenuActivi
         while(System.currentTimeMillis() < current_time+millis) {}
     }
 
+    /*
     public void testExpiration() {
-        target_db.box1_delay=2*1000; // 2 secs
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 2);
         target_db.betterBox("你");
@@ -397,6 +397,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<MainMenuActivi
         assertTrue(target_db.getNumCharsExpiredInBox(1) == 0);
         assertTrue(checkDB(target_db, false));
     }
+    */
 
     public void testAddingMoreStudy() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));

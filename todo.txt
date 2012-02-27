@@ -19,7 +19,8 @@ FUTURE (8):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (88):
+DONE (89):
+* Adapt study delay depending on number of chars in DB
 * Fix layout of tests
 * Can edit word from list of vocabulary in lesson (context menu) -> change to edit word from details list
 * If details word is only one character, do not link to anything...
