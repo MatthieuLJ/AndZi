@@ -11,6 +11,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.PriorityQueue;
 
 public class ProgressDB extends SQLiteOpenHelper{
 
@@ -22,6 +24,7 @@ public class ProgressDB extends SQLiteOpenHelper{
 
     private static final String TAG="ProgressDB";
     private static final int DATABASE_VERSION = 1;
+    private static final int DEFAULT_MAX=200;
     private SQLiteDatabase db;
     private AndZiApplication app;
 
@@ -31,6 +34,7 @@ public class ProgressDB extends SQLiteOpenHelper{
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
         db.acquireReference();
+        purge_data(DEFAULT_MAX);
     }
 
     @Override
@@ -99,13 +103,13 @@ public class ProgressDB extends SQLiteOpenHelper{
         cv.put("expired_box_4", data.num_chars_expired_in_box[3]);
         cv.put("expired_box_5", data.num_chars_expired_in_box[4]);
         db.insert("progress", null, cv);
+        purge_data(DEFAULT_MAX);
     }
 
     public ArrayList<ProgressData> get_data() {
-        ArrayList<ProgressData> res=null;
+        ArrayList<ProgressData> res=new ArrayList<ProgressData>();
         Cursor cur = db.rawQuery("SELECT * FROM progress ORDER BY date ASC", new String[]{});
         if (cur.moveToFirst()) {
-            res = new ArrayList<ProgressData>();
             res.ensureCapacity(cur.getCount());
             do {
                 ProgressData data = new ProgressData();
@@ -160,5 +164,54 @@ public class ProgressDB extends SQLiteOpenHelper{
 
     public void delete_data(long max_date) {
        db.delete("progress", "date<=?", new String[] {Long.toString(max_date)});
+    }
+
+    public void purge_data(int min_items) {
+        ArrayList<ProgressData> data = get_data();
+        
+        if (data.size() < min_items)
+            return;
+
+        long min_date = data.get(0).date;
+        long max_date = data.get(data.size()-1).date;
+        HashMap<ProgressData, Double> deltas = new HashMap<ProgressData, Double>();
+        for (int i=1; i<data.size()-1; i++) {
+            double delta = (data.get(i + 1).date - data.get(i - 1).date) * Math.sqrt((double)(data.get(i).date - min_date) / (max_date - min_date));
+            deltas.put(data.get(i), delta);
+        }
+
+        while (deltas.size() > min_items-2) {
+            int min_index=0;
+            double min_value=-1;
+            for (int i=1; i<data.size()-1; i++) {
+                if ((deltas.containsKey(data.get(i))) &&
+                        ((min_value == -1) || (deltas.get(data.get(i)) < min_value))) {
+                    min_value = deltas.get(data.get(i));
+                    min_index = i;
+                }
+            }
+            if (min_index == 0)
+                return;
+            int res = db.delete("progress", "date=?", new String[] {Long.toString(data.get(min_index).date)});
+            Log.d(TAG, "Deleted "+res+" rows (date "+data.get(min_index).date+", delta "+min_value+")");
+            deltas.remove(data.get(min_index));
+            data.remove(min_index);
+
+            // recomputes neighbors
+            double delta;
+            if (min_index < data.size()-1) {
+                delta = (data.get(min_index + 1).date - data.get(min_index - 1).date) *
+                        Math.sqrt((double)(data.get(min_index).date - min_date) / (max_date - min_date));
+                deltas.remove(data.get(min_index));
+                deltas.put(data.get(min_index), delta);
+            }
+
+            if (min_index > 1) {
+                delta = (data.get(min_index).date - data.get(min_index - 2).date) *
+                        Math.sqrt((double)(data.get(min_index-1).date - min_date) / (max_date - min_date));
+                deltas.remove(data.get(min_index-1));
+                deltas.put(data.get(min_index-1), delta);
+            }
+        }
     }
 }
