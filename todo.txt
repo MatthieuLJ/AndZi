@@ -1,4 +1,5 @@
-ONGOING (6):
+ONGOING (7):
+* Change database to store word length and to store expiration date rather than modification in Leitner system
 * Test performance with huge database
 * Offer to delete old history of stats
 * Add help (different screens, IME, ref DB)

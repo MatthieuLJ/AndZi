@@ -206,7 +206,7 @@ public class ProgressGraph extends View {
 
         canvas.drawBitmap(left_scale, 0, 0, p);
 
-        int right_size = (getMeasuredWidth()-left_size)*2;
+        int right_size= (getMeasuredWidth()-left_size)*((current_zoom == 0) ? 1: 2);
         max_zoom = 1+ (int) floor(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2));
 
         if ((graph == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth()) || (cached_zoom != current_zoom)) {
