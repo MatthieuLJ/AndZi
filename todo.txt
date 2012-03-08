@@ -7,9 +7,11 @@ ONGOING (6):
 * Check different screen sizes
 
 BUGS (1):
-* Find a way to hilight the character sequence in Details list
+* Do not guess pinyin for words that only contain that character repeated
 
-FUTURE (8):
+FUTURE (10):
+* Find a way to hilight the character sequence in Details list
+* Brag about the score on Facebook / Twitter
 * Pre-created lessons
 * Hide IME when not needed
 * Adaptive delays to how often the app is used
@@ -19,7 +21,8 @@ FUTURE (8):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (89):
+DONE (90):
+* Fix display / zoom of progress graph (max size of the graph is twice the size of screen)
 * Adapt study delay depending on number of chars in DB
 * Fix layout of tests
 * Can edit word from list of vocabulary in lesson (context menu) -> change to edit word from details list

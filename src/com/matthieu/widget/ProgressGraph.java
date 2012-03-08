@@ -19,6 +19,7 @@ import java.util.Date;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.pow;
+import static java.lang.Math.log;
 
 public class ProgressGraph extends View {
     ArrayList<ProgressDB.ProgressData> data=null;
@@ -37,8 +38,9 @@ public class ProgressGraph extends View {
         super(context, attrs, defStyle);
     }
 
-    private long min_date, max_date;
-    private int max_score, max_scale, scale_magnitude;
+    private long min_date, max_date, second_to_max_date;
+    private int max_score, max_scale, scale_magnitude; // scale_magnitude is the largest number such that 10^sm < max_score
+                                                       // max_scale       is the next "round" number above max_score. eg if max_score = 250, max_scale=300
     public void set_data(ArrayList<ProgressDB.ProgressData> data) {
         // assumes the data is sorted chronologically
         this.data=data;
@@ -47,6 +49,17 @@ public class ProgressGraph extends View {
         }
         min_date=data.get(0).date;
         max_date=data.get(data.size()-1).date;
+        int i;
+        for (i=data.size()-1; i>=0; i--) {
+            if (data.get(i).date < max_date - ((long)24*60*60*1000)) {
+                second_to_max_date=data.get(i).date;
+                break;
+            }
+        }
+        if (i<0) {
+            second_to_max_date=min_date;
+        }
+
         max_score= data.get(0).num_chars_in_box[0]+data.get(0).num_chars_in_box[1]+data.get(0).num_chars_in_box[2]+data.get(0).num_chars_in_box[3]+data.get(0).num_chars_in_box[4];
         for (ProgressDB.ProgressData d : data) {
             int num_chars=d.num_chars_in_box[0]+d.num_chars_in_box[1]+d.num_chars_in_box[2]+d.num_chars_in_box[3]+d.num_chars_in_box[4];
@@ -118,8 +131,8 @@ public class ProgressGraph extends View {
         return true;
     }
 
-    private double log_scale(double y) {
-        return (Math.pow(10,y/max_scale)-1)/9;
+    private double log_scale(double y, double max) {
+        return (Math.pow(10,y/max)-1)/9;
     }
 
     @Override
@@ -128,7 +141,7 @@ public class ProgressGraph extends View {
         p.setColor(Color.BLACK);
         Rect r=new Rect();
 
-        if ((data == null) || (data.size() <=1)) {
+        if (data.size() <=1) {
             p.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 24, getResources().getDisplayMetrics()));
             p.setTextAlign(Paint.Align.CENTER);
             canvas.drawText("Not enough data", getMeasuredWidth()/2, getMeasuredHeight()/2, p);
@@ -177,12 +190,12 @@ public class ProgressGraph extends View {
             int int_value= (int) (max_scale-pow(10, scale_magnitude));
             while(int_value >0) {
                 left_scale_canvas.drawLine((int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
-                        (float) ((1.0-log_scale(int_value)))*(getMeasuredHeight()-bottom_size), left_size-1, (float) ((1-log_scale(int_value))*(getMeasuredHeight()-bottom_size)), p);
-                if (((int) ((1-log_scale(int_value))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2 > last_offset) &&
-                        ((int) ((1-log_scale(int_value))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2<first_offset)) {
+                        (float) ((1.0-log_scale(int_value, max_scale)))*(getMeasuredHeight()-bottom_size), left_size-1, (float) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size)), p);
+                if (((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2 > last_offset) &&
+                        ((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2<first_offset)) {
                     left_scale_canvas.drawText(Integer.toString(int_value),(int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
-                            (int) ((1-log_scale(int_value))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2, p);
-                    last_offset = (int) ((1-log_scale(int_value))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2;
+                            (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2, p);
+                    last_offset = (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2;
                 }
                 int_value -= pow(10, scale_magnitude);
             }
@@ -193,22 +206,16 @@ public class ProgressGraph extends View {
 
         canvas.drawBitmap(left_scale, 0, 0, p);
 
-        int right_size = (getMeasuredWidth()-left_size)*((int)pow(2, current_zoom));
+        int right_size = (getMeasuredWidth()-left_size)*2;
+        max_zoom = 1+ (int) floor(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2));
 
         if ((graph == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth()) || (cached_zoom != current_zoom)) {
             if(graph != null) {
                 graph.recycle();
                 graph=null;
             }
-            try {
-                graph=Bitmap.createBitmap(right_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-            } catch (OutOfMemoryError e) {
-                Log.e(TAG, "Not enough memory...");
-                current_zoom--;
-                max_zoom=current_zoom;
-                this.invalidate();
-                return;
-            }
+            graph=Bitmap.createBitmap(right_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+
             Canvas graph_canvas = new Canvas(graph);
             Path graph_path=new Path();
 
@@ -217,34 +224,91 @@ public class ProgressGraph extends View {
 
             // draw the bottom labels
             int last_offset=0, first_offset;
-            String date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(0).date));
-            p.getTextBounds(date_string, 0, date_string.length(), r);
-            first_offset=r.width();
-            for (int i=data.size()-1; i>=0; i--) {
-                graph_canvas.drawLine((right_size)*((float)data.get(i).date-min_date)/(max_date-min_date), getMeasuredHeight()-bottom_size,
-                        (right_size)*((float)data.get(i).date-min_date)/(max_date-min_date),
-                        getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
+            long cut_off_date;
+            int first_date_index=0;
+            boolean first_left_aligned;
+            String date_string;
+            ProgressDB.ProgressData data0;
+
+            if (current_zoom==0) {
+                cut_off_date = min_date;
+                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(0).date));
+                p.getTextBounds(date_string, 0, date_string.length(), r);
+                first_offset=r.width();
+                first_left_aligned=true;
+                data0 = data.get(0);
+            }
+            else {
+                cut_off_date = (long) (max_date - pow(2, 1-current_zoom) * ((double)(max_date-min_date)));
+                for (int i=0; i<data.size(); i++) {
+                    if (data.get(i).date >= cut_off_date) {
+                        first_date_index=i;
+                        break;
+                    }
+                }
+                if (first_date_index == 0) {
+                    data0 = data.get(0);
+                }
+                else {
+                    Log.d(TAG, "first date index is "+first_date_index+"out of "+data.size());
+                    data0 = new ProgressDB.ProgressData();
+                    data0.date = cut_off_date;
+                    for (int i=0; i<5; i++) {
+                        data0.num_chars_in_box[i] = (int) (data.get(first_date_index-1).num_chars_in_box[i] +
+                                (float)(data.get(first_date_index).num_chars_in_box[i] - data.get(first_date_index-1).num_chars_in_box[i]) *
+                                        (cut_off_date - data.get(first_date_index-1).date) / (data.get(first_date_index).date - data.get(first_date_index-1).date));
+                        data0.num_chars_expired_in_box[i] = (int) (data.get(first_date_index-1).num_chars_expired_in_box[i] +
+                                (float)(data.get(first_date_index).num_chars_expired_in_box[i] - data.get(first_date_index-1).num_chars_expired_in_box[i]) *
+                                        (cut_off_date - data.get(first_date_index-1).date) / (data.get(first_date_index).date - data.get(first_date_index-1).date));
+                    }
+                }
+                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(first_date_index).date));
+                p.getTextBounds(date_string, 0, date_string.length(), r);
+
+                if (((data.get(first_date_index).date - cut_off_date)*right_size)/(max_date-cut_off_date) <= r.width()) {
+                    first_left_aligned=true;
+                    first_offset=r.width();
+                }
+                else {
+                    first_left_aligned=false;
+                    first_offset= (int) (((data.get(first_date_index).date - cut_off_date)*right_size)/(max_date-cut_off_date) + r.width()/2);
+                }
+            }
+
+            // Draw the date labels
+            for (int i=data.size()-1; i>=first_date_index; i--) {
                 if (i==data.size()-1) {
                     p.setTextAlign(Paint.Align.RIGHT);
-                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
+                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
+                    graph_canvas.drawLine((right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date), getMeasuredHeight()-bottom_size,
+                        (right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date),
+                        getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
                     graph_canvas.drawText(date_string, right_size,
                             getMeasuredHeight()-bottom_size+bottom_axis_r.height()+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4+2, getResources().getDisplayMetrics()), p);
                     p.getTextBounds(date_string, 0, date_string.length(), r);
                     last_offset=right_size-r.width();
-                } else if (i>0) {
+                } else if ((i>first_date_index) || (!first_left_aligned)) {
                     p.setTextAlign(Paint.Align.CENTER);
-                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
+                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
                     p.getTextBounds(date_string, 0, date_string.length(), r);
-                    if ((right_size)*((float)data.get(i).date-min_date)/(max_date-min_date)+r.width()/2 > last_offset)
-                        continue;
-                    if ((right_size)*((float)data.get(i).date-min_date)/(max_date-min_date)-r.width()/2 <= first_offset)
-                        continue;
-                    graph_canvas.drawText(date_string, (right_size)*((float)data.get(i).date-min_date)/(max_date-min_date),
+                    if (i>first_date_index) {
+                        if ((right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)+r.width()/2 > last_offset)
+                            continue;
+                        if ((right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)-r.width()/2 <= first_offset)
+                            continue;
+                    }
+                    graph_canvas.drawLine((right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date), getMeasuredHeight()-bottom_size,
+                        (right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date),
+                        getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
+                    graph_canvas.drawText(date_string, (right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date),
                             getMeasuredHeight()-bottom_size+bottom_axis_r.height()+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4+2, getResources().getDisplayMetrics()), p);
-                    last_offset=(int) ((right_size)*((float)data.get(i).date-min_date)/(max_date-min_date)-r.width()/2);
+                    last_offset=(int) ((right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)-r.width()/2);
                 } else {
                     p.setTextAlign(Paint.Align.LEFT);
-                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
+                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
+                    graph_canvas.drawLine((right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date), getMeasuredHeight()-bottom_size,
+                        (right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date),
+                        getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
                     graph_canvas.drawText(date_string, 0,
                             getMeasuredHeight()-bottom_size+bottom_axis_r.height()+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4+2, getResources().getDisplayMetrics()), p);
                 }
@@ -254,10 +318,14 @@ public class ProgressGraph extends View {
             graph_path.reset();
             graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
             double value[]=new double[data.size()];
-            for (int i=0; i<data.size(); i++) {
+            if (first_date_index>0) {
+                value[0] = data0.num_chars_in_box[0]+data0.num_chars_in_box[1]+data0.num_chars_in_box[2]+data0.num_chars_in_box[3]+data0.num_chars_in_box[4];
+                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+            }
+            for (int i=first_date_index; i<data.size(); i++) {
                 value[i] = data.get(i).num_chars_in_box[0]+data.get(i).num_chars_in_box[1]+data.get(i).num_chars_in_box[2]+data.get(i).num_chars_in_box[3]+data.get(i).num_chars_in_box[4];
-                float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
-                float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
+                float x= (float) ((right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
+                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
                 //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
@@ -268,10 +336,14 @@ public class ProgressGraph extends View {
 
             graph_path.reset();
             graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            for (int i=0; i<data.size(); i++) {
+            if (first_date_index>0) {
+                value[0] -= data0.num_chars_in_box[0]+data0.num_chars_expired_in_box[1]+data0.num_chars_expired_in_box[2]+data0.num_chars_expired_in_box[3]+data0.num_chars_expired_in_box[4];
+                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+            }
+            for (int i=first_date_index; i<data.size(); i++) {
                 value[i] -= data.get(i).num_chars_in_box[0]+data.get(i).num_chars_expired_in_box[1]+data.get(i).num_chars_expired_in_box[2]+data.get(i).num_chars_expired_in_box[3]+data.get(i).num_chars_expired_in_box[4];
-                float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
-                float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
+                float x= (float) ((right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
+                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
                 //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
@@ -282,10 +354,14 @@ public class ProgressGraph extends View {
 
             graph_path.reset();
             graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            for (int i=0; i<data.size(); i++) {
+            if (first_date_index>0) {
+                value[0] -= data0.num_chars_in_box[1]-data0.num_chars_expired_in_box[1];
+                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+            }
+            for (int i=first_date_index; i<data.size(); i++) {
                 value[i] -= data.get(i).num_chars_in_box[1]-data.get(i).num_chars_expired_in_box[1];
-                float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
-                float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
+                float x= (float) ((right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
+                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
                 //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
@@ -296,10 +372,14 @@ public class ProgressGraph extends View {
 
             graph_path.reset();
             graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            for (int i=0; i<data.size(); i++) {
+            if (first_date_index>0) {
+                value[0] -= data0.num_chars_in_box[2]-data0.num_chars_expired_in_box[2];
+                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+            }
+            for (int i=first_date_index; i<data.size(); i++) {
                 value[i] -= data.get(i).num_chars_in_box[2]-data.get(i).num_chars_expired_in_box[2];
-                float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
-                float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
+                float x= (float) ((right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
+                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
                 //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
@@ -310,10 +390,14 @@ public class ProgressGraph extends View {
 
             graph_path.reset();
             graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            for (int i=0; i<data.size(); i++) {
+            if (first_date_index>0) {
+                value[0] -= data0.num_chars_in_box[3]-data0.num_chars_expired_in_box[3];
+                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+            }
+            for (int i=first_date_index; i<data.size(); i++) {
                 value[i] -= data.get(i).num_chars_in_box[3]-data.get(i).num_chars_expired_in_box[3];
-                float x=(right_size)*((float)data.get(i).date-min_date)/(max_date-min_date);
-                float y= (float) ((1.0-log_scale(value[i]))*(getMeasuredHeight()-bottom_size));
+                float x= (float) ((right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
+                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
                 //Log.d(TAG, "Line to "+x+", "+y);
                 graph_path.lineTo(x ,y);
             }
