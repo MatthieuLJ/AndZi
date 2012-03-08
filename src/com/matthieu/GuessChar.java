@@ -68,7 +68,7 @@ public class GuessChar extends TestActivity {
         while ((hanzis.size() >0) && (hanzi == null)) {
             candidate = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             Log.d(TAG, "will study " + candidate);
-            words = myDB.getWordsWithPinyin(candidate);
+            words = myDB.getFilteredWordsWithPinyin(candidate);
             if (words.size() == 0) {
                 Log.d(TAG, "we have a problem");
             }

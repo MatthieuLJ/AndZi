@@ -64,27 +64,27 @@ public class GuessChineseWord extends TestActivity {
         while ((hanzis.size() >0) && (solution == null)) {
             hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             Log.d(TAG, "will study "+hanzi);
-            ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
+            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
             if (words.size() == 0) {
                 Log.d(TAG, "we have a problem");
             }
 
             while ((words.size() > 0) && (solution == null)) {
                 candidate = words.remove((int) (words.size()*Math.random())).chinese;
-                ArrayList<Vocabulary> voc = myDB.getTranslations(candidate);
+                ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
+                if (voc.size() == 0)
+                    continue;
                 solution = voc.get((int) (voc.size()*Math.random()));
 
                 translations = solution.english;
-                if (refDB != null) {
-                    if (refDB.getTranslations(candidate, solution.pinyin) == null) {
-                        more_translations = new ArrayList<String>();
-                    }
-                    else {
-                        more_translations = refDB.getTranslations(candidate, solution.pinyin).english;
-                    }
+                if (myDB.isFilterEnabled()) {
+                    more_translations = myDB.getTranslations(candidate, solution.pinyin).english;
                 }
                 else {
                     more_translations = new ArrayList<String>();
+                }
+                if ((refDB != null) && (refDB.getTranslations(candidate, solution.pinyin) != null)) {
+                    more_translations.addAll(refDB.getTranslations(candidate, solution.pinyin).english);
                 }
             }
         }

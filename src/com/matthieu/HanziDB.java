@@ -2334,6 +2334,40 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
+            ArrayList<Integer> cword_ids = getWordIdWithPinyin(hanzi);
+            for (int id : cword_ids) {
+
+                Vocabulary to_add = getFilteredTranslations(id);
+                if (to_add != null)
+                    res.add(to_add);
+            }
+
+            return res;
+        }
+        else {
+            return getWordsWithPinyin(hanzi);
+        }
+    }
+
+    public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi, String pinyin) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
+            ArrayList<Integer> cword_ids = getWordIdWithPinyin(hanzi, pinyin);
+            for (int id : cword_ids) {
+                Vocabulary to_add = getFilteredTranslations(id);
+                if (to_add != null)
+                    res.add(to_add);
+            }
+            return res;
+        }
+        else {
+            return getWordsWithPinyin(hanzi, pinyin);
+        }
+    }
+
     /*
      *
      *  Leitner learning database management

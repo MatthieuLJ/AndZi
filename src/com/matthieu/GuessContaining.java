@@ -64,7 +64,7 @@ public class GuessContaining extends TestActivity {
         while ((hanzis.size() >0) && (hanzi == null)) {
             candidate = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             Log.d(TAG, "will study " + candidate);
-            ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(candidate);
+            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(candidate);
             if (words.size() == 0) {
                 Log.d(TAG, "we have a problem");
             }

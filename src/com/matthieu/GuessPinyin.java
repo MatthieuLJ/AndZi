@@ -95,7 +95,7 @@ public class GuessPinyin extends TestActivity {
                 pinyin = pinyins.get(0);
             }
 
-            words = myDB.getWordsWithPinyin(hanzi, pinyin);
+            words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
             for (Vocabulary word : words) {
                 if (!word.chinese.replace(hanzi, "").equals(""))
                     found = true;

@@ -7,7 +7,8 @@ ONGOING (7):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (0):
+BUGS (1):
+* Add option to select all or select none in lesson filter
 
 FUTURE (10):
 * Find a way to hilight the character sequence in Details list
@@ -21,7 +22,8 @@ FUTURE (10):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (91):
+DONE (92):
+* Fix tests when lesson filter is enabled
 * Do not guess pinyin for words that only contain that character repeated
 * Fix display / zoom of progress graph (max size of the graph is twice the size of screen)
 * Adapt study delay depending on number of chars in DB
