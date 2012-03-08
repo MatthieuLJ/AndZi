@@ -6,8 +6,7 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
-* Do not guess pinyin for words that only contain that character repeated
+BUGS (0):
 
 FUTURE (10):
 * Find a way to hilight the character sequence in Details list
@@ -21,7 +20,8 @@ FUTURE (10):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (90):
+DONE (91):
+* Do not guess pinyin for words that only contain that character repeated
 * Fix display / zoom of progress graph (max size of the graph is twice the size of screen)
 * Adapt study delay depending on number of chars in DB
 * Fix layout of tests

@@ -25,6 +25,7 @@ public class GuessPinyin extends TestActivity {
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
+    private boolean show_words=false;
 
     private static final String TAG="GuessPinyin";
     @Override
@@ -54,51 +55,67 @@ public class GuessPinyin extends TestActivity {
 
     @Override
     protected void set_next_study() {
+        boolean found=false;
+
         super.set_next_study();
 
-        hanzi = myDB.getNextFilteredToStudy();
+        show_words=false;
+        hanzi = null;
+
+        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
+
+        while ((hanzis.size()>0) && (hanzi == null)) {
+            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
+
+            ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
+            if (pinyins.size() > 1) {
+                ArrayList<Pinyin> pins=new ArrayList<Pinyin>();
+                // remove the ones without tone that have equivalents with tones...
+                for (String p:pinyins) {
+                    Pinyin pin = new Pinyin(p);
+                    pins.add(pin);
+                }
+                for (int i=0; i<pins.size(); i++) {
+                    Pinyin pin = pins.get(i);
+                    if (pin.get_tone()!=5)
+                        continue;
+                    for (Pinyin pin2:pins) {
+                        if ((pin2.get_radical().equals(pin.get_radical())) && (pin2.get_tone() != 5)) {
+                            pins.remove(i);
+                            i=0;
+                            break;
+                        }
+                    }
+                }
+                if (pinyins.size() > 1)
+                    show_words=true;
+                pinyin=pinyins.get((int)(Math.random()*pinyins.size()));
+            }
+            else {
+                pinyin = pinyins.get(0);
+            }
+
+            words = myDB.getWordsWithPinyin(hanzi, pinyin);
+            for (Vocabulary word : words) {
+                if (!word.chinese.replace(hanzi, "").equals(""))
+                    found = true;
+            }
+            if (!found)
+                hanzi=null;
+        }
 
         if (hanzi == null) {
             nothing_to_test();
             return;
         }
+        
         display_test();
     }
 
     @Override
     protected void display_test() {
-        boolean show_words=false;
-
         setContentView(R.layout.guess_pinyin);
         current_view=R.layout.guess_pinyin;
-
-        ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
-        if (pinyins.size() > 1) {
-            ArrayList<Pinyin> pins=new ArrayList<Pinyin>();
-            // remove the ones without tone that have equivalents with tones...
-            for (String p:pinyins) {
-                Pinyin pin = new Pinyin(p);
-                pins.add(pin);
-            }
-            for (int i=0; i<pins.size(); i++) {
-                Pinyin pin = pins.get(i);
-                if (pin.get_tone()!=5)
-                    continue;
-                for (Pinyin pin2:pins) {
-                    if ((pin2.get_radical().equals(pin.get_radical())) && (pin2.get_tone() != 5)) {
-                        pins.remove(i);
-                        i=0;
-                        break;
-                    }
-                }
-            }
-            if (pinyins.size() > 1)
-                show_words=true;
-            pinyin=pinyins.get((int)(Math.random()*pinyins.size()));
-        }
-        else {
-            pinyin = pinyins.get(0);
-        }
 
         EditText guess = (EditText) findViewById(R.id.guess_pinyin_guess);
         guess.setText("");
@@ -110,8 +127,6 @@ public class GuessPinyin extends TestActivity {
             }
         });
         guess.requestFocus();
-
-        words = myDB.getWordsWithPinyin(hanzi, pinyin);
 
         Log.d(TAG, "Testing for character " + hanzi + " got " + words.size() + " words");
 
