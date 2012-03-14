@@ -412,8 +412,8 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<MainMenuActivi
         Log.d(TAG, "3");
         ArrayList<String> expiring=target_db.getMostAdvancedExpiring(2);
         assertTrue(expiring.size()==2);
-        assertTrue(expiring.get(0).equals("你"));
-        assertTrue(expiring.get(1).equals("好"));
+        assertTrue(expiring.contains("你"));
+        assertTrue(expiring.contains("好"));
         target_db.setExpired("好");
         assertTrue(target_db.getNumCharsExpiredInBox(4) == 1);
         assertTrue(target_db.getNumCharsExpiredInBox(3) == 0);
