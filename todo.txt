@@ -6,7 +6,8 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
+BUGS (2):
+* When screen is rotated when adding vocabulary, the default lesson is reset
 * Add option to select all or select none in lesson filter
 
 FUTURE (10):

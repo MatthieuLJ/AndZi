@@ -23,7 +23,7 @@ import java.util.Calendar;
 
 public class ExportDB extends PreferenceActivity {
     protected HanziDB myDB=null;
-    String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ Calendar.getInstance().get(Calendar.MONTH)+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
+    String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ (1+Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
