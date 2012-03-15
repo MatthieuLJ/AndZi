@@ -6,7 +6,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#dddddd"
+        style="@style/AndZiTheme"
         android:weightSum="4">
     <Button
             android:id="@+id/review_expand_button"
@@ -24,7 +24,7 @@
             android:background="@color/separation_line_color" />
     <com.matthieu.widget.ExtendingLinearLayout
             android:id="@+id/review_item_words"
-            android:layout_width="fill_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginTop="5dp"
@@ -55,7 +55,7 @@
                     />
         </LinearLayout>
         <View
-                android:layout_height="1px"
+                android:layout_height="1dp"
                 android:layout_width="fill_parent"
                 android:layout_margin="@dimen/separation_line_thickness"
                 android:background="@color/separation_line_color"

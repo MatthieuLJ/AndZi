@@ -6,12 +6,12 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
-        android:background="#dddddd">
+        style="@style/AndZiTheme">
 
     <com.matthieu.widget.TouchListView
             android:id="@+id/lesson_list"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:drawSelectorOnTop="false"
             tlv:grabber="@+id/edit_lesson_grab"

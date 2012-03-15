@@ -219,6 +219,9 @@ public class EditLessonsActivity extends Activity {
                     row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_item);
                 }
 
+                CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_filter_on);
+                cb.setOnCheckedChangeListener(null);
+                
                 Lesson le = current_lessons.get(position-1);
 
                 String more_info = "";
@@ -251,8 +254,7 @@ public class EditLessonsActivity extends Activity {
                 }
                 label.setTag(R.id.lesson_item, le);
 
-                CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_filter_on);
-                cb.setOnCheckedChangeListener(null);
+
                 cb.setChecked((le.state & Lesson.FILTERED_ENABLED) != 0);
                 if (filter_on) {
                     cb.setVisibility(View.VISIBLE);

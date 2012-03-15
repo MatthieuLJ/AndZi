@@ -136,80 +136,27 @@ DONE (93):
 
 Lint output:
 
-res/layout/edit_lesson_list_item.xml:16: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
-        <LinearLayout
-        ^
-res/layout/db_export_options.xml:65: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
-    <LinearLayout
+res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
+                android:layout_width="fill_parent"
+                ^
+res/values/strings.xml:27: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
+    <string name="as_in">As in...</string>
     ^
-res/layout-land/guess_tone.xml:47: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
-        <LinearLayout
-        ^
 res/layout/test_result.xml:3: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
 <LinearLayout
 ^
-res/layout/add_vocabulary_context.xml:25: Warning: Use a layout_height of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_height="fill_parent"
-            ^
-res/layout/add_vocabulary_list_item.xml:28: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_width="fill_parent"
-            ^
-res/layout/add_vocabulary_list_new_item.xml:14: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_width="fill_parent"
-            ^
-res/layout/add_vocabulary_list_ref_item.xml:13: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_width="fill_parent"
-            ^
-res/layout/add_vocabulary_pinyin_dialog.xml:9: Warning: Use a layout_height of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_height="fill_parent"
-            ^
-res/layout/add_vocabulary_pinyin_dialog.xml:24: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-                android:layout_width="fill_parent"
-                ^
-res/layout/add_vocabulary_top.xml:22: Warning: Use a layout_height of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_height="fill_parent"
-            ^
-res/layout/db_export_options.xml:58: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-                android:layout_width="fill_parent"
-                ^
-res/layout/edit_lesson_list_item.xml:10: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_width="fill_parent"
-            ^
-res/layout/edit_lesson_list_new_item.xml:20: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_width="fill_parent"
-            ^
-res/layout/edit_lessons.xml:14: Warning: Use a layout_height of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_height="fill_parent"
-            ^
-res/layout/review_list_item.xml:27: Warning: Use a layout_width of 0dip instead of fill_parent for better performance [InefficientWeight]
-            android:layout_width="fill_parent"
-            ^
 res/layout/add_vocabulary_pinyin_dialog.xml:25: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"
                 ^
 res/layout/db.xml:52: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"
                 ^
-res/layout-land/guess_tone.xml:55: Warning: Nested weights are bad for performance [NestedWeights]
+res/layout-land/guess_tone.xml:56: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"
                     ^
-res/layout/test_result.xml:52: Warning: Nested weights are bad for performance [NestedWeights]
+res/layout/test_result.xml:53: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"
                 ^
-res/layout/add_vocabulary_top.xml:7: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/db.xml:8: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/db_export_options.xml:8: Warning: Possible overdraw: Root element paints background #ffffff with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/details.xml:8: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout-land/details.xml:8: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/credits.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/dictionary.xml:8: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/edit_lessons.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/guess_char.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/guess_chinese_word.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/guess_containing.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/guess_english.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/guess_pinyin.xml:9: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
-res/layout/test_result.xml:8: Warning: Possible overdraw: Root element paints background #dddddd with a theme that also paints a background (inferred theme is @android:style/Theme) [Overdraw]
 Warning: The resource R.attr.dragndrop_background appears to be unused [UnusedResources]
 Warning: The resource R.attr.expanded_height appears to be unused [UnusedResources]
 Warning: The resource R.attr.grabber appears to be unused [UnusedResources]
@@ -219,8 +166,8 @@ Warning: The resource R.attr.remove_mode appears to be unused [UnusedResources]
 Warning: The resource R.attr.scroll appears to be unused [UnusedResources]
 res/values/colors.xml: Warning: The resource R.color.gray appears to be unused [UnusedResources]
 Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
-res/layout/db_export_options.xml: Warning: The resource R.layout.db_export_options appears to be unused [UnusedResources]
 res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
+res/values/strings.xml: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
 Warning: The resource R.styleable.ModifiableLinearLayout_hidable  appears to be unused [UnusedResources]
 Warning: The resource R.styleable.ModifiableLinearLayout_scroll  appears to be unused [UnusedResources]
 Warning: The resource R.styleable.TouchListView_dragndrop_background  appears to be unused [UnusedResources]
@@ -228,22 +175,19 @@ Warning: The resource R.styleable.TouchListView_expanded_height  appears to be u
 Warning: The resource R.styleable.TouchListView_grabber  appears to be unused [UnusedResources]
 Warning: The resource R.styleable.TouchListView_normal_height  appears to be unused [UnusedResources]
 Warning: The resource R.styleable.TouchListView_remove_mode  appears to be unused [UnusedResources]
-res/layout-land/guess_tone.xml:14: Warning: This LinearLayout layout or its android.gesture.GestureOverlayView parent is useless; transfer the background attribute to the other view [UselessParent]
+res/layout/guess_tone.xml:14: Warning: This LinearLayout layout or its android.gesture.GestureOverlayView parent is useless [UselessParent]
     <LinearLayout
     ^
-res/layout/file_dialog_main.xml:17: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
+res/layout-land/guess_tone.xml:14: Warning: This LinearLayout layout or its android.gesture.GestureOverlayView parent is useless [UselessParent]
+    <LinearLayout
+    ^
+res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
-res/layout/guess_tone.xml:14: Warning: This LinearLayout layout or its android.gesture.GestureOverlayView parent is useless; transfer the background attribute to the other view [UselessParent]
-    <LinearLayout
-    ^
 res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does not specify an inputType or a hint [TextFields]
     <EditText
     ^
 res/layout/add_vocabulary_pinyin_dialog.xml:21: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/db_export_options.xml:57: Warning: This text field does not specify an inputType or a hint [TextFields]
         <EditText
         ^
 res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
@@ -252,7 +196,7 @@ res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not s
 res/layout/dictionary.xml:18: Warning: This text field does not specify an inputType or a hint [TextFields]
     <EditText
     ^
-res/layout/file_dialog_main.xml:35: Warning: This text field does not specify an inputType or a hint [TextFields]
+res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
 res/layout/guess_char.xml:54: Warning: This text field does not specify an inputType or a hint [TextFields]
@@ -285,47 +229,8 @@ res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_t
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-res/layout/edit_lesson_list_item.xml:20: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-            <ImageView
-            ^
-res/layout/guess_tone.xml:69: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                <ImageView
-                ^
-res/layout/guess_tone.xml:96: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                <ImageView
-                ^
-res/layout/guess_tone.xml:123: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                <ImageView
-                ^
-res/layout/guess_tone.xml:150: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                <ImageView
-                ^
-res/layout-land/guess_tone.xml:69: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                    <ImageView
-                    ^
-res/layout-land/guess_tone.xml:96: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                    <ImageView
-                    ^
-res/layout-land/guess_tone.xml:130: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                    <ImageView
-                    ^
-res/layout-land/guess_tone.xml:157: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-                    <ImageView
-                    ^
-res/layout/main_menu_splash.xml:8: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-res/layout/add_vocabulary_context.xml:33: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-            android:text="OK"
-            ^
 res/layout/add_vocabulary_list_item.xml:54: Warning: [I18N] Hardcoded string "more info\nhere...", should use @string resource [HardcodedText]
                 android:text="more info\nhere..."
-                ^
-res/layout/add_vocabulary_list_new_item.xml:21: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-            android:text="OK"
-            ^
-res/layout/add_vocabulary_pinyin_dialog.xml:31: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
                 ^
 res/layout/add_vocabulary_top.xml:14: Warning: [I18N] Hardcoded string "Enter a Chinese Word", should use @string resource [HardcodedText]
             android:hint="Enter a Chinese Word"
@@ -333,108 +238,6 @@ res/layout/add_vocabulary_top.xml:14: Warning: [I18N] Hardcoded string "Enter a 
 res/layout/add_vocabulary_wrong_entry.xml:14: Warning: [I18N] Hardcoded string "Enter a Chinese word", should use @string resource [HardcodedText]
             android:text="Enter a Chinese word" />
             ^
-res/layout/db.xml:18: Warning: [I18N] Hardcoded string "Number of characters:", should use @string resource [HardcodedText]
-                    android:text="Number of characters:"
-                    ^
-res/layout/db.xml:29: Warning: [I18N] Hardcoded string "Number of chinese words:", should use @string resource [HardcodedText]
-                    android:text="Number of chinese words:"
-                    ^
-res/layout/db.xml:53: Warning: [I18N] Hardcoded string "zoom-in", should use @string resource [HardcodedText]
-                android:text="zoom-in" />
-                ^
-res/layout/db.xml:59: Warning: [I18N] Hardcoded string "zoom-out", should use @string resource [HardcodedText]
-                android:text="zoom-out" />
-                ^
-res/layout/db_export_options.xml:18: Warning: [I18N] Hardcoded string "Only filtered lessons", should use @string resource [HardcodedText]
-                android:text="Only filtered lessons"
-                ^
-res/layout/db_export_options.xml:36: Warning: [I18N] Hardcoded string "Include scores", should use @string resource [HardcodedText]
-                android:text="Include scores"
-                ^
-res/layout/db_export_options.xml:54: Warning: [I18N] Hardcoded string "Path...", should use @string resource [HardcodedText]
-                android:text="Path..."
-                ^
-res/layout/db_export_options.xml:81: Warning: [I18N] Hardcoded string "Cancel", should use @string resource [HardcodedText]
-                    android:text="Cancel"
-                    ^
-res/layout/db_export_options.xml:95: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                    android:text="OK"
-                    ^
-res/layout/edit_lesson_list_new_item.xml:27: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-            android:text="OK"
-            ^
-res/layout/guess_char.xml:23: Warning: [I18N] Hardcoded string "Find the missing character:", should use @string resource [HardcodedText]
-            android:text="Find the missing character:" />
-            ^
-res/layout/guess_char.xml:67: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
-res/layout/guess_chinese_word.xml:21: Warning: [I18N] Hardcoded string "Find the Chinese translation for:", should use @string resource [HardcodedText]
-            android:text="Find the Chinese translation for:" />
-            ^
-res/layout/guess_chinese_word.xml:41: Warning: [I18N] Hardcoded string "show more vocabulary", should use @string resource [HardcodedText]
-            android:text="show more vocabulary"
-            ^
-res/layout/guess_chinese_word.xml:85: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
-res/layout/guess_containing.xml:23: Warning: [I18N] Hardcoded string "Find words containing the character:", should use @string resource [HardcodedText]
-            android:text="Find words containing the character:"
-            ^
-res/layout/guess_containing.xml:57: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
-res/layout/guess_english.xml:23: Warning: [I18N] Hardcoded string "Find the English translation for:", should use @string resource [HardcodedText]
-            android:text="Find the English translation for:"
-            ^
-res/layout/guess_english.xml:58: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
-res/layout/guess_pinyin.xml:22: Warning: [I18N] Hardcoded string "Give the pinyin for:", should use @string resource [HardcodedText]
-            android:text="Give the pinyin for:" />
-            ^
-res/layout/guess_pinyin.xml:36: Warning: [I18N] Hardcoded string "As in...", should use @string resource [HardcodedText]
-            android:text="As in..."
-            ^
-res/layout/guess_pinyin.xml:77: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
-res/layout/guess_tone.xml:30: Warning: [I18N] Hardcoded string "Find the tone for:", should use @string resource [HardcodedText]
-                android:text="Find the tone for:" />
-                ^
-res/layout/guess_tone.xml:79: Warning: [I18N] Hardcoded string "1st tone", should use @string resource [HardcodedText]
-                        android:text="1st tone"
-                        ^
-res/layout/guess_tone.xml:106: Warning: [I18N] Hardcoded string "2nd tone", should use @string resource [HardcodedText]
-                        android:text="2nd tone"
-                        ^
-res/layout/guess_tone.xml:133: Warning: [I18N] Hardcoded string "3rd tone", should use @string resource [HardcodedText]
-                        android:text="3rd tone"
-                        ^
-res/layout/guess_tone.xml:160: Warning: [I18N] Hardcoded string "4th tone", should use @string resource [HardcodedText]
-                        android:text="4th tone"
-                        ^
-res/layout/guess_tone.xml:175: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
-res/layout-land/guess_tone.xml:25: Warning: [I18N] Hardcoded string "Find the tone for:", should use @string resource [HardcodedText]
-                android:text="Find the tone for:" />
-                ^
-res/layout-land/guess_tone.xml:79: Warning: [I18N] Hardcoded string "1st tone", should use @string resource [HardcodedText]
-                            android:text="1st tone"
-                            ^
-res/layout-land/guess_tone.xml:106: Warning: [I18N] Hardcoded string "2nd tone", should use @string resource [HardcodedText]
-                            android:text="2nd tone"
-                            ^
-res/layout-land/guess_tone.xml:140: Warning: [I18N] Hardcoded string "3rd tone", should use @string resource [HardcodedText]
-                            android:text="3rd tone"
-                            ^
-res/layout-land/guess_tone.xml:167: Warning: [I18N] Hardcoded string "4th tone", should use @string resource [HardcodedText]
-                            android:text="4th tone"
-                            ^
-res/layout-land/guess_tone.xml:183: Warning: [I18N] Hardcoded string "OK", should use @string resource [HardcodedText]
-                android:text="OK"
-                ^
 res/layout/main_menu.xml:16: Warning: [I18N] Hardcoded string "Add Vocabulary", should use @string resource [HardcodedText]
                 android:text="Add Vocabulary"
                 ^
@@ -459,11 +262,8 @@ res/layout/main_menu.xml:71: Warning: [I18N] Hardcoded string "Settings", should
 res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should use @string resource [HardcodedText]
                 android:text="Stats"
                 ^
-res/layout/test_result.xml:53: Warning: [I18N] Hardcoded string "Accept answer", should use @string resource [HardcodedText]
-                android:text="Accept answer"
-                ^
-res/layout/test_result.xml:61: Warning: [I18N] Hardcoded string "Next", should use @string resource [HardcodedText]
-                android:text="Next"
-                ^
+res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
+            android:contentDescription="splash screen"
+            ^
 
-0 errors, 150 warnings
+0 errors, 63 warnings

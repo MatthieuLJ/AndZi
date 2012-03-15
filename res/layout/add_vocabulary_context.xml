@@ -15,14 +15,14 @@
         <LinearLayout
                 android:id="@+id/pinyin_buttons"
                 android:orientation="horizontal"
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"/>
     </HorizontalScrollView>
     <ListView
             android:id="@+id/vocabulary_list"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             />
 
@@ -30,7 +30,7 @@
             android:id="@+id/add_vocabulary_submit"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="OK"
+            android:text="@string/ok"
             android:onClick="handle_add_another"/>
 
 </LinearLayout>

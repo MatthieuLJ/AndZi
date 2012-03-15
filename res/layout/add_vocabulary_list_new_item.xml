@@ -6,18 +6,18 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:orientation="horizontal"
-        android:background="#dddddd"
+        style="@style/AndZiTheme"
         android:minHeight="?android:attr/listPreferredItemHeight">
     <EditText
             android:id="@+id/add_new_translation"
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
+            android:layout_width="0dp"
             android:layout_weight="1"
             />
     <Button
             android:id="@+id/add_new_translation_ok"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:text="OK"
+            android:text="@string/ok"
             />
 </LinearLayout>

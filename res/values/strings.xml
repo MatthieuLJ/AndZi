@@ -10,4 +10,31 @@
     <string name="cancel">Cancel</string>
     <string name="create">Save</string>
     <string name="no_data">No Data</string>
+
+    <string name="next">Next</string>
+    <string name="accept">Accept Answer</string>
+    <string name="ok">OK</string>
+    <string name="find_tone">Find the tone for:</string>
+    <string name="guess_char">Find the missing character:</string>
+    <string name="guess_chinese">Find the Chinese translation for:</string>
+    <string name="guess_containing">Find words containing the character:</string>
+    <string name="guess_english">Find the English translation for:</string>
+    <string name="guess_pinyin">Give the pinyin for:</string>
+    <string name="first_tone">1st tone</string>
+    <string name="second_tone">2nd tone</string>
+    <string name="third_tone">3rd tone</string>
+    <string name="fourth_tone">4th tone</string>
+    <string name="as_in">As in...</string>
+    <string name="zoom_in">Zoom-in</string>
+    <string name="zoom_out">Zoom-out</string>
+    <string name="more_vocabulary">Show more vocabulary</string>
+    <string name="num_words">Number of Chinese words:</string>
+    <string name="num_chars">Number of Chinese characters:</string>
+
+    <string name="description_splash">splash screen</string>
+    <string name="description_1st_tone">first tone accent</string>
+    <string name="description_2nd_tone">second tone accent</string>
+    <string name="description_3rd_tone">third tone accent</string>
+    <string name="description_4th_tone">fourth tone accent</string>
+    <string name="description_drag_icon">drag icon</string>
 </resources>

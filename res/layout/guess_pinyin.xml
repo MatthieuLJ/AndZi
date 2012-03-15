@@ -6,7 +6,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
-        android:background="#dddddd">
+        style="@style/AndZiTheme">
     <View
             android:id="@+id/spacer"
             android:layout_height="0dp"
@@ -19,7 +19,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
             android:textColor="#000000"
-            android:text="Give the pinyin for:" />
+            android:text="@string/guess_pinyin" />
     <TextView
             android:id="@+id/guess_pinyin_chinese"
             android:layout_width="wrap_content"
@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#00000000"
-            android:text="As in..."
+            android:text="@string/as_in"
             expandable:hidable="true"
             />
     <ScrollView
@@ -74,7 +74,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:text="OK"
+                android:text="@string/ok"
                 android:onClick="handle_ok"
                 />
     </LinearLayout>

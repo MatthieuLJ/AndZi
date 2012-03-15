@@ -5,7 +5,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
-        android:background="#dddddd"
+        style="@style/AndZiTheme"
         >
     <TableLayout
             android:layout_height="wrap_content"
@@ -15,7 +15,7 @@
         <TableRow>
             <TextView
                     android:textColor="#000000"
-                    android:text="Number of characters:"
+                    android:text="@string/num_chars"
                     />
             <TextView
                     android:id="@+id/stats_chars"
@@ -26,7 +26,7 @@
         <TableRow>
             <TextView
                     android:textColor="#000000"
-                    android:text="Number of chinese words:"
+                    android:text="@string/num_words"
                     />
             <TextView
                     android:id="@+id/stats_words"
@@ -50,14 +50,13 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:text="zoom-in" />
+                android:text="@string/zoom_in" />
         <Button
                 android:id="@+id/graph_out"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:text="zoom-out" />
+                android:text="@string/zoom_out" />
     </LinearLayout>
-
 
 </LinearLayout>
