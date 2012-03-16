@@ -615,16 +615,22 @@ public class AddVocabularyActivity extends Activity
 
                         process_handler.post(new Runnable() {
                             public void run() {
-                                Vocabulary voc = new Vocabulary(current_chinese_word, get_current_pinyin(), translation);
-                                myDB.addVocabulary(voc);
+                                new Thread(new Runnable() {
+                                    public void run() {
+                                        Vocabulary voc = new Vocabulary(current_chinese_word, get_current_pinyin(), translation);
+                                        myDB.addVocabulary(voc);
+
+                                        if (!default_lesson.equals("")) {
+                                            myDB.assignWordLesson(default_lesson, voc);
+                                        }
+                                    }
+                                }).run();
                                 ArrayList<String> word_lesson = new ArrayList<String>();
                                 if (!default_lesson.equals("")) {
-                                    myDB.assignWordLesson(default_lesson, voc);
                                     word_lesson.add(default_lesson);
                                 }
                                 translations_in_db.add(new VocabularyItem(translation, word_lesson, VocabularyItem.NEW));
                                 hide_duplicates_in_ref();
-
                             }
                         });
                     }
@@ -702,14 +708,22 @@ public class AddVocabularyActivity extends Activity
                                         public void run() {
                                             if (b) {
                                                 voc.lessons.add(lessons.get(i));
-                                                myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
                                             }
                                             else {
                                                 voc.lessons.remove(lessons.get(i));
-                                                myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
                                             }
                                         }
                                     });
+                                    new Thread(new Runnable() {
+                                        public void run() {
+                                            if (b) {
+                                                myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                            }
+                                            else {
+                                                myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                            }
+                                        }
+                                    }).run();
 
                                 }
                             });
@@ -743,24 +757,29 @@ public class AddVocabularyActivity extends Activity
 
                 CheckBox cb = (CheckBox) row.findViewById(R.id.add_check);
                 cb.setTag(R.id.add_vocabulary_item, voc);
+                cb.setOnCheckedChangeListener(null);
+                cb.setChecked(true);
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     public void onCheckedChanged(final CompoundButton compoundButton, final boolean b) {
                         if (b)
                             return;
-                        process_handler.post(new Runnable() {
+                        new Thread(new Runnable() {
                             public void run() {
-                                VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
                                 Vocabulary v = new Vocabulary(current_chinese_word, get_current_pinyin(), voc.translation);
                                 myDB.delVocabulary(v);
+                            }
+                        }).run();
+                        process_handler.post(new Runnable() {
+                            public void run() {
+                                final VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
                                 translations_in_db.remove(voc);
                                 hide_duplicates_in_ref();
                                 Log.d(TAG, "translation "+voc.translation+" is changed");
                             }
                         });
-
                     }
                 });
-                cb.setChecked(true);
+
 
                 return row;
             }
@@ -790,17 +809,25 @@ public class AddVocabularyActivity extends Activity
 
                 CheckBox cb = (CheckBox) row.findViewById(R.id.add_check);
                 cb.setTag(R.id.add_vocabulary_item, voc);
+                cb.setOnCheckedChangeListener(null);
+                cb.setChecked(false);
                 cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     public void onCheckedChanged(final CompoundButton compoundButton, boolean b) {
                         if (!b)
                             return;
-                        process_handler.post(new Runnable() {
+                        final VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
+                        new Thread(new Runnable() {
                             public void run() {
-                                VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
                                 Vocabulary v = new Vocabulary(current_chinese_word, get_current_pinyin(), voc.translation);
                                 myDB.addVocabulary(v);
                                 if (!default_lesson.equals("")) {
                                     myDB.assignWordLesson(default_lesson, v);
+                                }
+                            }
+                        }).run();
+                        process_handler.post(new Runnable() {
+                            public void run() {
+                                if (!default_lesson.equals("")) {
                                     voc.lessons.add(default_lesson);
                                 }
                                 translations_in_db.add(voc);
@@ -814,7 +841,7 @@ public class AddVocabularyActivity extends Activity
                         });
                     }
                 });
-                cb.setChecked(false);
+
 
                 return row;
             }
