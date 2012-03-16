@@ -34,6 +34,7 @@
                 />
         <activity android:name=".AddVocabularyActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
+                  android:configChanges="keyboardHidden|orientation"
                 />
 
         <activity android:name=".DBActivity"/>

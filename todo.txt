@@ -6,8 +6,7 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
-* When screen is rotated when adding vocabulary, the default lesson is reset
+BUGS (1):
 * Add option to select all or select none in lesson filter
 
 FUTURE (10):
@@ -22,7 +21,8 @@ FUTURE (10):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (93):
+DONE (94):
+* When screen is rotated when adding vocabulary, the default lesson is reset
 * Change database to store word length and to store expiration date rather than modification in Leitner system
 * Fix tests when lesson filter is enabled
 * Do not guess pinyin for words that only contain that character repeated
