@@ -222,14 +222,28 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<MainMenuActivi
 
     public void testLessonAssignment() {
         target_db.addLesson("lesson 1");
-        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addLesson("lesson 2");
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        target_db.addVocabulary("small",new ArrayList<String>(Arrays.asList("小")), new ArrayList<String>(Arrays.asList("xiao3")));
+
         target_db.assignWordLesson("lesson 1", "good", "好", "hao3");
         assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1", ""))).size() == 3);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(""))).size() == 3);
+        target_db.assignWordLesson("lesson 2", "small", "小", "xiao3");
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1", ""))).size() == 2);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(""))).size() == 2);
         target_db.assignWordLesson("lesson 1", "well", "好", "hao3");
         assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 1);
-        target_db.addVocabulary("big",new ArrayList<String>(Arrays.asList("大")), new ArrayList<String>(Arrays.asList("da4")));
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1", ""))).size() == 2);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(""))).size() == 1);
         target_db.assignWordLesson("lesson 1", "big", "大", "da4");
         assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1", ""))).size() == 2);
+        assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(""))).size() == 0);
+
         assertTrue(checkDB(target_db, false));
     }
 

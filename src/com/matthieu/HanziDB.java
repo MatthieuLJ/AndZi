@@ -1825,7 +1825,6 @@ public class HanziDB extends SQLiteOpenHelper {
                         vocabulary=getVocabularyInLessons(all_lessons);
                     }
 
-
                     for (int i=0; i<vocabulary.size(); i++) {
                         Vocabulary v=vocabulary.get(i);
                         publishProgress((i*50)/vocabulary.size());
@@ -2174,15 +2173,53 @@ public class HanziDB extends SQLiteOpenHelper {
         Vocabulary tmp=null;
         Cursor cur;
 
-        if (lessons.contains("")) {
+        if ((lessons.size() == 1) && (lessons.contains(""))) {
+            // only words not in any lesson
             cur = db.rawQuery("SELECT e.translation AS translation, " +
                     "c.chinese AS chinese, " +
                     "c.pinyin AS pinyin " +
                     "FROM eword AS e " +
                     " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word)"
+                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ORDER BY c.cword_id"
                     ,null);
-            if (cur.moveToFirst()) {
+        }
+        else if (!lessons.contains("")) {
+            // words that have some lessons associated with them
+            String whereQuery = buildWhereQuery(lessons);
+
+            cur = db.rawQuery("SELECT e.translation AS translation, " +
+                    "c.chinese AS chinese, " +
+                    "c.pinyin AS pinyin " +
+                    "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
+                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id ORDER BY c.cword_id"
+                    ,null);
+
+
+        }
+        else {
+            // a little bit of both
+            lessons.remove("");
+            String whereQuery = buildWhereQuery(lessons);
+            cur = db.rawQuery("SELECT e.translation AS translation, " +
+                    "c.chinese AS chinese, " +
+                    "c.pinyin AS pinyin, " +
+                    "c.cword_id AS cword_id " +
+                    "FROM eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) " +
+                    "UNION " +
+                    "SELECT e.translation AS translation, " +
+                    "c.chinese AS chinese, " +
+                    "c.pinyin AS pinyin, " +
+                    "c.cword_id AS cword_id " +
+                    "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
+                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    "ORDER BY cword_id"
+                    ,null);
+        }
+        if (cur.moveToFirst()) {
                 res.ensureCapacity(cur.getCount());
                 do{
                     String chinese = cur.getString(cur.getColumnIndex("chinese"));
@@ -2203,43 +2240,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 res.add(tmp);
             }
             cur.close();
-            lessons.remove("");
-        }
-
-        if (lessons.size() > 0) {
-            String whereQuery = buildWhereQuery(lessons);
-
-            cur = db.rawQuery("SELECT e.translation AS translation, " +
-                    "c.chinese AS chinese, " +
-                    "c.pinyin AS pinyin " +
-                    "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
-                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id "
-                    ,null);
-
-            if (cur.moveToFirst()) {
-                res.ensureCapacity(res.size() + cur.getCount());
-                do{
-                    String chinese = cur.getString(cur.getColumnIndex("chinese"));
-                    String pinyin = cur.getString(cur.getColumnIndex("pinyin"));
-                    if (tmp == null)
-                        tmp = new Vocabulary(chinese, pinyin,
-                                cur.getString(cur.getColumnIndex("translation")));
-                    else {
-                        if (tmp.chinese.equals(chinese) && tmp.pinyin.equals(pinyin))
-                            tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
-                        else {
-                            res.add(tmp);
-                            tmp = new Vocabulary(chinese, pinyin,
-                                    cur.getString(cur.getColumnIndex("translation")));
-                        }
-                    }
-                }while(cur.moveToNext());
-                res.add(tmp);
-            }
-
-            cur.close();
-        }
         return res;
     }
 
