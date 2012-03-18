@@ -2447,8 +2447,6 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      */
 
-
-
     private static final int MAX_BOX=4;
 
     ////////////////////////////////////////
@@ -2532,10 +2530,11 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             return 0;
 
-        long box_delay = (long) 6 * 60 * 60 * 1000;
+        long box_delay = (long) 6 * 60 * 60 * 1000; // 6 hours is basic
 
-        int multiplicator = Math.max((int) Math.log10(getNumChars()), 1);
-        long res = (long) (box_delay * Math.pow(Math.pow(2, box), multiplicator));
+        double multiplicator = Math.max(Math.log10(getNumChars()), 1);
+        // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
+        long res = (long) (box_delay * Math.pow(2, box + multiplicator));
 
         //System.out.println("With "+getNumChars()+" characters, mult is "+multiplicator+", so delay is "+(res/(1000*60*60)+" hours for box "+box));
         return res;
