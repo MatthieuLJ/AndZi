@@ -5,6 +5,8 @@ import android.content.ContextWrapper;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 
+import java.util.concurrent.ExecutionException;
+
 public class ProgressDBTest extends ActivityInstrumentationTestCase2<MainMenuActivity> {
     public ProgressDBTest() {
         super("com.matthieu", MainMenuActivity.class);
@@ -88,7 +90,13 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<MainMenuAct
         data.date=100L;
         target_db.add_data(data);
         assertTrue(target_db.get_data().size()==7);
-        target_db.purge_data(6);
+        try {
+            target_db.purge_data(6).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (ExecutionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         assertTrue(target_db.get_data().size()==6);
         assertTrue(target_db.get_data().get(1).date==50);
         assertTrue(target_db.get_data().get(2).date==52);
@@ -108,7 +116,13 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<MainMenuAct
         data.date=100L;
         target_db.add_data(data);
         assertTrue(target_db.get_data().size()==5);
-        target_db.purge_data(4);
+        try {
+            target_db.purge_data(4).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (ExecutionException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         assertTrue(target_db.get_data().size()==4);
         assertTrue(target_db.get_data().get(0).date==10);
         assertTrue(target_db.get_data().get(1).date==12);
