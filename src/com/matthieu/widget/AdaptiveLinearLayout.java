@@ -1,7 +1,6 @@
 package com.matthieu.widget;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +21,7 @@ public class AdaptiveLinearLayout extends LinearLayout {
     public AdaptiveLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
+
 
     protected void findItemsToHide() {
         final int count = getChildCount();
@@ -48,13 +48,6 @@ public class AdaptiveLinearLayout extends LinearLayout {
     protected View findScroll() {
         final int count = getChildCount();
 
-        if (itemsToHide == null) {
-            itemsToHide = new ArrayList<View>();
-        }
-        else {
-            itemsToHide.clear();
-        }
-
         for (int i=0; i<count; i++) {
             final View child = getChildAt(i);
 
@@ -66,6 +59,22 @@ public class AdaptiveLinearLayout extends LinearLayout {
             }
         }
         return null;
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);    //To change body of overridden methods use File | Settings | File Templates.
+        View spacer = findViewById(R.id.spacer);
+        if (spacer==null)
+            return;
+
+        int height = spacer.getMeasuredHeight();
+        if (height < 10) {
+            findItemsToHide();
+            for (View v:itemsToHide) {
+                v.setVisibility(GONE);
+            }
+        }
     }
 
     @Override
@@ -93,19 +102,6 @@ public class AdaptiveLinearLayout extends LinearLayout {
                     super.onMeasure(widthMeasureSpec, heightMeasureSpec);
                 }
             }
-        }
-
-        View spacer = findViewById(R.id.spacer);
-        if (spacer==null)
-            return;
-
-        int height = spacer.getMeasuredHeight();
-        if (height < 10) {
-            findItemsToHide();
-            for (View v:itemsToHide) {
-                v.setVisibility(GONE);
-            }
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
     }
 
