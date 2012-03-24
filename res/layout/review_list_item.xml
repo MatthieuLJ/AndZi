@@ -7,7 +7,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         style="@style/AndZiTheme"
-        android:weightSum="4">
+        >
     <Button
             android:id="@+id/review_expand_button"
             android:layout_width="24sp"
