@@ -1,4 +1,5 @@
-ONGOING (6):
+ONGOING (7):
+* Add service to save progress instead of anything else
 * Offer to delete old history of stats
 * Test performance with huge database
 * Add help (different screens, IME, ref DB)

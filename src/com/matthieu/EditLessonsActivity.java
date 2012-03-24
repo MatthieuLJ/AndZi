@@ -58,13 +58,13 @@ public class EditLessonsActivity extends Activity {
                 final ArrayList<String> lesson_order=new ArrayList<String>();
                 for (Lesson l:current_lessons)
                     lesson_order.add(l.label);
+                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
                 new Thread(new Runnable() {
                     public void run() {
                         myDB.sortLessons(lesson_order);
                     }
-                }).run();
-                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
+                }).start();
             }
         });
         registerForContextMenu(list);
@@ -153,12 +153,11 @@ public class EditLessonsActivity extends Activity {
         }
     }
 
-    private class LessonArrayAdapter extends ArrayAdapter<Object> {
+    private class LessonArrayAdapter extends BaseAdapter {
         public LessonArrayAdapter() {
-            super(EditLessonsActivity.this, R.layout.edit_lesson_list_item, current_lessons.toArray());
+            super();
         }
 
-        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View row;
 
@@ -197,14 +196,14 @@ public class EditLessonsActivity extends Activity {
                         final ArrayList<String> lesson_order=new ArrayList<String>();
                         for (Lesson l:current_lessons)
                             lesson_order.add(l.label);
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         new Thread(new Runnable() {
                             public void run() {
                                 myDB.addLesson(new_lesson_label);
                                 myDB.sortLessons(lesson_order);
                             }
-                        }).run();
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                        }).start();
                     }
                 });
             }
@@ -273,23 +272,30 @@ public class EditLessonsActivity extends Activity {
                             lesson.state &= ~Lesson.FILTERED_ENABLED;
                             current_lesson_filter.remove(lesson.label);
                         }
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         new Thread(new Runnable() {
                             public void run() {
                                 myDB.setLessonsToFilter(current_lesson_filter);
                                 ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
                             }
-                        }).run();
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                        }).start();
                     }
                 });
             }
             return row;
         }
 
-        @Override
         public int getCount() {
             return current_lessons.size()+1;
+        }
+
+        public Object getItem(int i) {
+            return null;
+        }
+
+        public long getItemId(int i) {
+            return 0;
         }
     }
 
@@ -322,16 +328,14 @@ public class EditLessonsActivity extends Activity {
 
         switch(item.getItemId()) {
             case R.id.delete_lesson:
-                new Thread(new Runnable() {
-                    public void run() {
-                        myDB.delLesson(le.label);
-
-                    }
-                }).run();
                 current_lessons.remove(le);
                 TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-
+                new Thread(new Runnable() {
+                    public void run() {
+                        myDB.delLesson(le.label);
+                    }
+                }).start();
                 break;
             case R.id.rename_lesson:
                 if (le.old_label.equals(""))
@@ -349,11 +353,7 @@ public class EditLessonsActivity extends Activity {
                         }
                         if (param.equals(le.label))
                             return;
-                        new Thread(new Runnable() {
-                            public void run() {
-                                myDB.renameLesson(le.label, param);
-                            }
-                        }).run();
+
                         le.label=param;
                         if (le.old_label.equals(param)) {
                             le.old_label="";
@@ -363,6 +363,12 @@ public class EditLessonsActivity extends Activity {
                             le.state |= Lesson.RENAMED;
                         TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+
+                        new Thread(new Runnable() {
+                            public void run() {
+                                myDB.renameLesson(le.label, param);
+                            }
+                        }).start();
                     }
                 });
                 break;
@@ -380,6 +386,10 @@ public class EditLessonsActivity extends Activity {
                         Lesson new_lesson=new Lesson(param);
                         new_lesson.state = Lesson.NEW;
                         new_lesson.num_items = le.num_items;
+                        current_lessons.add(0, new_lesson);
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+
                         new Thread(new Runnable() {
                             public void run() {
                                 myDB.addLesson(param);
@@ -390,10 +400,7 @@ public class EditLessonsActivity extends Activity {
                                     lesson_order.add(l.label);
                                 myDB.sortLessons(lesson_order);
                             }
-                        }).run();
-                        current_lessons.add(0, new_lesson);
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                        }).start();
                     }
                 });
                 break;
@@ -413,25 +420,26 @@ public class EditLessonsActivity extends Activity {
                 });
                 alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, int n) {
-                        process_handler.post(new Runnable() {
+                        final ArrayList<String> lessons_selected = new ArrayList<String>();
+                        for (int i=0; i<current_lessons.size(); i++) {
+                            if (lesson_checked[i]) {
+                                lessons_selected.add(lessons[i]);
+                            }
+                        }
+
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                        dialog.dismiss();
+
+                        new Thread(new Runnable() {
                             public void run() {
-                                ArrayList<String> lessons_selected = new ArrayList<String>();
-                                for (int i=0; i<current_lessons.size(); i++) {
-                                    if (lesson_checked[i]) {
-                                        lessons_selected.add(lessons[i]);
-                                    }
-                                }
                                 ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(lessons_selected);
                                 for (Vocabulary v:voc) {
                                     myDB.assignWordLesson(le.label, v);
+                                    le.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))).size();
                                 }
-                                le.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))).size();
-                                dialog.dismiss();
-                                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                             }
-                        });
-
+                        }).start();
                     }
                 });
                 alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

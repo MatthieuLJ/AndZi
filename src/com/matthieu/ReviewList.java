@@ -37,7 +37,7 @@ public class ReviewList extends ListActivity {
 
         lesson=getIntent().getStringExtra("lesson");
         if (lesson == null) {
-            ArrayAdapter adapter = new ReviewListAdapter();
+            BaseAdapter adapter = new ReviewListAdapter();
             new table_filler(adapter).execute();
             LayoutInflater inflater = getLayoutInflater();
             TextView header = (TextView) inflater.inflate(R.layout.review_list_header, getListView(), false);
@@ -49,7 +49,7 @@ public class ReviewList extends ListActivity {
             setListAdapter(adapter);
         }
         else {
-            ArrayAdapter adapter = new ReviewLessonAdapter();
+            BaseAdapter adapter = new ReviewLessonAdapter();
             setListAdapter(adapter);
             
         }
@@ -72,11 +72,11 @@ public class ReviewList extends ListActivity {
     }
 
     private class table_filler extends AsyncTask<Void, Integer, Void> {
-        ArrayAdapter adap;
+        BaseAdapter adap;
         ArrayList<CharPinyin> temp_to_study;
         ArrayList<String> chars_to_study;
 
-        public table_filler(ArrayAdapter a) {
+        public table_filler(BaseAdapter a) {
             adap=a;
         }
 
@@ -193,10 +193,10 @@ public class ReviewList extends ListActivity {
         }
     }
 
-    private class ReviewListAdapter extends ArrayAdapter<Object> {
+    private class ReviewListAdapter extends BaseAdapter {
 
         public ReviewListAdapter() {
-            super(ReviewList.this, R.layout.review_list_item, to_study.toArray());
+            super();
         }
 
         public int getCount() {
@@ -205,6 +205,10 @@ public class ReviewList extends ListActivity {
 
         public Object getItem(int i) {
             return data_to_study.get(to_study.get(i));
+        }
+
+        public long getItemId(int i) {
+            return 0;  //To change body of implemented methods use File | Settings | File Templates.
         }
 
         public View getView(int i, View convertView, ViewGroup viewGroup) {
@@ -294,19 +298,25 @@ public class ReviewList extends ListActivity {
         }
     }
 
-    private class ReviewLessonAdapter extends ArrayAdapter<Object> {
+    private class ReviewLessonAdapter extends BaseAdapter {
         ArrayList<Vocabulary> lesson_voc;
         public ReviewLessonAdapter() {
-            super(ReviewList.this, R.layout.details_list_item);
+            super();
             lesson_voc=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
         }
 
-        @Override
         public int getCount() {
             return lesson_voc.size();
         }
 
-        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        public long getItemId(int i) {
+            return 0;
+        }
+
         public View getView(int position, View convertView, ViewGroup viewGroup) {
             LayoutInflater li = getLayoutInflater();
             if (convertView == null) {

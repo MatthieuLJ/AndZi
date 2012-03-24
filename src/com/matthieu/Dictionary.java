@@ -231,7 +231,7 @@ public class Dictionary extends Activity {
                     public void run() {
                         filler.cancel(true);
                     }
-                }).run();
+                }).start();
         }
 
         public void resume() {
