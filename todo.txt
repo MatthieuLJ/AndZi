@@ -1,14 +1,19 @@
-ONGOING (7):
+ONGOING (8):
 * Add service to save progress instead of anything else
 * Offer to delete old history of stats
 * Test performance with huge database
+* When dictionnary query does not exist, try to break it up to find the meaning
 * Add help (different screens, IME, ref DB)
 * Make it pretty
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
+BUGS (5):
 * Add option to select all or select none in lesson filter
+* Guess Character, translation is clipped
+* Guess Pinyin, word is aligned to top of screen when other content is hidden
+* Guess chinese, translation text may be too big
+* Do the splash screen correctly
 
 FUTURE (10):
 * Find a way to hilight the character sequence in Details list
