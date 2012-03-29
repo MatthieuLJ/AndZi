@@ -3,6 +3,7 @@
 <com.matthieu.widget.AdaptiveLinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res/com.matthieu"
+        android:id="@+id/adaptive_layout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
@@ -19,14 +20,28 @@
             android:gravity="center_horizontal"
             android:textColor="#000000"
             android:text="@string/guess_chinese" />
-    <TextView
-            android:id="@+id/guess_chinese_word_voc"
+    <View
+            android:layout_height="0dp"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:textColor="#000000"
-            android:gravity="center_horizontal"
-            />
+            android:layout_weight="1" />
+    <ScrollView
+            android:scrollbars="vertical"
+            android:layout_height="0dp"
+            android:layout_width="fill_parent"
+            android:measureAllChildren="true"
+            android:layout_weight="8"
+            android:fillViewport="false"
+            app:scroll="true"
+            >
+        <TextView
+                android:id="@+id/guess_chinese_word_voc"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:textColor="#000000"
+                android:gravity="center_horizontal"
+                />
+    </ScrollView>
     <View
             android:layout_height="0dp"
             android:layout_width="fill_parent"
@@ -46,7 +61,7 @@
             android:layout_height="0dp"
             android:layout_width="fill_parent"
             android:measureAllChildren="true"
-            android:layout_weight="4"
+            android:layout_weight="3"
             android:fillViewport="false"
             app:hidable="true"
             app:scroll="true"
@@ -91,11 +106,6 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="#000000"
-            app:hidable="true" />
-    <View
-            android:layout_height="0dp"
-            android:layout_width="fill_parent"
-            android:layout_weight="1"
             app:hidable="true" />
 
 </com.matthieu.widget.AdaptiveLinearLayout>

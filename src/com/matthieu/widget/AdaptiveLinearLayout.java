@@ -12,16 +12,25 @@ import java.util.ArrayList;
 
 public class AdaptiveLinearLayout extends LinearLayout {
     protected ArrayList<View> itemsToHide=null;
-    HideParams saved_params=null;
+    protected ArrayList<ScrollView> scrollsToResize=null;
+    protected ArrayList<HideParams> scrollsParams=null;
 
     public AdaptiveLinearLayout(Context context) {
         super(context);
+        findItemsToHide();
+        findScrolls();
     }
 
     public AdaptiveLinearLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        findItemsToHide();
+        findScrolls();
     }
 
+    public void refreshContent() {
+        findItemsToHide();
+        findScrolls();
+    }
 
     protected void findItemsToHide() {
         final int count = getChildCount();
@@ -45,8 +54,28 @@ public class AdaptiveLinearLayout extends LinearLayout {
         }
     }
 
-    protected View findScroll() {
+    protected void findScrolls() {
         final int count = getChildCount();
+
+        if ((scrollsToResize != null) && (scrollsToResize.size() > 0)) {
+            for (int i=0; i<scrollsToResize.size(); i++) {
+                ScrollView scrollView=scrollsToResize.get(i);
+                scrollView.setLayoutParams(scrollsParams.get(i));
+            }
+        }
+
+        if (scrollsToResize == null) {
+            scrollsToResize = new ArrayList<ScrollView>();
+        }
+        else {
+            scrollsToResize.clear();
+        }
+        if (scrollsParams == null) {
+            scrollsParams = new ArrayList<HideParams>();
+        }
+        else {
+            scrollsParams.clear();
+        }
 
         for (int i=0; i<count; i++) {
             final View child = getChildAt(i);
@@ -55,24 +84,8 @@ public class AdaptiveLinearLayout extends LinearLayout {
 
             final HideParams hp = (HideParams) child.getLayoutParams();
             if (hp.scroll) {
-                return child;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);    //To change body of overridden methods use File | Settings | File Templates.
-        View spacer = findViewById(R.id.spacer);
-        if (spacer==null)
-            return;
-
-        int height = spacer.getMeasuredHeight();
-        if (height < 10) {
-            findItemsToHide();
-            for (View v:itemsToHide) {
-                v.setVisibility(GONE);
+                scrollsToResize.add((ScrollView) child);
+                scrollsParams.add((HideParams) child.getLayoutParams());
             }
         }
     }
@@ -80,28 +93,44 @@ public class AdaptiveLinearLayout extends LinearLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         findItemsToHide();
-        final ScrollView scrollView = (ScrollView) findScroll();
+        findScrolls();
 
         for (View v:itemsToHide) {
             v.setVisibility(VISIBLE);
         }
-        if (saved_params != null) {
-            scrollView.setLayoutParams(saved_params);
+        if (scrollsToResize.size() > 0) {
+            for (int i=0; i<scrollsToResize.size(); i++) {
+                ScrollView scrollView=scrollsToResize.get(i);
+                scrollView.setLayoutParams(scrollsParams.get(i));
+            }
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (scrollView != null) {
-            if (scrollView.getChildCount() > 0) {
-                final View child = scrollView.getChildAt(0);
-                int height = scrollView.getMeasuredHeight();
-                if (child.getMeasuredHeight() < height) {
-                    saved_params = (HideParams) scrollView.getLayoutParams();
-                    HideParams hp = new HideParams((HideParams) scrollView.getLayoutParams());
-                    hp.height=child.getMeasuredHeight();
-                    hp.weight=0;
-                    scrollView.setLayoutParams(hp);
-                    super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        if (scrollsToResize.size() > 0) {
+            for (ScrollView scrollView : scrollsToResize) {
+                if (scrollView.getChildCount() > 0) {
+                    final View child = scrollView.getChildAt(0);
+                    int height = scrollView.getMeasuredHeight();
+                    if (child.getMeasuredHeight() < height) {
+                        HideParams hp = new HideParams((HideParams) scrollView.getLayoutParams());
+                        hp.height=child.getMeasuredHeight();
+                        hp.weight=0;
+                        scrollView.setLayoutParams(hp);
+                        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+                    }
                 }
             }
+        }
+
+        View spacer = findViewById(R.id.spacer);
+        if (spacer==null)
+            return;
+
+        int height = spacer.getMeasuredHeight();
+        if (height < 20) {
+            for (View v:itemsToHide) {
+                v.setVisibility(GONE);
+            }
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
     }
 

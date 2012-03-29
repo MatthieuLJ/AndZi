@@ -137,11 +137,13 @@ public class GuessChar extends TestActivity {
                     en += ", ";
             }
             trans.setText(en);
-            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
             trlp.setMargins(5,5,5,5);
             trans.setLayoutParams(trlp);
             tr.addView(trans);
 
+            TableLayout.LayoutParams tlp = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
+            tr.setLayoutParams(tlp);
             tl.addView(tr);
         }
         tl.invalidate();

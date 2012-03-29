@@ -8,12 +8,11 @@ ONGOING (8):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (5):
+BUGS (4):
 * Add option to select all or select none in lesson filter
-* Guess Character, translation is clipped
-* Guess Pinyin, word is aligned to top of screen when other content is hidden
-* Guess chinese, translation text may be too big
 * Do the splash screen correctly
+* Avoid guess missing character when too many possibilities (or keep only a few)
+* Avoid guess containing when the only word is character + zi
 
 FUTURE (10):
 * Find a way to hilight the character sequence in Details list
@@ -27,7 +26,10 @@ FUTURE (10):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (94):
+DONE (97):
+* Guess chinese, translation text may be too big
+* Guess Pinyin, word is aligned to top of screen when other content is hidden
+* Guess Character, translation is clipped
 * When screen is rotated when adding vocabulary, the default lesson is reset
 * Change database to store word length and to store expiration date rather than modification in Leitner system
 * Fix tests when lesson filter is enabled
