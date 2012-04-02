@@ -8,10 +8,9 @@ ONGOING (8):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (4):
+BUGS (3):
 * Avoid guess missing character when too many possibilities (or keep only a few)
 * Avoid guess containing when the only word is character + zi
-* dictionary does not return anything for 'wei' in Chinese
 * Improve performances of the dictionary!
 
 FUTURE (10):
@@ -26,7 +25,8 @@ FUTURE (10):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (99):
+DONE (100):
+* dictionary does not return anything for 'wei' in Chinese
 * Do the splash screen correctly (find why it does not show sometimes)
 * Add option to select all or select none in lesson filter
 * Guess chinese, translation text may be too big

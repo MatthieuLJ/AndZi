@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 public class PinyinParser {
     private final static String TAG = "PinyinParser";
+    private final static String pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ\'0-5]*";
 
     static public ArrayList<String> parse_string(String pinyin_string)
     {
@@ -206,7 +207,7 @@ public class PinyinParser {
         ArrayList<HanziDB.StringElement> temp;
         int i=0;
 
-        if (!pinyin_string.matches("[bpmfdtnlgkhzcsrjqxaoeiuvāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ0-5]*"))
+        if (!pinyin_string.matches(pinyin_chars))
             return null;
 
         // Try to find strophe to split the string
@@ -221,14 +222,14 @@ public class PinyinParser {
             {
                 return parse_string_to_elements(pinyin_string.substring(0, pinyin_string.length() - 1));
             }
-            temp = parse_string_to_elements(pinyin_string.substring(0, split_index - 1));
+            temp = parse_string_to_elements(pinyin_string.substring(0, split_index));
             if ((temp == null) || (temp.get(temp.size()-1).type==HanziDB.StringElement.INCOMPLETE_PINYIN))
             {
                 return null;
             }
             result = temp;
 
-            temp = parse_string_to_elements(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            temp = parse_string_to_elements(pinyin_string.substring(split_index+1, pinyin_string.length()));
             if (temp == null)
             {
                 return null;
@@ -322,12 +323,12 @@ public class PinyinParser {
                 i+=Character.charCount(entry);
             }
             else {
-                if (!input.substring(i, i+1).toLowerCase().matches("[bpmfdtnlgkhzcsrjqxaoeiuvāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ0-5]")) {
+                if (!input.substring(i, i+1).toLowerCase().matches(pinyin_chars)) {
                     res.clear();
                     return res;
                 }
                 int j=i+1;
-                while ((j<=input.length()) && (input.substring(i, j).toLowerCase().matches("[bpmfdtnlgkhzcsrjqxaoeiuvāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ0-5]*"))) {
+                while ((j<=input.length()) && (input.substring(i, j).toLowerCase().matches(pinyin_chars))) {
                     j++;
                 }
                 String pinyins=input.substring(i, j-1);
@@ -342,7 +343,7 @@ public class PinyinParser {
             }
         }
         if (res == null)
-            Log.d(TAG, "Failed to parse string [\"+input+\"]\"");
+            Log.d(TAG, "Failed to parse string ["+input+"]");
         else
             Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
         return res;
