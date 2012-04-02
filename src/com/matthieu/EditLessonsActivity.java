@@ -487,34 +487,26 @@ public class EditLessonsActivity extends Activity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.clear();
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.edit_lesson_menu, menu);
-
+        if (filter_on) {
+            inflater.inflate(R.menu.edit_lesson_menu_filter, menu);
+        }
+        else {
+            inflater.inflate(R.menu.edit_lesson_menu, menu);
+        }
         return true;
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        boolean res = super.onPrepareOptionsMenu(menu);
-        MenuItem enable = menu.findItem(R.id.lesson_enable_filter);
-        if (filter_on) {
-            enable.setTitle("Disable Lesson Filter");
-        }
-        else {
-            enable.setTitle("Enable Lesson Filter");
-        }
-
-        return res;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
         switch(item.getItemId()) {
             case R.id.lesson_enable_filter:
                 process_handler.post(new Runnable() {
                     public void run() {
-                        filter_on = !filter_on;
+                        filter_on = true;
                         myDB.enableFilter(filter_on);
                         ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
                         TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
@@ -523,12 +515,41 @@ public class EditLessonsActivity extends Activity {
                 });
                 break;
             
+            case R.id.lesson_disable_filter:
+                process_handler.post(new Runnable() {
+                    public void run() {
+                        filter_on = false;
+                        myDB.enableFilter(filter_on);
+                        ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
+                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                    }
+                });
+                break;
+
+            case R.id.lesson_filter_all:
+                current_lesson_filter.clear();
+                for (Lesson l : current_lessons) {
+                    l.state |= Lesson.FILTERED_ENABLED;
+                    current_lesson_filter.add(l.label);
+                }
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                break;
+                
+            case R.id.lesson_filter_none:
+                current_lesson_filter.clear();
+                for (Lesson l : current_lessons) {
+                    l.state &= ~Lesson.FILTERED_ENABLED;
+                }
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                break;
+            
             case R.id.no_lesson_list:
                 Intent i=new Intent(this, ReviewList.class);
                 i.putExtra("lesson", "");
                 startActivity(i);
-
                 break;
+
             default:
                 return super.onOptionsItemSelected(item);
         }

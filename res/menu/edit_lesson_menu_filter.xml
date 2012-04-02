@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/lesson_disable_filter"
+          android:title="Disable Lesson Filter"/>
+    <item android:id="@+id/no_lesson_list"
+          android:title="Show unassigned words"/>
+    <item android:id="@+id/lesson_filter_all"
+          android:title="Filter all lessons"/>
+    <item android:id="@+id/lesson_filter_none"
+          android:title="Filter no lesson"/>
+
+</menu>
