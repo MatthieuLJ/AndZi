@@ -9,72 +9,105 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.matthieu.settings.Settings;
 import com.matthieu.widget.DBCheckProgressHandler;
 
+
 public class MainMenuActivity extends Activity {
+    boolean showing_splash=false;
+    private final String TAG="MainMenuActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
-        setContentView(R.layout.main_menu_splash);
+        SplashStateSaver myState = (SplashStateSaver) getLastNonConfigurationInstance();
 
-        TextView tversion = (TextView) findViewById(R.id.splash_version);
-        tversion.setText(((AndZiApplication) getApplication()).get_version());
-        
-        final ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
-        progress.setIndeterminate(false);
-        progress.setMax(100);
+        if ((myState == null) || ((myState != null) && (myState.showSplash))) {
+            Log.d(TAG, "Showing splash");
+            showing_splash=true;
+            setContentView(R.layout.main_menu_splash);
+            TextView tversion = (TextView) findViewById(R.id.splash_version);
+            tversion.setText(((AndZiApplication) getApplication()).get_version());
 
-        myDB.checkDatabase(true, new DBCheckProgressHandler() {
-            @Override
-            public void progress(int i) {
-                progress.setProgress(i);
-            }
+            final ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
+            progress.setIndeterminate(false);
+            progress.setMax(100);
 
-            @Override
-            public void finish(boolean b) {
-                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
-                boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
-                if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
-                    AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
-                    alert.setMessage("Everything would be so much better if you downloaded the reference data...");
-                    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            dialog.dismiss();
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                public void run() {
+                    myDB.checkDatabase(true, new DBCheckProgressHandler() {
+                        @Override
+                        public void progress(int i) {
+                            progress.setProgress(i);
+                        }
+
+                        @Override
+                        public void finish(boolean b) {
+                            start_it();
                         }
                     });
-                    alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            SharedPreferences.Editor edit = prefs.edit();
-                            edit.putBoolean("first_time_ref", false);
-                            edit.commit();
-                            dialog.dismiss();
-                        }
-                    });
-                    alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            Intent in = new Intent(MainMenuActivity.this, Settings.class);
-                            in.putExtra("Settings_action", 0);
-                            startActivity(in);
-                            dialog.dismiss();
-                        }
-                    });
-                    alert.create();
-                    alert.show();
                 }
+            }, 1000);
 
-                setContentView(R.layout.main_menu);
-            }
-        });
+        }
+        else {
+            start_it();
+        }
+    }
 
+    private void start_it() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
+        boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
+        if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
+            alert.setMessage("Everything would be so much better if you downloaded the reference data...");
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                }
+            });
+            alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    SharedPreferences.Editor edit = prefs.edit();
+                    edit.putBoolean("first_time_ref", false);
+                    edit.commit();
+                    dialog.dismiss();
+                }
+            });
+            alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    Intent in = new Intent(MainMenuActivity.this, Settings.class);
+                    in.putExtra("Settings_action", 0);
+                    startActivity(in);
+                    dialog.dismiss();
+                }
+            });
+            alert.create();
+            alert.show();
+        }
 
+        showing_splash = false;
+        setContentView(R.layout.main_menu);
+    }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        SplashStateSaver state = new SplashStateSaver();
+        state.showSplash = showing_splash;
+        return state;
+    }
+
+    private class SplashStateSaver {
+        public boolean showSplash = false;
     }
 
     @Override
