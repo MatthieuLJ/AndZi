@@ -8,10 +8,15 @@ ONGOING (8):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (3):
-* Avoid guess missing character when too many possibilities (or keep only a few)
-* Avoid guess containing when the only word is character + zi
+BUGS (8):
+* Guess character - Avoid when too many possibilities (or keep only a few)
+* Guess containing - Avoid when the only word is character + 子 or character + 儿
+* Guess pinyin - Don't ask for a pinyin with no tone when the same one with tone exists
+* Guess chinese - Do not guess when length is more than 3 characters
+* Guess character - Do not show word with only that character (or + 子 or + 儿)
+* Guess tone - pinyin print is not pretty (lv)
 * Improve performances of the dictionary!
+* Find a way to spread the challenges
 
 FUTURE (10):
 * Find a way to hilight the character sequence in Details list
