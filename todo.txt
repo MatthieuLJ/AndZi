@@ -1,5 +1,4 @@
-ONGOING (9):
-* Add service to save progress instead of anything else
+ONGOING (8):
 * Show current state of progress next to graph
 * Offer to delete old history of stats
 * Test performance with huge database
@@ -25,7 +24,8 @@ FUTURE (11):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (106):
+DONE (107):
+* Add service to save progress instead of anything else
 * Guess tone - pinyin print is not pretty (lv)
 * Guess pinyin - Don't ask for a pinyin with no tone when the same one with tone exists (check 快)
 * Guess chinese - Do not guess when length is more than 3 characters

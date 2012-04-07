@@ -13,9 +13,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.PriorityQueue;
 
-public class ProgressDB extends SQLiteOpenHelper{
+public class ProgressDB extends SQLiteOpenHelper {
 
     static public class ProgressData {
         public long date=0;
@@ -27,11 +26,9 @@ public class ProgressDB extends SQLiteOpenHelper{
     private static final int DATABASE_VERSION = 1;
     private static final int DEFAULT_MAX=200;
     private SQLiteDatabase db;
-    private AndZiApplication app;
 
-    public ProgressDB(Context context, AndZiApplication application, String db_name) {
+    public ProgressDB(Context context, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);
-        app = application;
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
         db.acquireReference();
@@ -62,12 +59,8 @@ public class ProgressDB extends SQLiteOpenHelper{
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
     }
 
-    public void add_data() {
-        ProgressData new_data = app.getCurrentProgress();
-        add_data(new_data);
-    }
-
     public void add_data(ProgressData data) {
+        Log.d(TAG, "Adding progress data");
         ArrayList<ProgressData> latest = get_data(1);
         if (latest != null) {
             if (latest.get(0).date - data.date < 1000 * 60 * 60 * 24) {

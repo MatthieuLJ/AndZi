@@ -7,6 +7,7 @@ package com.matthieu;
 
 import android.app.Application;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
@@ -24,10 +25,10 @@ public class AndZiApplication extends Application {
     private boolean ref_enabled=true;
     private boolean ref_present=false;
 
-    private final static String TAG = "AndZiApplication";
-    private final static String REF_DB_NAME = "cedict_db";
-    private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
-    private static final String PROGRESS_DB_NAME = "progress_db";
+    static final String TAG = "AndZiApplication";
+    static final String REF_DB_NAME = "cedict_db";
+    static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
+    static final String PROGRESS_DB_NAME = "progress_db";
 
     private static final String VERSION="0.1.0";
 
@@ -46,12 +47,15 @@ public class AndZiApplication extends Application {
             ref_present=true;
             ref_enabled=prefs.getBoolean("ref_enabled", true);
         }
-        prog = new ProgressDB(getApplicationContext(), this, PROGRESS_DB_NAME);
+        prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
+        
+        Intent startServiceIntent = new Intent(this, ProgressService.class);
+        this.startService(startServiceIntent);
     }
 
     @Override
     public void onTerminate() {
-        prog.add_data();
+        prog.add_data(getCurrentProgress());
         super.onTerminate();
     }
 

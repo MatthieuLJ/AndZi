@@ -110,12 +110,6 @@ public class MainMenuActivity extends Activity {
         public boolean showSplash = false;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        ((AndZiApplication) getApplication()).getProgress().add_data();
-    }
-
     public void handle_add_vocabulary(View v) {
         Intent intent = new Intent(this, AddVocabularyActivity.class);
         startActivity(intent);
