@@ -67,12 +67,15 @@ public class GuessChineseWord extends TestActivity {
             Log.d(TAG, "will study "+hanzi);
             ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
             if (words.size() == 0) {
-                Log.d(TAG, "we have a problem");
+                continue;
             }
 
             while ((words.size() > 0) && (solution == null)) {
                 candidate = words.remove((int) (words.size()*Math.random())).chinese;
 
+                if (candidate.codePointCount(0, candidate.length())>3)
+                    continue;
+                
                 ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
                 if (voc.size() == 0)
                     continue;

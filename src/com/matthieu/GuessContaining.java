@@ -57,23 +57,20 @@ public class GuessContaining extends TestActivity {
     @Override
     protected void set_next_study() {
         super.set_next_study();
-        String candidate, candidate_word;
         ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         hanzi=null;
 
         while ((hanzis.size() >0) && (hanzi == null)) {
-            candidate = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "will study " + candidate);
-            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(candidate);
-            if (words.size() == 0) {
-                Log.d(TAG, "we have a problem");
+            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
+            Log.d(TAG, "will study " + hanzi);
+            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+            for (int i=words.size()-1; i>=0; i--) {
+                Vocabulary w = words.get(i);
+                if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals(""))
+                    words.remove(i);
             }
-            while ((words.size() > 0) && (hanzi == null)) {
-                candidate_word=words.remove(0).chinese;
-                String without_hanzi=candidate_word.replace(candidate, "");
-                if (without_hanzi.codePointCount(0, without_hanzi.length())>0) {
-                    hanzi=candidate;
-                }
+            if (words.size() == 0) {
+                hanzi=null;
             }
         }
         if (hanzi == null) {

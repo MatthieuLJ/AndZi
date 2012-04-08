@@ -87,6 +87,7 @@ public class GuessPinyin extends TestActivity {
                         }
                     }
                 }
+                Log.d(TAG, "After filtering, remaining pinyins are "+pinyins);
                 if (pinyins.size() > 1)
                     show_words=true;
                 pinyin=pinyins.get((int)(Math.random()*pinyins.size()));

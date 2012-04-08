@@ -8,12 +8,8 @@ ONGOING (8):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (8):
-* Guess character - Avoid when too many possibilities (or keep only a few)
-* Guess containing - Avoid when the only word is character + 子 or character + 儿
+BUGS (4):
 * Guess pinyin - Don't ask for a pinyin with no tone when the same one with tone exists
-* Guess chinese - Do not guess when length is more than 3 characters
-* Guess character - Do not show word with only that character (or + 子 or + 儿)
 * Guess tone - pinyin print is not pretty (lv)
 * Improve performances of the dictionary!
 * Find a way to spread the challenges
@@ -30,7 +26,11 @@ FUTURE (10):
 * Teach to write characters
 * Voice recognition... ?
 
-DONE (100):
+DONE (104):
+* Guess chinese - Do not guess when length is more than 3 characters
+* Guess containing - Avoid when the only word is character + 子 or character + 儿
+* Guess character - Avoid when too many possibilities (or keep only a few)
+* Guess character - Do not show word with only that character (or + 子 or + 儿)
 * dictionary does not return anything for 'wei' in Chinese
 * Do the splash screen correctly (find why it does not show sometimes)
 * Add option to select all or select none in lesson filter

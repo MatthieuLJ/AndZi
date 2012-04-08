@@ -69,6 +69,11 @@ public class GuessChar extends TestActivity {
             candidate = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             Log.d(TAG, "will study " + candidate);
             words = myDB.getFilteredWordsWithPinyin(candidate);
+            for (int i=words.size()-1; i>=0; i--) {
+                Vocabulary w = words.get(i);
+                if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿"))
+                    words.remove(i);
+            }
             if (words.size() == 0) {
                 Log.d(TAG, "we have a problem");
             }
@@ -109,6 +114,15 @@ public class GuessChar extends TestActivity {
         previous_guess.clear();
 
         words = myDB.getWordsWithPinyin(hanzi);
+
+        for (int i=words.size()-1; i>=0; i--) {
+            Vocabulary w = words.get(i);
+            if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿"))
+                words.remove(i);
+        }
+        while(words.size()>5) {
+            words.remove((int)(words.size()*Math.random()));
+        }
 
         Log.d(TAG, "Testing for character "+hanzi+" got "+words.size()+" words");
 
