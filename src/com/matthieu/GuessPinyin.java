@@ -69,6 +69,8 @@ public class GuessPinyin extends TestActivity {
 
             ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
             if (pinyins.size() > 1) {
+                show_words=true;
+
                 ArrayList<Pinyin> pins=new ArrayList<Pinyin>();
                 // remove the ones without tone that have equivalents with tones...
                 for (String p:pinyins) {
@@ -87,10 +89,7 @@ public class GuessPinyin extends TestActivity {
                         }
                     }
                 }
-                Log.d(TAG, "After filtering, remaining pinyins are "+pinyins);
-                if (pinyins.size() > 1)
-                    show_words=true;
-                pinyin=pinyins.get((int)(Math.random()*pinyins.size()));
+                pinyin=pins.get((int)(Math.random()*pins.size())).get_lame();
             }
             else {
                 pinyin = pinyins.get(0);
