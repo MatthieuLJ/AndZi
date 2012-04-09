@@ -57,27 +57,17 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
     protected void set_next_study() {
         super.set_next_study();
-        ArrayList<String> all = myDB.getAllFilteredToStudy();
+        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         ArrayList<String> pinyins;
         hanzi = null;
 
-        while((hanzi==null) && (all.size()>0)) {
-            hanzi=all.remove(0);
+        while((hanzi==null) && (hanzis.size()>0)) {
+            hanzi=hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             pinyins = myDB.getPinyinForChar(hanzi);
-
-            pinyin = null;
-            while ((pinyin == null) && (pinyins.size() > 0)) {
-                int j = (int) (pinyins.size()*Math.random());
-                pinyin = new Pinyin(pinyins.remove(j));
-                if (pinyin.get_tone() == 5) {
-                    //Log.v(TAG,"Reject study of pinyin "+pinyin.get_pretty());
-                    pinyin=null;
-                }
-            }
-            if (pinyin == null) {
-                //Log.v(TAG,"Reject study of character "+hanzi);
+            if (pinyins.size() > 1)
                 hanzi=null;
-            }
+            else
+                pinyin = new Pinyin(pinyins.get(0));
         }
 
         if (hanzi == null) {
@@ -98,7 +88,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         overlay.addOnGesturePerformedListener(this);
 
         pinyins = myDB.getPinyinForChar(hanzi);
-        radical = pinyin.get_radical();
+        radical = new Pinyin(pinyin.get_radical()+"5").get_pretty();
         tones.clear();
 
         for (String p : pinyins) {

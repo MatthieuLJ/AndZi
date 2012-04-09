@@ -41,7 +41,7 @@ public class Pinyin {
                             this.tone=5;
                         switch(tone) {
                             case 5:
-                                this.print=pinyin_list_notone[j];
+                                this.print=pinyin_list_tone5[j];
                                 this.html_color_print=this.print;
                                 break;
                             case 1:
@@ -91,12 +91,12 @@ public class Pinyin {
         }
 
         for (i = 0; i < pinyin_list_notone.length; i++) {
-            if (entry.equals(pinyin_list_notone[i])) {
-                this.lame=entry+"5";
-                this.radical=entry;
+            if ((entry.equals(pinyin_list_notone[i])) || (entry.equals(pinyin_list_tone5[i]))) {
+                this.lame=pinyin_list_notone[i]+"5";
+                this.radical=pinyin_list_notone[i];
                 this.tone=0;
-                this.print=entry;
-                this.html_color_print=entry;
+                this.print=pinyin_list_tone5[i];
+                this.html_color_print=pinyin_list_tone5[i];
                 return;
             }
         }
@@ -188,6 +188,18 @@ public class Pinyin {
             }
         }
         for (String pin:pinyin_list_tone4) {
+            first = pin.substring(0,1);
+            if (pinyin_by_first_letter.containsKey(first)) {
+                list = pinyin_by_first_letter.get(first);
+                list.add(pin);
+            }
+            else {
+                list = new ArrayList<String>();
+                list.add(pin);
+                pinyin_by_first_letter.put(first, list);
+            }
+        }
+        for (String pin:pinyin_list_tone5) {
             first = pin.substring(0,1);
             if (pinyin_by_first_letter.containsKey(first)) {
                 list = pinyin_by_first_letter.get(first);
@@ -484,5 +496,44 @@ public class Pinyin {
             "yuè", "nüè", "lüè", "juè", "què", "xuè",
             "yuàn", "juàn", "quàn", "xuàn",
             "yǜn", "jǜn", "qǜn", "xǜn"
+    };
+    private static final String[] pinyin_list_tone5 = {
+            "a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca", "sa", "zha", "cha", "sha", "ga", "ka", "ha",
+            "o", "bo", "po", "mo", "fo",
+            "me", "de", "te", "ne", "le", "ze", "ce", "se", "zhe", "che", "she", "re", "ge", "ke", "he",
+            "zi", "ci", "si", "zhi", "chi", "shi", "ri",
+            "e",
+            "er", "r",
+            "ai", "bai", "pai", "mai", "dai", "tai", "nai", "lai", "zai", "cai", "sai", "zhai", "chai", "shai", "gai", "kai", "hai",
+            "ei", "bei", "pei", "mei", "fei", "dei", "nei", "lei", "zei", "zhei", "shei", "gei", "kei", "hei",
+            "ao", "bao", "pao", "mao", "dao", "tao", "nao", "lao", "zao", "cao", "sao", "zhao", "chao", "shao", "rao", "gao", "kao", "hao",
+            "ou", "pou", "mou", "fou", "dou", "tou", "nou", "lou", "zou", "cou", "sou", "zhou", "chou", "shou", "rou", "gou", "kou", "hou",
+            "an", "ban", "pan", "man", "fan", "dan", "tan", "nan", "lan", "zan", "can", "san", "zhan", "chan", "shan", "ran", "gan", "kan", "han",
+            "en", "ben", "pen", "men", "fen", "den", "nen", "zen", "cen", "sen", "zhen", "chen", "shen", "ren", "gen", "ken", "hen",
+            "ang", "bang", "pang", "mang", "fang", "dang", "tang", "nang", "lang", "zang", "cang", "sang", "zhang", "chang", "shang", "rang", "gang", "kang", "hang",
+            "eng", "beng", "peng", "meng", "feng", "deng", "teng", "neng", "leng", "zeng", "ceng", "seng", "zheng", "cheng", "sheng", "reng", "geng", "keng", "heng",
+            "dong", "tong", "nong", "long", "zong", "cong", "song", "zhong", "chong", "rong", "gong", "kong", "hong",
+            "yi", "bi", "pi", "mi", "di", "ti", "ni", "li", "ji", "qi", "xi",
+            "ya", "lia", "jia", "qia", "xia",
+            "yao", "biao", "piao", "miao", "diao", "tiao", "niao", "liao", "jiao", "qiao", "xiao",
+            "ye", "bie", "pie", "mie", "die", "tie", "nie", "lie", "jie", "qie", "xie",
+            "you", "miu", "diu", "niu", "liu", "jiu", "qiu", "xiu",
+            "yan", "bian", "pian", "mian", "dian", "tian", "nian", "lian", "jian", "qian", "xian",
+            "yin", "bin", "pin", "min", "nin", "lin", "jin", "qin", "xin",
+            "yang", "niang", "liang", "jiang", "qiang", "xiang",
+            "ying", "bing", "ping", "ming", "ding", "ting", "ning", "ling", "jing", "qing", "xing",
+            "yong", "jiong", "qiong", "xiong",
+            "wu", "bu", "pu", "mu", "fu", "du", "tu", "nu", "lu", "zu", "cu", "su", "zhu", "chu", "shu", "ru", "gu", "ku", "hu",
+            "wa", "zhua", "chua", "shua", "rua", "gua", "kua", "hua",
+            "wo", "duo", "tuo", "nuo", "luo", "zuo", "cuo", "suo", "zhuo", "chuo", "shuo", "ruo", "guo", "kuo", "huo",
+            "wai", "zhuai", "chuai", "shuai", "guai", "kuai", "huai",
+            "wei", "dui", "tui", "zui", "cui", "sui", "zhui", "chui", "shui", "rui", "gui", "kui", "hui",
+            "wan", "duan", "tuan", "nuan", "luan", "zuan", "cuan", "suan", "zhuan", "chuan", "shuan", "ruan", "guan", "kuan", "huan",
+            "wen", "dun", "tun", "lun", "zun", "cun", "sun", "zhun", "chun", "shun", "run", "gun", "kun", "hun",
+            "wang", "zhuang", "chuang", "shuang", "guang", "kuang", "huang", "weng",
+            "yu", "nü", "lü", "ju", "qu", "xu",
+            "yue", "nüe", "lüe", "jue", "que", "xue",
+            "yuan", "juan", "quan", "xuan",
+            "yun", "jun", "qun", "xun"
     };
 }
