@@ -1,5 +1,6 @@
-ONGOING (8):
+ONGOING (9):
 * Add service to save progress instead of anything else
+* Show current state of progress next to graph
 * Offer to delete old history of stats
 * Test performance with huge database
 * When dictionnary query does not exist, try to break it up to find the meaning
@@ -8,11 +9,11 @@ ONGOING (8):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
+BUGS (1):
 * Improve performances of the dictionary!
-* Find a way to spread the challenges
 
-FUTURE (10):
+FUTURE (11):
+* Change scoring / spaces repetition algorithm
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
 * Pre-created lessons
@@ -155,12 +156,74 @@ Lint output:
 res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="fill_parent"
                 ^
-res/values/strings.xml:27: Warning: Replace "..." with ellipsis character (…, &#8230;) ? [TypographyEllipsis]
-    <string name="as_in">As in...</string>
-    ^
-res/layout/test_result.xml:3: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
-<LinearLayout
-^
+src/com/matthieu/settings/Settings.java:105: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+                intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
+                                                                                        ^
+res/layout/add_vocabulary_top.xml:15: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
+            android:capitalize="none"
+            ^
+res/layout/guess_char.xml:58: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
+                android:capitalize="none"
+                ^
+res/layout/guess_chinese_word.xml:92: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
+                android:capitalize="none"
+                ^
+res/layout/guess_containing.xml:48: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
+                android:capitalize="none"
+                ^
+res/layout/guess_english.xml:49: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
+                android:capitalize="none"
+                ^
+res/layout/guess_pinyin.xml:69: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
+                android:capitalize="none"
+                ^
+src/com/matthieu/widget/AdaptiveLinearLayout.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                        HideParams hp = new HideParams((HideParams) scrollView.getLayoutParams());
+                                         ^
+src/com/matthieu/widget/ProgressGraph.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+        Paint p=new Paint();
+                 ^
+src/com/matthieu/widget/ProgressGraph.java:142: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+        Rect r=new Rect();
+                ^
+src/com/matthieu/widget/ProgressGraph.java:152: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+        Rect left_axis_r=new Rect();
+                          ^
+src/com/matthieu/widget/ProgressGraph.java:153: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+        Rect bottom_axis_r=new Rect();
+                            ^
+src/com/matthieu/widget/ProgressGraph.java:235: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(0).date));
+                                                                                   ^
+src/com/matthieu/widget/ProgressGraph.java:254: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                    data0 = new ProgressDB.ProgressData();
+                             ^
+src/com/matthieu/widget/ProgressGraph.java:265: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(first_date_index).date));
+                                                                                   ^
+src/com/matthieu/widget/ProgressGraph.java:282: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
+                                                                                             ^
+src/com/matthieu/widget/ProgressGraph.java:292: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
+                                                                                             ^
+src/com/matthieu/widget/ProgressGraph.java:308: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
+                                                                                       ^
+src/com/matthieu/widget/ProgressGraph.java:415: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+            Rect origin=new Rect(right_size-current_offset_x-getMeasuredWidth()+left_size ,0, right_size-current_offset_x, getMeasuredHeight());
+                         ^
+src/com/matthieu/widget/ProgressGraph.java:416: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+            Rect dest = new Rect(left_size, 0, getMeasuredWidth(), getMeasuredHeight());
+                         ^
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
 res/layout/add_vocabulary_pinyin_dialog.xml:25: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"
                 ^
@@ -170,66 +233,17 @@ res/layout/db.xml:52: Warning: Nested weights are bad for performance [NestedWei
 res/layout-land/guess_tone.xml:56: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"
                     ^
-res/layout/test_result.xml:53: Warning: Nested weights are bad for performance [NestedWeights]
+res/layout/test_result.xml:54: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"
                 ^
-Warning: The resource R.attr.dragndrop_background appears to be unused [UnusedResources]
-Warning: The resource R.attr.expanded_height appears to be unused [UnusedResources]
-Warning: The resource R.attr.grabber appears to be unused [UnusedResources]
-Warning: The resource R.attr.hidable appears to be unused [UnusedResources]
-Warning: The resource R.attr.normal_height appears to be unused [UnusedResources]
-Warning: The resource R.attr.remove_mode appears to be unused [UnusedResources]
-Warning: The resource R.attr.scroll appears to be unused [UnusedResources]
-res/values/colors.xml: Warning: The resource R.color.gray appears to be unused [UnusedResources]
-Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
+res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
 res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
-res/values/strings.xml: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
-Warning: The resource R.styleable.ModifiableLinearLayout_hidable  appears to be unused [UnusedResources]
-Warning: The resource R.styleable.ModifiableLinearLayout_scroll  appears to be unused [UnusedResources]
-Warning: The resource R.styleable.TouchListView_dragndrop_background  appears to be unused [UnusedResources]
-Warning: The resource R.styleable.TouchListView_expanded_height  appears to be unused [UnusedResources]
-Warning: The resource R.styleable.TouchListView_grabber  appears to be unused [UnusedResources]
-Warning: The resource R.styleable.TouchListView_normal_height  appears to be unused [UnusedResources]
-Warning: The resource R.styleable.TouchListView_remove_mode  appears to be unused [UnusedResources]
-res/layout/guess_tone.xml:14: Warning: This LinearLayout layout or its android.gesture.GestureOverlayView parent is useless [UselessParent]
-    <LinearLayout
-    ^
-res/layout-land/guess_tone.xml:14: Warning: This LinearLayout layout or its android.gesture.GestureOverlayView parent is useless [UselessParent]
-    <LinearLayout
+res/values/strings.xml:34: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
+    <string name="description_splash">splash screen</string>
     ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
-res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
-res/layout/add_vocabulary_pinyin_dialog.xml:21: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
-res/layout/dictionary.xml:18: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
-res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
-   <EditText android:text="" android:id="@+id/fdEditTextFile"
-   ^
-res/layout/guess_char.xml:54: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_chinese_word.xml:72: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_containing.xml:44: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_english.xml:45: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_pinyin.xml:64: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
 res/drawable/drag_me.png: Warning: Found bitmap drawable res/drawable/drag_me.png in densityless folder [IconLocation]
 res/drawable/expand_arrow_down.png: Warning: Found bitmap drawable res/drawable/expand_arrow_down.png in densityless folder [IconLocation]
 res/drawable/expand_arrow_right.png: Warning: Found bitmap drawable res/drawable/expand_arrow_right.png in densityless folder [IconLocation]
@@ -242,6 +256,36 @@ res/drawable/no_tone.png: Warning: Found bitmap drawable res/drawable/no_tone.pn
 res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second_tone.png in densityless folder [IconLocation]
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
 res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
+res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does not specify an inputType or a hint [TextFields]
+    <EditText
+    ^
+res/layout/add_vocabulary_pinyin_dialog.xml:21: Warning: This text field does not specify an inputType or a hint [TextFields]
+        <EditText
+        ^
+res/layout/dictionary.xml:18: Warning: This text field does not specify an inputType or a hint [TextFields]
+    <EditText
+    ^
+res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
+    <EditText
+    ^
+res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
+   <EditText android:text="" android:id="@+id/fdEditTextFile"
+   ^
+res/layout/guess_char.xml:53: Warning: This text field does not specify an inputType or a hint [TextFields]
+        <EditText
+        ^
+res/layout/guess_chinese_word.xml:87: Warning: This text field does not specify an inputType or a hint [TextFields]
+        <EditText
+        ^
+res/layout/guess_containing.xml:43: Warning: This text field does not specify an inputType or a hint [TextFields]
+        <EditText
+        ^
+res/layout/guess_english.xml:44: Warning: This text field does not specify an inputType or a hint [TextFields]
+        <EditText
+        ^
+res/layout/guess_pinyin.xml:64: Warning: This text field does not specify an inputType or a hint [TextFields]
+        <EditText
+        ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
@@ -281,5 +325,4 @@ res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should us
 res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
             android:contentDescription="splash screen"
             ^
-
-0 errors, 63 warnings
+0 errors, 72 warnings
