@@ -60,29 +60,22 @@ public class GuessChar extends TestActivity {
 
     protected void set_next_study() {
         super.set_next_study();
-        String candidate, candidate_word;
         ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         ArrayList<Vocabulary> words;
         hanzi=null;
 
         while ((hanzis.size() >0) && (hanzi == null)) {
-            candidate = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "will study " + candidate);
-            words = myDB.getFilteredWordsWithPinyin(candidate);
+            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
+            Log.d(TAG, "will study " + hanzi);
+            words = myDB.getFilteredWordsWithPinyin(hanzi);
             for (int i=words.size()-1; i>=0; i--) {
                 Vocabulary w = words.get(i);
-                if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿"))
+                if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || (w.chinese.replace(hanzi, "").equals("")))
                     words.remove(i);
             }
             if (words.size() == 0) {
-                Log.d(TAG, "we have a problem");
-            }
-            while ((words.size() > 0) && (hanzi == null)) {
-                candidate_word=words.remove(0).chinese;
-                String without_hanzi=candidate_word.replace(candidate, "");
-                if (without_hanzi.codePointCount(0, without_hanzi.length())>0) {
-                    hanzi=candidate;
-                }
+                hanzi=null;
+                continue;
             }
         }
 
