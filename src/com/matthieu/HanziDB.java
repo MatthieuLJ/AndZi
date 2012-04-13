@@ -2395,7 +2395,7 @@ public class HanziDB extends SQLiteOpenHelper {
         if (cur.moveToFirst()) {
             String chinese = cur.getString(cur.getColumnIndex("chinese"));
             String pinyin =  cur.getString(cur.getColumnIndex("pinyin"));
-            res = new Vocabulary(chinese, pinyin,cur.getString(cur.getColumnIndex("translation")));
+            res = new Vocabulary(chinese, pinyin);
             res.english.ensureCapacity(cur.getCount());
             do{
                 res.english.add(cur.getString(cur.getColumnIndex("translation")));
