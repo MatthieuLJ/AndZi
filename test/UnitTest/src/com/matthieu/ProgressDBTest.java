@@ -25,7 +25,7 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<MainMenuAct
         appContext = getActivity().getApplicationContext();
         ContextWrapper cw = new ContextWrapper(appContext);
         cw.deleteDatabase(DbName);
-        target_db = new ProgressDB(appContext, app,  DbName);
+        target_db = new ProgressDB(appContext, DbName);
         Log.d(TAG, " is setup");
     }
 
