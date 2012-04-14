@@ -270,7 +270,7 @@ public class PinyinParser {
             return result;
         }
 
-        for (i = Math.min(7, pinyin_string.length()); i >= 0; i--) // the maximum size with tone is 7 characters with the tone...
+        for (i = Math.min(7, pinyin_string.length()); i > 0; i--) // the maximum size with tone is 7 characters with the tone...
         // start with the maximum size to avoid breaking down unnecessary (that would have a "'")
         {
             Pinyin try_pinyin = new Pinyin(pinyin_string.substring(0, i));
