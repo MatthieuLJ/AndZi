@@ -55,7 +55,6 @@ public class AndZiApplication extends Application {
 
     @Override
     public void onTerminate() {
-        prog.add_data(getCurrentProgress());
         super.onTerminate();
     }
 
