@@ -2325,7 +2325,7 @@ public class HanziDB extends SQLiteOpenHelper {
     public ArrayList<Vocabulary> getFilteredCTranslations(String english, int start) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            Cursor cur = db.rawQuery("SELECT cword.chinese AS chinese,cword.pinyin AS pinyin " +
+            Cursor cur = db.rawQuery("SELECT DISTINCT cword.chinese AS chinese,cword.pinyin AS pinyin " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN (SELECT * FROM eword WHERE translation=?) AS eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON cword.cword_id=eword.cword_id "
@@ -2350,7 +2350,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     protected ArrayList<Integer> getFilteredWordId(String chinese) {
         ArrayList<Integer> res = new ArrayList<Integer>();
-        Cursor cur = db.rawQuery("SELECT cword.cword_id AS cword_id " +
+        Cursor cur = db.rawQuery("SELECT DISTINCT cword.cword_id AS cword_id " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                 "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                 "JOIN cword ON cword.cword_id=eword.cword_id " +
@@ -2371,7 +2371,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     protected int getFilteredWordId(String chinese, String pinyin) {
         int res = -1;
-        Cursor cur = db.rawQuery("SELECT * " +
+        Cursor cur = db.rawQuery("SELECT DISTINCT cword_id " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                 "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                 "JOIN cword ON cword.cword_id=eword.cword_id " +
@@ -2386,7 +2386,7 @@ public class HanziDB extends SQLiteOpenHelper {
     protected Vocabulary getFilteredTranslations(int cword_id) {
         Vocabulary res = null;
 
-        Cursor cur = db.rawQuery("SELECT * " +
+        Cursor cur = db.rawQuery("SELECT DISTINCT chinese, pinyin, translation " +
                 "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                 "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                 "JOIN cword ON eword.cword_id=cword.cword_id " +
@@ -2706,7 +2706,7 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
 
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi, 0 " +
+            cur = db.rawQuery("SELECT DISTINCT char_pinyin.hanzi AS hanzi, 0 " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
@@ -2714,7 +2714,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                     "WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
                     "UNION " +
-                    "SELECT char_pinyin.hanzi AS hanzi, exp_time " +
+                    "SELECT DISTINCT char_pinyin.hanzi AS hanzi, exp_time " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +

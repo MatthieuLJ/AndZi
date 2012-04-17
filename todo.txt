@@ -6,8 +6,9 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
+BUGS (2):
 * Improve performances of the dictionary!
+* Export without scores much too slow
 
 FUTURE (12):
 * When dictionnary query does not exist, try to break it up to find the meaning
