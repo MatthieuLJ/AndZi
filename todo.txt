@@ -1,8 +1,7 @@
-ONGOING (6):
-* Offer to delete old history of stats
+ONGOING (5):
 * Test performance with huge database
-* Add help (different screens, IME, ref DB)
 * Make it pretty
+* Add help (overview, different screens, IME, ref DB)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
@@ -42,7 +41,8 @@ More information includes:
 - If query is <= 2 characters or query exists in DB, then show the exact match, followed by everything starting with the same sequence followed by everything else containing that sequence
 - If the query is >2 and the sequence does not exist in DB, then breat it down... for character 1234, show exact matches for 123,12,1,234,23,2,34,3,4
 
-DONE (108):
+DONE (109):
+* Offer to delete old history of stats
 * Show current state of progress next to graph
 * Add service to save progress instead of anything else
 * Guess tone - pinyin print is not pretty (lv)
@@ -199,42 +199,34 @@ res/layout/guess_pinyin.xml:69: Warning: android:capitalize is deprecated: Use i
 src/com/matthieu/widget/AdaptiveLinearLayout.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                         HideParams hp = new HideParams((HideParams) scrollView.getLayoutParams());
                                          ^
-src/com/matthieu/widget/ProgressGraph.java:140: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-        Paint p=new Paint();
-                 ^
-src/com/matthieu/widget/ProgressGraph.java:142: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-        Rect r=new Rect();
-                ^
-src/com/matthieu/widget/ProgressGraph.java:152: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-        Rect left_axis_r=new Rect();
-                          ^
-src/com/matthieu/widget/ProgressGraph.java:153: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-        Rect bottom_axis_r=new Rect();
-                            ^
-src/com/matthieu/widget/ProgressGraph.java:235: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:246: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                 date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(0).date));
                                                                                    ^
-src/com/matthieu/widget/ProgressGraph.java:254: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                    data0 = new ProgressDB.ProgressData();
-                             ^
 src/com/matthieu/widget/ProgressGraph.java:265: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                    data0 = new ProgressData();
+                             ^
+src/com/matthieu/widget/ProgressGraph.java:276: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                 date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(first_date_index).date));
                                                                                    ^
-src/com/matthieu/widget/ProgressGraph.java:282: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:293: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
                                                                                              ^
-src/com/matthieu/widget/ProgressGraph.java:292: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:305: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
                                                                                              ^
-src/com/matthieu/widget/ProgressGraph.java:308: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:323: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
                                                                                        ^
-src/com/matthieu/widget/ProgressGraph.java:415: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-            Rect origin=new Rect(right_size-current_offset_x-getMeasuredWidth()+left_size ,0, right_size-current_offset_x, getMeasuredHeight());
-                         ^
-src/com/matthieu/widget/ProgressGraph.java:416: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-            Rect dest = new Rect(left_size, 0, getMeasuredWidth(), getMeasuredHeight());
-                         ^
+src/com/matthieu/widget/ProgressGraph.java:507: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+        Rect origin=new Rect(main_size-current_offset_x-getMeasuredWidth()+left_size ,0, main_size-current_offset_x, getMeasuredHeight());
+                     ^
+src/com/matthieu/widget/ProgressGraph.java:508: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+        Rect dest = new Rect(left_size, 0, getMeasuredWidth(), getMeasuredHeight());
+                     ^
+src/com/matthieu/settings/TrimProgressPreference.java:133: Warning: Use Integer.valueOf(value) instead [UseValueOf]
+        callChangeListener(new Integer(value));
+                            ^
+bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
 bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
 bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
 bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
@@ -344,4 +336,4 @@ res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should us
 res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
             android:contentDescription="splash screen"
             ^
-0 errors, 72 warnings
+0 errors, 70 warnings

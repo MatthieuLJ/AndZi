@@ -6,13 +6,13 @@
     <PreferenceCategory
             android:title="Appearance">
         <android.preference.CheckBoxPreference
-                android:title="Enable colored pinyins"
+                android:title="@string/settings_colored_pinyins"
                 android:key="color_pinyin"
                 android:defaultValue="true"
                 android:summary="Show different tones with colors"
                 />
         <ListPreference
-                android:title="Show correct answer"
+                android:title="@string/settings_show_correct_answer"
                 android:summary="Customize when you want to see the correct answer when doing a test"
                 android:key="show_result"
                 android:defaultValue="1"
@@ -20,11 +20,11 @@
                 android:entryValues="@array/result_preference_values"
                 />
     </PreferenceCategory>
-    
+
     <PreferenceCategory
-            android:title="Database operations">
+            android:title="@string/settings_db_operations">
         <PreferenceScreen
-                android:title="Export Database to file..."
+                android:title="@string/settings_db_export"
                 android:key="ExportDB">
             <intent
                     android:action="android.intent.action.MAIN"
@@ -33,7 +33,7 @@
                     />
         </PreferenceScreen>
         <PreferenceScreen
-                android:title="Email Database..."
+                android:title="@string/settings_db_email"
                 android:key="EmailDB">
             <intent
                     android:action="android.intent.action.MAIN"
@@ -42,33 +42,37 @@
                     />
         </PreferenceScreen>
         <Preference
-                android:title="Reset scores"
+                android:title="@string/settings_db_reset_scores"
                 android:key="ResetDB"
                 />
         <Preference
-                android:title="Clear Database"
+                android:title="@string/settings_db_clear"
                 android:key="ClearDB"
                 />
+        <com.matthieu.settings.TrimProgressPreference
+                android:title="@string/settings_db_forget_progress"
+                android:key="TrimProgress"
+                />
         <PreferenceScreen
-                android:title="Import Database..."
+                android:title="@string/settings_db_import"
                 android:key="ImportDB"
                 />
     </PreferenceCategory>
-    
+
     <PreferenceCategory
-            android:title="Reference Database">
+            android:title="@string/settings_ref_db">
         <CheckBoxPreference
-                android:title="Reference Database enabled"
+                android:title="@string/settings_ref_db_enable"
                 android:defaultValue="true"
                 android:summary="Enable the use for reference database"
                 android:key="ref_enabled"
                 />
         <Preference
-                android:title="Download Reference Database"
+                android:title="@string/settings_ref_db_download"
                 android:key="DownloadRef"
                 />
         <Preference
-                android:title="Erase Reference Database"
+                android:title="@string/settings_ref_db_erase"
                 android:key="ClearRef"
                 />
     </PreferenceCategory>

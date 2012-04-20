@@ -156,8 +156,11 @@ public class ProgressDB extends SQLiteOpenHelper {
         return res;
     }
 
-    public void delete_data(long max_date) {
-       db.delete("progress", "date<=?", new String[] {Long.toString(max_date)});
+    public void delete_data(long to_keep) {
+        if (to_keep==-1)
+            db.delete("progress", "", new String[] {});
+        else
+            db.delete("progress", "date<=?", new String[] {Long.toString(System.currentTimeMillis()-to_keep)});
     }
 
     public synchronized AsyncTask purge_data(final int min_items) {

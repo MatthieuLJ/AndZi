@@ -37,4 +37,20 @@
     <string name="description_3rd_tone">third tone accent</string>
     <string name="description_4th_tone">fourth tone accent</string>
     <string name="description_drag_icon">drag icon</string>
+
+    <string name="settings_colored_pinyins">Enable colored pinyins</string>
+    <string name="settings_show_correct_answer">Show correct answer</string>
+    <string name="settings_db_operations">Database operations</string>
+    <string name="settings_db_export">Export Database to file…</string>
+    <string name="settings_db_email">Email Database…</string>
+    <string name="settings_db_reset_scores">Reset scores</string>
+    <string name="settings_db_clear">Clear Database</string>
+    <string name="settings_db_forget_progress">Forget old progress…</string>
+    <string name="settings_db_import">Import Database…</string>
+    <string name="settings_ref_db">Reference Database</string>
+    <string name="settings_ref_db_enable">Reference Database enabled</string>
+    <string name="settings_ref_db_download">Download Reference Database</string>
+    <string name="settings_ref_db_erase">Erase Reference Database</string>
+
+
 </resources>
