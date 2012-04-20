@@ -23,6 +23,7 @@ import static java.lang.Math.log;
 
 public class ProgressGraph extends View {
     ArrayList<ProgressData> data=null;
+    ArrayList<Date> dates=null;
 
     private static final String TAG="ProgressGraph";
     private Paint p = new Paint();
@@ -63,6 +64,10 @@ public class ProgressGraph extends View {
         }
         if (i<0) {
             second_to_max_date=min_date;
+        }
+        dates = new ArrayList<Date>();
+        for (ProgressData item:data) {
+            dates.add(new Date(item.date));
         }
 
         max_score= data.get(0).num_chars_in_box[0]+data.get(0).num_chars_in_box[1]+data.get(0).num_chars_in_box[2]+data.get(0).num_chars_in_box[3]+data.get(0).num_chars_in_box[4];
@@ -243,7 +248,7 @@ public class ProgressGraph extends View {
 
             if (current_zoom==0) {
                 cut_off_date = min_date;
-                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(0).date));
+                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(dates.get(0));
                 p.getTextBounds(date_string, 0, date_string.length(), r);
                 first_offset=r.width();
                 first_left_aligned=true;
@@ -273,7 +278,7 @@ public class ProgressGraph extends View {
                                         (cut_off_date - data.get(first_date_index-1).date) / (data.get(first_date_index).date - data.get(first_date_index-1).date));
                     }
                 }
-                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(first_date_index).date));
+                date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(dates.get(first_date_index));
                 p.getTextBounds(date_string, 0, date_string.length(), r);
 
                 if (((data.get(first_date_index).date - cut_off_date)*(main_size-right_size))/(max_date-cut_off_date) <= r.width()) {
@@ -290,7 +295,7 @@ public class ProgressGraph extends View {
             for (int i=data.size()-1; i>=first_date_index; i--) {
                 if (i==data.size()-1) {
                     p.setTextAlign(Paint.Align.RIGHT);
-                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date));
+                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(dates.get(i));
                     graph_canvas.drawLine(
                             (main_size-right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date),
                             getMeasuredHeight()-bottom_size,
@@ -302,7 +307,7 @@ public class ProgressGraph extends View {
                     last_offset=main_size-right_size-r.width();
                 } else if ((i>first_date_index) || (!first_left_aligned)) {
                     p.setTextAlign(Paint.Align.CENTER);
-                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
+                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(dates.get(i))+" - ";
                     p.getTextBounds(date_string, 0, date_string.length(), r);
                     if (i>first_date_index) {
                         if ((main_size-right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)+r.width()/2 > last_offset)
@@ -320,7 +325,7 @@ public class ProgressGraph extends View {
                     last_offset=(int) ((main_size-right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)-r.width()/2);
                 } else {
                     p.setTextAlign(Paint.Align.LEFT);
-                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(data.get(i).date))+" - ";
+                    date_string= DateFormat.getDateInstance(DateFormat.MEDIUM).format(dates.get(i))+" - ";
                     graph_canvas.drawLine((main_size-right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date), getMeasuredHeight()-bottom_size,
                         (main_size-right_size)*((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date),
                         getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
