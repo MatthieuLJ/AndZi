@@ -915,7 +915,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     switch (elements.get(0).type) {
                         case StringElement.CHINESE:
                             if (start == SEQUENCE_EXACT) {
-                                query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                                query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                         "FROM eword " +
                                         "JOIN cword ON cword.cword_id=eword.cword_id ";
                                 if (lesson_filtered) {
@@ -928,7 +928,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                 query_args.add(elements.get(0).content);
                                 break;
                             }
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                                     "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
@@ -952,7 +952,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query+="ORDER BY cword.pinyin, cword.cword_id";
                             break;
                         case StringElement.PINYIN_WITH_TONE:
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                                     "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
@@ -980,7 +980,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query+="ORDER BY cword.pinyin, cword.cword_id";
                             break;
                         case StringElement.PINYIN_WITHOUT_TONE:
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                                     "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
@@ -1008,7 +1008,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query+="ORDER BY cword.pinyin, cword.cword_id";
                             break;
                         case StringElement.INCOMPLETE_PINYIN:
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                                     "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
@@ -1056,7 +1056,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     if ((i==elements.size()) && (type == StringElement.CHINESE)) {
                         // only Chinese...
                         if (start == SEQUENCE_START) {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1070,7 +1070,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query_args.add(concat+"%");
                             query_args.add(concat);
                         } else if (start == SEQUENCE_NO_START) {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1084,7 +1084,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query_args.add("%"+concat+"%");
                             query_args.add(concat+"%");
                         } else if (start == SEQUENCE_EXACT) {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1097,7 +1097,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                     "ORDER BY cword.pinyin, cword.cword_id";
                             query_args.add(concat);
                         } else {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1114,7 +1114,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
                         // only pinyins with tones....
                         if (start == SEQUENCE_START) {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1128,7 +1128,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query_args.add(concat+"%");
                             query_args.add(concat);
                         } else if (start == SEQUENCE_NO_START) {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1142,7 +1142,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             query_args.add("%"+concat+"%");
                             query_args.add(concat+"%");
                         } else if (start == SEQUENCE_EXACT) {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1155,7 +1155,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                     "ORDER BY cword.pinyin, cword.cword_id";
                             query_args.add(concat);
                         } else {
-                            query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
+                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
                                     "FROM eword " +
                                     "JOIN cword ON cword.cword_id=eword.cword_id ";
                             if (lesson_filtered) {
@@ -1171,7 +1171,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     } else {
                         // mixed up
-                        query="SELECT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english FROM (SELECT * FROM cword ";
+                        query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english FROM (SELECT * FROM cword ";
                         if (start == SEQUENCE_EXACT) {
                             query += " WHERE length(chinese)="+elements.size();
                         } else if (start == SEQUENCE_START) {

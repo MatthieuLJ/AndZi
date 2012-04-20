@@ -6,14 +6,18 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
+BUGS (5):
 * Improve performances of the dictionary!
 * Export without scores much too slow
+* Lesson rename is broken
+* Guess tone - Do not ask to guess tone when pinyin has no tone
+* Guess English - try 长
 
-FUTURE (12):
+FUTURE (13):
 * When dictionnary query does not exist, try to break it up to find the meaning
 * Change scoring / spaces repetition algorithm
 * Find a way to hilight the character sequence in Details list
+* Send notification when there is something to review
 * Brag about the score on Facebook / Twitter
 * Pre-created lessons
 * Hide IME when not needed
@@ -30,7 +34,7 @@ Should store more information and calculate the time between repetition accordin
 More information includes:
 - Number of times tested
 - Number of times wrong
-- Last time wrong
+- Success streak
 - Date added
 - Total number of characters
 * About the dictionary for long queries,
