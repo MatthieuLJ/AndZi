@@ -68,6 +68,9 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
                 hanzi=null;
             else
                 pinyin = new Pinyin(pinyins.get(0));
+
+            if (pinyin.get_tone()==5)
+                hanzi=null;
         }
 
         if (hanzi == null) {
