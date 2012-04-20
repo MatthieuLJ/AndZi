@@ -171,7 +171,6 @@ DONE (109):
 
 
 Lint output:
-
 res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="fill_parent"
                 ^
@@ -211,15 +210,6 @@ src/com/matthieu/widget/ProgressGraph.java:513: Warning: Avoid object allocation
 src/com/matthieu/settings/TrimProgressPreference.java:133: Warning: Use Integer.valueOf(value) instead [UseValueOf]
         callChangeListener(new Integer(value));
                             ^
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#ceil() instead of java.lang.Math#ceil to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
-bin/classes/com/matthieu/widget/ProgressGraph.class: Warning: Use android.util.FloatMath#floor() instead of java.lang.Math#floor to avoid argument float to double conversion [FloatMath]
 res/layout/add_vocabulary_pinyin_dialog.xml:25: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"
                 ^
@@ -321,4 +311,4 @@ res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should us
 res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
             android:contentDescription="splash screen"
             ^
-0 errors, 65 warnings
+0 errors, 56 warnings

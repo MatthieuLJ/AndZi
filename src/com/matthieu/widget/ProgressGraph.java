@@ -16,8 +16,8 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
+import static android.util.FloatMath.floor;
+import static android.util.FloatMath.ceil;
 import static java.lang.Math.pow;
 import static java.lang.Math.log;
 
@@ -81,7 +81,7 @@ public class ProgressGraph extends View {
             scale_magnitude++;
         }
         scale_magnitude--;
-        max_scale = (int) ((1+ (int)floor(max_score/pow(10, scale_magnitude)))*pow(10, scale_magnitude));
+        max_scale = (int) ((1+ (int)floor((float)(max_score/pow(10, scale_magnitude))))*pow(10, scale_magnitude));
 
         left_scale=null;
     }
@@ -177,7 +177,7 @@ public class ProgressGraph extends View {
         label_size = (int) left_axis_r.height()/2;
         main_size= (getMeasuredWidth()-left_size)*2 + right_size;
 
-        max_zoom = 1+ (int) floor(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2));
+        max_zoom = 1+ (int) floor((float)(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2)));
 
         if ((left_scale == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth())) {
             if (left_scale != null) {
