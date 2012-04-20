@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.util.Log;
@@ -102,7 +103,7 @@ public class Settings extends PreferenceActivity {
         import_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
                 Intent intent = new Intent(Settings.this, com.matthieu.widget.file_dialog.FileDialog.class);
-                intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
+                intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, Environment.getExternalStorageDirectory().getPath());
                 startActivityForResult(intent, 0);
                 return true;
             }

@@ -174,9 +174,6 @@ Lint output:
 res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="fill_parent"
                 ^
-src/com/matthieu/settings/Settings.java:105: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
-                intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, "/sdcard");
-                                                                                        ^
 res/layout/add_vocabulary_top.xml:15: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
             android:capitalize="none"
             ^
@@ -311,4 +308,4 @@ res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should us
 res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
             android:contentDescription="splash screen"
             ^
-0 errors, 56 warnings
+0 errors, 55 warnings
