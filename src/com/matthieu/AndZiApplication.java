@@ -14,10 +14,17 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 import com.matthieu.widget.ObjectSerializer;
+import org.acra.ACRA;
+import org.acra.ReportingInteractionMode;
+import org.acra.annotation.ReportsCrashes;
 
 import java.io.*;
 import java.util.ArrayList;
 
+@ReportsCrashes(formKey = "", // will not be used
+                mailTo = "matthieu.jeanson@gmail.com",
+                mode = ReportingInteractionMode.TOAST,
+                resToastText = R.string.crash_toast_text)
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
@@ -33,6 +40,7 @@ public class AndZiApplication extends Application {
     private static final String VERSION="0.1.0";
 
     public void onCreate() {
+        ACRA.init(this);
         initialize_my_db();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         refDB = new HanziDB(getApplicationContext(), this,REF_DB_NAME);
