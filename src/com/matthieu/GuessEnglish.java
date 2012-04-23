@@ -101,7 +101,7 @@ public class GuessEnglish extends TestActivity {
             while ((words.size() > 0) && (solution == null)) {
                 candidate = words.remove((int) (words.size()*Math.random())).chinese;
                 ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
-                if (voc.size() == 0)
+                if ((voc.size() == 0) || (voc.size() > 1)) // one case has multiple pinyins...
                     continue;
                 solution = voc.get((int) (voc.size()*Math.random()));
 

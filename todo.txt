@@ -5,11 +5,10 @@ ONGOING (5):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (4):
+BUGS (3):
 * Improve performances of the dictionary!
 * Export without scores much too slow
 * Lesson rename is broken
-* Guess English - try 长
 
 FUTURE (13):
 * When dictionnary query does not exist, try to break it up to find the meaning
@@ -40,7 +39,8 @@ More information includes:
 - If query is <= 2 characters or query exists in DB, then show the exact match, followed by everything starting with the same sequence followed by everything else containing that sequence
 - If the query is >2 and the sequence does not exist in DB, then breat it down... for character 1234, show exact matches for 123,12,1,234,23,2,34,3,4
 
-DONE (110):
+DONE (111):
+* Guess English - try 长 (multiple pinyin / meanings possible)
 * Guess tone - Do not ask to guess tone when pinyin has no tone
 * Offer to delete old history of stats
 * Show current state of progress next to graph
