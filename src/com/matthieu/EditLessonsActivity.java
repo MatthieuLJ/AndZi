@@ -354,6 +354,7 @@ public class EditLessonsActivity extends Activity {
                         if (param.equals(le.label))
                             return;
 
+                        final String old_name = le.label;
                         le.label=param;
                         if (le.old_label.equals(param)) {
                             le.old_label="";
@@ -366,7 +367,7 @@ public class EditLessonsActivity extends Activity {
 
                         new Thread(new Runnable() {
                             public void run() {
-                                myDB.renameLesson(le.label, param);
+                                myDB.renameLesson(old_name, param);
                             }
                         }).start();
                     }
