@@ -64,13 +64,13 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         while((hanzi==null) && (hanzis.size()>0)) {
             hanzi=hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
             pinyins = myDB.getPinyinForChar(hanzi);
-            if (pinyins.size() > 1)
+            if (pinyins.size() != 1)
                 hanzi=null;
-            else
+            else {
                 pinyin = new Pinyin(pinyins.get(0));
-
-            if (pinyin.get_tone()==5)
-                hanzi=null;
+                if (pinyin.get_tone()==5)
+                    hanzi=null;
+            }
         }
 
         if (hanzi == null) {
