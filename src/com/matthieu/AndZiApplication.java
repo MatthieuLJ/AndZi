@@ -77,10 +77,12 @@ public class AndZiApplication extends Application {
     public ProgressDB getProgress() { return prog; }
     public ProgressDB.ProgressData getCurrentProgress() {
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
-        for (int i=0; i<5; i++) {
+        for (int i=0; i<4; i++) {
             new_data.num_chars_in_box[i]=myDB.getNumCharsInBox(i);
             new_data.num_chars_expired_in_box[i]=myDB.getNumCharsExpiredInBox(i);
         }
+        new_data.num_chars_in_box[4]=myDB.getNumCharsInBoxOrAbove(4);
+        new_data.num_chars_expired_in_box[4]=myDB.getNumCharsExpiredInBoxOrAbove(4);
         new_data.date = System.currentTimeMillis();
         return new_data;
     }
