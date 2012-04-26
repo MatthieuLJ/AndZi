@@ -413,6 +413,32 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<MainMenuActivi
     }
     */
 
+    public void testBoxDistribution() {
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addVocabulary("grow", new ArrayList<String>(Arrays.asList("长")), new ArrayList<String>(Arrays.asList("zhang3")));
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("bright", "next", "wise")),new ArrayList<String>(Arrays.asList("明")), new ArrayList<String>(Arrays.asList("ming2")));
+        target_db.addVocabulary("west", new ArrayList<String>(Arrays.asList("西")), new ArrayList<String>(Arrays.asList("xi1")));
+        target_db.setBoxForChar("你", 0);
+        target_db.setBoxForChar("好", 0);
+        assertTrue(target_db.getNumChars()==5);
+        assertTrue(target_db.getNumCharsInBox(0)==5);
+        assertTrue(target_db.getNumCharsInBoxOrAbove(0)==5);
+        target_db.setBoxForChar("西", 1);
+        target_db.setBoxForChar("明", 2);
+        assertTrue(target_db.getNumCharsInBox(0)==3);
+        assertTrue(target_db.getNumCharsInBoxOrAbove(0)==5);
+        assertTrue(target_db.getNumCharsInBoxOrAbove(1)==2);
+        target_db.setExpirationTimeForChar("西", System.currentTimeMillis()-100);
+        target_db.setExpirationTimeForChar("明", System.currentTimeMillis()-100);
+        target_db.setBoxForChar("长", 1);
+        target_db.setExpirationTimeForChar("长", System.currentTimeMillis()+60*60*1000);
+        assertTrue(target_db.getNumCharsExpiredInBox(0)==2);
+        assertTrue(target_db.getNumCharsExpiredInBox(1)==1);
+        assertTrue(target_db.getNumCharsExpiredInBoxOrAbove(0)==4);
+        assertTrue(target_db.getNumCharsExpiredInBoxOrAbove(1)==2);
+        assertTrue(checkDB(target_db, false));
+    }
+
     public void testAddingMoreStudy() {
         target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
         assertTrue(target_db.getNumCharsExpiredInBox(0) == 2);
@@ -452,6 +478,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<MainMenuActivi
         target_db.getMoreStudy(3);
         Log.d(TAG, "7");
         assertTrue(target_db.getAllToStudy().size()>=3);
+        assertTrue(checkDB(target_db, false));
     }
 
     public void testNextToStudyFiltered() {
