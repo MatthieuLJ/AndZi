@@ -2544,19 +2544,19 @@ public class HanziDB extends SQLiteOpenHelper {
             return 0;
 
         Cursor cur;
-        if (box == 0) {
+        if (box == 0)
             // add the characters that do not have any box...
-            cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
-                    "UNION " +
-                    "SELECT hanzi FROM leitner WHERE box=0", null);
-            res = cur.getCount();
-            cur.close();
-        }
-        else {
-            cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=?", new String[] {Integer.toString(box)});
-            res= cur.getCount();
-            cur.close();
-        }
+            cur = db.rawQuery("SELECT COUNT(char_pinyin.hanzi) AS count FROM char_pinyin " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (box IS NULL) OR (box=0)", null);
+
+
+        else
+            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box=?", new String[] {Integer.toString(box)});
+
+        cur.moveToFirst();
+        res= cur.getInt(cur.getColumnIndex("count"));
+        cur.close();
 
         return res;
     }
@@ -2567,15 +2567,15 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box < 0)
             return 0;
 
-        if (box == 0) {
+        if (box == 0)
             return getNumChars();
-        }
-        else {
-            Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box>=?", new String[] {Integer.toString(box)});
-            res= cur.getCount();
 
-            cur.close();
-        }
+        Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box>=?", new String[] {Integer.toString(box)});
+        cur.moveToFirst();
+        res= cur.getInt(cur.getColumnIndex("count"));
+
+        cur.close();
+
         return res;
     }
 
@@ -2588,9 +2588,10 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             return getNumCharsInBox(0);
         else {
-            Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box=? AND exp_time<?",
+            Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box=? AND exp_time<?",
                     new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
-            res= cur.getCount();
+            cur.moveToFirst();
+            res= cur.getInt(cur.getColumnIndex("count"));
 
             cur.close();
         }
@@ -2603,22 +2604,21 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box < 0)
             return 0;
 
-        if (box == 0) {
-            Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time<? " +
-                    "UNION " +
-                    "SELECT hanzi FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner)",
+        Cursor cur;
+
+        if (box == 0)
+            cur = db.rawQuery("SELECT COUNT(char_pinyin.hanzi) AS count FROM char_pinyin " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (exp_time<?) OR (box IS NULL)",
                     new String[] {Long.toString(System.currentTimeMillis())});
-            res= cur.getCount();
-
-            cur.close();
-        }
-        else {
-            Cursor cur = db.rawQuery("SELECT hanzi FROM leitner WHERE box>=? AND exp_time<?",
+        else
+            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box>=? AND exp_time<?",
                     new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
-            res= cur.getCount();
 
-            cur.close();
-        }
+        cur.moveToFirst();
+        res= cur.getInt(cur.getColumnIndex("count"));
+
+        cur.close();
         return res;
     }
 
@@ -2676,10 +2676,10 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
         ArrayList<String> res=new ArrayList<String>();
 
-        cur = db.rawQuery("SELECT hanzi, exp_time FROM leitner WHERE exp_time>? ORDER BY exp_time DESC LIMIT ?",
+        cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time DESC LIMIT ?",
                 new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
         if (cur.moveToFirst()) {
-            res.ensureCapacity(Math.min(num, cur.getCount()));
+            res.ensureCapacity(cur.getCount());
             do {
                 res.add(cur.getString(cur.getColumnIndex("hanzi")));
             } while (cur.moveToNext());
@@ -2691,6 +2691,10 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Update data
     ////////////////////////////////////////
+    public void resetAllScores() {
+        db.delete("leitner", null, null);
+    }
+
     public void resetTime(String hanzi) {
         if (getBoxForChar(hanzi)==0)
             betterBox(hanzi);
@@ -2797,10 +2801,11 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> res=new ArrayList<String>();
         Cursor cur;
 
-        cur = db.rawQuery("SELECT hanzi, 0 FROM char_pinyin WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
-                "UNION " +
-                "SELECT hanzi, exp_time " +
-                "FROM leitner WHERE (box=0) OR (exp_time<?) ORDER BY exp_time ASC",
+        cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time " +
+                "FROM char_pinyin " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "ORDER BY exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis())});
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());
@@ -2815,10 +2820,12 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void getMoreStudy(int how_many) {
-        ArrayList<String> chars = getMostAdvancedExpiring(how_many);
-        for (String ch:chars)
-            setExpired(ch);
+        ContentValues cv = new ContentValues();
+        cv.put("exp_time", System.currentTimeMillis());
+        db.update("leitner", cv, "hanzi IN (SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time DESC LIMIT ?)",
+                new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(how_many)});
     }
+
     /*
      *
      *  Combining lesson database management with Leitner system
@@ -2837,22 +2844,15 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
 
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            cur = db.rawQuery("SELECT DISTINCT char_pinyin.hanzi AS hanzi, 0 " +
+            cur = db.rawQuery("SELECT DISTINCT char_pinyin.hanzi AS hanzi, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
                     "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "WHERE hanzi NOT IN (SELECT hanzi FROM leitner) " +
-                    "UNION " +
-                    "SELECT DISTINCT char_pinyin.hanzi AS hanzi, exp_time " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE leitner.exp_time<? ORDER BY exp_time DESC",
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY exp_time DESC",
                     new String[] {Long.toString(System.currentTimeMillis())});
             if (cur.moveToFirst()) {
                 res.ensureCapacity(cur.getCount());

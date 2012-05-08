@@ -56,11 +56,7 @@ public class Settings extends PreferenceActivity {
 
                             @Override
                             protected Void doInBackground(Void... voids) {
-                                ArrayList<String> hanzis = myDB.getAllChar();
-                                for (String han:hanzis){
-                                    myDB.restartStudy(han);
-                                }
-
+                                myDB.resetAllScores();
                                 return null;
                             }
                         }.execute((Void)null);
