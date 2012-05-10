@@ -585,6 +585,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     if (to_add != null)
                         res.add(to_add);
                     to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
+                    current_id = new_id;
                 }
                 to_add.english.add(english);
             }while(cur.moveToNext());
@@ -707,6 +708,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     if (to_add != null)
                         res.add(to_add);
                     to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
+                    current_id = new_id;
                 }
                 to_add.english.add(english);
             }while(cur.moveToNext());
@@ -744,6 +746,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     if (to_add != null)
                         res.add(to_add);
                     to_add = new Vocabulary(chinese,w_pinyin, new ArrayList<String>());
+                    current_id=new_id;
                 }
                 to_add.english.add(english);
             }while(cur.moveToNext());
@@ -2380,6 +2383,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         if (to_add != null)
                             res.add(to_add);
                         to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
+                        current_id=new_id;
                     }
                     to_add.english.add(english);
                 }while(cur.moveToNext());
@@ -2471,6 +2475,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         if (to_add != null)
                             res.add(to_add);
                         to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
+                        current_id = new_id;
                     }
                     to_add.english.add(english);
                 }while(cur.moveToNext());
@@ -2513,6 +2518,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         if (to_add != null)
                             res.add(to_add);
                         to_add = new Vocabulary(chinese,pinyin_w, new ArrayList<String>());
+                        current_id = new_id;
                     }
                     to_add.english.add(english);
                 }while(cur.moveToNext());

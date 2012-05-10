@@ -373,6 +373,21 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(checkDB(target_db, false));
     }
 
+    public void testNonDuplicatedVocabularyResults() {
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addLesson("lesson filter");
+        target_db.assignWordLesson("lesson filter", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson filter", "well", "好", "hao3");
+        target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
+        target_db.enableFilter(true);
+        assertTrue(target_db.getTranslations("好").size() == 1);
+        assertTrue(target_db.getWordsWithPinyin("好", "hao3").size() == 1);
+        assertTrue(target_db.getWordsWithPinyin("好").size() == 1);
+        assertTrue(target_db.getFilteredTranslations("好").size() == 1);
+        assertTrue(target_db.getFilteredWordsWithPinyin("好", "hao3").size() == 1);
+        assertTrue(target_db.getFilteredWordsWithPinyin("好").size() == 1);
+    }
+
     private static final long three_hours = 3 * 60 * 60;
     private static final long three_days = 3 * 24 * 60 * 60;
     private static final long three_weeks = 3 * 7 * 24 * 60 * 60;
