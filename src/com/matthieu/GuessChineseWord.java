@@ -58,39 +58,30 @@ public class GuessChineseWord extends TestActivity {
     protected void set_next_study() {
         super.set_next_study();
         String candidate;
-        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
-        String hanzi;
         solution=null;
 
-        while ((hanzis.size() >0) && (solution == null)) {
-            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "will study "+hanzi);
-            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
-            if (words.size() == 0) {
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+
+        while ((words.size() > 0) && (solution == null)) {
+            candidate = words.remove((int) (words.size()*Math.random())).chinese;
+
+            if (candidate.codePointCount(0, candidate.length())>3)
                 continue;
+
+            ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
+            if (voc.size() == 0)
+                continue;
+            solution = voc.get((int) (voc.size()*Math.random()));
+
+            translations = solution.english;
+            if (myDB.isFilterEnabled()) {
+                more_translations = myDB.getTranslations(candidate, solution.pinyin).english;
             }
-
-            while ((words.size() > 0) && (solution == null)) {
-                candidate = words.remove((int) (words.size()*Math.random())).chinese;
-
-                if (candidate.codePointCount(0, candidate.length())>3)
-                    continue;
-                
-                ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
-                if (voc.size() == 0)
-                    continue;
-                solution = voc.get((int) (voc.size()*Math.random()));
-
-                translations = solution.english;
-                if (myDB.isFilterEnabled()) {
-                    more_translations = myDB.getTranslations(candidate, solution.pinyin).english;
-                }
-                else {
-                    more_translations = new ArrayList<String>();
-                }
-                if ((refDB != null) && (refDB.getTranslations(candidate, solution.pinyin) != null)) {
-                    more_translations.addAll(refDB.getTranslations(candidate, solution.pinyin).english);
-                }
+            else {
+                more_translations = new ArrayList<String>();
+            }
+            if ((refDB != null) && (refDB.getTranslations(candidate, solution.pinyin) != null)) {
+                more_translations.addAll(refDB.getTranslations(candidate, solution.pinyin).english);
             }
         }
         if (solution == null) {

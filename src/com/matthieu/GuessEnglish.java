@@ -86,46 +86,37 @@ public class GuessEnglish extends TestActivity {
     protected void set_next_study() {
         super.set_next_study();
         String candidate;
-        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
-        String hanzi;
         solution=null;
 
-        while ((hanzis.size() >0) && (solution == null)) {
-            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "will study " + hanzi);
-            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
-            if (words.size() == 0) {
-                Log.d(TAG, "we have a problem");
-            }
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
 
-            while ((words.size() > 0) && (solution == null)) {
-                candidate = words.remove((int) (words.size()*Math.random())).chinese;
-                ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
-                if ((voc.size() == 0) || (voc.size() > 1)) // one case has multiple pinyins...
+        while ((words.size() > 0) && (solution == null)) {
+            candidate = words.remove((int) (words.size()*Math.random())).chinese;
+            ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
+            if ((voc.size() == 0) || (voc.size() > 1)) // one case has multiple pinyins...
+                continue;
+            solution = voc.get((int) (voc.size()*Math.random()));
+
+            // find a translation that's not too complicated... but still enough
+            int i,j;
+            for (i=0; i<solution.english.size(); i++) {
+                String[] translations=HanziDB.bare_translation(solution.english.get(i)).split(" ");
+
+                if (translations.length > 2)
                     continue;
-                solution = voc.get((int) (voc.size()*Math.random()));
-
-                // find a translation that's not too complicated... but still enough
-                int i,j;
-                for (i=0; i<solution.english.size(); i++) {
-                    String[] translations=HanziDB.bare_translation(solution.english.get(i)).split(" ");
-
-                    if (translations.length > 2)
-                        continue;
-                    for (j=0; j<translations.length; j++) {
-                        if (translations[j].length() > 2)
-                            break;
-                    }
-                    if (j==translations.length)
-                        continue;
-
-                    break;
+                for (j=0; j<translations.length; j++) {
+                    if (translations[j].length() > 2)
+                        break;
                 }
-                if (i<solution.english.size())
-                    break;
-                
-                solution=null;
+                if (j==translations.length)
+                    continue;
+
+                break;
             }
+            if (i<solution.english.size())
+                break;
+
+            solution=null;
         }
         if (solution == null) {
             nothing_to_test();

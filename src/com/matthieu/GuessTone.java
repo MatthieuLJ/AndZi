@@ -18,9 +18,7 @@ import java.util.ArrayList;
 
 public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
     protected HanziDB myDB=null;
-    private String hanzi;
     private Pinyin pinyin;
-    private String radical;
     private ArrayList<Integer> tones;
     private int current_view=0;
     private String last_guess="";
@@ -57,20 +55,15 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
     protected void set_next_study() {
         super.set_next_study();
-        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
         ArrayList<String> pinyins;
-        hanzi = null;
 
-        while((hanzi==null) && (hanzis.size()>0)) {
-            hanzi=hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            pinyins = myDB.getPinyinForChar(hanzi);
-            if (pinyins.size() != 1)
+        pinyins = myDB.getPinyinForChar(hanzi);
+        if (pinyins.size() != 1)
+            hanzi=null;
+        else {
+            pinyin = new Pinyin(pinyins.get(0));
+            if (pinyin.get_tone()==5)
                 hanzi=null;
-            else {
-                pinyin = new Pinyin(pinyins.get(0));
-                if (pinyin.get_tone()==5)
-                    hanzi=null;
-            }
         }
 
         if (hanzi == null) {
@@ -83,6 +76,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     @Override
     protected void display_test() {
         ArrayList<String> pinyins;
+        String radical;
 
         setContentView(R.layout.guess_tone);
         current_view = R.layout.guess_tone;

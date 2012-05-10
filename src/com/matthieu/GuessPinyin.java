@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class GuessPinyin extends TestActivity {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
-    private String hanzi, pinyin;
+    private String pinyin;
     private ArrayList<Vocabulary> words;
     private int current_view=0;
     private String last_guess="";
@@ -33,7 +33,6 @@ public class GuessPinyin extends TestActivity {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
-        hanzi="";
         words=new ArrayList<Vocabulary>();
     }
 
@@ -55,60 +54,49 @@ public class GuessPinyin extends TestActivity {
 
     @Override
     protected void set_next_study() {
-        boolean found=false;
-
         super.set_next_study();
 
         show_words=false;
-        hanzi = null;
 
-        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
+        ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
 
-        while ((hanzis.size()>0) && (hanzi == null)) {
-            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
+        if (pinyins.size() > 1) {
+            show_words=true;
 
-            ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
-            if (pinyins.size() > 1) {
-                show_words=true;
-
-                ArrayList<Pinyin> pins=new ArrayList<Pinyin>();
-                // remove the ones without tone that have equivalents with tones...
-                for (String p:pinyins) {
-                    Pinyin pin = new Pinyin(p);
-                    pins.add(pin);
-                }
-                for (int i=0; i<pins.size(); i++) {
-                    Pinyin pin = pins.get(i);
-                    if (pin.get_tone()!=5)
-                        continue;
-                    for (Pinyin pin2:pins) {
-                        if ((pin2.get_radical().equals(pin.get_radical())) && (pin2.get_tone() != 5)) {
-                            pins.remove(i);
-                            i=0;
-                            break;
-                        }
+            ArrayList<Pinyin> pins=new ArrayList<Pinyin>();
+            // remove the ones without tone that have equivalents with tones...
+            for (String p:pinyins) {
+                Pinyin pin = new Pinyin(p);
+                pins.add(pin);
+            }
+            for (int i=0; i<pins.size(); i++) {
+                Pinyin pin = pins.get(i);
+                if (pin.get_tone()!=5)
+                    continue;
+                for (Pinyin pin2:pins) {
+                    if ((pin2.get_radical().equals(pin.get_radical())) && (pin2.get_tone() != 5)) {
+                        pins.remove(i);
+                        i=0;
+                        break;
                     }
                 }
-                pinyin=pins.get((int)(Math.random()*pins.size())).get_lame();
             }
-            else {
-                pinyin = pinyins.get(0);
-            }
-
-            words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
-            for (Vocabulary word : words) {
-                if (!word.chinese.replace(hanzi, "").equals(""))
-                    found = true;
-            }
-            if (!found)
-                hanzi=null;
+            pinyin=pins.get((int)(Math.random()*pins.size())).get_lame();
         }
-
-        if (hanzi == null) {
+        else {
+            pinyin = pinyins.get(0);
+        }
+        words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
+        boolean found=false;
+        for (Vocabulary word : words) {
+            if (!word.chinese.replace(hanzi, "").equals(""))
+                found = true;
+        }
+        if (!found) {
             nothing_to_test();
             return;
         }
-        
+
         display_test();
     }
 

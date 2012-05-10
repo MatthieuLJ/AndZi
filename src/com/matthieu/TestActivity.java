@@ -19,6 +19,7 @@ public abstract class TestActivity extends Activity {
     protected int show_result=1;
     protected int last_result;
     protected boolean single_test;
+    protected String hanzi;
 
     private static final String TAG="TestActivity";
 
@@ -35,6 +36,12 @@ public abstract class TestActivity extends Activity {
             Log.d(TAG, "Running single test");
         else
             Log.d(TAG, "Running continuous test");
+
+        hanzi=getIntent().getStringExtra("hanzi");
+        if ((hanzi==null) || (hanzi.equals(""))) {
+            nothing_to_test();
+            return;
+        }
     }
 
     @Override

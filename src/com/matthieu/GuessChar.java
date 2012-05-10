@@ -20,7 +20,6 @@ import java.util.ArrayList;
 public class GuessChar extends TestActivity {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
-    private String hanzi;
     private ArrayList<Vocabulary> words;
     private ArrayList<String> previous_guess;
     private String last_guess="";
@@ -35,7 +34,6 @@ public class GuessChar extends TestActivity {
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         refDB = ((AndZiApplication) getApplication()).getRefDB();
 
-        hanzi="";
         words=new ArrayList<Vocabulary>();
         previous_guess=new ArrayList<String>();
     }
@@ -60,29 +58,18 @@ public class GuessChar extends TestActivity {
 
     protected void set_next_study() {
         super.set_next_study();
-        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
-        ArrayList<Vocabulary> words;
-        hanzi=null;
 
-        while ((hanzis.size() >0) && (hanzi == null)) {
-            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "will study " + hanzi);
-            words = myDB.getFilteredWordsWithPinyin(hanzi);
-            for (int i=words.size()-1; i>=0; i--) {
-                Vocabulary w = words.get(i);
-                if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || (w.chinese.replace(hanzi, "").equals("")))
-                    words.remove(i);
-            }
-            if (words.size() == 0) {
-                hanzi=null;
-                continue;
-            }
+        words = myDB.getFilteredWordsWithPinyin(hanzi);
+        for (int i=words.size()-1; i>=0; i--) {
+            Vocabulary w = words.get(i);
+            if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || (w.chinese.replace(hanzi, "").equals("")))
+                words.remove(i);
         }
-
-        if (hanzi == null) {
+        if (words.size() == 0) {
             nothing_to_test();
             return;
         }
+
         display_test();
     }
 
@@ -106,13 +93,6 @@ public class GuessChar extends TestActivity {
         previous.setText("");
         previous_guess.clear();
 
-        words = myDB.getWordsWithPinyin(hanzi);
-
-        for (int i=words.size()-1; i>=0; i--) {
-            Vocabulary w = words.get(i);
-            if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿"))
-                words.remove(i);
-        }
         while(words.size()>5) {
             words.remove((int)(words.size()*Math.random()));
         }

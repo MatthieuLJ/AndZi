@@ -22,7 +22,6 @@ import java.util.ArrayList;
 public class GuessContaining extends TestActivity {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
-    protected String hanzi=null;
     protected ArrayList<String> correct_answers;
     private int current_view=0;
     private String last_guess="";
@@ -57,23 +56,14 @@ public class GuessContaining extends TestActivity {
     @Override
     protected void set_next_study() {
         super.set_next_study();
-        ArrayList<String> hanzis = myDB.getAllFilteredToStudy();
-        hanzi=null;
 
-        while ((hanzis.size() >0) && (hanzi == null)) {
-            hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "will study " + hanzi);
-            ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
-            for (int i=words.size()-1; i>=0; i--) {
-                Vocabulary w = words.get(i);
-                if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals(""))
-                    words.remove(i);
-            }
-            if (words.size() == 0) {
-                hanzi=null;
-            }
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        for (int i=words.size()-1; i>=0; i--) {
+            Vocabulary w = words.get(i);
+            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals(""))
+                words.remove(i);
         }
-        if (hanzi == null) {
+        if (words.size() == 0) {
             nothing_to_test();
             return;
         }
