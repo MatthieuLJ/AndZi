@@ -7,9 +7,9 @@ import android.util.Log;
 
 import java.util.concurrent.ExecutionException;
 
-public class ProgressDBTest extends ActivityInstrumentationTestCase2<MainMenuActivity> {
+public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivity> {
     public ProgressDBTest() {
-        super("com.matthieu", MainMenuActivity.class);
+        super("com.matthieu", EmptyActivity.class);
     }
 
     private final String TAG="ProgressDBTest";
