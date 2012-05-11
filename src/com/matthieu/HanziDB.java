@@ -531,11 +531,11 @@ public class HanziDB extends SQLiteOpenHelper {
             boolean found = false;
             for (Vocabulary orig_voc : original_A) {
                 if (orig_voc.same_word(voc)) {
-                    for (int i=0; i<itemA.size(); i++) {
-                        if (itemA.get(i).same_word(voc)) {
-                            for (String en:voc.english)
-                                if (!itemA.get(i).english.contains(en))
-                                    itemA.get(i).english.add(en);
+                    for (Vocabulary anItemA : itemA) {
+                        if (anItemA.same_word(voc)) {
+                            for (String en : voc.english)
+                                if (!anItemA.english.contains(en))
+                                    anItemA.english.add(en);
                             break;
                         }
                     }
@@ -587,6 +587,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
                     current_id = new_id;
                 }
+                assert to_add != null;
                 to_add.english.add(english);
             }while(cur.moveToNext());
         }
@@ -668,7 +669,7 @@ public class HanziDB extends SQLiteOpenHelper {
             default:
                 return res;
         }
-        Cursor cur = db.rawQuery(query, query_arg.toArray(new String[0]));
+        Cursor cur = db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());
             do{
@@ -710,6 +711,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
                     current_id = new_id;
                 }
+                assert to_add != null;
                 to_add.english.add(english);
             }while(cur.moveToNext());
         }
@@ -748,6 +750,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     to_add = new Vocabulary(chinese,w_pinyin, new ArrayList<String>());
                     current_id=new_id;
                 }
+                assert to_add != null;
                 to_add.english.add(english);
             }while(cur.moveToNext());
         }
@@ -946,7 +949,7 @@ public class HanziDB extends SQLiteOpenHelper {
         });
         try {
             signal.await();
-        } catch (InterruptedException e) { }
+        } catch (InterruptedException ignored) { }
         return res;
     }
 
@@ -1302,7 +1305,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     num_records=0;
                     String tmp_query=query+" LIMIT "+limit_size+" OFFSET "+current_offset;
-                    Cursor cur = db.rawQuery(tmp_query, query_args.toArray(new String[0]));
+                    Cursor cur = db.rawQuery(tmp_query, query_args.toArray(new String[query_args.size()]));
 
                     if (cur.moveToFirst()) {
                         query_results.ensureCapacity(cur.getCount());
@@ -2385,6 +2388,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
                         current_id=new_id;
                     }
+                    assert to_add != null;
                     to_add.english.add(english);
                 }while(cur.moveToNext());
             }
@@ -2477,6 +2481,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
                         current_id = new_id;
                     }
+                    assert to_add != null;
                     to_add.english.add(english);
                 }while(cur.moveToNext());
             }
@@ -2520,6 +2525,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         to_add = new Vocabulary(chinese,pinyin_w, new ArrayList<String>());
                         current_id = new_id;
                     }
+                    assert to_add != null;
                     to_add.english.add(english);
                 }while(cur.moveToNext());
             }
@@ -2682,7 +2688,7 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
         ArrayList<String> res=new ArrayList<String>();
 
-        cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time DESC LIMIT ?",
+        cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time ASC LIMIT ?",
                 new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());

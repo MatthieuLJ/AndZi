@@ -49,13 +49,6 @@ public abstract class TestActivity extends Activity {
         super.onResume();
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-
-        if (answered==1) {
-            another_test_or_quit();
-        }
-        else if (answered==-1) {
-            set_next_study();
-        }
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (sp.getString("show_result", "always").equals("always")) {
@@ -66,6 +59,13 @@ public abstract class TestActivity extends Activity {
         }
         else {
             show_result = 3;
+        }
+
+        if (answered==1) {
+            another_test_or_quit();
+        }
+        else if (answered==-1) {
+            set_next_study();
         }
     }
 
@@ -101,10 +101,8 @@ public abstract class TestActivity extends Activity {
         } else {
             update_scores(INCORRECT);
         }
-
     }
 
-    // for Chinese guesses
     protected int handle_submit(String guess) {
         Toast toast;
         last_result = check_guess(guess);

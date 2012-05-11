@@ -147,7 +147,7 @@ public class GuessEnglish extends TestActivity {
 
     @Override
     protected void update_scores(int good) {
-        Log.d(TAG, "updating scores "+good);
+        Log.d(TAG, "update_scores ("+hanzi+") "+good);
 
         int min_box = 5;
 

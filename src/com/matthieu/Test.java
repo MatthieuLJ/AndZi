@@ -47,11 +47,9 @@ public class Test extends Activity {
     }
 
     private void set_next_char_to_study() {
-        ArrayList<String> hanzis;
-        if (!continue_with_more_chars)
-            hanzis= myDB.getAllFilteredToStudy();
-        else
-            hanzis=myDB.getMostAdvancedExpiring(5);
+        ArrayList<String> hanzis=myDB.getAllFilteredToStudy();
+        if (continue_with_more_chars)
+            hanzis.addAll(myDB.getMostAdvancedExpiring(5));
 
         if (hanzis.size()==0) {
             if (!continue_with_more_chars) {
@@ -76,6 +74,7 @@ public class Test extends Activity {
             } else {
                 finish();
             }
+            current_hanzi=null;
         }
         else {
             current_hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
