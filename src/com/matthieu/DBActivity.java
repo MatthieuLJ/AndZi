@@ -36,9 +36,7 @@ public class DBActivity extends Activity {
         tv.setText(""+num_words);
 
         final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
-        ArrayList<ProgressDB.ProgressData> to_display = ((AndZiApplication) getApplication()).getProgress().get_data();
-        to_display.add(((AndZiApplication) getApplication()).getCurrentProgress());
-        graph.set_data(to_display);
+        update_graph();
 
         Button zoomin= (Button) findViewById(R.id.graph_in);
         zoomin.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +54,32 @@ public class DBActivity extends Activity {
         });
 
         update_buttons();
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                update_graph();
+                DBActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        graph.invalidate();
+                    }
+                });
+            }
+        }, 0, 10*60*1000);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        update_graph();
+    }
+
+    private void update_graph() {
+        final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
+        ArrayList<ProgressDB.ProgressData> to_display = ((AndZiApplication) getApplication()).getProgress().get_data();
+        to_display.add(((AndZiApplication) getApplication()).getCurrentProgress());
+        graph.set_data(to_display);
     }
 
     private void update_buttons() {
