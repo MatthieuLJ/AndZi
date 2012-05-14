@@ -1,6 +1,10 @@
 package com.matthieu;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 
@@ -8,6 +12,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ProgressService extends Service  {
+
+    private final static int NOTIFICATION_ID=1;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -16,10 +22,19 @@ public class ProgressService extends Service  {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                db.add_data(((AndZiApplication)getApplication()).getCurrentProgress());
+                ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
+                db.add_data(current_data);
+                if (current_data.num_chars_expired_in_box[0] > 10) {
+                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    Notification notification = new Notification(R.drawable.icon, "More to study", System.currentTimeMillis());
+                    notification.setLatestEventInfo(ProgressService.this, "More Chinese to study", "You have " + current_data.num_chars_expired_in_box[0] + " to study",
+                            PendingIntent.getActivity(ProgressService.this, 0, new Intent(ProgressService.this, Test.class), 0));
+                    nm.notify(NOTIFICATION_ID, notification);
+                }
             }
         };
-        timer.scheduleAtFixedRate(task, 0, 4*60*60*1000); // every 2 hours
+
+        timer.scheduleAtFixedRate(task, 0, 4*60*60*1000); // every 4 hours
         //timer.scheduleAtFixedRate(task, 0, 4*1000); // every 4 seconds for test...
     }
 
