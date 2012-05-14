@@ -16,8 +16,6 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static android.util.FloatMath.floor;
-import static android.util.FloatMath.ceil;
 import static java.lang.Math.pow;
 import static java.lang.Math.log;
 
@@ -45,8 +43,9 @@ public class ProgressGraph extends View {
     }
 
     private long min_date, max_date, second_to_max_date;
-    private int max_score, max_scale, scale_magnitude; // scale_magnitude is the largest number such that 10^sm < max_score
-                                                       // max_scale       is the next "round" number above max_score. eg if max_score = 250, max_scale=300
+    private int max_scale;
+    private int scale_magnitude; // scale_magnitude is the largest number such that 10^sm < max_score
+                                 // max_scale       is the next "round" number above max_score. eg if max_score = 250, max_scale=300
     public void set_data(ArrayList<ProgressData> data) {
         // assumes the data is sorted chronologically
         this.data=data;
@@ -70,18 +69,18 @@ public class ProgressGraph extends View {
             dates.add(new Date(item.date));
         }
 
-        max_score= data.get(0).num_chars_in_box[0]+data.get(0).num_chars_in_box[1]+data.get(0).num_chars_in_box[2]+data.get(0).num_chars_in_box[3]+data.get(0).num_chars_in_box[4];
+        int max_score = data.get(0).num_chars_in_box[0] + data.get(0).num_chars_in_box[1] + data.get(0).num_chars_in_box[2] + data.get(0).num_chars_in_box[3] + data.get(0).num_chars_in_box[4];
         for (ProgressData d : data) {
             int num_chars=d.num_chars_in_box[0]+d.num_chars_in_box[1]+d.num_chars_in_box[2]+d.num_chars_in_box[3]+d.num_chars_in_box[4];
-            if (num_chars>max_score)
-                max_score=num_chars;
+            if (num_chars> max_score)
+                max_score =num_chars;
         }
         scale_magnitude = 1;
         while (max_score > pow(10,scale_magnitude)) {
             scale_magnitude++;
         }
         scale_magnitude--;
-        max_scale = (int) ((1+ (int)floor((float)(max_score/pow(10, scale_magnitude))))*pow(10, scale_magnitude));
+        max_scale = (int) ((1+ (int)android.util.FloatMath.floor((float)(max_score /pow(10, scale_magnitude))))*pow(10, scale_magnitude));
 
         left_scale=null;
     }
@@ -145,6 +144,45 @@ public class ProgressGraph extends View {
         return (Math.pow(10,y/max)-1)/9;
     }
 
+    // bottom size is the height of the bottom scale
+    // left_size is the width of the left scale
+    // right_size is the width of the indicators on the right
+    // main_size is the width of the main graph including the indicators on the right (so everything that will move left-right)
+    // label_size is the height of the text in the current arrows
+    int bottom_size, left_size, right_size, main_size, label_size;
+    Canvas left_scale_canvas;
+    Canvas graph_canvas;
+    Path graph_path;
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        p.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics()));
+
+        String date_label="01/01/01";
+        p.getTextBounds(date_label, 0, date_label.length(), bottom_axis_r);
+        bottom_size= (int) android.util.FloatMath.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + bottom_axis_r.height();
+
+        String max_label=Integer.toString(max_scale);
+        p.getTextBounds(max_label, 0,max_label.length(), left_axis_r);
+        left_size= (int) android.util.FloatMath.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + left_axis_r.width();
+        right_size= (int) android.util.FloatMath.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 6 + 2 +2, getResources().getDisplayMetrics())) + left_axis_r.width() + left_axis_r.height();
+        label_size = (int) android.util.FloatMath.ceil(left_axis_r.height()/2);
+        main_size= (getMeasuredWidth()-left_size)*2 + right_size;
+
+        if(graph != null) {
+            graph.recycle();
+        }
+        graph=Bitmap.createBitmap(main_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+        graph_canvas = new Canvas(graph);
+        graph_path=new Path();
+        if (left_scale != null) {
+            left_scale.recycle();
+        }
+        left_scale=Bitmap.createBitmap(left_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+        left_scale_canvas = new Canvas(left_scale);
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         p.setColor(Color.BLACK);
@@ -157,61 +195,37 @@ public class ProgressGraph extends View {
             return;
         }
 
-        // bottom size is the height of the bottom scale
-        // left_size is the width of the left scale
-        // right_size is the width of the indicators on the right
-        // main_size is the width of the main graph including the indicators on the right (so everything that will move left-right)
-        // label_size is the height of the text in the current arrows
-        int bottom_size, left_size, right_size, main_size, label_size;
-
         p.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12, getResources().getDisplayMetrics()));
 
-        String date_label="01/01/01";
-        p.getTextBounds(date_label, 0, date_label.length(), bottom_axis_r);
-        bottom_size= (int) ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + bottom_axis_r.height();
-
-        String max_label=Integer.toString(max_scale);
-        p.getTextBounds(max_label, 0,max_label.length(), left_axis_r);
-        left_size= (int) ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + left_axis_r.width();
-        right_size= (int) ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 6 + 2 +2, getResources().getDisplayMetrics())) + left_axis_r.width() + left_axis_r.height();
-        label_size = (int) left_axis_r.height()/2;
-        main_size= (getMeasuredWidth()-left_size)*2 + right_size;
-
-        max_zoom = 1+ (int) floor((float)(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2)));
+        max_zoom = 1+ (int) android.util.FloatMath.floor((float)(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2)));
 
         if ((left_scale == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth())) {
-            if (left_scale != null) {
-                left_scale.recycle();
-                left_scale=null;
-            }
-            left_scale=Bitmap.createBitmap(left_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-            Canvas left_scale_canvas = new Canvas(left_scale);
             p.setTextAlign(Paint.Align.RIGHT);
-            int last_offset=0, first_offset;
+            int last_offset, first_offset;
 
             // left axis is (2 points) LABEL (2 points) (horizontal line of 4 points) (vertical line of 1 point width)
 
             // draw the top of the scale
-            left_scale_canvas.drawLine((int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())), 0, left_size-1, 0, p);
-            left_scale_canvas.drawText(Integer.toString(max_scale),(int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
+            left_scale_canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())), 0, left_size-1, 0, p);
+            left_scale_canvas.drawText(Integer.toString(max_scale),(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                     left_axis_r.height(), p);
             last_offset=left_axis_r.height();
 
             // draw the bottom of the scale
-            left_scale_canvas.drawLine((int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
+            left_scale_canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
                     getMeasuredHeight()-bottom_size, left_size-1, getMeasuredHeight()-bottom_size, p);
-            left_scale_canvas.drawText("0",(int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
+            left_scale_canvas.drawText("0",(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                     getMeasuredHeight()-bottom_size, p);
             first_offset=getMeasuredHeight()-bottom_size-left_axis_r.height();
 
             // draw some intermediary values
             int int_value= (int) (max_scale-pow(10, scale_magnitude));
             while(int_value >0) {
-                left_scale_canvas.drawLine((int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
+                left_scale_canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
                         (float) ((1.0-log_scale(int_value, max_scale)))*(getMeasuredHeight()-bottom_size), left_size-1, (float) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size)), p);
                 if (((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2 > last_offset) &&
                         ((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2<first_offset)) {
-                    left_scale_canvas.drawText(Integer.toString(int_value),(int) floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
+                    left_scale_canvas.drawText(Integer.toString(int_value),(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                             (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2, p);
                     last_offset = (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2;
                 }
@@ -225,14 +239,20 @@ public class ProgressGraph extends View {
         canvas.drawBitmap(left_scale, 0, 0, p);
 
         if ((graph == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth()) || (cached_zoom != current_zoom)) {
-            if(graph != null) {
-                graph.recycle();
-                graph=null;
-            }
-            graph=Bitmap.createBitmap(main_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            // Erase the whole graph
 
-            Canvas graph_canvas = new Canvas(graph);
-            Path graph_path=new Path();
+            graph_path.reset();
+            graph_path.moveTo(0, 0);
+            graph_path.lineTo(0, getMeasuredHeight());
+            graph_path.lineTo(main_size-right_size,getMeasuredHeight());
+            graph_path.lineTo(main_size-right_size,0);
+            p.setAlpha(0);
+            p.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+            p.setStyle(Paint.Style.FILL);
+            graph_canvas.drawPath(graph_path, p);
+
+            p.setAlpha(0xff);
+            p.setXfermode(null);
 
             // draw a line along the bottom
             graph_canvas.drawLine(0, getMeasuredHeight()-bottom_size, main_size-right_size, getMeasuredHeight()-bottom_size, p);
@@ -292,6 +312,7 @@ public class ProgressGraph extends View {
             }
 
             // Draw the date labels
+            p.setColor(Color.BLACK);
             for (int i=data.size()-1; i>=first_date_index; i--) {
                 if (i==data.size()-1) {
                     p.setTextAlign(Paint.Align.RIGHT);
