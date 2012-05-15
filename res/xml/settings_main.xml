@@ -76,4 +76,15 @@
                 android:key="ClearRef"
                 />
     </PreferenceCategory>
+    <PreferenceCategory
+            android:title="Extra">
+        <Preference
+                android:title="Export Progress"
+                android:key="ExportProgress"
+                />
+        <Preference
+                android:title="Import Progress"
+                android:key="ImportProgress"
+                />
+    </PreferenceCategory>
 </PreferenceScreen>

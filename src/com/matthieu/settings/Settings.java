@@ -22,7 +22,7 @@ import com.matthieu.R;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
+import java.util.Calendar;
 
 public class Settings extends PreferenceActivity {
     protected HanziDB myDB=null;
@@ -145,6 +145,75 @@ public class Settings extends PreferenceActivity {
             }
         });
 
+        Preference export_progress = findPreference("ExportProgress");
+        export_progress.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            private void do_export_progress(final String destination) {
+                File export_db = new File(destination);
+                try {
+                    if (!export_db.createNewFile()) {
+                        Toast toast = Toast.makeText(Settings.this, "There was an error creating the file", 5);
+                        toast.show();
+                        return;
+                    }
+                } catch (IOException e) {
+                    Toast toast = Toast.makeText(Settings.this, "There was an error creating the file", 5);
+                    toast.show();
+                    return;
+                }
+                if (((AndZiApplication) getApplication()).check_exporting_progress_space(destination)) {
+                    ((AndZiApplication) getApplication()).copyProgressDataBase(destination);
+                    Toast toast = Toast.makeText(Settings.this, "Successfully copied progress to\n"+destination, 5);
+                                        toast.show();
+                }
+                else {
+                    Toast toast = Toast.makeText(Settings.this, "Not enough space on device to export database", 5);
+                    toast.show();
+                }
+
+                return;
+            }
+            public boolean onPreferenceClick(Preference preference) {
+                String dest = Environment.getExternalStorageDirectory().getPath()+"/progress-"+ (1+ Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
+                do_export_progress(dest);
+                return true;
+            }
+        });
+
+        Preference import_progress = findPreference("ImportProgress");
+        import_progress.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            private void do_import_progress(final String destination) {
+                File export_db = new File(destination);
+                try {
+                    if (!export_db.createNewFile()) {
+                        Toast toast = Toast.makeText(Settings.this, "There was an error creating the file", 5);
+                        toast.show();
+                        return;
+                    }
+                } catch (IOException e) {
+                    Toast toast = Toast.makeText(Settings.this, "There was an error creating the file", 5);
+                    toast.show();
+                    return;
+                }
+                if (((AndZiApplication) getApplication()).check_exporting_progress_space(destination)) {
+                    ((AndZiApplication) getApplication()).copyProgressDataBase(destination);
+                    Toast toast = Toast.makeText(Settings.this, "Successfully copied progress to\n"+destination, 5);
+                    toast.show();
+                }
+                else {
+                    Toast toast = Toast.makeText(Settings.this, "Not enough space on device to export database", 5);
+                    toast.show();
+                }
+
+                return;
+            }
+            public boolean onPreferenceClick(Preference preference) {
+                Intent intent = new Intent(Settings.this, com.matthieu.widget.file_dialog.FileDialog.class);
+                intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, Environment.getExternalStorageDirectory().getPath());
+                startActivityForResult(intent, 1);
+                return true;
+            }
+        });
+
         int intent_action=getIntent().getIntExtra("Settings_action", -1);
         switch(intent_action) {
             case 0: // download reference
@@ -159,7 +228,7 @@ public class Settings extends PreferenceActivity {
         // should come here after the activity startedin import_database completes
         if (resultCode == Activity.RESULT_OK) {
 
-            if ((requestCode != 0) && (requestCode != 1)) {
+            if ((requestCode < 0) || (requestCode > 1)) {
                 return;
             }
             final String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
@@ -172,6 +241,15 @@ public class Settings extends PreferenceActivity {
                     toast.show();
                 }
             }
+            else if (requestCode == 1) {
+                if (((AndZiApplication)getApplication()).check_replace_progress(filePath))
+                    ((AndZiApplication)getApplication()).replaceProgressDataBase(filePath);
+                else {
+                    Toast toast = Toast.makeText(Settings.this, "Not enough space on device to import progress", 5);
+                    toast.show();
+                }
+            }
+
         } else if (resultCode == Activity.RESULT_CANCELED) {
             return;
         }
@@ -224,7 +302,7 @@ public class Settings extends PreferenceActivity {
             }
             mProgressDialog.dismiss();
             if (!enough_space) {
-                Toast toast = Toast.makeText(Settings.this, "Not enough space on device to download and isntall reference database", 5);
+                Toast toast = Toast.makeText(Settings.this, "Not enough space on device to download and install reference database", 5);
                 toast.show();
             }
 

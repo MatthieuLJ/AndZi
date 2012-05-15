@@ -1696,7 +1696,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 else {
                     // copy to the DB directory
-                    if (!app.copyDataBase(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                    if (!app.copyFile(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
                     }
@@ -1708,7 +1708,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
 
                     // copy a backup
-                    if (!app.copyDataBase(db.getPath(), appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
+                    if (!app.copyFile(db.getPath(), appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
                     }
@@ -1878,7 +1878,7 @@ public class HanziDB extends SQLiteOpenHelper {
             @Override
             protected Void doInBackground(Void... voids) {
                 if ((with_scores) && (!filtered_lessons)) {
-                    if (!app.copyDataBase(db.getPath(), path)) {
+                    if (!app.copyFile(db.getPath(), path)) {
                         clean_up_on_cancel(true);
                         return null;
                     }
@@ -1951,7 +1951,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         }
                     }
 
-                    if (!app.copyDataBase(new_db.getWritableDatabase().getPath(), path)) {
+                    if (!app.copyFile(new_db.getWritableDatabase().getPath(), path)) {
                         clean_up_on_cancel(true);
                         return null;
                     }
