@@ -170,17 +170,19 @@ public class ProgressGraph extends View {
         label_size = (int) android.util.FloatMath.ceil(left_axis_r.height()/2);
         main_size= (getMeasuredWidth()-left_size)*2 + right_size;
 
-        if(graph != null) {
-            graph.recycle();
+        if ((left_scale == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth())) {
+            if(graph != null) {
+                graph.recycle();
+            }
+            graph=Bitmap.createBitmap(main_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            graph_canvas = new Canvas(graph);
+            graph_path=new Path();
+            if (left_scale != null) {
+                left_scale.recycle();
+            }
+            left_scale=Bitmap.createBitmap(left_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            left_scale_canvas = new Canvas(left_scale);
         }
-        graph=Bitmap.createBitmap(main_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-        graph_canvas = new Canvas(graph);
-        graph_path=new Path();
-        if (left_scale != null) {
-            left_scale.recycle();
-        }
-        left_scale=Bitmap.createBitmap(left_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-        left_scale_canvas = new Canvas(left_scale);
     }
 
     @Override
@@ -200,6 +202,10 @@ public class ProgressGraph extends View {
         max_zoom = 1+ (int) android.util.FloatMath.floor((float)(log((double) (max_date-min_date)/(max_date-second_to_max_date))/log(2)));
 
         if ((left_scale == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth())) {
+            if (left_scale == null) {
+                left_scale=Bitmap.createBitmap(left_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+                left_scale_canvas = new Canvas(left_scale);
+            }
             p.setTextAlign(Paint.Align.RIGHT);
             int last_offset, first_offset;
 
@@ -241,6 +247,11 @@ public class ProgressGraph extends View {
         if ((graph == null) || (cached_height != getMeasuredHeight()) || (cached_width != getMeasuredWidth()) || (cached_zoom != current_zoom)) {
             // Erase the whole graph
 
+            if (graph == null) {
+                graph=Bitmap.createBitmap(main_size, getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+                graph_canvas = new Canvas(graph);
+                graph_path=new Path();
+            }
             graph_path.reset();
             graph_path.moveTo(0, 0);
             graph_path.lineTo(0, getMeasuredHeight());
