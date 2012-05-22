@@ -26,16 +26,16 @@ public class ProgressService extends Service {
                 if (current_data.num_chars_expired_in_box[0] > 10) {
                     NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     Notification notification = new Notification(R.drawable.icon, "More to study", System.currentTimeMillis());
+                    notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
                     notification.setLatestEventInfo(ProgressService.this, "More Chinese to study", "You have " + current_data.num_chars_expired_in_box[0] + " to study",
                             PendingIntent.getActivity(ProgressService.this, 0, new Intent(ProgressService.this, Test.class), 0));
-                    nm.cancel(NOTIFICATION_ID);
                     nm.notify(NOTIFICATION_ID, notification);
                 }
             }
         };
 
-        timer.scheduleAtFixedRate(task, 0, 4*60*60*1000); // every 4 hours
-        //timer.scheduleAtFixedRate(task, 0, 4*1000); // every 4 seconds for test...
+        timer.scheduleAtFixedRate(task, 0, 2*60*60*1000); // every 2 hours
+        //timer.scheduleAtFixedRate(task, 0, 4*60*1000); // every 4 seconds for test...
     }
 
     @Override
