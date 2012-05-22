@@ -26,6 +26,8 @@ public class MainMenuActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ProgressService.clear_notification(this);
+
         final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         SplashStateSaver myState = (SplashStateSaver) getLastNonConfigurationInstance();
