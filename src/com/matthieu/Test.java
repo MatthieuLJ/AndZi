@@ -85,7 +85,6 @@ public class Test extends Activity {
     private void launch_test() {
         Class target = tests.get(current_index);
         Intent i=new Intent(this, target);
-        i.putExtra("SingleTest", true);
         i.putExtra("hanzi", current_hanzi);
         this.startActivityForResult(i, current_index);
     }
