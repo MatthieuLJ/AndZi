@@ -55,15 +55,26 @@ public class Test extends Activity {
             if (!continue_with_more_chars) {
                 AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(Test.this);
                 nothing_to_study.setCancelable(false);
-                nothing_to_study.setMessage("You master everything, do you want to continue ?");
-                nothing_to_study.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        dialog.dismiss();
-                        continue_with_more_chars=true;
-                        start_test();
-                    }
-                });
-                nothing_to_study.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                if (myDB.isFilterEnabled()) {
+                    nothing_to_study.setMessage(getResources().getText(R.string.test_mastering_disable_filter));
+                    nothing_to_study.setPositiveButton(getResources().getText(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            myDB.enableFilter(false);
+                            start_test();
+                        }
+                    });
+                } else {
+                    nothing_to_study.setMessage(getResources().getText(R.string.test_mastering));
+                    nothing_to_study.setPositiveButton(getResources().getText(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            continue_with_more_chars=true;
+                            start_test();
+                        }
+                    });
+                }
+                nothing_to_study.setNegativeButton(getResources().getText(R.string.cancel), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                         finish();
