@@ -7,13 +7,14 @@
     <string name="nnew">New</string>
     <string name="select">Select</string>
     <string name="file_name">File name:</string>
-    <string name="cancel">Cancel</string>
     <string name="create">Save</string>
     <string name="no_data">No Data</string>
 
     <string name="next">Next</string>
     <string name="accept">Accept Answer</string>
     <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+
     <string name="find_tone">Find the tone for:</string>
     <string name="guess_char">Find the missing character:</string>
     <string name="guess_chinese">Find the Chinese translation for:</string>
@@ -51,6 +52,9 @@
     <string name="settings_ref_db_enable">Reference Database enabled</string>
     <string name="settings_ref_db_download">Download Reference Database</string>
     <string name="settings_ref_db_erase">Erase Reference Database</string>
+
+    <string name="test_mastering">You master everything, do you want to continue ?</string>
+    <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
 
     <string name="crash_toast_text">Ooooops ! I crashed, but a report has been sent to my developer to help fix the issue !</string>
 </resources>

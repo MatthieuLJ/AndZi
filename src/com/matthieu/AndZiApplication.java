@@ -156,10 +156,10 @@ public class AndZiApplication extends Application {
 
         if (destination_mp.equals(localDB_mp)) {
             StatFs stats = new StatFs(destination_mp);
-            int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+            int available_space = stats.getAvailableBlocks();
 
             File f = getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME);
-            long dbSize = f.length();
+            long dbSize = f.length()/stats.getBlockSize();
 
             if (available_space < 2*dbSize)
                 return false;
@@ -169,15 +169,15 @@ public class AndZiApplication extends Application {
             long dbSize = f.length();
 
             StatFs stats = new StatFs(destination_mp);
-            int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+            int available_space = stats.getAvailableBlocks();
 
-            if (available_space < dbSize)
+            if (available_space < dbSize/stats.getBlockSize())
                 return false;
 
             stats = new StatFs(localDB_mp);
-            available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+            available_space = stats.getAvailableBlocks();
 
-            if (available_space < dbSize)
+            if (available_space < dbSize/stats.getBlockSize())
                 return false;
         }
 
@@ -193,12 +193,12 @@ public class AndZiApplication extends Application {
         // delete the backup
 
         StatFs stats = new StatFs(FileMountPoint.mount_point(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath()));
-        int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
+        long available_space = stats.getAvailableBlocks();
 
         File f = new File(path);
         long dbSize = f.length();
 
-        return available_space >= 3 * dbSize;
+        return available_space >= 3 * dbSize/stats.getBlockSize();
     }
 
     public boolean check_ref_download_space(String path, int size) {
@@ -208,25 +208,27 @@ public class AndZiApplication extends Application {
         // copy the new one in place
         // delete the temporary file (?)
 
+        // first there is enough space to download the file
         String destination_mp = FileMountPoint.mount_point(path);
+        StatFs stats = new StatFs(destination_mp);
+        int available_space = stats.getAvailableBlocks();
+        int dest_blockSize = stats.getBlockSize();
+
         String localDB_mp = FileMountPoint.mount_point(getApplicationContext().getDatabasePath(REF_DB_NAME).getPath());
         long installed_db_size = getApplicationContext().getDatabasePath(REF_DB_NAME).length();
 
-        // first there is enough space to download the file
-        StatFs stats = new StatFs(destination_mp);
-        int available_space = stats.getAvailableBlocks()*stats.getBlockSize();
-
-        if (available_space < size)
-            return false;
-
         if (destination_mp.equals(localDB_mp)) {
-            if (available_space + installed_db_size < 2*size)
+            if (available_space + installed_db_size/dest_blockSize < 2*size/dest_blockSize)
                 return false;
         }
         else {
+            if (available_space < size/dest_blockSize)
+                return false;
+
             stats = new StatFs(localDB_mp);
-            available_space = stats.getAvailableBlocks()*stats.getBlockSize();
-            if (available_space + installed_db_size < size)
+            available_space = stats.getAvailableBlocks();
+            dest_blockSize = stats.getBlockSize();
+            if (available_space + installed_db_size/dest_blockSize < size/dest_blockSize)
                 return false;
 
         }

@@ -30,7 +30,9 @@ public class MainMenuActivity extends Activity {
 
         SplashStateSaver myState = (SplashStateSaver) getLastNonConfigurationInstance();
 
-        if ((myState == null) || ((myState != null) && (myState.showSplash))) {
+        boolean skip_splash = getIntent().getBooleanExtra("skip_splash", false);
+
+        if ((!skip_splash) && ((myState == null) || ((myState != null) && (myState.showSplash)))) {
             Log.d(TAG, "Showing splash");
             showing_splash=true;
             setContentView(R.layout.main_menu_splash);
@@ -57,7 +59,6 @@ public class MainMenuActivity extends Activity {
                     });
                 }
             }, 1000);
-
         }
         else {
             start_it();

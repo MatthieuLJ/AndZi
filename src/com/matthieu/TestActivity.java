@@ -18,7 +18,6 @@ public abstract class TestActivity extends Activity {
     protected int answered=-1;
     protected int show_result=1;
     protected int last_result;
-    protected boolean single_test;
     protected String hanzi;
 
     private static final String TAG="TestActivity";
@@ -31,11 +30,6 @@ public abstract class TestActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        single_test=getIntent().getBooleanExtra("SingleTest", false);
-        if (single_test)
-            Log.d(TAG, "Running single test");
-        else
-            Log.d(TAG, "Running continuous test");
 
         hanzi=getIntent().getStringExtra("hanzi");
         if ((hanzi==null) || (hanzi.equals(""))) {
@@ -49,13 +43,6 @@ public abstract class TestActivity extends Activity {
         super.onResume();
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-
-        if (answered==1) {
-            another_test_or_quit();
-        }
-        else if (answered==-1) {
-            set_next_study();
-        }
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (sp.getString("show_result", "always").equals("always")) {
@@ -66,6 +53,13 @@ public abstract class TestActivity extends Activity {
         }
         else {
             show_result = 3;
+        }
+
+        if (answered==1) {
+            another_test_or_quit();
+        }
+        else if (answered==-1) {
+            set_next_study();
         }
     }
 
@@ -79,12 +73,7 @@ public abstract class TestActivity extends Activity {
         answered=0;
     }
     protected void nothing_to_test() {
-        if (single_test) {
-            setResult(NOTHING_TO_TEST);
-        }
-        else {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-        }
+        setResult(NOTHING_TO_TEST);
         finish();
     }
     abstract protected void display_test();
@@ -101,10 +90,8 @@ public abstract class TestActivity extends Activity {
         } else {
             update_scores(INCORRECT);
         }
-
     }
 
-    // for Chinese guesses
     protected int handle_submit(String guess) {
         Toast toast;
         last_result = check_guess(guess);
@@ -138,12 +125,8 @@ public abstract class TestActivity extends Activity {
     }
 
     public void another_test_or_quit() {
-        if (single_test) {
-            setResult(last_result);
-            finish();
-        }
-        else
-            set_next_study();
+        setResult(last_result);
+        finish();
     }
 
     public void handle_next(View v) {

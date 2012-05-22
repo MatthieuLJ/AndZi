@@ -195,7 +195,7 @@ public class GuessChar extends TestActivity {
     }
 
     protected void update_scores(int good) {
-        Log.d(TAG, "updating scores "+good);
+        Log.d(TAG, "update_scores ("+hanzi+") "+good);
         
         if (good==CORRECT) {
             myDB.betterBox(hanzi);

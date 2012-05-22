@@ -111,21 +111,23 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
         cb.setChecked(false);
 
-
         Log.d(TAG, "Expects tones : "+tones.toString());
     }
 
     protected int check_guess(String guess) {
         int res=INCORRECT;
 
+        // check if did not guess anything
+        if (guess.length()==0)
+            return res;
         // check if any wrong guess
-        if ((guess.contains("1") && !tones.contains(1)) || (tones.contains(1) && !guess.contains("1")))
+        if (guess.contains("1") && !tones.contains(1))
             return res;
-        if ((guess.contains("2") && !tones.contains(2)) || (tones.contains(2) && !guess.contains("2")))
+        if (guess.contains("2") && !tones.contains(2))
             return res;
-        if ((guess.contains("3") && !tones.contains(3)) || (tones.contains(3) && !guess.contains("3")))
+        if (guess.contains("3") && !tones.contains(3))
             return res;
-        if ((guess.contains("4") && !tones.contains(4)) || (tones.contains(4) && !guess.contains("4")))
+        if (guess.contains("4") && !tones.contains(4))
             return res;
 
         return CORRECT;
@@ -133,6 +135,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
     @Override
     protected void update_scores(int good) {
+        Log.d(TAG, "update_scores ("+hanzi+") "+good);
         if (good == CORRECT)
             myDB.resetTime(hanzi);
         else
