@@ -11,8 +11,7 @@ import android.os.IBinder;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class ProgressService extends Service  {
-
+public class ProgressService extends Service {
     private final static int NOTIFICATION_ID=1;
     @Override
     public void onCreate() {
@@ -29,6 +28,7 @@ public class ProgressService extends Service  {
                     Notification notification = new Notification(R.drawable.icon, "More to study", System.currentTimeMillis());
                     notification.setLatestEventInfo(ProgressService.this, "More Chinese to study", "You have " + current_data.num_chars_expired_in_box[0] + " to study",
                             PendingIntent.getActivity(ProgressService.this, 0, new Intent(ProgressService.this, Test.class), 0));
+                    nm.cancel(NOTIFICATION_ID);
                     nm.notify(NOTIFICATION_ID, notification);
                 }
             }
