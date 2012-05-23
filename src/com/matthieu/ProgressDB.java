@@ -13,6 +13,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 public class ProgressDB extends SQLiteOpenHelper {
 
@@ -26,12 +27,16 @@ public class ProgressDB extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private static final int DEFAULT_MAX=200;
     private SQLiteDatabase db;
+    private purger_task current_purger=null;
 
     public ProgressDB(Context context, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);
+        Log.d(TAG, "new ProgressDB "+db_name);
+        Log.d(TAG, Thread.currentThread().getStackTrace().toString());
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
         db.acquireReference();
+        Log.d(TAG, "with db "+db);
         purge_data(DEFAULT_MAX);
     }
 
@@ -57,6 +62,26 @@ public class ProgressDB extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+    }
+
+    @Override
+    public synchronized void close() {
+        synchronized (ProgressDB.this) {
+            if (current_purger!= null) {
+                try {
+                    // wait until any purge task finishes
+                    current_purger.get();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        db.releaseReference();
+        db.close();
+        super.close();
     }
 
     public void add_data(ProgressData data) {
@@ -163,11 +188,36 @@ public class ProgressDB extends SQLiteOpenHelper {
             db.delete("progress", "date<=?", new String[] {Long.toString(System.currentTimeMillis()-to_keep)});
     }
 
-    public synchronized AsyncTask purge_data(final int min_items) {
-        AsyncTask<Void,Void,Void> purger = new AsyncTask<Void,Void,Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
+    private class purger_task extends AsyncTask<Void,Void,Void> {
+        boolean restart=false;
+        int min_items;
+        int new_min_items=0;
+
+        public purger_task(int num) {
+            min_items=num;
+            Log.d(TAG, "Start new purger for "+num);
+        }
+        public void update_num(int num) {
+            Log.d(TAG, "Updating num items with "+num);
+            synchronized (this) {
+                if (num < min_items) {
+                    new_min_items=num;
+                    restart=true;
+                }
+            }
+        }
+        @Override
+        protected Void doInBackground(Void... voids) {
+            do {
                 ArrayList<ProgressData> data = get_data();
+
+                synchronized (this) {
+                    if (new_min_items != 0) {
+                        min_items=new_min_items;
+                        restart=false;
+                        new_min_items=0;
+                    }
+                }
 
                 if (data.size() < min_items)
                     return (Void)null;
@@ -213,13 +263,27 @@ public class ProgressDB extends SQLiteOpenHelper {
                         deltas.put(data.get(min_index-1), delta);
                     }
                 }
-                return (Void)null;
+                synchronized (ProgressDB.this) {
+                    if (!restart)
+                        current_purger=null;
+                }
+            } while (restart);
+
+            Log.d(TAG, "Leaving purger");
+            return (Void)null;
+        }
+    }
+
+    public synchronized AsyncTask<Void,Void,Void> purge_data(final int min_items) {
+        synchronized (ProgressDB.this) {
+            if (current_purger != null)
+                current_purger.update_num(min_items);
+            else {
+                current_purger = new purger_task(min_items);
+                current_purger.execute((Void[])null);
             }
-        };
-
-        purger.execute((Void[])null);
-
-        return purger;
+        }
+        return current_purger;
     }
 
 }

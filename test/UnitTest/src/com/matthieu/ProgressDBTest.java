@@ -93,9 +93,9 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivi
         try {
             target_db.purge_data(6).get();
         } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         } catch (ExecutionException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
         assertTrue(target_db.get_data().size()==6);
         assertTrue(target_db.get_data().get(1).date==50);
