@@ -57,7 +57,7 @@ public class GuessContaining extends TestActivity {
     protected void set_next_study() {
         super.set_next_study();
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
             if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals(""))
@@ -134,6 +134,7 @@ public class GuessContaining extends TestActivity {
                             good_chars.add(c);
                         i+=Character.charCount(answers.codePointAt(i));
                     }
+                    myDB.guessedWord(true, answers);
                 }
                 for (String c:good_chars) {
                     Log.d(TAG, "Reset time for "+c);

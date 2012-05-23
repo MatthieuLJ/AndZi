@@ -60,10 +60,10 @@ public class GuessChineseWord extends TestActivity {
         String candidate;
         solution=null;
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
 
         while ((words.size() > 0) && (solution == null)) {
-            candidate = words.remove((int) (words.size()*Math.random())).chinese;
+            candidate = words.remove(0).chinese;
 
             if (candidate.codePointCount(0, candidate.length())>3)
                 continue;
@@ -217,6 +217,7 @@ public class GuessChineseWord extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(true, solution.chinese);
         }
         else {
             for (int i=0; i<solution.chinese.length();) {
@@ -225,6 +226,7 @@ public class GuessChineseWord extends TestActivity {
                 Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(false, solution.chinese);
         }
     }
 

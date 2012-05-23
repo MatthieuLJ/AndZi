@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class Test extends Activity {
-    private ArrayList<Class> tests = new ArrayList<Class>(Arrays.asList(GuessChar.class, GuessChineseWord.class, GuessContaining.class,
+    private ArrayList<Class> tests = new ArrayList<Class>(Arrays.asList(GuessMissingChar.class, GuessChineseWord.class, GuessContaining.class,
             GuessEnglish.class, GuessPinyin.class, GuessTone.class));
     private HanziDB myDB;
     private int current_index=0;

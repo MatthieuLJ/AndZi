@@ -17,7 +17,7 @@ public class ProgressService extends Service {
     public void onCreate() {
         super.onCreate();
         Timer timer = new Timer();
-        final ProgressDB db = new ProgressDB(getApplicationContext(), AndZiApplication.PROGRESS_DB_NAME);
+        final ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
