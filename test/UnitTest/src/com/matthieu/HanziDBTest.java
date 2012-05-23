@@ -433,6 +433,50 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(checkDB(target_db, false));
     }
 
+    public void testWordsToTest() {
+        target_db.addVocabulary("similar", new ArrayList<String>(Arrays.asList("好", "像")), new ArrayList<String>(Arrays.asList("hao3", "xiang4")));
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.guessedWord(true, "你好", "ni3hao3");
+        target_db.guessedWord(true, "好", "hao3");
+        target_db.guessedWord(true, "你好", "ni3hao3");
+        ArrayList<Vocabulary> res = target_db.getFilteredWordsWithPinyinForTesting("好");
+        assertTrue(res.get(0).chinese.equals("好像"));
+        assertTrue(res.size()==3);
+
+    }
+
+    public void testWordsToTestNoPinyin() {
+            target_db.addVocabulary("similar", new ArrayList<String>(Arrays.asList("好", "像")), new ArrayList<String>(Arrays.asList("hao3", "xiang4")));
+            target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+            target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+            target_db.guessedWord(true, "你好");
+            target_db.guessedWord(true, "好");
+            target_db.guessedWord(true, "你好");
+            ArrayList<Vocabulary> res = target_db.getFilteredWordsWithPinyinForTesting("好");
+            assertTrue(res.get(0).chinese.equals("好像"));
+            assertTrue(res.size()==3);
+
+        }
+
+    public void testWordsToTestWithFilter() {
+        target_db.addVocabulary("similar", new ArrayList<String>(Arrays.asList("好", "像")), new ArrayList<String>(Arrays.asList("hao3", "xiang4")));
+        target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), new ArrayList<String>(Arrays.asList("好")), new ArrayList<String>(Arrays.asList("hao3")));
+        target_db.addVocabulary("hello", new ArrayList<String>(Arrays.asList("你", "好")), new ArrayList<String>(Arrays.asList("ni3", "hao3")));
+        target_db.addLesson("lesson filter");
+        target_db.assignWordLesson("lesson filter", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson filter", "hello", "你好", "ni3hao3");
+        target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
+        target_db.enableFilter(true);
+        target_db.guessedWord(true, "你好", "ni3hao3");
+        target_db.guessedWord(true, "好", "hao3");
+        target_db.guessedWord(true, "你好", "ni3hao3");
+        ArrayList<Vocabulary> res = target_db.getFilteredWordsWithPinyinForTesting("好");
+        assertTrue(res.get(0).chinese.equals("好"));
+        assertTrue(res.size()==2);
+
+    }
+
     private void delay(long millis) {
         long current_time = System.currentTimeMillis();
         while(System.currentTimeMillis() < current_time+millis) {}

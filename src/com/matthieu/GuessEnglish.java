@@ -88,10 +88,10 @@ public class GuessEnglish extends TestActivity {
         String candidate;
         solution=null;
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
 
         while ((words.size() > 0) && (solution == null)) {
-            candidate = words.remove((int) (words.size()*Math.random())).chinese;
+            candidate = words.remove(0).chinese;
             ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
             if ((voc.size() == 0) || (voc.size() > 1)) // one case has multiple pinyins...
                 continue;
@@ -174,6 +174,7 @@ public class GuessEnglish extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(true, solution.chinese);
         }
         else {
             for (int i=0; i<solution.chinese.length();) {
@@ -182,6 +183,7 @@ public class GuessEnglish extends TestActivity {
                 Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(false, solution.chinese);
         }
     }
 
