@@ -130,7 +130,7 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
     {
         mValueText.setText(labels[max_range - value]);
         mValue=value;
-        callChangeListener(new Integer(value));
+        callChangeListener(value);
     }
     public void onStartTrackingTouch(SeekBar seek) {}
     public void onStopTrackingTouch(SeekBar seek) {}
