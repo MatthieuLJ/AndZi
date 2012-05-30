@@ -29,6 +29,7 @@ public class ProgressGraph extends View {
     private Rect left_axis_r=new Rect();
     private Rect bottom_axis_r=new Rect();
     private boolean reset_offset_x=true;
+    private Rect origin=new Rect(), dest=new Rect();
 
     public ProgressGraph(Context context) {
         super(context);
@@ -541,8 +542,16 @@ public class ProgressGraph extends View {
             reset_offset_x=false;
         }
 
-        Rect origin=new Rect(main_size-current_offset_x-getMeasuredWidth()+left_size ,0, main_size-current_offset_x, getMeasuredHeight());
-        Rect dest = new Rect(left_size, 0, getMeasuredWidth(), getMeasuredHeight());
+        origin.left = main_size-current_offset_x-getMeasuredWidth()+left_size;
+        origin.top=0;
+        origin.right=main_size-current_offset_x;
+        origin.bottom=getMeasuredHeight();
+
+        dest.left=left_size;
+        dest.top=0;
+        dest.right = getMeasuredWidth();
+        dest.bottom = getMeasuredHeight();
+
         canvas.drawBitmap(graph, origin, dest, p);
 
         cached_height=getMeasuredHeight();

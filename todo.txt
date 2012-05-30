@@ -5,9 +5,8 @@ ONGOING (5):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
+BUGS (1):
 * Improve performances of the dictionary!
-* Export without scores much too slow
 
 FUTURE (13):
 * When dictionnary query does not exist, try to break it up to find the meaning
@@ -38,7 +37,8 @@ More information includes:
 - If query is <= 2 characters or query exists in DB, then show the exact match, followed by everything starting with the same sequence followed by everything else containing that sequence
 - If the query is >2 and the sequence does not exist in DB, then breat it down... for character 1234, show exact matches for 123,12,1,234,23,2,34,3,4
 
-DONE (113):
+DONE (114):
+* Export without scores much too slow
 * Let leitner boxes go higher than 4
 * Lesson rename is broken
 * Guess English - try 长 (multiple pinyin / meanings possible)
@@ -175,34 +175,16 @@ Lint output:
 res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="fill_parent"
                 ^
-res/layout/add_vocabulary_top.xml:15: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
-            android:capitalize="none"
-            ^
-res/layout/guess_char.xml:58: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
-                android:capitalize="none"
-                ^
-res/layout/guess_chinese_word.xml:92: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
-                android:capitalize="none"
-                ^
-res/layout/guess_containing.xml:48: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
-                android:capitalize="none"
-                ^
-res/layout/guess_english.xml:49: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
-                android:capitalize="none"
-                ^
-res/layout/guess_pinyin.xml:69: Warning: android:capitalize is deprecated: Use inputType instead [Deprecated]
-                android:capitalize="none"
-                ^
 src/com/matthieu/widget/AdaptiveLinearLayout.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                         HideParams hp = new HideParams((HideParams) scrollView.getLayoutParams());
                                          ^
-src/com/matthieu/widget/ProgressGraph.java:270: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:301: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     data0 = new ProgressData();
                              ^
-src/com/matthieu/widget/ProgressGraph.java:512: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:544: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
         Rect origin=new Rect(main_size-current_offset_x-getMeasuredWidth()+left_size ,0, main_size-current_offset_x, getMeasuredHeight());
                      ^
-src/com/matthieu/widget/ProgressGraph.java:513: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/widget/ProgressGraph.java:545: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
         Rect dest = new Rect(left_size, 0, getMeasuredWidth(), getMeasuredHeight());
                      ^
 src/com/matthieu/settings/TrimProgressPreference.java:133: Warning: Use Integer.valueOf(value) instead [UseValueOf]
@@ -222,7 +204,7 @@ res/layout/test_result.xml:54: Warning: Nested weights are bad for performance [
                 ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
 res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
-res/values/strings.xml:34: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
+res/values/strings.xml:35: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
     <string name="description_splash">splash screen</string>
     ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
@@ -255,21 +237,6 @@ res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not s
 res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
-res/layout/guess_char.xml:53: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_chinese_word.xml:87: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_containing.xml:43: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_english.xml:44: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/guess_pinyin.xml:64: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
@@ -309,4 +276,4 @@ res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should us
 res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
             android:contentDescription="splash screen"
             ^
-0 errors, 55 warnings
+0 errors, 44 warnings

@@ -64,6 +64,10 @@ public class AndZiApplication extends Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
+        prog.close();
+        myDB.close();
+        if (ref_present)
+            refDB.close();
     }
 
     public HanziDB getMyDB() { return myDB; }
