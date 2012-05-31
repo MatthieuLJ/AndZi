@@ -37,7 +37,7 @@ public class AndZiApplication extends Application {
     static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     static final String PROGRESS_DB_NAME = "progress_db";
 
-    private static final String VERSION="0.1.0";
+    private static final String VERSION="0.1.0-acra";
 
     public void onCreate() {
         ACRA.init(this);
