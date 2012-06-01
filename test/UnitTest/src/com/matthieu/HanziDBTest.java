@@ -1,10 +1,8 @@
 package com.matthieu;
 
 import android.content.*;
-import android.os.Looper;
-import android.preference.PreferenceManager;
+import android.database.Cursor;
 import android.test.ActivityInstrumentationTestCase2;
-import android.test.UiThreadTest;
 import android.util.Log;
 import com.matthieu.widget.DBCheckProgressHandler;
 
@@ -121,14 +119,14 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertFalse(combineListOfTranslations(target_db.getTranslations("长","chang2")).contains("grow"));
         assertTrue(combineListOfTranslations(target_db.getTranslations("风")).contains("wind"));
         assertTrue(combineListOfTranslations(target_db.getTranslations("风")).contains("custom"));
-        assertTrue(target_db.getCTranslations("big").size()==2);
+        assertTrue(captureDataFromCursor(target_db.getCTranslations("big")).size()==2);
         assertTrue(checkDB(target_db, false));
     }
 
     public void testMultipleChinese() {
         target_db.addVocabulary("big","大", "da4");
         target_db.addVocabulary("big","伟", "wei3");
-        assertTrue(target_db.getCTranslations("big").size()==2);
+        assertTrue(captureDataFromCursor(target_db.getCTranslations("big")).size()==2);
         assertTrue(checkDB(target_db, false));
     }
 
@@ -370,8 +368,8 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(combineListOfTranslations(target_db.getFilteredTranslations("好")).contains("well"));
         assertFalse(combineListOfTranslations(target_db.getFilteredTranslations("好")).contains("perfect"));
         assertFalse(combineListOfTranslations(target_db.getFilteredTranslations("好", "hao3")).contains("perfect"));
-        assertTrue(target_db.getFilteredCTranslations("good").get(0).chinese.equals("好"));
-        assertTrue(target_db.getFilteredCTranslations("perfect").size()==0);
+        assertTrue(captureDataFromCursor(target_db.getFilteredCTranslations("good")).get(0).chinese.equals("好"));
+        assertTrue(captureDataFromCursor(target_db.getFilteredCTranslations("perfect")).size()==0);
         assertTrue(checkDB(target_db, false));
     }
 
@@ -764,305 +762,244 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(A.size() == 4);
     }
 
-    @UiThreadTest
     public void testGetSequence() {
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    runTestOnUiThread(new Runnable() {
-                        public void run() {
-                            target_db.addVocabulary("you", "你", "ni3");
-                            target_db.addVocabulary("to be", "是", "shi4");
-                            target_db.addVocabulary("good", "好", "hao3");
-                            target_db.addVocabulary("not", "不", "bu4");
-                            target_db.addVocabulary("hello", "你好", "ni3hao3");
-                            target_db.addVocabulary("how are you?", "你好吗", "ni3hao3ma");
-                            target_db.addVocabulary("no good", "不好", "bu4hao3");
-                            target_db.addVocabulary("you no good", "你不好", "ni3bu4hao3");
-                            target_db.addVocabulary("tasty", "好吃", "hao3chi1");
-                            target_db.addVocabulary("all right?", "好不好", "hao3bu4hao3");
-                            target_db.addVocabulary("no good", "不太好", "bu4tai4hao3");
-                            target_db.addVocabulary("unattractive", "不好看", "bu4hao3kan4");
-                            target_db.addVocabulary("hard to say", "不好说", "bu4hao3shuo1");
-                            target_db.addVocabulary("easy to use", "好使", "hao3shi3");
-                            target_db.addVocabulary("difficult to use", "不好使", "bu4hao3shi3");
-                            target_db.addVocabulary("yes or no", "是不是", "shi4bu4shi4");
-                            target_db.addVocabulary("hershey's", "好时", "hao3shi2");
-                            target_db.addVocabulary("eager to be first", "好强", "hao3qiang2");
-                            target_db.addVocabulary("inside", "里边", "li3bian5");
-                            target_db.addVocabulary("already", "便已", "bian4yi1");
-                            ArrayList<Vocabulary> res;
-                            HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-                            HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-                            HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-                            HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-                            HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-                            HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-                            HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-                            HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        target_db.addVocabulary("you", "你", "ni3");
+        target_db.addVocabulary("to be", "是", "shi4");
+        target_db.addVocabulary("good", "好", "hao3");
+        target_db.addVocabulary("well", "好", "hao3");
+        target_db.addVocabulary("very good", "好好", "hao3hao3");
+        target_db.addVocabulary("not", "不", "bu4");
+        target_db.addVocabulary("hello", "你好", "ni3hao3");
+        target_db.addVocabulary("how are you?", "你好吗", "ni3hao3ma");
+        target_db.addVocabulary("no good", "不好", "bu4hao3");
+        target_db.addVocabulary("you no good", "你不好", "ni3bu4hao3");
+        target_db.addVocabulary("tasty", "好吃", "hao3chi1");
+        target_db.addVocabulary("all right?", "好不好", "hao3bu4hao3");
+        target_db.addVocabulary("no good", "不太好", "bu4tai4hao3");
+        target_db.addVocabulary("unattractive", "不好看", "bu4hao3kan4");
+        target_db.addVocabulary("hard to say", "不好说", "bu4hao3shuo1");
+        target_db.addVocabulary("easy to use", "好使", "hao3shi3");
+        target_db.addVocabulary("difficult to use", "不好使", "bu4hao3shi3");
+        target_db.addVocabulary("yes or no", "是不是", "shi4bu4shi4");
+        target_db.addVocabulary("hershey's", "好时", "hao3shi2");
+        target_db.addVocabulary("eager to be first", "好强", "hao3qiang2");
+        target_db.addVocabulary("inside", "里边", "li3bian5");
+        target_db.addVocabulary("already", "便已", "bian4yi1");
+        ArrayList<Vocabulary> res;
+        long max_time=0;
+        long max_time_allowed=100;
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
 
-                            // ** test only one element
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)));
-                            assertTrue(res.size()==14);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)));
-                            assertTrue(res.size()==9);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)));
-                            assertTrue(res.size()==5);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)));
-                            assertTrue(res.size()==11);
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==5);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)),HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==5);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==6);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==8);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==3);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==3);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==4);
-                            // * start 2
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(ni_pinyin)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
+        // ** test only one element
+        long current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), false, false));
+        long difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==15);
+        assertTrue(res.get(0).chinese.equals("好"));
+        assertTrue(res.get(0).english.size()==2);
+        assertTrue(res.get(7).chinese.equals("不好"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==9);
+        assertTrue(res.get(0).chinese.equals("不"));
+        assertTrue(res.get(6).chinese.equals("好不好"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==5);
+        assertTrue(res.get(0).chinese.equals("是"));
+        assertTrue(res.get(1).chinese.equals("是不是"));
+        assertTrue(res.get(4).chinese.equals("好使"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==11);
+        assertTrue(res.get(0).chinese.equals("不"));
+        assertTrue(res.get(1).chinese.equals("便已"));
+        assertTrue(res.get(7).chinese.equals("好不好"));
 
-                            // ** Only Chinese
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)));
-                            assertTrue(res.size()==6);
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==3);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==2);
-                            // * start 2
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)),HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
+        // Only Chinese
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==6);
+        assertTrue(res.get(0).chinese.equals("不好"));
+        assertTrue(res.get(5).chinese.equals("你不好"));
 
+        // Only Pinyin
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==6);
+        assertTrue(res.get(0).chinese.equals("不好"));
+        assertTrue(res.get(5).chinese.equals("你不好"));
 
-                            // ** Only Pinyins
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)));
-                            assertTrue(res.size()==6);
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==3);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==2);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-
-
-                            // ** Mixed
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)));
-                            assertTrue(res.size()==6);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)));
-                            assertTrue(res.size()==3);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)));
-                            assertTrue(res.size()==6);
-
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==3);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_START, false);
-                            assertTrue(res.size()==3);
-
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==2);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_NO_START, false);
-                            assertTrue(res.size()==2);
-
-                            // * start 2
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, chi_no_tone_pinyin)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_EXACT, false);
-                            assertTrue(res.size()==1);
-                        }
-                    });
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                }
-            }
-        }.run();
+        // Mixed
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==6);
+        assertTrue(res.get(0).chinese.equals("不好"));
+        assertTrue(res.get(5).chinese.equals("你不好"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==3);
+        assertTrue(res.get(0).chinese.equals("好时"));
+        assertTrue(res.get(2).chinese.equals("不好使"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), false, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==6);
+        assertTrue(res.get(0).chinese.equals("不好"));
+        assertTrue(res.get(5).chinese.equals("你不好"));
+        Log.d(TAG, "testGetSequence: Maximum time for a query is "+max_time);
     }
 
-    @UiThreadTest
     public void testGetFilteredSequence() {
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    runTestOnUiThread(new Runnable() {
-                        public void run() {
-                            target_db.addVocabulary("you", "你", "ni3");
-                            target_db.addVocabulary("to be", "是", "shi4");
-                            target_db.addVocabulary("good", "好", "hao3");
-                            target_db.addVocabulary("not", "不", "bu4");
-                            target_db.addVocabulary("hello", "你好", "ni3hao3");
-                            target_db.addVocabulary("how are you?", "你好吗", "ni3hao3ma");
-                            target_db.addVocabulary("no good", "不好", "bu4hao3");
-                            target_db.addVocabulary("you no good", "你不好", "ni3bu4hao3");
-                            target_db.addVocabulary("tasty", "好吃", "hao3chi1");
-                            target_db.addVocabulary("all right?", "好不好", "hao3bu4hao3");
-                            target_db.addVocabulary("no good", "不太好", "bu4tai4hao3");
-                            target_db.addVocabulary("unattractive", "不好看", "bu4hao3kan4");
-                            target_db.addVocabulary("hard to say", "不好说", "bu4hao3shuo1");
-                            target_db.addVocabulary("easy to use", "好使", "hao3shi3");
-                            target_db.addVocabulary("difficult to use", "不好使", "bu4hao3shi3");
-                            target_db.addVocabulary("yes or no", "是不是", "shi4bu4shi4");
-                            target_db.addVocabulary("hershey's", "好时", "hao3shi2");
-                            target_db.addVocabulary("eager to be first", "好强", "hao3qiang2");
-                            target_db.addVocabulary("inside", "里边", "li3bian5");
-                            target_db.addVocabulary("already", "便已", "bian4yi1");
-                            target_db.addLesson("lesson filter");
-                            target_db.assignWordLesson("lesson filter", "good", "好", "hao3");
-                            target_db.assignWordLesson("lesson filter", "you", "你", "ni3");
-                            target_db.assignWordLesson("lesson filter", "you no good", "你不好", "ni3bu4hao3");
-                            target_db.assignWordLesson("lesson filter", "yes or no", "是不是", "shi4bu4shi4");
-                            target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
-                            target_db.enableFilter(true);
-                            ArrayList<Vocabulary> res;
-                            HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-                            HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-                            HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-                            HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-                            HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-                            HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-                            HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-                            HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        target_db.addVocabulary("you", "你", "ni3");
+        target_db.addVocabulary("to be", "是", "shi4");
+        target_db.addVocabulary("good", "好", "hao3");
+        target_db.addVocabulary("well", "好", "hao3");
+        target_db.addVocabulary("very good", "好好", "hao3hao3");
+        target_db.addVocabulary("not", "不", "bu4");
+        target_db.addVocabulary("hello", "你好", "ni3hao3");
+        target_db.addVocabulary("how are you?", "你好吗", "ni3hao3ma");
+        target_db.addVocabulary("no good", "不好", "bu4hao3");
+        target_db.addVocabulary("you no good", "你不好", "ni3bu4hao3");
+        target_db.addVocabulary("tasty", "好吃", "hao3chi1");
+        target_db.addVocabulary("all right?", "好不好", "hao3bu4hao3");
+        target_db.addVocabulary("no good", "不太好", "bu4tai4hao3");
+        target_db.addVocabulary("unattractive", "不好看", "bu4hao3kan4");
+        target_db.addVocabulary("hard to say", "不好说", "bu4hao3shuo1");
+        target_db.addVocabulary("easy to use", "好使", "hao3shi3");
+        target_db.addVocabulary("difficult to use", "不好使", "bu4hao3shi3");
+        target_db.addVocabulary("yes or no", "是不是", "shi4bu4shi4");
+        target_db.addVocabulary("hershey's", "好时", "hao3shi2");
+        target_db.addVocabulary("eager to be first", "好强", "hao3qiang2");
+        target_db.addVocabulary("inside", "里边", "li3bian5");
+        target_db.addVocabulary("already", "便已", "bian4yi1");
+        target_db.addLesson("lesson filter");
+        target_db.assignWordLesson("lesson filter", "good", "好", "hao3");
+        target_db.assignWordLesson("lesson filter", "you", "你", "ni3");
+        target_db.assignWordLesson("lesson filter", "you no good", "你不好", "ni3bu4hao3");
+        target_db.assignWordLesson("lesson filter", "yes or no", "是不是", "shi4bu4shi4");
+        target_db.assignWordLesson("lesson filter",  "no good", "不太好", "bu4tai4hao3");
+        target_db.assignWordLesson("lesson filter",  "inside", "里边", "li3bian5");
+        target_db.setLessonsToFilter(new ArrayList<String>(Arrays.asList("lesson filter")));
+        target_db.enableFilter(true);
+        ArrayList<Vocabulary> res;
+        long max_time=0;
+        long max_time_allowed=100;
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
 
-                            // ** test only one element
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==2);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==2);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==2);
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==2);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==2);
-                            // * start 2
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(ni_pinyin)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
+        // ** test only one element
+        long current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char)), true, false));
+        long difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==3);
+        assertTrue(res.get(0).chinese.equals("好"));
+        assertTrue(res.get(0).english.size()==1);
+        assertTrue(res.get(2).chinese.equals("你不好"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==3);
+        assertTrue(res.get(0).chinese.equals("不太好"));
+        assertTrue(res.get(1).chinese.equals("你不好"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(shi_no_tone_pinyin)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==1);
+        assertTrue(res.get(0).chinese.equals("是不是"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==4);
+        assertTrue(res.get(0).chinese.equals("不太好"));
+        assertTrue(res.get(2).chinese.equals("你不好"));
 
+        // Only Chinese
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==1);
+        assertTrue(res.get(0).chinese.equals("你不好"));
 
-                            // ** Only Chinese
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==1);
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==1);
-                            // * start 2
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_char, hao_char)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
+        // Only Pinyin
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==1);
+        assertTrue(res.get(0).chinese.equals("你不好"));
 
-                            // ** Only Pinyins
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==1);
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==1);
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_pinyin)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
-
-
-                            // ** Mixed
-                            // * start -1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_ALL, true);
-                            assertTrue(res.size()==1);
-
-                            // * start 1
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_START, true);
-                            assertTrue(res.size()==0);
-
-                            // * start 0
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==1);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_NO_START, true);
-                            assertTrue(res.size()==1);
-
-                            // * start 2
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, chi_no_tone_pinyin)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
-                            res = target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), HanziDB.SEQUENCE_EXACT, true);
-                            assertTrue(res.size()==0);
-                        }
-                    });
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                }
-            }
-        }.run();
+        // Mixed
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin, hao_char)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==1);
+        assertTrue(res.get(0).chinese.equals("你不好"));
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(hao_char, shi_no_tone_pinyin)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==0);
+        current_time = System.currentTimeMillis();
+        res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin, hao_char)), true, false));
+        difference = System.currentTimeMillis()-current_time;
+        if (difference > max_time) max_time=difference;
+        assertTrue(difference<max_time_allowed);
+        assertTrue(res.size()==1);
+        assertTrue(res.get(0).chinese.equals("你不好"));
+        Log.d(TAG, "testGetSequence: Maximum time for a query is "+max_time);
     }
 
     public boolean checkDB(final HanziDB db, final boolean fixme) {
@@ -1110,5 +1047,35 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         else
             return voc.english;
     }
+    private static ArrayList<Vocabulary> captureDataFromCursor(Cursor cur) {
+        ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
+        if (!cur.moveToFirst())
+            return res;
 
+        int current_cword_id=-1;
+        Vocabulary current_voc=null;
+        do {
+            int cword_id = cur.getInt(cur.getColumnIndex("_id"));
+            String english=cur.getString(cur.getColumnIndex("english"));
+            if (current_cword_id==cword_id) {
+                current_voc.english.add(english);
+            }
+            else {
+                String chinese=cur.getString(cur.getColumnIndex("chinese"));
+                String pinyin =cur.getString(cur.getColumnIndex("pinyin"));
+                if (current_voc!=null) {
+                    res.add(current_voc);
+                }
+                current_voc = new Vocabulary(chinese, pinyin);
+                current_cword_id=cword_id;
+                current_voc.english.add(english);
+            }
+
+        } while (cur.moveToNext());
+        if (current_voc!=null)
+            res.add(current_voc);
+
+        cur.close();
+        return res;
+    }
 }

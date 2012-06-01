@@ -20,6 +20,9 @@ public abstract class TestActivity extends Activity {
     protected int last_result;
     protected String hanzi;
 
+    protected HanziDB myDB=null;
+    protected HanziDB refDB=null;
+
     private static final String TAG="TestActivity";
 
     final static protected int CORRECT=1;
@@ -30,6 +33,9 @@ public abstract class TestActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
 
         hanzi=getIntent().getStringExtra("hanzi");
         if ((hanzi==null) || (hanzi.equals(""))) {

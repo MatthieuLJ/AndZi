@@ -34,6 +34,9 @@ public class AndZiApplication extends Application {
 
     public void onCreate() {
         initialize_my_db();
+
+        Pinyin.prepare_pinyin_process();
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         refDB = new HanziDB(getApplicationContext(), this,REF_DB_NAME);
         if (refDB.getNumChars()==0) {
