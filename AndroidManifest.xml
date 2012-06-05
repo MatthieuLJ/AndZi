@@ -72,7 +72,8 @@
 
         <activity android:name=".widget.file_dialog.FileDialog" />
 
-        <activity android:name=".EmptyActivity"/>
+        <activity android:name=".EmptyActivity"
+                android:theme="@android:style/Theme.NoDisplay"/>
 
         <receiver android:name=".BootBroadcastReceiver">
             <intent-filter>

@@ -126,7 +126,10 @@ public class Dictionary extends Activity {
             final ListView results = (ListView) findViewById(R.id.dict_results);
             runOnUiThread(new Runnable() {
                 public void run() {
+                    Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
                     ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(loading_cursor);
+                    if (old_cursor != null)
+                        old_cursor.close();
                 }
             });
 
@@ -137,13 +140,32 @@ public class Dictionary extends Activity {
                 HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
                 if (mode == 0) {
                     ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(orig);
-                    if (elems != null)
-                        current_cursor = refDB.getWordsWithSequence(elems, true, true);
-                    else
+                    boolean all_chinese=true;
+                    for (HanziDB.StringElement e : elems) {
+                        if (e.type != HanziDB.StringElement.CHINESE)
+                            all_chinese=false;
+                    }
+
+                    if (elems == null)
                         current_cursor = new MessageCursor("Cannot understand this query");
+                    else if (elems.size()==1) {
+                        if (elems.get(0).type == HanziDB.StringElement.INCOMPLETE_PINYIN)
+                            current_cursor = null;
+                        else
+                            current_cursor = refDB.getWordsStartingWithSequence(elems, true, true);
+                    }
+                    else if ((all_chinese) && (elems.size() >= 3) && (refDB.getTranslations(orig).size()==0))
+                        current_cursor = refDB.getDecomposedParts(elems, 4, true, true);
+                    else
+                        current_cursor = refDB.getWordsWithSequence(elems, true, true);
                 }
                 else if (mode == 1) {
-                    current_cursor = refDB.getFilteredCTranslations(orig);
+                    if (orig.length()<2)
+                        current_cursor=null;
+                    else if (orig.length()<3)
+                        current_cursor = refDB.getFilteredStartingCTranslations(orig);
+                    else
+                        current_cursor = refDB.getFilteredCTranslations(orig);
                 }
                 else
                     current_cursor =null;
@@ -159,7 +181,10 @@ public class Dictionary extends Activity {
             if ((mode == last_mode) && (orig.equals(last_query)))
                 runOnUiThread(new Runnable() {
                     public void run() {
+                        Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
                         ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(current_cursor);
+                        if (old_cursor != null)
+                            old_cursor.close();
                     }
                 });
         }
