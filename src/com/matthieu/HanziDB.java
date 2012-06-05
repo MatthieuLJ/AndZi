@@ -2318,6 +2318,57 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public Cursor getVocabularyCursorInLessons(ArrayList<String> lessons, boolean group) {
+        StringBuilder query=new StringBuilder();
+
+        if ((lessons.size() == 1) && (lessons.contains(""))) {
+            // only words not in any lesson
+            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
+            if (group)
+                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
+            else
+                query.append("e.translation AS english ");
+            query.append("FROM eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ");
+            if (group)
+                query.append("GROUP BY c.cword_id ");
+        } else if (!lessons.contains("")) {
+            // words that have some lessons associated with them
+            String whereQuery = buildWhereQuery(lessons);
+
+            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
+            if (group)
+                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
+            else
+                query.append("e.translation AS english ");
+
+            query.append("FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
+                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id ");
+            if (group)
+                query.append("GROUP BY c.cword_id ");
+        } else {
+            // a little bit of both
+            lessons.remove("");
+            String whereQuery = buildWhereQuery(lessons);
+            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
+            if (group)
+                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
+            else
+                query.append("e.translation AS english ");
+            query.append("FROM eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    " WHERE (e.eng_id NOT IN (SELECT eng_id FROM lesson_word)) " +
+                    " OR (e.eng_id IN " +
+                    "   (SELECT eword.eng_id FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lessons" +
+                    "   JOIN eword ON lessons.eng_id=eword.eng_id))");
+            if (group)
+                query.append("GROUP BY c.cword_id ");
+        }
+        return db.rawQuery(query.toString(), null);
+    }
+
     protected String buildWhereQuery(ArrayList<String> lessons) {
         String whereQuery = "WHERE lesson_word.lesson_id IN (";
         int size = lessons.size();
@@ -2370,6 +2421,37 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use lesson filter
     ////////////////////////////////////////
+    /*
+    public int getNumWordsFiltered() {
+        int res;
+        Cursor cur = db.rawQuery("SELECT eword.cword_id " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "GROUP BY eword.cword_id ", null);
+        res= cur.getCount();
+
+        cur.close();
+        return res;
+    }
+
+    public int getNumCharsFiltered() {
+        int res;
+        if (cached_num_chars != -1)
+            return cached_num_chars;
+        Cursor cur = db.rawQuery("SELECT char_pinyin.hanzi " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "JOIN cword_segment ON cword_segment.cword_id=eword.cword_id " +
+                "JOIN char_pinyin ON cword_segment.char_pinyin_id=char_pinyin.char_pinyin_id " +
+                "GROUP BY hanzi", null);
+        res= cur.getCount();
+        cached_num_chars=res;
+
+        cur.close();
+        return res;
+    }
+    */
+
     public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -2706,6 +2788,153 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+/*
+    public int getNumCharsFilteredInBox(int box) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            int res;
+
+            if (box < 0)
+                return 0;
+
+            Cursor cur;
+            if (box == 0)
+                // add the characters that do not have any box...
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE (box IS NULL) OR (box=0)) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)", null);
+            else
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE box=?) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Integer.toString(box)});
+
+            cur.moveToFirst();
+            res= cur.getInt(cur.getColumnIndex("count"));
+            cur.close();
+
+            return res;
+        }
+        else {
+            return getNumCharsInBox(box);
+        }
+    }
+
+    public int getNumCharsFilteredInBoxOrAbove(int box) {
+        int res;
+
+        if (box < 0)
+            return 0;
+
+        if (box == 0)
+            return getNumCharsFiltered();
+
+        Cursor cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                "FROM char_pinyin " +
+                "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE box>=?) AS expired_chars " +
+                "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                new String[] {Integer.toString(box)});
+
+        cur.moveToFirst();
+        res= cur.getInt(cur.getColumnIndex("count"));
+
+        cur.close();
+
+        return res;
+    }
+
+    public int getNumCharsFilteredExpiredInBox(int box) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            int res;
+
+            if (box < 0)
+                return 0;
+
+            if (box == 0)
+                return getNumCharsFilteredInBox(0);
+            else {
+                Cursor cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE box=? AND leitner.exp_time<?) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
+                cur.moveToFirst();
+                res= cur.getInt(cur.getColumnIndex("count"));
+
+                cur.close();
+            }
+            return res;
+        }
+        else
+            return getNumCharsExpiredInBox(box);
+    }
+
+    public int getNumCharsFilteredExpiredInBoxOrAbove(int box) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            int res;
+
+            if (box < 0)
+                return 0;
+
+            Cursor cur;
+
+            if (box == 0)
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE (box IS NULL) OR (box=0) OR ((box>0) AND (exp_time<?))) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Long.toString(System.currentTimeMillis())});
+            else
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE box>=? AND leitner.exp_time<?) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
+
+            cur.moveToFirst();
+            res= cur.getInt(cur.getColumnIndex("count"));
+
+            cur.close();
+            return res;
+        }
+        else {
+            return getNumCharsExpiredInBoxOrAbove(box);
+        }
+    }
+    */
+
+
     public int getBoxForChar(String hanzi) {
         int res;
 
@@ -2914,7 +3143,16 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
 
         return res;
+    }
 
+    protected Cursor getCursorToStudy() {
+        return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
+                "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time " +
+                "FROM char_pinyin " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "ORDER BY exp_time ASC",
+                new String[] {Long.toString(System.currentTimeMillis())});
     }
 
     public void getMoreStudy(int how_many) {
@@ -2955,6 +3193,26 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         else {
             return getAllToStudy();
+        }
+    }
+
+    public Cursor getCursorFilteredToStudy() {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
+                    "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY exp_time DESC",
+                    new String[] {Long.toString(System.currentTimeMillis())});
+
+        }
+        else {
+            return getCursorToStudy();
         }
     }
 }
