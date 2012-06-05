@@ -18,25 +18,13 @@ import android.widget.*;
 import java.util.ArrayList;
 
 public class GuessMissingChar extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
-    private ArrayList<Vocabulary> words;
-    private ArrayList<String> previous_guess;
+    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();;
+    private ArrayList<String> previous_guess=new ArrayList<String>();;
     private String last_guess="";
     private int last_good=0;
 
     private final String TAG="GuessMissingChar";
     private int current_view=0;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-
-        words=new ArrayList<Vocabulary>();
-        previous_guess=new ArrayList<String>();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -238,7 +226,7 @@ public class GuessMissingChar extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessMissingChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        Details.populate_details_view(GuessMissingChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessMissingChar.this);

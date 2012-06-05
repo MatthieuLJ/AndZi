@@ -207,7 +207,7 @@ public class ReviewList extends ListActivity {
         }
 
         public long getItemId(int i) {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
+            return 0;
         }
 
         public View getView(int i, View convertView, ViewGroup viewGroup) {
@@ -227,7 +227,7 @@ public class ReviewList extends ListActivity {
             });
             TextView pinyin = (TextView) convertView.findViewById(R.id.review_item_pinyin);
             if (show_pinyin_color)
-                pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(to_study.get(i).pinyin)));
+                pinyin.setText(PinyinParser.convert_to_spannable_version(to_study.get(i).pinyin));
             else
                 pinyin.setText(PinyinParser.convert_to_pretty_version(to_study.get(i).pinyin));
 
@@ -326,7 +326,7 @@ public class ReviewList extends ListActivity {
             chinese.setText(voc.chinese);
             TextView pinyin = (TextView) convertView.findViewById(R.id.details_pinyin_word);
             if (show_pinyin_color)
-                pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(voc.pinyin)));
+                pinyin.setText(PinyinParser.convert_to_spannable_version(voc.pinyin));
             else
                 pinyin.setText(PinyinParser.convert_to_pretty_version(voc.pinyin));
             TextView translation = (TextView) convertView.findViewById(R.id.details_translations);

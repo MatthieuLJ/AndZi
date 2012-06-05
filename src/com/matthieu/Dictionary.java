@@ -8,9 +8,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Handler;
+import android.database.Cursor;
+import android.os.*;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Html;
@@ -19,92 +18,184 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
-import com.matthieu.widget.UpdatableListAdapter;
+import android.widget.*;
+import com.matthieu.widget.MessageCursor;
+import com.matthieu.widget.VocabularyCursorAdapter;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Dictionary extends Activity {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
-    Handler updater=null;
-    UpdatableListAdapter current_adapter=null;
-
+    Cursor current_cursor =null;
+    Handler update_handler=null;
     private static final String TAG="Dictionary";
+
+    static final int CHINESE_TO_ENGLISH_MODE=0;
+    static final int ENGLISH_TO_CHINESE_MODE=1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        new update_delayer().start();
+
         setContentView(R.layout.dictionary);
         mode=0;
+
+        final ListView results = (ListView) findViewById(R.id.dict_results);
+        results.setAdapter(new VocabularyCursorAdapter(Dictionary.this, null));
+
         TextView dict_mode = (TextView) findViewById(R.id.dict_mode);
         dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
         dict_mode.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 switch (mode) {
-                    case 0:
-                        mode = 1;
+                    case CHINESE_TO_ENGLISH_MODE:
+                        mode = ENGLISH_TO_CHINESE_MODE;
                         ((TextView) view).setText(Html.fromHtml("Chinese ← <b>English</b>"));
                         break;
-                    case 1:
-                        mode = 0;
+                    case ENGLISH_TO_CHINESE_MODE:
+                        mode = CHINESE_TO_ENGLISH_MODE;
                         ((TextView) view).setText(Html.fromHtml("<b>Chinese</b> → English"));
                         break;
                 }
-                if (current_adapter != null)
-                    current_adapter.cancel();
-                create_new_adapter("", null);
+                EditText edit_query= (EditText) findViewById(R.id.dict_query);
+                start_new_query(mode, edit_query.getText().toString());
             }
         });
-
-        updater=new Handler();
 
         EditText query = (EditText) findViewById(R.id.dict_query);
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
+
+//        Debug.startMethodTracing("dictionary");
     }
 
-    private void create_new_adapter(String orig, ArrayList<HanziDB.StringElement> elements) {
-        if (current_adapter!= null)
-            current_adapter.cancel();
-
-        ListView results = (ListView) findViewById(R.id.dict_results);
-        if (mode == 0) {
-            current_adapter=new Details.DetailsWordAdapter(elements, true, Dictionary.this, results);
-        }
-        else {
-            current_adapter=new EnglishWordAdapter(orig, true, Dictionary.this);
-        }
-        results.setAdapter(current_adapter);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        update_handler.getLooper().quit();
     }
 
-    private void update_list(final String orig, final ArrayList<HanziDB.StringElement> elements) {
-        Runnable to_run = new Runnable() {
-            public void run() {
-                EditText query = (EditText) findViewById(R.id.dict_query);
-                if (query == null)
-                    return;
-                if (!query.getText().toString().equals(orig))
-                    return;
+    private class update_delayer extends Thread {
+        private Timer next_update=null;
+        private int last_mode=-1;
+        private String last_query;
+        private MessageCursor loading_cursor = new MessageCursor("Loading...");
+        @Override
+        public void run() {
+            Looper.prepare();
+            setPriority(MIN_PRIORITY);
 
-                Log.d(TAG, "Starting a new query "+orig);
+            update_handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    if (next_update != null)
+                        next_update.cancel();
+                    next_update = new Timer();
+                    final String query = (String) msg.obj;
+                    final int mode = msg.arg1;
 
-                create_new_adapter(orig, elements);
+                    last_mode=mode;
+                    last_query=query;
+
+                    TimerTask next_update_task = new TimerTask() {
+                        @Override
+                        public void run() {
+                            next_update=null;
+                            update_list(mode, query);
+                        }
+                    };
+                    next_update.schedule(next_update_task, 500);
+                }
+            };
+
+            Looper.loop();
+        }
+
+        private void update_list(final int mode, final String orig) {
+            EditText query = (EditText) findViewById(R.id.dict_query);
+            if (query == null)
+                return;
+            if (!query.getText().toString().equals(orig))
+                return;
+
+            Log.d(TAG, "Starting a new query for "+orig);
+            final ListView results = (ListView) findViewById(R.id.dict_results);
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
+                    ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(loading_cursor);
+                    if (old_cursor != null)
+                        old_cursor.close();
+                }
+            });
+
+            if (orig.length()==0) {
+                current_cursor=null;
             }
-        };
+            else {
+                HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
+                if (mode == 0) {
+                    ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(orig);
+                    boolean all_chinese=true;
+                    for (HanziDB.StringElement e : elems) {
+                        if (e.type != HanziDB.StringElement.CHINESE)
+                            all_chinese=false;
+                    }
 
-        if ((current_adapter==null) || (current_adapter.is_finished())) {
-            Log.d(TAG, "Starting right away");
-            updater.post(to_run);
+                    if (elems == null)
+                        current_cursor = new MessageCursor("Cannot understand this query");
+                    else if (elems.size()==1) {
+                        if (elems.get(0).type == HanziDB.StringElement.INCOMPLETE_PINYIN)
+                            current_cursor = null;
+                        else
+                            current_cursor = refDB.getWordsStartingWithSequence(elems, true, true);
+                    }
+                    else if ((all_chinese) && (elems.size() >= 3) && (refDB.getTranslations(orig).size()==0))
+                        current_cursor = refDB.getDecomposedParts(elems, 4, true, true);
+                    else
+                        current_cursor = refDB.getWordsWithSequence(elems, true, true);
+                }
+                else if (mode == 1) {
+                    if (orig.length()<2)
+                        current_cursor=null;
+                    else if (orig.length()<3)
+                        current_cursor = refDB.getFilteredStartingCTranslations(orig);
+                    else
+                        current_cursor = refDB.getFilteredCTranslations(orig);
+                }
+                else
+                    current_cursor =null;
+            }
+
+            // Just to make sure the query actually happens in this thread (and not the UI thread)
+            if ((mode == last_mode) && (orig.equals(last_query)) && (current_cursor != null)) {
+                Log.d(TAG, "Start query! "+System.currentTimeMillis());
+                current_cursor.getCount();
+                Log.d(TAG, "Finish query! "+System.currentTimeMillis());
+            }
+
+            if ((mode == last_mode) && (orig.equals(last_query)))
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
+                        ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(current_cursor);
+                        if (old_cursor != null)
+                            old_cursor.close();
+                    }
+                });
         }
-        else {
-            current_adapter.cancel();
-            Log.d(TAG, "Starting a bit later");
-            updater.postDelayed(to_run, 1000); // give some time to breath (or change the text further)
-        }
+    }
+
+    private void start_new_query(int mode, String query) {
+        Message toSend = new Message();
+        toSend.obj = query;
+        toSend.arg1 = mode;
+        if (update_handler!=null)
+            update_handler.dispatchMessage(toSend);
     }
 
     private class Dictionary_query_parse implements TextWatcher {
@@ -112,194 +203,12 @@ public class Dictionary extends Activity {
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            if (mode == 0) {
-                ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(charSequence.toString());
-                if (elems != null)
-                    update_list(charSequence.toString(), elems);
-            }
-            else {
-                update_list(charSequence.toString(), null);
-            }
+//            if (charSequence.toString().equals(" "))
+//                Debug.stopMethodTracing();
+            start_new_query(mode, charSequence.toString());
         }
 
         public void afterTextChanged(Editable editable) {
-        }
-    }
-
-    public static class EnglishWordAdapter extends BaseAdapter implements UpdatableListAdapter {
-        ArrayList<Vocabulary> voc_list = new ArrayList<Vocabulary>();
-        boolean loading;
-        AsyncTask<Void, Void, Void> filler=null;
-        boolean use_ref=true;
-        Activity context;
-        boolean is_cancelled=false;
-        String current_english="";
-
-        public EnglishWordAdapter(final String english, final boolean use_ref, Activity context) {
-            this.use_ref=use_ref;
-            this.context=context;
-            current_english=english;
-            start_it();
-        }
-
-        private void start_it() {
-            final HanziDB myDB=((AndZiApplication)context.getApplication()).getMyDB();
-            final HanziDB refDB=((AndZiApplication)context.getApplication()).getRefDB();
-
-            if (current_english.length()==0)
-                return;
-
-            loading=true;
-            is_cancelled=false;
-
-            filler = new AsyncTask<Void, Void, Void>() {
-                ArrayList<Vocabulary> voc;
-
-                @Override
-                protected Void doInBackground(Void... voids) {
-                    voc=new ArrayList<Vocabulary>();
-                    publishProgress((Void[])null);
-
-                    voc.addAll(myDB.getCTranslations(current_english,HanziDB.SEQUENCE_EXACT));
-                    if (isCancelled())
-                        return null;
-
-                    publishProgress((Void[])null);
-
-                    voc.addAll(myDB.getCTranslations(current_english,HanziDB.SEQUENCE_START));
-                    if (isCancelled())
-                        return null;
-
-                    publishProgress((Void[])null);
-
-                    voc.addAll(myDB.getCTranslations(current_english,HanziDB.SEQUENCE_NO_START));
-                    if (isCancelled())
-                        return null;
-
-                    if ((use_ref) && (refDB != null)) {
-                        publishProgress((Void[])null);
-
-                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,HanziDB.SEQUENCE_EXACT));
-                        if (isCancelled())
-                            return null;
-
-                        publishProgress((Void[])null);
-
-                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,HanziDB.SEQUENCE_START));
-                        if (isCancelled())
-                            return null;
-
-                        publishProgress((Void[])null);
-
-                        HanziDB.merge_vocabulary(voc, refDB.getCTranslations(current_english,HanziDB.SEQUENCE_NO_START));
-                        if (isCancelled())
-                            return null;
-                    }
-                    return null;
-                }
-
-                @Override
-                protected void onCancelled() {
-                    super.onCancelled();
-                    is_cancelled=true;
-                }
-
-                @Override
-                protected void onProgressUpdate(Void... values) {
-                    super.onProgressUpdate(values);
-                    voc_list= (ArrayList<Vocabulary>) voc.clone();
-                    EnglishWordAdapter.this.notifyDataSetChanged();
-                }
-
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    filler = null;
-                    voc_list=voc;
-                    loading=false;
-                    EnglishWordAdapter.this.notifyDataSetChanged();
-                }
-            };
-
-
-            filler.execute((Void []) null);
-        }
-
-        public void cancel() {
-            Log.d(TAG, "Cancelling Dictionary filler");
-            if (filler != null)
-                new Thread( new Runnable() {
-                    public void run() {
-                        filler.cancel(true);
-                    }
-                }).start();
-        }
-
-        public void resume() {
-            if (is_cancelled)
-                start_it();
-        }
-
-        public boolean is_finished() {
-            return (filler==null);
-        }
-
-        public int getCount() {
-            return loading==true?voc_list.size()+1:voc_list.size();
-        }
-
-        public Object getItem(int i) {
-            return i<voc_list.size()?voc_list.get(i):"";
-        }
-
-        public long getItemId(int i) {
-            return i;
-        }
-
-        public View getView(int i, View convertView, ViewGroup viewGroup) {
-            if (convertView == null) {
-                LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                convertView = li.inflate(R.layout.details_list_item, viewGroup, false);
-            }
-
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
-
-            if (i==voc_list.size()) {
-                TextView details_chinese = (TextView) convertView.findViewById(R.id.details_chinese_word);
-                details_chinese.setText("");
-                TextView details_pinyin = (TextView) convertView.findViewById(R.id.details_pinyin_word);
-                details_pinyin.setText("");
-                TextView details_translations = (TextView) convertView.findViewById(R.id.details_translations);
-                details_translations.setText("Loading...");
-                convertView.setOnClickListener(null);
-            }
-            else {
-                final Vocabulary voc=voc_list.get(i);
-                TextView details_chinese = (TextView) convertView.findViewById(R.id.details_chinese_word);
-                details_chinese.setText(voc.chinese);
-                TextView details_pinyin = (TextView) convertView.findViewById(R.id.details_pinyin_word);
-                if (show_pinyin_color)
-                    details_pinyin.setText(Html.fromHtml(PinyinParser.convert_to_html_version(voc.pinyin)));
-                else
-                    details_pinyin.setText(PinyinParser.convert_to_pretty_version(voc.pinyin));
-                TextView details_translations = (TextView) convertView.findViewById(R.id.details_translations);
-                String trans="";
-                for (int j=0; j<voc.english.size();j++) {
-                    trans+=voc.english.get(j);
-                    if (j<voc.english.size()-1)
-                        trans+=", ";
-                }
-                details_translations.setText(trans);
-                convertView.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View view) {
-                        Intent intent=new Intent(context, Details.class);
-                        intent.putExtra("hanzi", voc.chinese);
-                        context.startActivity(intent);
-                    }
-                });
-            }
-
-            return convertView;
         }
     }
 }

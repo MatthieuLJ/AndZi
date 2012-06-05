@@ -20,22 +20,12 @@ import android.widget.*;
 import java.util.ArrayList;
 
 public class GuessContaining extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
-    protected ArrayList<String> correct_answers;
+    protected ArrayList<String> correct_answers=new ArrayList<String>();;
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
 
     private final String TAG="GuessContaining";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-        correct_answers=new ArrayList<String>();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -178,7 +168,7 @@ public class GuessContaining extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessContaining.this);

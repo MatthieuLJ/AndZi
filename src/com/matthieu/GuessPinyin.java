@@ -18,23 +18,14 @@ import android.widget.*;
 import java.util.ArrayList;
 
 public class GuessPinyin extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
     private String pinyin;
-    private ArrayList<Vocabulary> words;
+    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();;
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
     private boolean show_words=false;
 
     private static final String TAG="GuessPinyin";
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-        words=new ArrayList<Vocabulary>();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -231,7 +222,7 @@ public class GuessPinyin extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        Details.populate_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessPinyin.this);
