@@ -6,7 +6,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -20,7 +19,7 @@ import android.widget.*;
 import java.util.ArrayList;
 
 public class GuessContaining extends TestActivity {
-    protected ArrayList<String> correct_answers=new ArrayList<String>();;
+    protected ArrayList<String> correct_answers=new ArrayList<String>();
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
@@ -90,7 +89,7 @@ public class GuessContaining extends TestActivity {
                 continue;
             Log.d(TAG, "Checking "+guesses[i]);
             guesses[i]=guesses[i].trim();
-            if (guesses[i].indexOf(hanzi) == -1)
+            if (!guesses[i].contains(hanzi))
                 continue;
             if (guesses[i].codePointCount(0, guesses[i].length())==1)
                 continue;

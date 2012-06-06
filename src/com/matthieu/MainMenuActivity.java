@@ -34,7 +34,7 @@ public class MainMenuActivity extends Activity {
 
         boolean skip_splash = getIntent().getBooleanExtra("skip_splash", false);
 
-        if ((!skip_splash) && ((myState == null) || ((myState != null) && (myState.showSplash)))) {
+        if ((!skip_splash) && ((myState == null) || (myState.showSplash))) {
             Log.d(TAG, "Showing splash");
             showing_splash=true;
             setContentView(R.layout.main_menu_splash);

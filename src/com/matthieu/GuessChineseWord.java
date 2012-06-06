@@ -5,7 +5,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -17,6 +16,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import com.matthieu.widget.AdaptiveLinearLayout;
 import com.matthieu.widget.HideParams;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
@@ -221,7 +221,7 @@ public class GuessChineseWord extends TestActivity {
         }
     }
 
-    public void more_voc(View v) {
+    public void more_voc(@Nullable View v) {
         Button more = (Button) findViewById(R.id.guess_chinese_word_more_voc_button);
         more.setVisibility(View.GONE);
 

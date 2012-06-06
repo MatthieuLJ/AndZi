@@ -5,7 +5,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -18,8 +17,8 @@ import android.widget.*;
 import java.util.ArrayList;
 
 public class GuessMissingChar extends TestActivity {
-    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();;
-    private ArrayList<String> previous_guess=new ArrayList<String>();;
+    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
+    private ArrayList<String> previous_guess=new ArrayList<String>();
     private String last_guess="";
     private int last_good=0;
 

@@ -1353,9 +1353,8 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         query.append("ORDER BY sort");
         Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
-        Cursor cur = db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
 
-        return cur;
+        return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
 
     ////////////////////////////////////////
@@ -1798,7 +1797,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     publishProgress(100);
 
                     if (isCancelled()) { // everything went through anyway...
-                        onPostExecute(null);
+                        onPostExecute((Void) null);
                     }
                 }
 
@@ -1970,7 +1969,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     appContext.deleteDatabase(new_db_name);
 
                     if (isCancelled()) { // everything went through anyway...
-                        onPostExecute(null);
+                        onPostExecute((Void) null);
                     }
                 }
                 return null;
@@ -2044,7 +2043,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         };
 
-        res.execute();
+        res.execute((Void) null);
 
         return res;
     }
@@ -2343,7 +2342,7 @@ public class HanziDB extends SQLiteOpenHelper {
             else
                 query.append("e.translation AS english ");
 
-            query.append("FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
+            query.append("FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lesson_word " +
                     " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
                     " JOIN cword AS c ON c.cword_id=e.cword_id ");
             if (group)
@@ -2361,7 +2360,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     " JOIN cword AS c ON c.cword_id=e.cword_id " +
                     " WHERE (e.eng_id NOT IN (SELECT eng_id FROM lesson_word)) " +
                     " OR (e.eng_id IN " +
-                    "   (SELECT eword.eng_id FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lessons" +
+                    "   (SELECT eword.eng_id FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lessons" +
                     "   JOIN eword ON lessons.eng_id=eword.eng_id))");
             if (group)
                 query.append("GROUP BY c.cword_id ");

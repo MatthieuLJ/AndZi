@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -40,7 +39,6 @@ public abstract class TestActivity extends Activity {
         hanzi=getIntent().getStringExtra("hanzi");
         if ((hanzi==null) || (hanzi.equals(""))) {
             nothing_to_test();
-            return;
         }
     }
 

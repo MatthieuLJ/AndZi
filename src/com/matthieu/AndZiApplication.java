@@ -253,7 +253,7 @@ public class AndZiApplication extends Application {
             return false;
         }
 
-        OutputStream output=null;
+        OutputStream output;
         try {
             output = new FileOutputStream(destination);
 

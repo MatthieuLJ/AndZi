@@ -6,7 +6,6 @@ package com.matthieu;
 import android.content.res.Configuration;
 import android.gesture.*;
 import android.graphics.Point;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 
 public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
     private Pinyin pinyin;
-    private ArrayList<Integer> tones=new ArrayList<Integer>();;
+    private ArrayList<Integer> tones=new ArrayList<Integer>();
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;

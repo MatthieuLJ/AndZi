@@ -5,9 +5,10 @@ package com.matthieu;
 
 import android.graphics.Color;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 
 public class PinyinParser {
@@ -17,7 +18,7 @@ public class PinyinParser {
     static public ArrayList<String> parse_string(String pinyin_string)
     {
         int split_index;
-        ArrayList<String> result=null;
+        ArrayList<String> result;
         ArrayList<String> temp;
         
         // Try to find strophe to split the string
@@ -315,6 +316,7 @@ public class PinyinParser {
         return null;
     }
 
+    @Nullable
     static public ArrayList<HanziDB.StringElement> parse_mixed_string(String input) {
         ArrayList<HanziDB.StringElement> res = new ArrayList<HanziDB.StringElement>();
         for (int i=0; i<input.length(); ) {
@@ -343,13 +345,13 @@ public class PinyinParser {
                 }
                 res.addAll(more);
                 i=j-1;
-
             }
         }
         if (res == null)
             Log.d(TAG, "Failed to parse string ["+input+"]");
         else
             Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
+
         return res;
     }
 

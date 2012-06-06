@@ -5,7 +5,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -19,7 +18,7 @@ import java.util.ArrayList;
 
 public class GuessPinyin extends TestActivity {
     private String pinyin;
-    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();;
+    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
