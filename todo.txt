@@ -31,7 +31,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (118):
+DONE (119):
+* Third tone gesture does not work well
 * Improve performances of the dictionary!
 * When dictionnary query does not exist, try to break it up to find the meaning
 * About the dictionary for long queries,
