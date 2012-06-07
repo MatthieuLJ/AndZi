@@ -14,8 +14,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import com.matthieu.widget.AdaptiveLinearLayout;
-import com.matthieu.widget.HideParams;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -121,16 +119,12 @@ public class GuessChineseWord extends TestActivity {
 
             ScrollView scroll = (ScrollView) findViewById(R.id.guess_chinese_word_more_voc_scroll);
             scroll.setVisibility(View.GONE);
-            ((HideParams)scroll.getLayoutParams()).setHidable(false);
-            AdaptiveLinearLayout parent_layout = (AdaptiveLinearLayout) findViewById(R.id.adaptive_layout);
-            parent_layout.refreshContent();
 
             Button more = (Button) findViewById(R.id.guess_chinese_word_more_voc_button);
             View more_spacer = findViewById(R.id.guess_chinese_word_more_spacer);
             if (more_translations.size() == 0) {
                 more.setVisibility(View.GONE);
                 more_spacer.setVisibility(View.GONE);
-                ((HideParams)more_spacer.getLayoutParams()).setHidable(false);
             }
             else {
                 more.setVisibility(View.VISIBLE);
@@ -234,9 +228,6 @@ public class GuessChineseWord extends TestActivity {
         }
         ScrollView scroll = (ScrollView) findViewById(R.id.guess_chinese_word_more_voc_scroll);
         scroll.setVisibility(View.VISIBLE);
-        ((HideParams)scroll.getLayoutParams()).setHidable(true);
-        AdaptiveLinearLayout parent_layout = (AdaptiveLinearLayout) findViewById(R.id.adaptive_layout);
-        parent_layout.refreshContent();
         showing_more_voc=true;
     }
 
