@@ -5,8 +5,10 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,6 +16,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
+import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
@@ -42,7 +45,6 @@ public class EditLessonsActivity extends Activity {
 
         setContentView(R.layout.edit_lessons);
         TouchListView list = (TouchListView) findViewById(R.id.lesson_list);
-        list.setAdapter(new LessonArrayAdapter());
         list.setDropListener(new TouchListView.DropListener() {
             public void drop(int from, int to) {
                 if (from == 0)
@@ -88,10 +90,13 @@ public class EditLessonsActivity extends Activity {
             super.onPostExecute(aVoid);
 
             current_lessons = tmp_lessons;
+
             TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
             if (lv != null) {
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                lv.setAdapter(new LessonArrayAdapter());
             }
+            TextView loading_text = (TextView) findViewById(R.id.loading_text);
+            loading_text.setVisibility(View.GONE);
             loading=false;
         }
 
@@ -116,21 +121,9 @@ public class EditLessonsActivity extends Activity {
                     new_lesson.state|=Lesson.FILTERED_ENABLED;
                 new_lesson.num_items=num;
                 tmp_lessons.add(new_lesson);
-                if ((i>0) && (i%10==0))
-                    publishProgress((Void[])null);
             }
 
             return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            super.onProgressUpdate(values);
-            current_lessons= (ArrayList<Lesson>) tmp_lessons.clone();
-            TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-            if (lv != null) {
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-            }
         }
     }
 
