@@ -19,7 +19,8 @@
             android:id="@+id/dict_query"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            />
+            android:singleLine="true"
+            android:inputType="text"/>
     <TextView
             android:id="@+id/dict_warning"
             android:layout_height="wrap_content"
