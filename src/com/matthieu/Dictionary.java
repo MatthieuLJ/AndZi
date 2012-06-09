@@ -5,19 +5,13 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.*;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.*;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
@@ -77,6 +71,8 @@ public class Dictionary extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         update_handler.getLooper().quit();
+        if (current_cursor != null)
+            current_cursor.close();
     }
 
     private class update_delayer extends Thread {
@@ -141,10 +137,11 @@ public class Dictionary extends Activity {
                 if (mode == 0) {
                     ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(orig);
                     boolean all_chinese=true;
-                    for (HanziDB.StringElement e : elems) {
-                        if (e.type != HanziDB.StringElement.CHINESE)
-                            all_chinese=false;
-                    }
+                    if (elems != null)
+                        for (HanziDB.StringElement e : elems) {
+                            if (e.type != HanziDB.StringElement.CHINESE)
+                                all_chinese=false;
+                        }
 
                     if (elems == null)
                         current_cursor = new MessageCursor("Cannot understand this query");

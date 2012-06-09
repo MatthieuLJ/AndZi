@@ -1,12 +1,18 @@
-ONGOING (5):
+ONGOING (6):
+* Can reset score per lesson
 * Test performance with huge database
 * Make it pretty
 * Add help (overview, different screens, IME, ref DB)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
+BUGS (6):
 * No extra line in Dictionary queries
+* Keep list extended in Review list
+* Loading screen / sign in review list and vocabulary for lesson
+* Dictionary query, when splitting up, need to have more translations
+* fix the scale on stats (not good for 1001 chars)
+* Loading should include moving wheel
 
 FUTURE (11):
 * Change scoring / spaces repetition algorithm
@@ -31,7 +37,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (118):
+DONE (119):
+* Third tone gesture does not work well
 * Improve performances of the dictionary!
 * When dictionnary query does not exist, try to break it up to find the meaning
 * About the dictionary for long queries,

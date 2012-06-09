@@ -6,7 +6,6 @@ package com.matthieu;
 import android.content.res.Configuration;
 import android.gesture.*;
 import android.graphics.Point;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 
 public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
     private Pinyin pinyin;
-    private ArrayList<Integer> tones=new ArrayList<Integer>();;
+    private ArrayList<Integer> tones=new ArrayList<Integer>();
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
@@ -141,10 +140,17 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             return;
 
         GestureStroke stroke = gesture.getStrokes().get(0);
+
+        if (stroke.points.length < 4) {
+//            Log.v(TAG, "Too short");
+            return;
+        }
+
         ArrayList<Point> points = new ArrayList<Point>();
 
         for (int i=0; i<stroke.points.length; i+=2) {
             if ((i>0) && (stroke.points[i] < stroke.points[i-2])) {
+//                Log.v(TAG, "Going right to left");
                 return; // cannot go right to left
             }
 
@@ -155,7 +161,8 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
                 / ((float)points.get(points.size()-1).x - points.get(0).x))*180/Math.PI;
 
         boolean straight=true;
-        for (int i=1; i<points.size(); i++) {
+        // ignore the extremities
+        for (int i=2; i<points.size()-1; i++) {
             double new_angle = Math.atan(((float)points.get(i).y - points.get(i-1).y)
                 / ((float)points.get(i).x - points.get(i-1).x))*180/Math.PI;
             if (Math.abs(new_angle - angle) > 30) {
@@ -173,32 +180,47 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             else if (angle <= -30)
                 tone = 2;
         } else {
+            // check the proportions are about right
+            float ratio = (gesture.getBoundingBox().right - gesture.getBoundingBox().left) / (gesture.getBoundingBox().bottom - gesture.getBoundingBox().top);
+            if ((ratio < 0.3) || (ratio > 2)) {
+//                Log.v(TAG, "Bad proportions "+ratio);
+                return;
+            }
+
             // find the bottom point
             int bottom=0;
-            for (int i=0; i<points.size(); i++) {
-                if (points.get(i).y == gesture.getBoundingBox().bottom) {
+            for (int i=1; i<points.size(); i++) {
+                if (points.get(i).y  > points.get(bottom).y) {
                     bottom = i;
-                    break;
                 }
             }
-            if ((bottom == 0) || (bottom == points.size()-1)) {
+            if ((bottom < points.size()/ 5) || (bottom > 4*points.size()/5)) {
+//                Log.v(TAG, "Bottom not centered "+bottom+" out of "+points.size());
                 return;
             }
             double angle1 = Math.atan(((float)points.get(bottom).y - points.get(0).y)
                     / ((float)points.get(bottom).x - points.get(0).x))*180/Math.PI;
             for (int i=1; i<=bottom; i++) {
+                double square_distance = Math.pow((float)points.get(i).y - points.get(i-1).y,2) + Math.pow((float)points.get(i).x - points.get(i-1).x,2);
+                if (square_distance <= 100)
+                    continue;
                 double new_angle = Math.atan(((float)points.get(i).y - points.get(i-1).y)
                         / ((float)points.get(i).x - points.get(i-1).x))*180/Math.PI;
                 if (Math.abs(new_angle - angle1) > 50) {
+//                    Log.d(TAG, "Too high angle");
                     return;
                 }
             }
             double angle2 = Math.atan(((float)points.get(points.size()-1).y - points.get(bottom).y)
                     / ((float)points.get(points.size()-1).x - points.get(bottom).x))*180/Math.PI;
             for (int i=bottom+1; i<points.size(); i++) {
+                double square_distance = Math.pow((float)points.get(i).y - points.get(i-1).y,2) + Math.pow((float)points.get(i).x - points.get(i-1).x,2);
+                if (square_distance <= 100)
+                    continue;
                 double new_angle = Math.atan(((float)points.get(i).y - points.get(i-1).y)
                         / ((float)points.get(i).x - points.get(i-1).x))*180/Math.PI;
                 if (Math.abs(new_angle - angle2) > 50) {
+//                    Log.d(TAG, "Too high angle");
                     return;
                 }
             }

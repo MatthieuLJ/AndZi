@@ -1,6 +1,5 @@
 <resources>
     <declare-styleable name="ModifiableLinearLayout">
         <attr name="hidable" format="boolean" />
-        <attr name="scroll" format="boolean" />
     </declare-styleable>
 </resources>
