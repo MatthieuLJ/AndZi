@@ -6,8 +6,7 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (5):
-* Keep list extended in Review list
+BUGS (4):
 * Loading screen / sign in review list and vocabulary for lesson
 * Dictionary query, when splitting up, need to have more translations
 * fix the scale on stats (not good for 1001 chars)
@@ -36,7 +35,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (120):
+DONE (121):
+* Keep list extended in Review list
 * No extra line in Dictionary queries
 * Third tone gesture does not work well
 * Improve performances of the dictionary!

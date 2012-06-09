@@ -17,7 +17,7 @@ public class CharacterCursorAdapter  extends CursorAdapter {
     HanziDB db;
     boolean filtered;
 
-    ArrayList<CharPinyin> expanded_map=new ArrayList<CharPinyin>();
+    ArrayList<String> expanded_map=new ArrayList<String>();
 
     private class CharPinyin {
         public String hanzi=null;
@@ -93,7 +93,7 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         word_table.removeAllViews();
         ExtendingLinearLayout words = (ExtendingLinearLayout) view.findViewById(R.id.review_item_words);
         CharPinyin char_pinyin = new CharPinyin(hanzi, pinyin);
-        boolean expanded=expanded_map.contains(char_pinyin);
+        boolean expanded=expanded_map.contains(hanzi+pinyin);
         if (expanded) {
             fill_word_table(context, (ViewGroup) view, char_pinyin);
             words.expand_immediate();
@@ -142,7 +142,7 @@ public class CharacterCursorAdapter  extends CursorAdapter {
 
     public void expand(View v) {
         CharPinyin char_pinyin = (CharPinyin) v.getTag(R.id.review_item);
-        boolean expanded=expanded_map.contains(char_pinyin);
+        boolean expanded=expanded_map.contains(char_pinyin.hanzi+char_pinyin.pinyin);
         ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.review_view_to_expand);
         if (el == null)
             return;
@@ -151,12 +151,12 @@ public class CharacterCursorAdapter  extends CursorAdapter {
             fill_word_table(v.getContext(), el, char_pinyin);
             v.setBackgroundResource(R.drawable.expand_arrow_down);
             el.expand();
-            expanded_map.add(char_pinyin);
+            expanded_map.add(char_pinyin.hanzi+char_pinyin.pinyin);
         }
         else {
             v.setBackgroundResource(R.drawable.expand_arrow_right);
             el.collapse();
-            expanded_map.remove(char_pinyin);
+            expanded_map.remove(char_pinyin.hanzi+char_pinyin.pinyin);
         }
     }
 }
