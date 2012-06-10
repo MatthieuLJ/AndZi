@@ -6,9 +6,8 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (3):
+BUGS (2):
 * Loading screen / sign in review list and vocabulary for lesson
-* Dictionary query, when splitting up, need to have more translations
 * Loading should include moving wheel
 
 FUTURE (11):
@@ -34,7 +33,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (122):
+DONE (123):
+* Dictionary query, when splitting up, need to have more translations
 * fix the scale on stats (not good for 1001 chars)
 * Keep list extended in Review list
 * No extra line in Dictionary queries
