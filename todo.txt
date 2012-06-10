@@ -6,9 +6,7 @@ ONGOING (6):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
-* Loading screen / sign in review list and vocabulary for lesson
-* Loading should include moving wheel
+BUGS (00):
 
 FUTURE (11):
 * Change scoring / spaces repetition algorithm
@@ -33,7 +31,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (123):
+DONE (124):
+* Better handling of showing loading activity in Review list,
 * Dictionary query, when splitting up, need to have more translations
 * fix the scale on stats (not good for 1001 chars)
 * Keep list extended in Review list

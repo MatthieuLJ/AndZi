@@ -5,6 +5,7 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -30,6 +31,7 @@ public class EditLessonsActivity extends Activity {
     protected boolean filter_on;
     private Handler process_handler=null;
     private boolean loading;
+    private ProgressDialog mProgressDialog;
 
     private static final String TAG = "EditLessonsActivity";
 
@@ -42,6 +44,13 @@ public class EditLessonsActivity extends Activity {
         current_lessons = new ArrayList<Lesson>();
         filter_on = myDB.isFilterEnabled();
         process_handler = new Handler();
+
+        mProgressDialog = new ProgressDialog(EditLessonsActivity.this);
+        mProgressDialog.setMessage("Loading");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mProgressDialog.show();
 
         setContentView(R.layout.edit_lessons);
         TouchListView list = (TouchListView) findViewById(R.id.lesson_list);
@@ -95,8 +104,7 @@ public class EditLessonsActivity extends Activity {
             if (lv != null) {
                 lv.setAdapter(new LessonArrayAdapter());
             }
-            TextView loading_text = (TextView) findViewById(R.id.loading_text);
-            loading_text.setVisibility(View.GONE);
+            mProgressDialog.dismiss();
             loading=false;
         }
 

@@ -12,6 +12,7 @@ import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.*;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
@@ -32,6 +33,7 @@ public class Dictionary extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
         new update_delayer().start();
 
@@ -79,7 +81,6 @@ public class Dictionary extends Activity {
         private Timer next_update=null;
         private int last_mode=-1;
         private String last_query;
-        private MessageCursor loading_cursor = new MessageCursor("Loading...");
         @Override
         public void run() {
             Looper.prepare();
@@ -119,11 +120,13 @@ public class Dictionary extends Activity {
                 return;
 
             Log.d(TAG, "Starting a new query for "+orig);
+
             final ListView results = (ListView) findViewById(R.id.dict_results);
             runOnUiThread(new Runnable() {
                 public void run() {
+                    setProgressBarIndeterminateVisibility(true);
                     Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
-                    ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(loading_cursor);
+                    ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(null);
                     if (old_cursor != null)
                         old_cursor.close();
                 }
@@ -182,6 +185,7 @@ public class Dictionary extends Activity {
                         ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(current_cursor);
                         if (old_cursor != null)
                             old_cursor.close();
+                        setProgressBarIndeterminateVisibility(false);
                     }
                 });
         }
