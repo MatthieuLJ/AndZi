@@ -81,7 +81,10 @@ public class ProgressGraph extends View {
             scale_magnitude++;
         }
         scale_magnitude--;
-        max_scale = (int) ((1+ (int)android.util.FloatMath.floor((float)(max_score /pow(10, scale_magnitude))))*pow(10, scale_magnitude));
+        max_scale = 0;
+        while (max_score > max_scale) {
+            max_scale += pow(10,scale_magnitude);
+        }
 
         left_scale=null;
     }
