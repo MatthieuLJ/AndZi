@@ -11,11 +11,6 @@ import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-/**
- * User: matthieu
- * Date: 5/24/11
- * Time: 5:54 PM
- */
 public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity> {
 
     private static final String TAG = "HanziDBTest";
@@ -950,7 +945,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(res.size()==5);
         assertTrue(res.get(0).chinese.equals("是"));
         assertTrue(res.get(1).chinese.equals("是不是"));
-        assertTrue(res.get(4).chinese.equals("好使"));
+        assertTrue(res.get(4).chinese.equals("不好使"));
         current_time = System.currentTimeMillis();
         res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), false, false));
         difference = System.currentTimeMillis()-current_time;
@@ -958,7 +953,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(res.size()==11);
         assertTrue(res.get(0).chinese.equals("不"));
         assertTrue(res.get(1).chinese.equals("便已"));
-        assertTrue(res.get(7).chinese.equals("好不好"));
+        assertTrue(res.get(7).chinese.equals("里边"));
 
         // Only Chinese
         current_time = System.currentTimeMillis();
@@ -1060,7 +1055,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(res.size()==5);
         assertTrue(res.get(0).chinese.equals("是"));
         assertTrue(res.get(1).chinese.equals("是不是"));
-        assertTrue(res.get(4).chinese.equals("好使"));
+        assertTrue(res.get(4).chinese.equals("不好使"));
         current_time = System.currentTimeMillis();
         res = captureDataFromCursor(target_db.getWordsWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(b_incomplete_pinyin)), false, true));
         difference = System.currentTimeMillis()-current_time;
@@ -1068,7 +1063,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(res.size()==11);
         assertTrue(res.get(0).chinese.equals("不"));
         assertTrue(res.get(1).chinese.equals("便已"));
-        assertTrue(res.get(7).chinese.equals("好不好"));
+        assertTrue(res.get(7).chinese.equals("里边"));
 
         // Only Chinese
         current_time = System.currentTimeMillis();
@@ -1375,7 +1370,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(res.size()==7);
         assertTrue(res.get(0).chinese.equals("好"));
         assertTrue(res.get(0).english.size()==2);
-        assertTrue(res.get(5).chinese.equals("好时"));
+        assertTrue(res.get(5).chinese.equals("好使"));
         current_time = System.currentTimeMillis();
         res = captureDataFromCursor(target_db.getWordsStartingWithSequence(new ArrayList<HanziDB.StringElement>(Arrays.asList(bu_pinyin)), false, false));
         difference = System.currentTimeMillis()-current_time;

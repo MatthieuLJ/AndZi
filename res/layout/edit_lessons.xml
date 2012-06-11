@@ -14,14 +14,6 @@
             android:drawSelectorOnTop="false"
             tlv:grabber="@+id/edit_lesson_grab"
             />
-    <TextView
-            android:id="@+id/loading_text"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:gravity="center"
-            android:text="Loading..."
-            android:textAppearance="@android:style/TextAppearance.Medium.Inverse"
-            />
 
 </FrameLayout>
         

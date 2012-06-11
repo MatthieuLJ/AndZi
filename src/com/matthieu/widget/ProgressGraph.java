@@ -45,8 +45,8 @@ public class ProgressGraph extends View {
 
     private long min_date, max_date, second_to_max_date;
     private int max_scale;
-    private int scale_magnitude; // scale_magnitude is the largest number such that 10^sm < max_score
-                                 // max_scale       is the next "round" number above max_score. eg if max_score = 250, max_scale=300
+    private int scale_magnitude; // scale_magnitude is the largest number such that 10^(sm+1) < max_score
+                                 // max_scale       is the next "round" number above max_score. eg if max_score = 251, max_scale=260
     public void set_data(ArrayList<ProgressData> data) {
         // assumes the data is sorted chronologically
         this.data=data;
@@ -80,8 +80,11 @@ public class ProgressGraph extends View {
         while (max_score > pow(10,scale_magnitude)) {
             scale_magnitude++;
         }
-        scale_magnitude--;
-        max_scale = (int) ((1+ (int)android.util.FloatMath.floor((float)(max_score /pow(10, scale_magnitude))))*pow(10, scale_magnitude));
+        scale_magnitude = Math.max(scale_magnitude-2, 1);
+        max_scale = 0;
+        while (max_score > max_scale) {
+            max_scale += pow(10,scale_magnitude);
+        }
 
         left_scale=null;
     }

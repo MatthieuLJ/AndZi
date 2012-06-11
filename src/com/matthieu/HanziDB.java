@@ -939,7 +939,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
                     break;
                 case StringElement.PINYIN_WITH_TONE:
                     query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -960,7 +960,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
                     break;
                 case StringElement.PINYIN_WITHOUT_TONE:
                     query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -980,7 +980,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
                     break;
                 case StringElement.INCOMPLETE_PINYIN:
                     query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1000,7 +1000,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             }
         }
         else {
@@ -1039,7 +1039,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
-                query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
 
             } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
                 query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1058,7 +1058,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
-                query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             } else {
                 // mixed up
                 query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1099,7 +1099,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
-                query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             }
         }
 
@@ -1137,7 +1137,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
                     break;
                 case StringElement.PINYIN_WITH_TONE:
                     query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1159,7 +1159,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
                     break;
                 case StringElement.PINYIN_WITHOUT_TONE:
                     query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1185,7 +1185,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
                     break;
                 case StringElement.INCOMPLETE_PINYIN:
                     query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1206,7 +1206,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     if (group)
                         query.append("GROUP BY cword.cword_id ");
-                    query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             }
         }
         else {
@@ -1246,7 +1246,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
-                query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
 
             } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
                 query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1271,7 +1271,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
-                query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             } else {
                 // mixed up
                 query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
@@ -1315,7 +1315,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
-                query.append("ORDER BY sort, cword.pinyin, cword.cword_id;");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             }
         }
 
@@ -1332,7 +1332,11 @@ public class HanziDB extends SQLiteOpenHelper {
         for (int i=0; i<elements.size(); i++) {
             StringBuilder part_query= new StringBuilder(elements.get(i).content);
             for (int j=0; j<Math.min(max_size, elements.size()-i); j++) {
-                query.append("SELECT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english, ");
+                query.append("SELECT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
                 query.append((i*max_size) + (max_size-j)).append(" AS sort ");
                 query.append("FROM (SELECT * FROM cword WHERE cword.chinese=?) AS cword " +
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
