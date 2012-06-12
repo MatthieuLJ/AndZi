@@ -643,7 +643,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword " +
                 "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
                 "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, eword.translation";
+                "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
         query_arg.add(english);
         query_arg.add(english+" %");
         query_arg.add("% "+english);
@@ -663,7 +663,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword " +
                     "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
                     "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, eword.translation";
+                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
             query_arg.add(english);
             query_arg.add(english+" %");
             query_arg.add(english+"%");
@@ -2528,7 +2528,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "    JOIN (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword ON eword.eng_id=lesson_word.eng_id " +
                     "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
                     "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, eword.translation";
+                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
             query_arg.add(english);
             query_arg.add(english+" %");
             query_arg.add("% "+english);
@@ -2553,7 +2553,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "    JOIN (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword ON eword.eng_id=lesson_word.eng_id " +
                     "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
                     "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, eword.translation";
+                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
             query_arg.add(english);
             query_arg.add(english+" %");
             query_arg.add(english+"%");
