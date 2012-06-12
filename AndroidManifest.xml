@@ -61,7 +61,7 @@
         <activity android:name=".Dictionary"
                   android:windowSoftInputMode="stateHidden|adjustPan" />
 
-        <activity android:name=".Credits" />
+        <activity android:name=".Help" />
         <activity android:name=".settings.Settings" />
         <activity android:name=".settings.ExportDB">
             <intent-filter android:name="android.intent.action.MAIN" />
