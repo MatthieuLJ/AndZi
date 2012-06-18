@@ -1,5 +1,4 @@
-ONGOING (6):
-* Can reset score per lesson
+ONGOING (5):
 * Test performance with huge database
 * Make it pretty
 * Add help (overview, different screens, IME, ref DB)
@@ -8,7 +7,8 @@ ONGOING (6):
 
 BUGS (00):
 
-FUTURE (11):
+FUTURE (12):
+* Can reset score per lesson
 * Change scoring / spaces repetition algorithm
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
@@ -32,6 +32,8 @@ More information includes:
 - Total number of characters
 
 DONE (124):
+* Crash when trying to display test result in landscape
+* Cannot scroll the details of the wrong answer
 * Better handling of showing loading activity in Review list,
 * Dictionary query, when splitting up, need to have more translations
 * fix the scale on stats (not good for 1001 chars)
