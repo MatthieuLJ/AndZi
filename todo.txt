@@ -5,7 +5,8 @@ ONGOING (5):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (00):
+BUGS (1):
+* Word description from vocabulary in lesson is broken
 
 FUTURE (12):
 * Can reset score per lesson

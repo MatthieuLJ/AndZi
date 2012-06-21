@@ -23,7 +23,7 @@ import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
-import android.util.Log;
+//import android.util.Log;
 import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.EditTextAutomaticSize;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 
 public class AddVocabularyActivity extends Activity
 {
-    private static final String TAG="AddVocabularyActivity";
+    //private static final String TAG="AddVocabularyActivity";
 
     ArrayList<PinyinButton> pinyin_choices;
     ArrayList<VocabularyItem> translations_from_ref;
@@ -150,7 +150,7 @@ public class AddVocabularyActivity extends Activity
                     i+=Character.charCount(entry);
                 }
             }
-            Log.d(TAG, "context going to state "+new_state);
+            //Log.d(TAG, "context going to state "+new_state);
 
             need_complete_update=false;
 
@@ -190,7 +190,7 @@ public class AddVocabularyActivity extends Activity
         private void setPinyinButtons(CharSequence charSequence, int i, int i1, int i2) {
             LinearLayout pinyin_button_container = (LinearLayout) findViewById(R.id.pinyin_buttons);
             if (pinyin_button_container == null) {
-                Log.d(TAG, "pinyin_container is null..");
+                //Log.d(TAG, "pinyin_container is null..");
                 return;
             }
 
@@ -263,7 +263,7 @@ public class AddVocabularyActivity extends Activity
         private String default_choice="";
         private String current_choice="";
 
-        private final static String TAG = "PinyinButton";
+        //private final static String TAG = "PinyinButton";
         private Button button;
 
         public PinyinButton(String h, Button b) {
@@ -300,7 +300,7 @@ public class AddVocabularyActivity extends Activity
         }
 
         public void set_current_choice(String s) {
-            Log.d(TAG, "pinyin button set current choice"+s);
+            //Log.d(TAG, "pinyin button set current choice"+s);
             current_choice = s;
             if (!db_pinyins.contains(s))
                 new_pinyin=s;
@@ -422,7 +422,7 @@ public class AddVocabularyActivity extends Activity
                     max_transl = vocs.get(i).english.size();
                 }
             }
-            Log.d(TAG, "Setting default pinyins to "+vocs.get(best_index).pinyin);
+            //Log.d(TAG, "Setting default pinyins to "+vocs.get(best_index).pinyin);
             
             default_pinyins = PinyinParser.parse_string(vocs.get(best_index).pinyin);
             if (default_pinyins == null)
@@ -730,7 +730,7 @@ public class AddVocabularyActivity extends Activity
                             }
                             dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
                                 public void onClick(DialogInterface dialog, final int i, final boolean b) {
-                                    Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
+                                    //Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
                                     if (b) {
                                         voc.lessons.add(lessons.get(i));
                                     }
@@ -791,7 +791,7 @@ public class AddVocabularyActivity extends Activity
                         final VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
                         translations_in_db.remove(voc);
                         hide_duplicates_in_ref();
-                        Log.d(TAG, "translation "+voc.translation+" is changed");
+                        //Log.d(TAG, "translation "+voc.translation+" is changed");
 
                         new Thread(new Runnable() {
                             public void run() {
@@ -849,7 +849,7 @@ public class AddVocabularyActivity extends Activity
                         if (lv != null) {
                             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         }
-                        Log.d(TAG, "translation "+voc.translation+" is changed");
+                        //Log.d(TAG, "translation "+voc.translation+" is changed");
                         new Thread(new Runnable() {
                             public void run() {
                                 Vocabulary v = new Vocabulary(current_chinese_word, get_current_pinyin(), voc.translation);
@@ -901,7 +901,7 @@ public class AddVocabularyActivity extends Activity
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         default_lesson=lessons.get(i);
-                        Log.d(TAG, "Set default lesson to "+default_lesson);
+                        //Log.d(TAG, "Set default lesson to "+default_lesson);
                         if (default_lesson.equals(getResources().getText(R.string.add_voc_lesson_none)))
                             default_lesson="";
                         dialog.dismiss();
