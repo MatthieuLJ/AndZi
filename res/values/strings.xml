@@ -56,5 +56,15 @@
     <string name="test_mastering">You master everything, do you want to continue ?</string>
     <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
 
-
+    <string name="add_voc_enter_chinese">Enter a Chinese word</string>
+    <string name="add_voc_only_chinese">Only enter chinese characters</string>
+    <string name="add_voc_pick_pinyin">Pick a pinyin for character </string>
+    <string name="add_voc_local_db">Vocabulary from your list</string>
+    <string name="add_voc_ref_db">Vocabulary from dictionary</string>
+    <string name="add_voc_edit_lessons">Edit lessons</string>
+    <string name="add_voc_assign_lesson">Assign to lesson</string>
+    <string name="add_voc_default_lesson">Choose the default lesson</string>
+    <string name="add_voc_lesson_none">(none)</string>
+    <string name="add_voc_edit_translation">Edit translation for </string>
+    <string name="add_voc_edit_new_word">Please enter a new word:</string>
 </resources>

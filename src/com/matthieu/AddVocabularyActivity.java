@@ -163,7 +163,7 @@ public class AddVocabularyActivity extends Activity
                             main_content.removeAllViews();
                             View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) findViewById(R.id.warning_chinese_word)).setText("Enter a Chinese word");
+                        ((TextView) findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_enter_chinese);
                         break;
                     case 1:
                         // all chinese characters
@@ -180,7 +180,7 @@ public class AddVocabularyActivity extends Activity
                             main_content.removeAllViews();
                             View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) findViewById(R.id.warning_chinese_word)).setText("Only enter chinese characters");
+                        ((TextView) findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_only_chinese);
                         break;
                 }
                 state = new_state;
@@ -363,7 +363,7 @@ public class AddVocabularyActivity extends Activity
         private class PinyinButtonClickListener implements View.OnClickListener {
             public void onClick(View view) {
                 Dialog dialog = new Dialog(AddVocabularyActivity.this);
-                dialog.setTitle("Pick a pinyin for character "+PinyinButton.this.get_hanzi());
+                dialog.setTitle(getResources().getText(R.string.add_voc_pick_pinyin)+PinyinButton.this.get_hanzi());
                 fill_dialog(dialog);
                 dialog.show();
             }
@@ -563,9 +563,9 @@ public class AddVocabularyActivity extends Activity
 
         public Object getItem(int position) {
             if (position == 1)
-                return "Vocabulary from ref DB";
+                return getResources().getText(R.string.add_voc_ref_db);
             else if ((my != 0) && (position == my+2))
-                return "Vocabulary from your DB";
+                return getResources().getText(R.string.add_voc_local_db);
             else if ((position >1) && (position<my+2))
                 return translations_in_db.get(position-2);
             else
@@ -609,9 +609,9 @@ public class AddVocabularyActivity extends Activity
 
                 TextView title = (TextView) row.findViewById(R.id.add_title);
                 if ((position==1) && (my != 0))
-                    title.setText("Vocabulary from your DB");
+                    title.setText(R.string.add_voc_local_db);
                 else
-                    title.setText("Vocabulary from ref DB");
+                    title.setText(R.string.add_voc_ref_db);
 
                 return row;
             }
@@ -710,10 +710,10 @@ public class AddVocabularyActivity extends Activity
                             lessons=lessons.concat(s);
                             lessons=lessons.concat("\n");
                         }
-                        lessons=lessons.concat("Edit lessons");
+                        lessons=lessons.concat(getResources().getText(R.string.add_voc_edit_lessons).toString());
                     }
                     else {
-                        lessons = "Assign to lesson";
+                        lessons = getResources().getText(R.string.add_voc_assign_lesson).toString();
                     }
                     more.setText(lessons);
                     more.setTag(R.id.add_vocabulary_item, voc);
@@ -751,7 +751,7 @@ public class AddVocabularyActivity extends Activity
 
                                 }
                             });
-                            dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int i) {
                                     dialog.dismiss();
                                     ListView lv = (ListView) findViewById(R.id.vocabulary_list);
@@ -888,12 +888,12 @@ public class AddVocabularyActivity extends Activity
 
     private void set_default_lesson() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
-        dialog.setTitle("Choose the default lesson");
+        dialog.setTitle(R.string.add_voc_default_lesson);
         dialog.setCancelable(false);
 
         final String current_default_lesson=default_lesson;
         final ArrayList<String> lessons = myDB.getLessons();
-        lessons.add(0, "(none)");
+        lessons.add(0, getResources().getText(R.string.add_voc_lesson_none).toString());
         int selected_index = default_lesson.equals("")?0:lessons.indexOf(default_lesson);
 
         final ArrayAdapter<String> aa=new ArrayAdapter<String>(AddVocabularyActivity.this, R.layout.simple_list_item_single_choice, lessons);
@@ -902,12 +902,12 @@ public class AddVocabularyActivity extends Activity
                     public void onClick(DialogInterface dialog, int i) {
                         default_lesson=lessons.get(i);
                         Log.d(TAG, "Set default lesson to "+default_lesson);
-                        if (default_lesson.equals("(none)"))
+                        if (default_lesson.equals(getResources().getText(R.string.add_voc_lesson_none)))
                             default_lesson="";
                         dialog.dismiss();
                     }
                 });
-        dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        dialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int i) {
                 default_lesson = current_default_lesson;
                 dialog.dismiss();
@@ -942,14 +942,14 @@ public class AddVocabularyActivity extends Activity
         final TextView view = (TextView) v;
         final VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
 
-        alert.setTitle("Edit translation for "+current_chinese_word);
-        alert.setMessage("Please enter the new word:");
+        alert.setTitle(getResources().getText(R.string.add_voc_edit_translation)+current_chinese_word);
+        alert.setMessage(R.string.add_voc_edit_new_word);
 
         final EditText input = new EditText(this);
         input.setText(view.getText());
         alert.setView(input);
 
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 final String value = input.getText().toString();
                 if ((!value.equals("")) && (!value.equals(view.getText()))) {
@@ -1003,7 +1003,7 @@ public class AddVocabularyActivity extends Activity
             }
         });
 
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 dialog.dismiss();
             }
