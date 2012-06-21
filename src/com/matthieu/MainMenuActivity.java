@@ -148,7 +148,7 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
-    public void handle_credits(View v) {
+    public void handle_help(View v) {
         Intent intent = new Intent(this, Help.class);
         startActivity(intent);
     }

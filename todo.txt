@@ -1,11 +1,12 @@
-ONGOING (5):
+ONGOING (4):
 * Test performance with huge database
 * Make it pretty
-* Add help (overview, different screens, IME, ref DB)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (00):
+BUGS (2):
+* Tone test is wrong when testing for 绿
+* Dictionay is showing duplicated entries (search for dictionary...)
 
 FUTURE (13):
 * Can reset score per lesson
@@ -16,7 +17,7 @@ FUTURE (13):
 * Hide IME when not needed
 * Adaptive delays to how often the app is used
 * Find characters based on the composition
-* Can find similar characters based on composition
+* Can find similar characters based on composition (and test with MCQ)
 * Suggest vocabulary based on what is already known, frequency list
 * Push database from one phone to another (ICS)
 * Teach to write characters
@@ -33,7 +34,8 @@ More information includes:
 - Total number of characters
 Delay to repeat a character is increased when the character was late for review
 
-DONE (128):
+DONE (129):
+* Add help (overview, different screens, IME, ref DB)
 * Fix words getting duplicated in review list when repeating expand/collapse
 * Fix when it will duplicate number to study in review list
 * Do not ask to find "words containing" if the only solution(s) are more than 4 characters

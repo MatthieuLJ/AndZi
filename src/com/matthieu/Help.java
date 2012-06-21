@@ -8,8 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Help extends Activity {
@@ -23,10 +24,27 @@ public class Help extends Activity {
 
     private class HelpPageAdapter extends PagerAdapter {
         HashMap<Integer, SoftReference<View>> view_storage = new HashMap<Integer, SoftReference<View>>();
+        ArrayList<String> pages = new ArrayList<String>(Arrays.asList(
+                "file:///android_asset/help_introduction.html#",
+                "file:///android_asset/help_installation.html#",
+                "file:///android_asset/help_add_vocabulary.html#",
+                "file:///android_asset/help_lessons.html#",
+                "file:///android_asset/help_review.html#",
+                "file:///android_asset/help_tests.html#",
+                "file:///android_asset/help_test_tone.html#",
+                "file:///android_asset/help_test_pinyin.html#",
+                "file:///android_asset/help_test_missing.html#",
+                "file:///android_asset/help_test_containing.html#",
+                "file:///android_asset/help_test_chinese.html#",
+                "file:///android_asset/help_test_english.html#",
+                "file:///android_asset/help_dictionary1.html#",
+                "file:///android_asset/help_dictionary2.html#",
+                "file:///android_asset/help_dictionary3.html#",
+                "file:///android_asset/credits.html#"));
 
         @Override
         public int getCount() {
-            return 2;
+            return pages.size();
         }
 
         @Override
@@ -45,16 +63,8 @@ public class Help extends Activity {
                 LayoutInflater inflater = getLayoutInflater();
                 new_view = inflater.inflate(R.layout.help_page, null);
                 WebView wv = (WebView) new_view.findViewById(R.id.help_content);
-                switch(position) {
-                    case 0:
-                        wv.loadUrl("file:///android_asset/help.html");
-                        break;
-                    case 1:
-                        wv.loadUrl("file:///android_asset/credits.html");
-                        break;
-                    default:
-                        break;
-                }
+                wv.getSettings().setJavaScriptEnabled(true);
+                wv.loadUrl(pages.get(position));
                 view_storage.put(position, new SoftReference<View>(new_view));
             }
 
