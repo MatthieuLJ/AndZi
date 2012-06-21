@@ -5,8 +5,7 @@ ONGOING (5):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
-* Word description from vocabulary in lesson is broken
+BUGS (00):
 
 FUTURE (12):
 * Can reset score per lesson
@@ -32,7 +31,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (124):
+DONE (125):
+* Word description from vocabulary in lesson is broken
 * Crash when trying to display test result in landscape
 * Cannot scroll the details of the wrong answer
 * Better handling of showing loading activity in Review list,
