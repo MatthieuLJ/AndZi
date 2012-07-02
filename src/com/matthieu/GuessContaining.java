@@ -49,7 +49,7 @@ public class GuessContaining extends TestActivity {
         ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
-            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals(""))
+            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals("") || w.chinese.codePointCount(0, w.chinese.length())>4)
                 words.remove(i);
         }
         if (words.size() == 0) {
