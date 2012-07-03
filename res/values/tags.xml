@@ -8,4 +8,5 @@
     <item type="id" name="lesson_list_view_inflated"/>
     <item type="id" name="review_view_to_expand"/>
     <item type="id" name="review_item"/>
+    <item type="id" name="header_view"/>
 </resources>

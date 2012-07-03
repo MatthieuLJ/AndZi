@@ -31,7 +31,8 @@ More information includes:
 - Date added
 - Total number of characters
 
-DONE (126):
+DONE (127):
+* Fix when it will duplicate number to study in review list
 * Do not ask to find "words containing" if the only solution(s) are more than 4 characters
 * Word description from vocabulary in lesson is broken
 * Crash when trying to display test result in landscape
