@@ -116,10 +116,10 @@ public abstract class TestActivity extends Activity {
                 update_scores(last_result);
 
                 if (last_result == INCORRECT) {
-                    toast = Toast.makeText(this, "Wrong answer...", 2);
+                    toast = Toast.makeText(this, "Wrong answer...", Toast.LENGTH_SHORT);
                 }
                 else {
-                    toast = Toast.makeText(this, "Well done !", 2);
+                    toast = Toast.makeText(this, "Well done !", Toast.LENGTH_SHORT);
                 }
                 toast.show();
                 another_test_or_quit();

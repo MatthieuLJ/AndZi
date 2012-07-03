@@ -168,8 +168,7 @@ public class Settings extends PreferenceActivity {
                 if (((AndZiApplication)getApplication()).check_merging_space(filePath))
                     myDB.create_merge_task(filePath, true, this, null);
                 else {
-                    Toast toast = Toast.makeText(Settings.this, "Not enough space on device to import database", 5);
-                    toast.show();
+                    Toast.makeText(Settings.this, "Not enough space on device to import database", Toast.LENGTH_SHORT).show();
                 }
             }
         } else if (resultCode == Activity.RESULT_CANCELED) {
@@ -224,8 +223,7 @@ public class Settings extends PreferenceActivity {
             }
             mProgressDialog.dismiss();
             if (!enough_space) {
-                Toast toast = Toast.makeText(Settings.this, "Not enough space on device to download and isntall reference database", 5);
-                toast.show();
+                Toast.makeText(Settings.this, "Not enough space on device to download and install reference database", Toast.LENGTH_SHORT).show();
             }
 
             final Preference enable_ref = findPreference("ref_enabled");

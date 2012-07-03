@@ -190,36 +190,22 @@ Lint output:
 res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="fill_parent"
                 ^
-src/com/matthieu/widget/AdaptiveLinearLayout.java:114: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                        HideParams hp = new HideParams((HideParams) scrollView.getLayoutParams());
-                                         ^
-src/com/matthieu/widget/ProgressGraph.java:301: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+bin/classes/com/matthieu/Credits.class: Warning: The <activity> com.matthieu.Credits is not registered in the manifest [Registered]
+src/com/matthieu/widget/ProgressGraph.java:305: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     data0 = new ProgressData();
                              ^
-src/com/matthieu/widget/ProgressGraph.java:544: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-        Rect origin=new Rect(main_size-current_offset_x-getMeasuredWidth()+left_size ,0, main_size-current_offset_x, getMeasuredHeight());
-                     ^
-src/com/matthieu/widget/ProgressGraph.java:545: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-        Rect dest = new Rect(left_size, 0, getMeasuredWidth(), getMeasuredHeight());
-                     ^
-src/com/matthieu/settings/TrimProgressPreference.java:133: Warning: Use Integer.valueOf(value) instead [UseValueOf]
-        callChangeListener(new Integer(value));
-                            ^
-res/layout/add_vocabulary_pinyin_dialog.xml:25: Warning: Nested weights are bad for performance [NestedWeights]
-                android:layout_weight="1"
-                ^
-res/layout/db.xml:52: Warning: Nested weights are bad for performance [NestedWeights]
-                android:layout_weight="1"
-                ^
-res/layout-land/guess_tone.xml:56: Warning: Nested weights are bad for performance [NestedWeights]
-                    android:layout_weight="1"
-                    ^
-res/layout/test_result.xml:54: Warning: Nested weights are bad for performance [NestedWeights]
-                android:layout_weight="1"
-                ^
+src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                    post(new Runnable() {
+                          ^
+res/layout/edit_lessons.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]
+<FrameLayout
+^
+src/com/matthieu/Help.java:25: Warning: Use new SparseArray<SoftReference<View>>(...) instead for better performance [UseSparseArrays]
+        HashMap<Integer, SoftReference<View>> view_storage = new HashMap<Integer, SoftReference<View>>();
+                                                              ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
 res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
-res/values/strings.xml:35: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
+res/values/strings.xml:36: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
     <string name="description_splash">splash screen</string>
     ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
@@ -243,9 +229,6 @@ res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does no
 res/layout/add_vocabulary_pinyin_dialog.xml:21: Warning: This text field does not specify an inputType or a hint [TextFields]
         <EditText
         ^
-res/layout/dictionary.xml:18: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
 res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
     <EditText
     ^
@@ -291,4 +274,4 @@ res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should us
 res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
             android:contentDescription="splash screen"
             ^
-0 errors, 44 warnings
+0 errors, 39 warnings

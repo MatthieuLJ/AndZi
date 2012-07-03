@@ -1876,8 +1876,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                 mProgressDialog.dismiss();
 
                             if (error) {
-                                Toast toast = Toast.makeText(context, "An error occured while importing the database", 5);
-                                toast.show();
+                                Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
@@ -2038,8 +2037,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                 mProgressDialog.dismiss();
 
                             if (error) {
-                                Toast toast = Toast.makeText(context, "An error occured while exporting the database", 5);
-                                toast.show();
+                                Toast.makeText(context, "An error occured while exporting the database", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
