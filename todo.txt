@@ -7,7 +7,7 @@ ONGOING (5):
 
 BUGS (00):
 
-FUTURE (12):
+FUTURE (13):
 * Can reset score per lesson
 * Change scoring / spaces repetition algorithm
 * Find a way to hilight the character sequence in Details list
@@ -16,6 +16,7 @@ FUTURE (12):
 * Hide IME when not needed
 * Adaptive delays to how often the app is used
 * Find characters based on the composition
+* Can find similar characters based on composition
 * Suggest vocabulary based on what is already known, frequency list
 * Push database from one phone to another (ICS)
 * Teach to write characters
@@ -30,8 +31,10 @@ More information includes:
 - Success streak
 - Date added
 - Total number of characters
+Delay to repeat a character is increased when the character was late for review
 
-DONE (127):
+DONE (128):
+* Fix words getting duplicated in review list when repeating expand/collapse
 * Fix when it will duplicate number to study in review list
 * Do not ask to find "words containing" if the only solution(s) are more than 4 characters
 * Word description from vocabulary in lesson is broken
