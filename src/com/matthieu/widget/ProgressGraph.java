@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import com.matthieu.ProgressDB.ProgressData;
+import com.matthieu.R;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -256,6 +257,8 @@ public class ProgressGraph extends View {
                 graph_canvas = new Canvas(graph);
                 graph_path=new Path();
             }
+
+            // draw a line along the bottom
             graph_path.reset();
             graph_path.moveTo(0, 0);
             graph_path.lineTo(0, getMeasuredHeight());
@@ -269,7 +272,6 @@ public class ProgressGraph extends View {
             p.setAlpha(0xff);
             p.setXfermode(null);
 
-            // draw a line along the bottom
             graph_canvas.drawLine(0, getMeasuredHeight()-bottom_size, main_size-right_size, getMeasuredHeight()-bottom_size, p);
 
             // draw the bottom labels
@@ -301,7 +303,6 @@ public class ProgressGraph extends View {
                     data0 = data.get(0);
                 }
                 else {
-                    Log.d(TAG, "first date index is "+first_date_index+"out of "+data.size());
                     data0 = new ProgressData();
                     data0.date = cut_off_date;
                     for (int i=0; i<5; i++) {
@@ -371,171 +372,97 @@ public class ProgressGraph extends View {
             }
 
             // draw the graphs
-            graph_path.reset();
-            graph_path.moveTo(0, getMeasuredHeight() - bottom_size);
+            // in the order:
+            //  - red (box 0 / untested)
+            //  - orange (box 1)
+            //  - light green (box 2)
+            //  - medium green (box 3)
+            //  - dark green (box 4)
+
             int value[]=new int[data.size()];
-            if (first_date_index>0) {
-                value[0] = data0.num_chars_in_box[0]+data0.num_chars_in_box[1]+data0.num_chars_in_box[2]+data0.num_chars_in_box[3]+data0.num_chars_in_box[4];
-                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
-            }
-            for (int i=first_date_index; i<data.size(); i++) {
-                value[i] = data.get(i).num_chars_in_box[0]+data.get(i).num_chars_in_box[1]+data.get(i).num_chars_in_box[2]+data.get(i).num_chars_in_box[3]+data.get(i).num_chars_in_box[4];
-                float x= (float) ((main_size-right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
-                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
-                //Log.d(TAG, "Line to "+x+", "+y);
-                graph_path.lineTo(x ,y);
-            }
-            graph_path.lineTo(main_size-right_size, getMeasuredHeight()-bottom_size);
-            p.setColor(Color.RED);
-            p.setStyle(Paint.Style.FILL);
-            graph_canvas.drawPath(graph_path, p);
+            for (int graph_color = 0; graph_color < 5; graph_color++) {
+                graph_path.reset();
+                graph_path.moveTo(0, getMeasuredHeight() - bottom_size);
+                if (first_date_index>0) {
+                    switch(graph_color) {
+                        case 0:
+                            value[0] = data0.num_chars_in_box[0]+data0.num_chars_in_box[1]+data0.num_chars_in_box[2]+data0.num_chars_in_box[3]+data0.num_chars_in_box[4];
+                            break;
+                        case 1:
+                            value[0] -= data0.num_chars_in_box[0];
+                            break;
+                        case 2:
+                            value[0] -= data0.num_chars_in_box[1];
+                            break;
+                        case 3:
+                            value[0] -= data0.num_chars_in_box[2];
+                            break;
+                        case 4:
+                            value[0] -= data0.num_chars_in_box[3];
+                            break;
+                    }
 
-            graph_path.reset();
-            score_y = (float) ((1.0-log_scale(value[data.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
-            graph_path.moveTo(main_size-right_size+4, score_y);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+3*label_size+6);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-3*label_size-6);
-            graph_path.lineTo(main_size-right_size+4, score_y);
-            graph_canvas.drawPath(graph_path, p);
-            p.setTextAlign(Paint.Align.RIGHT);
-            p.setColor(Color.WHITE);
-            graph_canvas.drawText(Integer.toString(value[data.size()-1]), main_size-4, score_y+label_size, p);
+                    graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+                }
+                for (int i=first_date_index; i<data.size(); i++) {
+                    switch(graph_color) {
+                        case 0:
+                            value[i] = data.get(i).num_chars_in_box[0]+data.get(i).num_chars_in_box[1]+data.get(i).num_chars_in_box[2]+data.get(i).num_chars_in_box[3]+data.get(i).num_chars_in_box[4];
+                            break;
+                        case 1:
+                            value[i] -= data.get(i).num_chars_in_box[0];
+                            break;
+                        case 2:
+                            value[i] -= data.get(i).num_chars_in_box[1];
+                            break;
+                        case 3:
+                            value[i] -= data.get(i).num_chars_in_box[2];
+                            break;
+                        case 4:
+                            value[i] -= data.get(i).num_chars_in_box[3];
+                            break;
+                    }
+                    float x= (float) ((main_size-right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
+                    float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
+                    //Log.d(TAG, "Line to "+x+", "+y);
+                    graph_path.lineTo(x ,y);
+                }
+                graph_path.lineTo(main_size-right_size, getMeasuredHeight()-bottom_size);
+                switch(graph_color) {
+                    case 0:
+                        p.setColor(getResources().getColor(R.color.graph_box0));
+                        break;
+                    case 1:
+                        p.setColor(getResources().getColor(R.color.graph_box1));
+                        break;
+                    case 2:
+                        p.setColor(getResources().getColor(R.color.graph_box2));
+                        break;
+                    case 3:
+                        p.setColor(getResources().getColor(R.color.graph_box3));
+                        break;
+                    case 4:
+                        p.setColor(getResources().getColor(R.color.graph_box4));
+                        break;
+                }
+                p.setStyle(Paint.Style.FILL);
+                graph_canvas.drawPath(graph_path, p);
 
-            graph_path.reset();
-            graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            if (first_date_index>0) {
-                value[0] -= data0.num_chars_in_box[0]+data0.num_chars_expired_in_box[1]+data0.num_chars_expired_in_box[2]+data0.num_chars_expired_in_box[3]+data0.num_chars_expired_in_box[4];
-                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
+                graph_path.reset();
+                score_y = (float) ((1.0-log_scale(value[data.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
+                graph_path.moveTo(main_size-right_size+4, score_y);
+                graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+3*label_size+6);
+                graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+label_size+2);
+                graph_path.lineTo(main_size-2, score_y+label_size+2);
+                graph_path.lineTo(main_size-2, score_y-label_size-2);
+                graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-label_size-2);
+                graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-3*label_size-6);
+                graph_path.lineTo(main_size-right_size+4, score_y);
+                graph_canvas.drawPath(graph_path, p);
+                p.setTextAlign(Paint.Align.RIGHT);
+                p.setColor(Color.WHITE);
+                graph_canvas.drawText(Integer.toString(value[data.size()-1]), main_size-4, score_y+label_size, p);
             }
-            for (int i=first_date_index; i<data.size(); i++) {
-                value[i] -= data.get(i).num_chars_in_box[0]+data.get(i).num_chars_expired_in_box[1]+data.get(i).num_chars_expired_in_box[2]+data.get(i).num_chars_expired_in_box[3]+data.get(i).num_chars_expired_in_box[4];
-                float x= (float) ((main_size-right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
-                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
-                //Log.d(TAG, "Line to "+x+", "+y);
-                graph_path.lineTo(x ,y);
-            }
-            graph_path.lineTo(main_size-right_size, getMeasuredHeight()-bottom_size);
-            p.setColor(Color.rgb(255,128,0));
-            p.setStyle(Paint.Style.FILL);
-            graph_canvas.drawPath(graph_path, p);
-
-            graph_path.reset();
-            score_y = (float) ((1.0-log_scale(value[data.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
-            graph_path.moveTo(main_size-right_size+4, score_y);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+3*label_size+6);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-3*label_size-6);
-            graph_path.lineTo(main_size-right_size+4, score_y);
-            graph_canvas.drawPath(graph_path, p);
-            p.setTextAlign(Paint.Align.RIGHT);
-            p.setColor(Color.WHITE);
-            graph_canvas.drawText(Integer.toString(value[data.size()-1]), main_size-4, score_y+label_size, p);
-
-            graph_path.reset();
-            graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            if (first_date_index>0) {
-                value[0] -= data0.num_chars_in_box[1]-data0.num_chars_expired_in_box[1];
-                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
-            }
-            for (int i=first_date_index; i<data.size(); i++) {
-                value[i] -= data.get(i).num_chars_in_box[1]-data.get(i).num_chars_expired_in_box[1];
-                float x= (float) ((main_size-right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
-                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
-                //Log.d(TAG, "Line to "+x+", "+y);
-                graph_path.lineTo(x ,y);
-            }
-            graph_path.lineTo(main_size-right_size, getMeasuredHeight()-bottom_size);
-            p.setColor(Color.rgb(0,255,0));
-            p.setStyle(Paint.Style.FILL);
-            graph_canvas.drawPath(graph_path, p);
-
-            graph_path.reset();
-            score_y = (float) ((1.0-log_scale(value[data.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
-            graph_path.moveTo(main_size-right_size+4, score_y);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+3*label_size+6);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-3*label_size-6);
-            graph_path.lineTo(main_size-right_size+4, score_y);
-            graph_canvas.drawPath(graph_path, p);
-            p.setTextAlign(Paint.Align.RIGHT);
-            p.setColor(Color.WHITE);
-            graph_canvas.drawText(Integer.toString(value[data.size()-1]), main_size-4, score_y+label_size, p);
-
-            graph_path.reset();
-            graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            if (first_date_index>0) {
-                value[0] -= data0.num_chars_in_box[2]-data0.num_chars_expired_in_box[2];
-                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
-            }
-            for (int i=first_date_index; i<data.size(); i++) {
-                value[i] -= data.get(i).num_chars_in_box[2]-data.get(i).num_chars_expired_in_box[2];
-                float x= (float) ((main_size-right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
-                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
-                //Log.d(TAG, "Line to "+x+", "+y);
-                graph_path.lineTo(x ,y);
-            }
-            graph_path.lineTo(main_size-right_size, getMeasuredHeight()-bottom_size);
-            p.setColor(Color.rgb(0,170,0));
-            p.setStyle(Paint.Style.FILL);
-            graph_canvas.drawPath(graph_path, p);
-
-            graph_path.reset();
-            score_y = (float) ((1.0-log_scale(value[data.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
-            graph_path.moveTo(main_size-right_size+4, score_y);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+3*label_size+6);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-3*label_size-6);
-            graph_path.lineTo(main_size-right_size+4, score_y);
-            graph_canvas.drawPath(graph_path, p);
-            p.setTextAlign(Paint.Align.RIGHT);
-            p.setColor(Color.WHITE);
-            graph_canvas.drawText(Integer.toString(value[data.size()-1]), main_size-4, score_y+label_size, p);
-
-            graph_path.reset();
-            graph_path.moveTo(0, getMeasuredHeight()-bottom_size);
-            if (first_date_index>0) {
-                value[0] -= data0.num_chars_in_box[3]-data0.num_chars_expired_in_box[3];
-                graph_path.lineTo(0 ,(float) ((1.0-log_scale(value[0], max_scale))*(getMeasuredHeight()-bottom_size)));
-            }
-            for (int i=first_date_index; i<data.size(); i++) {
-                value[i] -= data.get(i).num_chars_in_box[3]-data.get(i).num_chars_expired_in_box[3];
-                float x= (float) ((main_size-right_size)* ((i==data.size()-1)?1.0:((float)data.get(i).date-cut_off_date)/(max_date-cut_off_date)));
-                float y= (float) ((1.0-log_scale(value[i], max_scale))*(getMeasuredHeight()-bottom_size));
-                //Log.d(TAG, "Line to "+x+", "+y);
-                graph_path.lineTo(x ,y);
-            }
-            graph_path.lineTo(main_size-right_size, getMeasuredHeight()-bottom_size);
-            p.setColor(Color.rgb(0,80,0));
-            p.setStyle(Paint.Style.FILL);
-            graph_canvas.drawPath(graph_path, p);
-
-            graph_path.reset();
-            score_y = (float) ((1.0-log_scale(value[data.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
-            graph_path.moveTo(main_size-right_size+4, score_y);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+3*label_size+6);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y+label_size+2);
-            graph_path.lineTo(main_size-2, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-label_size-2);
-            graph_path.lineTo(main_size-right_size+6+3*label_size, score_y-3*label_size-6);
-            graph_path.lineTo(main_size-right_size+4, score_y);
-            graph_canvas.drawPath(graph_path, p);
-            p.setTextAlign(Paint.Align.RIGHT);
-            p.setColor(Color.WHITE);
-            graph_canvas.drawText(Integer.toString(value[data.size()-1]), main_size-4, score_y+label_size, p);
 
             max_offset_x=main_size-getMeasuredWidth()+left_size;
         }

@@ -35,6 +35,10 @@ public class DBActivity extends Activity {
         tv = (TextView) findViewById(R.id.stats_words);
         tv.setText(""+num_words);
 
+        int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
+        tv = (TextView) findViewById(R.id.stats_to_study);
+        tv.setText(""+expired);
+
         final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
         update_graph();
 
