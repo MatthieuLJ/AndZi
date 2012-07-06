@@ -23,7 +23,6 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Calendar;
-import java.util.Formatter;
 
 public class Settings extends PreferenceActivity {
     protected HanziDB myDB=null;
@@ -165,8 +164,7 @@ public class Settings extends PreferenceActivity {
                     }
                     if (((AndZiApplication) getApplication()).check_exporting_progress_space(destination)) {
                         ((AndZiApplication) getApplication()).copyProgressDataBase(destination);
-                        Formatter f = new Formatter();
-                        Toast.makeText(Settings.this, f.format(getResources().getString(R.string.settings_export_progress_success),destination).toString(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(Settings.this, getString(R.string.settings_export_progress_success,destination), Toast.LENGTH_SHORT).show();
 
                     }
                     else {

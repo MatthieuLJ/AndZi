@@ -20,7 +20,6 @@ import com.matthieu.R;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Formatter;
 
 public class ExportDB extends PreferenceActivity {
     protected HanziDB myDB=null;
@@ -35,8 +34,7 @@ public class ExportDB extends PreferenceActivity {
         path.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object o) {
                 String current_text = (String) o;
-                Formatter f = new Formatter();
-                preference.setSummary(f.format(getResources().getString(R.string.settings_export_destination),current_text).toString());
+                preference.setSummary(getString(R.string.settings_export_destination,current_text));
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
                 SharedPreferences.Editor edit = sp.edit();
                 edit.putString("export_path", current_text);
@@ -45,8 +43,7 @@ public class ExportDB extends PreferenceActivity {
             }
         });
         path.setText(file_path);
-        Formatter f = new Formatter();
-        path.setSummary(f.format(getResources().getString(R.string.settings_export_destination),file_path).toString());
+        path.setSummary(getString(R.string.settings_export_destination,file_path));
         Preference export = findPreference("do_export");
         export.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             private void do_export(final String destination, final boolean include_scores, final boolean only_filtered) {
@@ -63,8 +60,7 @@ public class ExportDB extends PreferenceActivity {
                 if (((AndZiApplication) getApplication()).check_exporting_space(destination))
                     myDB.create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
                         public void run() {
-                            Formatter f = new Formatter();
-                            Toast.makeText(ExportDB.this, f.format(getResources().getString(R.string.settings_export_success), destination).toString(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ExportDB.this, getString(R.string.settings_export_success, destination), Toast.LENGTH_SHORT).show();
                         }
                     });
                 else {
@@ -81,8 +77,7 @@ public class ExportDB extends PreferenceActivity {
 
                 if (new File(destination).exists()) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(ExportDB.this);
-                    Formatter f = new Formatter();
-                    alert.setMessage(f.format(getResources().getString(R.string.settings_export_check_overwrite), destination).toString());
+                    alert.setMessage(getString(R.string.settings_export_check_overwrite, destination));
                     alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             dialog.dismiss();
