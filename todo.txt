@@ -1,6 +1,7 @@
-ONGOING (4):
+ONGOING (5):
 * Test performance with huge database
 * Make it pretty
+* Customize notification
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 

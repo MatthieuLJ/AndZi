@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.LinearLayout;
 import com.matthieu.AndZiApplication;
 import com.matthieu.ProgressDB;
+import com.matthieu.R;
 
 public class TrimProgressPreference extends DialogPreference implements SeekBar.OnSeekBarChangeListener
 {
@@ -38,9 +39,9 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
 
     private int mValue;
 
-    private String []labels = {"Delete everything", "Keep the last day", "Keep the last 3 days",
-            "Keep the last week", "Keep the last 3 weeks", "Keep the last month",
-            "Keep the last 3 months", "Keep the last year"};
+    private int []labels = {R.string.settings_trim_all, R.string.settings_trim_one_day, R.string.settings_trim_three_days,
+            R.string.settings_trim_one_week, R.string.settings_trim_three_weeks, R.string.settings_trim_one_month,
+            R.string.settings_trim_three_months, R.string.settings_trim_one_year};
     /*
     private long []delays = {1L*24*60*60*1000, 3L*24*60*60*1000, 1L*7*24*60*60*
             1L*30*24*60*60*1000, 3L*30*24*60*60*1000, 1L*365*24*60*60*1000};
@@ -84,7 +85,7 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
         layout.setPadding(6,6,6,6);
 
         mSplashText = new TextView(mContext);
-        mSplashText.setText("Deleting recent progress data...");
+        mSplashText.setText(R.string.settings_trim_progress);
         layout.addView(mSplashText);
 
         mValueText = new TextView(mContext);
@@ -110,7 +111,6 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
     protected void onDialogClosed(boolean positiveResult) {
         super.onDialogClosed(positiveResult);
         if (positiveResult) {
-            Log.d(TAG, "Preference done, chose "+mValue+" out of "+max_range);
             if (mValue == max_range)
                 progress_db.delete_data(-1);
             else

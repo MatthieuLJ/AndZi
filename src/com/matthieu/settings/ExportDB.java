@@ -20,6 +20,7 @@ import com.matthieu.R;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Formatter;
 
 public class ExportDB extends PreferenceActivity {
     protected HanziDB myDB=null;
@@ -34,7 +35,8 @@ public class ExportDB extends PreferenceActivity {
         path.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             public boolean onPreferenceChange(Preference preference, Object o) {
                 String current_text = (String) o;
-                preference.setSummary("Destination: "+current_text);
+                Formatter f = new Formatter();
+                preference.setSummary(f.format(getResources().getString(R.string.settings_export_destination),current_text).toString());
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
                 SharedPreferences.Editor edit = sp.edit();
                 edit.putString("export_path", current_text);
@@ -43,28 +45,30 @@ public class ExportDB extends PreferenceActivity {
             }
         });
         path.setText(file_path);
-        path.setSummary("Destination: "+file_path);
+        Formatter f = new Formatter();
+        path.setSummary(f.format(getResources().getString(R.string.settings_export_destination),file_path).toString());
         Preference export = findPreference("do_export");
         export.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             private void do_export(final String destination, final boolean include_scores, final boolean only_filtered) {
                 File export_db = new File(destination);
                 try {
                     if (!export_db.createNewFile()) {
-                        Toast.makeText(ExportDB.this, "There was an error creating the file", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ExportDB.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
                         return;
                     }
                 } catch (IOException e) {
-                    Toast.makeText(ExportDB.this, "There was an error creating the file", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ExportDB.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (((AndZiApplication) getApplication()).check_exporting_space(destination))
                     myDB.create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
                         public void run() {
-                            Toast.makeText(ExportDB.this, "Database was copied to "+destination, Toast.LENGTH_SHORT).show();
+                            Formatter f = new Formatter();
+                            Toast.makeText(ExportDB.this, f.format(getResources().getString(R.string.settings_export_success), destination).toString(), Toast.LENGTH_SHORT).show();
                         }
                     });
                 else {
-                    Toast.makeText(ExportDB.this, "Not enough space on device to export database", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ExportDB.this, R.string.settings_error_not_enough_space_export, Toast.LENGTH_SHORT).show();
                 }
 
                 return;
@@ -77,13 +81,14 @@ public class ExportDB extends PreferenceActivity {
 
                 if (new File(destination).exists()) {
                     AlertDialog.Builder alert = new AlertDialog.Builder(ExportDB.this);
-                    alert.setMessage("The file ["+destination+"] already exists, do you want to overwrite?");
-                    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    Formatter f = new Formatter();
+                    alert.setMessage(f.format(getResources().getString(R.string.settings_export_check_overwrite), destination).toString());
+                    alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             dialog.dismiss();
                         }
                     });
-                    alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             new File(destination).delete();
                             do_export(destination, include_scores, only_filtered);

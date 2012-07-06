@@ -15,6 +15,8 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="loading">Loading</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 
     <string name="find_tone">Find the tone for:</string>
     <string name="guess_char">Find the missing character:</string>
@@ -42,7 +44,9 @@
     <string name="description_drag_icon">drag icon</string>
 
     <string name="settings_colored_pinyins">Enable colored pinyins</string>
+    <string name="settings_colored_pinyins_summary">Show different tones with colors</string>
     <string name="settings_show_correct_answer">Show correct answer</string>
+    <string name="settings_show_correct_answer_summary">If you want to see the correct answer after a test</string>
     <string name="settings_db_operations">Database operations</string>
     <string name="settings_db_export">Export Database to file…</string>
     <string name="settings_db_email">Email Database…</string>
@@ -52,8 +56,44 @@
     <string name="settings_db_import">Import Database…</string>
     <string name="settings_ref_db">Reference Database</string>
     <string name="settings_ref_db_enable">Reference Database enabled</string>
+    <string name="settings_ref_db_enable_summary">Use the dictionary</string>
     <string name="settings_ref_db_download">Download Reference Database</string>
     <string name="settings_ref_db_erase">Erase Reference Database</string>
+    <string name="settings_export_progress">Export Progress</string>
+    <string name="settings_import_progress">Import Progress</string>
+
+    <string name="settings_include_scores">Include current score</string>
+    <string name="settings_include_filters">Export filtered lessons</string>
+    <string name="settings_include_filters_summary">Only include the lessons filtered</string>
+    <string name="settings_email">Email</string>
+    <string name="settings_export">Export</string>
+    <string name="settings_file_path">File path</string>
+    <string name="settings_file_path_summary">Destination</string>
+
+    <string name="settings_confirm_reset_scores">Are you sure you want to restart the study for everything?</string>
+    <string name="settings_reset_db_progress">Reset Database</string>
+    <string name="settings_confirm_clear_db">Are you sure you want to clear all your database?</string>
+    <string name="settings_confirm_ref_db_erase">Are you sure you want to delete the reference database?</string>
+    <string name="settings_error_create_file">There was an error creating the file</string>
+    <string name="settings_export_progress_success">Successfully copied progress to\n%s</string>
+    <string name="settings_import_progress_success">Successfully imported progress</string>
+    <string name="settings_error_not_enough_space_export">Not enough space on device to copy database</string>
+    <string name="settings_error_not_enough_space_import">Not enough space on device to import database</string>
+    <string name="settings_ref_db_download_progress">Downloading reference database</string>
+    <string name="settings_ref_db_install_progress">Installing…</string>
+    <string name="settings_error_not_enough_space_install_ref">Not enough space on device to download and install reference database</string>
+    <string name="settings_export_destination">Destination: %s</string>
+    <string name="settings_export_check_overwrite">The file [%s] already exists, do you want to overwrite?</string>
+    <string name="settings_export_success">Database was copied to %s</string>
+    <string name="settings_trim_all">Delete everything</string>
+    <string name="settings_trim_one_day">Keep the last day</string>
+    <string name="settings_trim_three_days">Keep the last 3 days</string>
+    <string name="settings_trim_one_week">Keep the last week</string>
+    <string name="settings_trim_three_weeks">Keep the last 3 weeks</string>
+    <string name="settings_trim_one_month">Keep the last month</string>
+    <string name="settings_trim_three_months">Keep the last 3 months</string>
+    <string name="settings_trim_one_year">Keep the last year</string>
+    <string name="settings_trim_progress">Deleting recent progress data…</string>
 
     <string name="test_mastering">You master everything, do you want to continue ?</string>
     <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
