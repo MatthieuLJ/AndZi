@@ -4,8 +4,7 @@ ONGOING (4):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
-* Dictionay is showing duplicated entries (search for dictionary...)
+BUGS (00):
 
 FUTURE (13):
 * Can reset score per lesson
