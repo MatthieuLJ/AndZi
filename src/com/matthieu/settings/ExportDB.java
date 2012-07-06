@@ -50,25 +50,21 @@ public class ExportDB extends PreferenceActivity {
                 File export_db = new File(destination);
                 try {
                     if (!export_db.createNewFile()) {
-                        Toast toast = Toast.makeText(ExportDB.this, "There was an error creating the file", 5);
-                        toast.show();
+                        Toast.makeText(ExportDB.this, "There was an error creating the file", Toast.LENGTH_SHORT).show();
                         return;
                     }
                 } catch (IOException e) {
-                    Toast toast = Toast.makeText(ExportDB.this, "There was an error creating the file", 5);
-                    toast.show();
+                    Toast.makeText(ExportDB.this, "There was an error creating the file", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (((AndZiApplication) getApplication()).check_exporting_space(destination))
                     myDB.create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
                         public void run() {
-                            Toast toast = Toast.makeText(ExportDB.this, "Database was copied to "+destination, 5);
-                            toast.show();
+                            Toast.makeText(ExportDB.this, "Database was copied to "+destination, Toast.LENGTH_SHORT).show();
                         }
                     });
                 else {
-                    Toast toast = Toast.makeText(ExportDB.this, "Not enough space on device to export database", 5);
-                    toast.show();
+                    Toast.makeText(ExportDB.this, "Not enough space on device to export database", Toast.LENGTH_SHORT).show();
                 }
 
                 return;

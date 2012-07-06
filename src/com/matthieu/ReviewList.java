@@ -15,6 +15,7 @@ import com.matthieu.widget.VocabularyCursorAdapter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Formatter;
 
 public class ReviewList extends ListActivity {
     protected HanziDB myDB=null;
@@ -43,7 +44,7 @@ public class ReviewList extends ListActivity {
             @Override
             protected void onPreExecute() {
                 mProgressDialog = new ProgressDialog(ReviewList.this);
-                mProgressDialog.setMessage("Loading");
+                mProgressDialog.setMessage(getResources().getText(R.string.loading));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -69,8 +70,8 @@ public class ReviewList extends ListActivity {
                     if (expired_filtered == 0) {
                         AlertDialog.Builder no_words_dialog = new AlertDialog.Builder(ReviewList.this);
                         no_words_dialog.setCancelable(false);
-                        no_words_dialog.setMessage("Nothing to study");
-                        no_words_dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        no_words_dialog.setMessage(getResources().getText(R.string.review_list_nothing_to_study));
+                        no_words_dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int i) {
                                 dialog.dismiss();
                                 finish();
@@ -83,13 +84,18 @@ public class ReviewList extends ListActivity {
                     TextView header = (TextView) inflater.inflate(R.layout.review_list_header, getListView(), false);
 
                     int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
+                    Formatter f = new Formatter();
                     if (expired != expired_filtered) {
-                        header.setText("You have "+ expired_filtered +" characters to study ("+expired+" total)");
+                        header.setText(f.format(getResources().getText(R.string.review_list_num_to_study_filtered).toString(), expired_filtered, expired).toString());
                     }
                     else {
-                        header.setText("You have "+ expired +" characters to study");
+                        header.setText(f.format(getResources().getText(R.string.review_list_num_to_study).toString(), expired).toString());
                     }
+                    View old_header = (View) getListView().getTag(R.id.header_view);
+                    if (old_header != null)
+                        getListView().removeHeaderView(old_header);
                     getListView().addHeaderView(header, null, false);
+                    getListView().setTag(R.id.header_view ,header);
                     setListAdapter(new CharacterCursorAdapter(ReviewList.this, cur, myDB, true));
                 } else {
                     setListAdapter(new VocabularyCursorAdapter(ReviewList.this, cur));

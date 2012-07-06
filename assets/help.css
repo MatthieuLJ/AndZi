@@ -1,0 +1,25 @@
+.screenshot {
+    float:left;
+    position:relative;
+    width: 40%;
+}
+
+.full_screenshot {
+    padding: 0 2% 0 2%;
+    width: 96%;
+}
+
+.hints {
+    position: absolute;
+    width: 10%; /* 50px / 480px */
+    height: 7%; /* 50px / 723px */
+}
+
+.hints:hover {
+    border: 1px solid red;
+    margin: -1px 0 0 -1px;
+}
+
+#target_help {
+    margin-left: 45%;
+}

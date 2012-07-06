@@ -187,7 +187,7 @@ public class EditLessonsActivity extends Activity {
                         if (new_lesson_label.equals("(none)"))
                             return;
                         if (lesson_exists(new_lesson_label)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + new_lesson_label + "] already exists", 5).show();
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + new_lesson_label + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         Lesson new_lesson = new Lesson(new_lesson_label);
@@ -349,7 +349,7 @@ public class EditLessonsActivity extends Activity {
                         if (param.equals("(none)"))
                             return;
                         if (lesson_exists(param)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         if (param.equals(le.label))
@@ -382,7 +382,7 @@ public class EditLessonsActivity extends Activity {
                         if (param.equals("(none)"))
                             return;
                         if (lesson_exists(param)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", 5).show();
+                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         Lesson new_lesson=new Lesson(param);

@@ -90,8 +90,8 @@ public class Details extends Activity {
 
         View new_view = View.inflate(context, R.layout.details, section);
 
+        TextView info = (TextView) new_view.findViewById(R.id.details_info);
         if (hanzi.codePointCount(0, hanzi.length()) == 1) {
-            TextView info = (TextView) new_view.findViewById(R.id.details_info);
             ArrayList<String> pinyins = db.getPinyinForChar(hanzi);
             String info_pinyins="(";
             for (int i=0; i<pinyins.size(); i++) {
@@ -107,6 +107,9 @@ public class Details extends Activity {
             info_pinyins+=")";
 
             info.setText(Html.fromHtml(info_pinyins));
+        }
+        else {
+            info.setVisibility(View.GONE);
         }
 
         // first write the word at the top

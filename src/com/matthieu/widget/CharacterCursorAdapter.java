@@ -115,6 +115,7 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         else
             words = db.getWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
         TableLayout word_table = (TableLayout) container.findViewById(R.id.review_item_word_table);
+        word_table.removeAllViews();
 
         for (Vocabulary voc : words) {
             TableRow row = (TableRow) li.inflate(R.layout.review_item_word_row, container, false);

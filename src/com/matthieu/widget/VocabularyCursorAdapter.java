@@ -64,10 +64,11 @@ public class VocabularyCursorAdapter extends CursorAdapter {
             details_pinyin.setText(PinyinParser.convert_to_pretty_version(cursor.getString(pinyin_column_index)));
         TextView details_translations = (TextView) view.findViewById(R.id.details_translations);
         details_translations.setText(cursor.getString(english_column_index));
+        final String chinese = cursor.getString(chinese_column_index);
         view.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 Intent intent=new Intent(context, Details.class);
-                intent.putExtra("hanzi", cursor.getString(chinese_column_index));
+                intent.putExtra("hanzi", chinese);
                 context.startActivity(intent);
             }
         });
