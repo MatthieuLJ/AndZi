@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="help.css" />
+    <script src="./jquery-1.7.2.min.js" > </script>
+    <script>
+
+        var hints = [ "Enter a word in Chinese here to add to your vocabulary list.",
+        "If the dictionary is loaded, a list of default pinyin will be displayed for the Chinese characters entered. You can click on each of them if you want to change those.",
+        "You can enter your own translation in this box to add to your vocabulary list. Click OK when you are done to confirm.",
+        "If the dictionary is loaded, a list of translations will be offered to be added in your list.",
+        "Clicking on this arrow will show you what lesson this translation is part of and let's you add or remove this assignment.",
+        "The checkbox let's you add or remove a word from your vocabulary list."];
+
+        </script>
+    <script src="./hints_linker.js"> </script>
+
+
+</head>
+<style type="text/css">
+    #screenshot_add_vocabulary #hint1 {
+        top: 2%;
+        left: 63%;
+    }
+    #screenshot_add_vocabulary #hint2 {
+        top: 11%;
+        left: 28%;
+    }
+    #screenshot_add_vocabulary #hint3 {
+        top: 21%;
+        left: 79%;
+    }
+    #screenshot_add_vocabulary #hint4 {
+        top: 62%;
+        left: 46%;
+    }
+    #screenshot_add_vocabulary #hint5 {
+        top: 45%;
+        left: 3%;
+    }
+    #screenshot_add_vocabulary #hint6 {
+        top: 48%;
+        left: 90%;
+    }
+</style>
+<body>
+<h1>Adding Vocabulary</h1>
+<p>
+    This part of the application let's you add vocabulary in your list to study. You will also be able to add more translations for the same word,
+    change what lesson a meaning is assigned to, and, when necessary, change the pinyin for each character.
+</p>
+<p>
+    The option menu let's you choose a default lesson that you want all the vocabulary you enter to be assigned to that lesson.
+</p>
+<div class="screenshot" id="screenshot_add_vocabulary">
+    <img src="help_add_vocabulary.png" width="100%"/>
+    <a href="#" class="hint_link"><img src="1.png" class="hints" id="hint1"/></a>
+    <a href="#" class="hint_link"><img src="2.png" class="hints" id="hint2"/></a>
+    <a href="#" class="hint_link"><img src="3.png" class="hints" id="hint3"/></a>
+    <a href="#" class="hint_link"><img src="4.png" class="hints" id="hint4"/></a>
+    <a href="#" class="hint_link"><img src="5.png" class="hints" id="hint5"/></a>
+    <a href="#" class="hint_link"><img src="6.png" class="hints" id="hint6"/></a>
+</div>
+<p id="target_help">
+    Click on the number to get appropriate help on that item.
+</p>
+</body>
+</html>

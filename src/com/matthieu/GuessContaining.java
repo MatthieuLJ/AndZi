@@ -6,7 +6,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -20,22 +19,12 @@ import android.widget.*;
 import java.util.ArrayList;
 
 public class GuessContaining extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
-    protected ArrayList<String> correct_answers;
+    protected ArrayList<String> correct_answers=new ArrayList<String>();
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
 
     private final String TAG="GuessContaining";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-        correct_answers=new ArrayList<String>();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -57,10 +46,10 @@ public class GuessContaining extends TestActivity {
     protected void set_next_study() {
         super.set_next_study();
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
-            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals(""))
+            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals("") || w.chinese.codePointCount(0, w.chinese.length())>4)
                 words.remove(i);
         }
         if (words.size() == 0) {
@@ -100,7 +89,7 @@ public class GuessContaining extends TestActivity {
                 continue;
             Log.d(TAG, "Checking "+guesses[i]);
             guesses[i]=guesses[i].trim();
-            if (guesses[i].indexOf(hanzi) == -1)
+            if (!guesses[i].contains(hanzi))
                 continue;
             if (guesses[i].codePointCount(0, guesses[i].length())==1)
                 continue;
@@ -134,6 +123,7 @@ public class GuessContaining extends TestActivity {
                             good_chars.add(c);
                         i+=Character.charCount(answers.codePointAt(i));
                     }
+                    myDB.guessedWord(true, answers);
                 }
                 for (String c:good_chars) {
                     Log.d(TAG, "Reset time for "+c);
@@ -166,7 +156,7 @@ public class GuessContaining extends TestActivity {
             }
             else {
                 update_scores(OTHER);
-                Toast.makeText(this, "Wrong tone", 2).show();
+                Toast.makeText(this, "Wrong tone", Toast.LENGTH_SHORT).show();
                 another_test_or_quit();
             }
         }
@@ -177,7 +167,7 @@ public class GuessContaining extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessContaining.this);

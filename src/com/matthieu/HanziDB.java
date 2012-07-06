@@ -9,24 +9,23 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.*;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.widget.DBCheckProgressHandler;
-import com.matthieu.widget.DBVocabularyResultsHandler;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class HanziDB extends SQLiteOpenHelper {
     private static final String TAG = "HanziDB";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     protected Context appContext;
     protected AndZiApplication app;
@@ -77,6 +76,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "chinese VARCHAR(50) NOT NULL," +
                 "pinyin VARCHAR(150) NOT NULL," +
                 "length INTEGER DEFAULT 0," +
+                "score INTEGER DEFAULT 0," +
                 "UNIQUE(chinese,pinyin))");
         database.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
         database.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
@@ -160,6 +160,17 @@ public class HanziDB extends SQLiteOpenHelper {
                             Long.toString(expiry4)});
             db.execSQL("DROP TABLE old_leitner");
         }
+
+        if (i<3) {
+            db.execSQL("ALTER TABLE cword ADD COLUMN score INTEGER DEFAULT 0");
+        }
+    }
+
+    @Override
+    public synchronized void close() {
+        super.close();
+        db.releaseReference();
+        db.close();
     }
 
     public AsyncTask<Void, Integer, Boolean> checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
@@ -622,66 +633,43 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    public ArrayList<Vocabulary> getCTranslations(String english) {
-        return getCTranslations(english, SEQUENCE_EXACT);
-    }
-
-    public ArrayList<Vocabulary> getCTranslations(String english, int start) {
-        // start is 2 for exactly the same sequence
-        //          1 for starting with this sequence (but not the same)
-        //          0 for not starting with this sequence
-        //         -1 for don't care
-        ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        String query;
+    public Cursor getCTranslations(String english) {
         ArrayList<String> query_arg=new ArrayList<String>();
+        String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
+                "FROM ( " +
+                "    SELECT DISTINCT cword.cword_id AS cword_id, " +
+                "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
+                "    WHEN eword.translation LIKE ? THEN 2 WHEN eword.translation LIKE ? THEN 3 ELSE 4 END AS sort " +
+                "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword " +
+                "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
+                "JOIN cword AS c ON c.cword_id=selection.cword_id " +
+                "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
+        query_arg.add(english);
+        query_arg.add(english+" %");
+        query_arg.add("% "+english);
+        query_arg.add("% "+english+" %");
+        query_arg.add("%"+english+"%");
 
-        switch (start) {
-            case SEQUENCE_EXACT:
-                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
-                        "FROM eword " +
-                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
-                        "WHERE translation=?";
-                query_arg.add(english);
-                break;
-            case SEQUENCE_START:
-                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
-                        "FROM eword " +
-                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
-                        "WHERE translation LIKE ? AND translation!=?";
-                query_arg.add(english+"%");
-                query_arg.add(english);
-                break;
-            case SEQUENCE_NO_START:
-                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
-                        "FROM eword " +
-                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
-                        "WHERE translation LIKE ? AND translation NOT LIKE ?";
-                query_arg.add("%"+english+"%");
-                query_arg.add(english+"%");
-                break;
-            case SEQUENCE_ALL:
-                query="SELECT c.chinese AS chinese,c.pinyin AS pinyin, eword.translation AS translation " +
-                        "FROM eword " +
-                        "JOIN cword AS c ON c.cword_id=eword.cword_id " +
-                        "WHERE translation LIKE ?";
-                query_arg.add("%"+english+"%");
-                break;
-            default:
-                return res;
-        }
-        Cursor cur = db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                res.add(new Vocabulary(cur.getString(cur.getColumnIndex("chinese")),
-                        cur.getString(cur.getColumnIndex("pinyin")),
-                        cur.getString(cur.getColumnIndex("translation"))));
-            }while(cur.moveToNext());
-        }
-
-        cur.close();
-        return res;
+        return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
     }
+
+    public Cursor getStartingCTranslations(String english) {
+            ArrayList<String> query_arg=new ArrayList<String>();
+            String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
+                    "FROM ( " +
+                    "    SELECT DISTINCT cword.cword_id AS cword_id, " +
+                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
+                    "    ELSE 2 END AS sort " +
+                    "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword " +
+                    "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
+                    "JOIN cword AS c ON c.cword_id=selection.cword_id " +
+                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
+            query_arg.add(english);
+            query_arg.add(english+" %");
+            query_arg.add(english+"%");
+
+            return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
+        }
 
     public ArrayList<Vocabulary> getWordsWithPinyin(String hanzi) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -722,6 +710,46 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public ArrayList<Vocabulary> getWordsWithPinyinForTesting(String hanzi) {
+            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
+            Vocabulary to_add=null;
+            Cursor cur = db.rawQuery("SELECT * " +
+                    "FROM cword_segment " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                    "JOIN eword ON eword.cword_id=cword.cword_id " +
+                    "WHERE char_pinyin.hanzi=? GROUP BY eword.eng_id " +
+                    "ORDER BY cword.score ASC", new String[] {hanzi});
+            int current_id=-1;
+
+            int id_column_index      = cur.getColumnIndex("cword_id");
+            int chinese_column_index = cur.getColumnIndex("chinese");
+            int pinyin_column_index  = cur.getColumnIndex("pinyin");
+            int english_column_index = cur.getColumnIndex("translation");
+            if (cur.moveToFirst()) {
+                do{
+                    int new_id = cur.getInt(id_column_index);
+                    String pinyin =  cur.getString(pinyin_column_index);
+                    String english = cur.getString(english_column_index);
+                    String chinese = cur.getString(chinese_column_index);
+
+                    if (new_id != current_id) {
+                        if (to_add != null)
+                            res.add(to_add);
+                        to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
+                        current_id = new_id;
+                    }
+                    assert to_add != null;
+                    to_add.english.add(english);
+                }while(cur.moveToNext());
+            }
+            if (to_add != null)
+                res.add(to_add);
+
+            cur.close();
+            return res;
+        }
+
     public ArrayList<Vocabulary> getWordsWithPinyin(String hanzi, String pinyin) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
         Vocabulary to_add=null;
@@ -757,38 +785,6 @@ public class HanziDB extends SQLiteOpenHelper {
         if (to_add != null)
             res.add(to_add);
 
-        cur.close();
-        return res;
-    }
-
-    protected ArrayList<Integer> getWordIdWithPinyin(String hanzi) {
-        ArrayList<Integer> res = new ArrayList<Integer>();
-        Cursor cur = db.rawQuery("SELECT DISTINCT cword_segment.cword_id AS cword_id " +
-                "FROM cword_segment " +
-                "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                "WHERE char_pinyin.hanzi=?", new String[] {hanzi});
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
-            }while(cur.moveToNext());
-        }
-        cur.close();
-        return res;
-    }
-
-    protected ArrayList<Integer> getWordIdWithPinyin(String hanzi, String pinyin) {
-        ArrayList<Integer> res = new ArrayList<Integer>();
-        Cursor cur = db.rawQuery("SELECT DISTINCT cword_segment.cword_id AS cword_id " +
-                "FROM cword_segment " +
-                "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                "WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?", new String[] {hanzi, pinyin});
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                res.add(cur.getInt(cur.getColumnIndex("cword_id")));
-            }while(cur.moveToNext());
-        }
         cur.close();
         return res;
     }
@@ -865,20 +861,6 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    protected ArrayList<Integer> getEWordId(int cword_id) {
-        ArrayList<Integer> res=new ArrayList<Integer>();
-        Cursor cur = db.rawQuery("SELECT eng_id " +
-                "FROM eword " +
-                "WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                res.add(cur.getInt(cur.getColumnIndex("eng_id")));
-            }while(cur.moveToNext());
-        }
-        return res;
-    }
-
     protected ArrayList<Integer> getCwordWithChar(int char_pinyin_id) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword_id " +
@@ -926,573 +908,525 @@ public class HanziDB extends SQLiteOpenHelper {
             type=t;
             content=c;
         }
+        public String toString() { return content; }
     }
 
-    protected ArrayList<Vocabulary> getWordsWithSequence(ArrayList<StringElement> elements) {
-        return getWordsWithSequence(elements, SEQUENCE_ALL, false);
-    }
-
-    protected ArrayList<Vocabulary> getWordsWithSequence(ArrayList<StringElement> elements, int start, boolean filtered) {
-        final ArrayList<Vocabulary> res=new ArrayList<Vocabulary>();
-        final CountDownLatch signal=new CountDownLatch(1);
-
-        getWordsWithSequence(elements, start, filtered, new DBVocabularyResultsHandler() {
-            @Override
-            public void handle_more_results(ArrayList<Vocabulary> data) {
-                res.addAll(data);
-            }
-
-            @Override
-            public void handle_end_of_results() {
-                signal.countDown();
-            }
-        });
-        try {
-            signal.await();
-        } catch (InterruptedException ignored) { }
-        return res;
-    }
-
-    public AsyncTask<Void,ArrayList<Vocabulary>,Void> getWordsWithSequence(final ArrayList<StringElement> elements, final int start, final DBVocabularyResultsHandler handler) {
-        return getWordsWithSequence(elements, start, false, handler);
-    }
-
-    public static final int SEQUENCE_START=1;
-    public static final int SEQUENCE_NO_START=0;
-    public static final int SEQUENCE_EXACT=2;
-    public static final int SEQUENCE_ALL=-1;
-
-    protected AsyncTask<Void,ArrayList<Vocabulary>,Void> getWordsWithSequence(final ArrayList<StringElement> elements, final int start, boolean filtered, final DBVocabularyResultsHandler handler) {
-        // start is 2 for exactly the same sequence
-        //          1 for starting with this sequence (but not the same)
-        //          0 for not starting with this sequence
-        //         -1 for don't care
-
+    public Cursor getWordsStartingWithSequence(final ArrayList<StringElement> elements, final boolean filtered, final boolean group) {
         final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
+        StringBuilder query = new StringBuilder();
+        ArrayList<String> query_args=new ArrayList<String>();
 
-        AsyncTask<Void,ArrayList<Vocabulary>,Void> res = new AsyncTask<Void,ArrayList<Vocabulary>,Void>() {
-            ArrayList<Vocabulary> query_results=new ArrayList<Vocabulary>();
+        if (elements.size()==0)
+            return null;
 
-            @Override
-            protected Void doInBackground(Void... voids) {
-                String query="";
-                ArrayList<String> query_args=new ArrayList<String>();
+        if (elements.size()==1) {
+            switch (elements.get(0).type) {
+                case StringElement.CHINESE:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content);
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
+                    }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+                    break;
+                case StringElement.PINYIN_WITH_TONE:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin=?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content);
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
+                    }
 
-                if (elements.size()==0)
-                    return null;
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+                    break;
+                case StringElement.PINYIN_WITHOUT_TONE:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content+"_");
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
+                    }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+                    break;
+                case StringElement.INCOMPLETE_PINYIN:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content+"%");
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
+                    }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+            }
+        }
+        else {
+            int type = elements.get(0).type;
+            int i=0;
+            String concat="";
+            if (type == StringElement.CHINESE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.CHINESE)
+                        break;
+                }
+            }
+            else if (type == StringElement.PINYIN_WITH_TONE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.PINYIN_WITH_TONE)
+                        break;
+                }
+            }
 
-                if (elements.size()==1) {
-                    switch (elements.get(0).type) {
+            if ((i==elements.size()) && (type == StringElement.CHINESE)) {
+                query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                query_args.add(concat+"%");
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                    query.append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+
+            } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
+                query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.pinyin LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                query_args.add(concat+"%");
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                    query.append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+            } else {
+                // mixed up
+                query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort FROM (SELECT * FROM cword ");
+                query_args.add(Integer.toString(elements.size()));
+                query.append(") AS cword JOIN eword ON cword.cword_id=eword.cword_id ");
+                for (i=0; i<elements.size(); i++) {
+                    query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    switch (elements.get(i).type) {
                         case StringElement.CHINESE:
-                            if (start == SEQUENCE_EXACT) {
-                                query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                        "FROM eword " +
-                                        "JOIN cword ON cword.cword_id=eword.cword_id ";
-                                if (lesson_filtered) {
-                                    query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                                }
-                                else {
-                                    query += "WHERE ";
-                                }
-                                query += "chinese=? ORDER BY cword.pinyin, cword.cword_id";
-                                query_args.add(elements.get(0).content);
-                                break;
-                            }
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                                    "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
-                                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "char_pinyin.hanzi=? ";
-                            query_args.add(elements.get(0).content);
-                            if (start == SEQUENCE_START) {
-                                query+="AND cword_segment.pos=0 AND cword.chinese!=? ";
-                                query_args.add(elements.get(0).content);
-                            }
-                            else if (start == SEQUENCE_NO_START) {
-                                query+="AND cword.chinese NOT LIKE ? ";
-                                query_args.add(elements.get(0).content+"%");
-                            }
-                            query+="ORDER BY cword.pinyin, cword.cword_id";
+                            query.append("hanzi=?");
+                            query_args.add(elements.get(i).content);
                             break;
                         case StringElement.PINYIN_WITH_TONE:
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                                    "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
-                                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "char_pinyin.pinyin=? ";
-                            query_args.add(elements.get(0).content);
-                            if (start == SEQUENCE_START) {
-                                query+="AND cword_segment.pos=0 AND cword.pinyin!=? ";
-                                query_args.add(elements.get(0).content);
-                            }
-                            else if (start == SEQUENCE_NO_START) {
-                                query+="AND cword.pinyin NOT LIKE ? ";
-                                query_args.add(elements.get(0).content+"%");
-                            }
-                            else if (start == SEQUENCE_EXACT) {
-                                query+="AND cword.pinyin=? ";
-                                query_args.add(elements.get(0).content);
-                            }
-                            query+="ORDER BY cword.pinyin, cword.cword_id";
+                            query.append("pinyin=?");
+                            query_args.add(elements.get(i).content);
                             break;
                         case StringElement.PINYIN_WITHOUT_TONE:
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                                    "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
-                                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "char_pinyin.pinyin LIKE ? ";
-                            query_args.add(elements.get(0).content+"_");
-                            if (start == SEQUENCE_START) {
-                                query+="AND cword_segment.pos=0 AND cword.pinyin NOT LIKE ? ";
-                                query_args.add(elements.get(0).content+"_");
-                            }
-                            else if (start == SEQUENCE_NO_START) {
-                                query+="AND cword.pinyin NOT LIKE ? ";
-                                query_args.add(elements.get(0).content+"%");
-                            }
-                            else if (start == SEQUENCE_EXACT) {
-                                query+="AND cword.pinyin LIKE ? ";
-                                query_args.add(elements.get(0).content+"_");
-                            }
-                            query+="ORDER BY cword.pinyin, cword.cword_id";
+                            query.append("pinyin LIKE ?");
+                            query_args.add(elements.get(i).content+"_");
                             break;
                         case StringElement.INCOMPLETE_PINYIN:
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                                    "JOIN cword_segment ON cword.cword_id=cword_segment.cword_id " +
-                                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "char_pinyin.pinyin LIKE ? ";
-                            query_args.add(elements.get(0).content+"%");
-                            if (start == SEQUENCE_START)
-                                query+="AND cword_segment.pos=0 AND length(cword.chinese)!=1 ";
-                            else if (start == SEQUENCE_NO_START) {
-                                query+="AND cword.pinyin NOT LIKE ? ";
-                                query_args.add(elements.get(0).content+"%");
-                            }
-                            else if (start == SEQUENCE_EXACT) {
-                                query+="AND length(cword.chinese)=1 ";
-                            }
-                            query+="ORDER BY cword.pinyin, cword.cword_id";
+                            query.append("pinyin LIKE ?");
+                            query_args.add(elements.get(i).content+"%");
                             break;
                     }
+                    query.append(" AND cword_segment.pos=?");
+                    query_args.add(Integer.toString(i));
+                    query.append(") AS elem").append(i);
+                    query.append(" ON (elem").append(i).append(".cword_id=cword.cword_id)");
                 }
-                else {
-                    int type = elements.get(0).type;
-                    int i=0;
-                    String concat="";
-                    if (type == StringElement.CHINESE) {
-                        for (i=0; i<elements.size(); i++) {
-                            concat+=elements.get(i).content;
-                            if (elements.get(i).type != StringElement.CHINESE)
-                                break;
-                        }
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ").append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+            }
+        }
+
+        Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+
+        return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
+    }
+
+    public Cursor getWordsWithSequence(final ArrayList<StringElement> elements, final boolean filtered, final boolean group) {
+        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
+        StringBuilder query = new StringBuilder();
+        ArrayList<String> query_args=new ArrayList<String>();
+
+        if (elements.size()==0)
+            return null;
+
+        if (elements.size()==1) {
+            switch (elements.get(0).type) {
+                case StringElement.CHINESE:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content+"%");
+                    query_args.add(elements.get(0).content);
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
                     }
-                    else if (type == StringElement.PINYIN_WITH_TONE) {
-                        for (i=0; i<elements.size(); i++) {
-                            concat+=elements.get(i).content;
-                            if (elements.get(i).type != StringElement.PINYIN_WITH_TONE)
-                                break;
-                        }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+                    break;
+                case StringElement.PINYIN_WITH_TONE:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin=?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content+"%");
+                    query_args.add(elements.get(0).content);
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
                     }
 
-                    if ((i==elements.size()) && (type == StringElement.CHINESE)) {
-                        // only Chinese...
-                        if (start == SEQUENCE_START) {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "chinese LIKE ? AND chinese!=? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add(concat+"%");
-                            query_args.add(concat);
-                        } else if (start == SEQUENCE_NO_START) {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "chinese LIKE ? AND chinese NOT LIKE ? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add("%"+concat+"%");
-                            query_args.add(concat+"%");
-                        } else if (start == SEQUENCE_EXACT) {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "chinese=?" +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add(concat);
-                        } else {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "chinese LIKE ? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add("%"+concat+"%");
-                        }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+                    break;
+                case StringElement.PINYIN_WITHOUT_TONE:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR " +
+                            "cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content+"1%");
+                    query_args.add(elements.get(0).content+"2%");
+                    query_args.add(elements.get(0).content+"3%");
+                    query_args.add(elements.get(0).content+"4%");
+                    query_args.add(elements.get(0).content+"5%");
+                    query_args.add(elements.get(0).content+"_");
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
+                    }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+                    break;
+                case StringElement.INCOMPLETE_PINYIN:
+                    query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                    if (group)
+                        query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                    else
+                        query.append("eword.translation AS english, ");
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).content+"%");
+                    query_args.add(elements.get(0).content+"%");
+                    if (lesson_filtered) {
+                        query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                        query.append(where_filter);
+                    }
+                    if (group)
+                        query.append("GROUP BY cword.cword_id ");
+                    query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+            }
+        }
+        else {
+            int type = elements.get(0).type;
+            int i=0;
+            String concat="";
+            if (type == StringElement.CHINESE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.CHINESE)
+                        break;
+                }
+            }
+            else if (type == StringElement.PINYIN_WITH_TONE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.PINYIN_WITH_TONE)
+                        break;
+                }
+            }
 
-                    } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
-                        // only pinyins with tones....
-                        if (start == SEQUENCE_START) {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "pinyin LIKE ? AND pinyin!=? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add(concat+"%");
-                            query_args.add(concat);
-                        } else if (start == SEQUENCE_NO_START) {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "pinyin LIKE ? AND pinyin NOT LIKE ? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add("%"+concat+"%");
-                            query_args.add(concat+"%");
-                        } else if (start == SEQUENCE_EXACT) {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "pinyin=? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add(concat);
-                        } else {
-                            query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english " +
-                                    "FROM eword " +
-                                    "JOIN cword ON cword.cword_id=eword.cword_id ";
-                            if (lesson_filtered) {
-                                query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter + " AND ";
-                            }
-                            else {
-                                query += "WHERE ";
-                            }
-                            query += "pinyin LIKE ? " +
-                                    "ORDER BY cword.pinyin, cword.cword_id";
-                            query_args.add("%"+concat+"%");
-                        }
+            if ((i==elements.size()) && (type == StringElement.CHINESE)) {
+                query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append("CASE WHEN cword.length=? THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                query_args.add(concat+"%");
+                query_args.add("%"+concat+"%");
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                    query.append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
 
-                    } else {
-                        // mixed up
-                        query="SELECT DISTINCT cword.cword_id AS cword_id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS english FROM (SELECT * FROM cword ";
-                        if (start == SEQUENCE_EXACT) {
-                            query += " WHERE length(chinese)="+elements.size();
-                        } else if (start == SEQUENCE_START) {
-                            query += " WHERE length(chinese)!="+elements.size();
-                        }
-                        query += ") AS cword JOIN eword ON cword.cword_id=eword.cword_id ";
-                        for (i=0; i<elements.size(); i++) {
-                            query+=" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ";
-                            switch (elements.get(i).type) {
-                                case StringElement.CHINESE:
-                                    query+="hanzi=?";
-                                    query_args.add(elements.get(i).content);
-                                    break;
-                                case StringElement.PINYIN_WITH_TONE:
-                                    query+="pinyin=?";
-                                    query_args.add(elements.get(i).content);
-                                    break;
-                                case StringElement.PINYIN_WITHOUT_TONE:
-                                    query+="pinyin LIKE ?";
-                                    query_args.add(elements.get(i).content+"_");
-                                    break;
-                                case StringElement.INCOMPLETE_PINYIN:
-                                    query+="pinyin LIKE ?";
-                                    query_args.add(elements.get(i).content+"%");
-                                    break;
-                            }
-                            if (i==0) {
-                                if (start == SEQUENCE_START)
-                                    query+=" AND cword_segment.pos=0";
-                                else if (start == SEQUENCE_NO_START)
-                                    query+=" AND cword_segment.pos>0";
-                            }
-                            query+=") AS elem"+i;
-                            if (i>0) {
-                                query+=" ON (elem"+i+".pos=elem"+(i-1)+".pos+1) AND (elem"+i+".cword_id=elem"+(i-1)+".cword_id)";
-                            }
-                            else {
-                                query+=" ON (elem"+i+".cword_id=cword.cword_id)";
-                            }
-                        }
-                        if (lesson_filtered) {
-                            query += "JOIN lesson_word ON eword.eng_id=lesson_word.eng_id " + where_filter;
-                        }
-                        query += " ORDER BY cword.pinyin, cword.cword_id";
+            } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
+                query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append("CASE WHEN cword.length=? THEN 0 WHEN cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                query_args.add(concat+"%");
+                query_args.add(concat+"%");
+                query_args.add("%1"+concat+"%");
+                query_args.add("%2"+concat+"%");
+                query_args.add("%3"+concat+"%");
+                query_args.add("%4"+concat+"%");
+                query_args.add("%5"+concat+"%");
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
+                    query.append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
+            } else {
+                // mixed up
+                query.append("SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append("CASE WHEN cword.length=? THEN 0 WHEN elem0.pos=0 THEN 1 ELSE 2 END AS sort FROM (SELECT * FROM cword ");
+                query_args.add(Integer.toString(elements.size()));
+                query.append(") AS cword JOIN eword ON cword.cword_id=eword.cword_id ");
+                for (i=0; i<elements.size(); i++) {
+                    query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    switch (elements.get(i).type) {
+                        case StringElement.CHINESE:
+                            query.append("hanzi=?");
+                            query_args.add(elements.get(i).content);
+                            break;
+                        case StringElement.PINYIN_WITH_TONE:
+                            query.append("pinyin=?");
+                            query_args.add(elements.get(i).content);
+                            break;
+                        case StringElement.PINYIN_WITHOUT_TONE:
+                            query.append("pinyin LIKE ?");
+                            query_args.add(elements.get(i).content+"_");
+                            break;
+                        case StringElement.INCOMPLETE_PINYIN:
+                            query.append("pinyin LIKE ?");
+                            query_args.add(elements.get(i).content+"%");
+                            break;
+                    }
+                    query.append(") AS elem").append(i);
+                    if (i>0) {
+                        query.append(" ON (elem").append(i).append(".pos=elem").append(i - 1).append(".pos+1) AND (elem").append(i).append(".cword_id=elem").append(i - 1).append(".cword_id)");
+                    }
+                    else {
+                        query.append(" ON (elem").append(i).append(".cword_id=cword.cword_id)");
                     }
                 }
-
-                Log.d(TAG, "Query for incomplete search is ["+query+"] with args "+query_args.toString());
-
-                int current_offset=0, limit_size=20, num_records;
-
-                do {
-                    if (isCancelled()) {
-                        Log.d(TAG, "getWordIdWithSequence cancelled");
-                        return null;
-                    }
-
-                    query_results.clear();
-                    Vocabulary current_voc=null;
-                    int current_cword_id=-1;
-
-                    num_records=0;
-                    String tmp_query=query+" LIMIT "+limit_size+" OFFSET "+current_offset;
-                    Cursor cur = db.rawQuery(tmp_query, query_args.toArray(new String[query_args.size()]));
-
-                    if (cur.moveToFirst()) {
-                        query_results.ensureCapacity(cur.getCount());
-                        do{
-                            int cword_id = cur.getInt(cur.getColumnIndex("cword_id"));
-                            String english=cur.getString(cur.getColumnIndex("english"));
-                            if (current_cword_id==cword_id) {
-                                current_voc.english.add(english);
-                            }
-                            else {
-                                String chinese=cur.getString(cur.getColumnIndex("chinese"));
-                                String pinyin =cur.getString(cur.getColumnIndex("pinyin"));
-                                if (current_voc!=null) {
-                                    query_results.add(current_voc);
-                                }
-                                current_voc = new Vocabulary(chinese, pinyin);
-                                current_cword_id=cword_id;
-                                current_voc.english.add(english);
-                            }
-
-                            num_records++;
-                        }while(cur.moveToNext());
-                    }
-
-                    cur.close();
-                    if (current_voc!=null) {
-                        query_results.add(current_voc);
-                    }
-
-                    if (isCancelled()) {
-                        Log.d(TAG, "getWordIdWithSequence cancelled");
-                        return null;
-                    }
-
-                    current_offset+=limit_size;
-                    publishProgress(query_results);
-                } while (num_records==limit_size);
-
-                return (Void) null;
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ").append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+                query.append("ORDER BY sort, cword.length, cword.pinyin, cword.cword_id;");
             }
+        }
 
-            @Override
-            protected void onProgressUpdate(ArrayList<Vocabulary>... values) {
-                if ((query_results.size()>0) && (!isCancelled()))
-                    handler.handle_more_results((ArrayList<Vocabulary>) query_results.clone());
+        Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+
+        return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
+    }
+
+    public Cursor getDecomposedParts(final ArrayList<StringElement> elements, final int max_size, final boolean filtered, final boolean group) {
+        // Assuming all elements are Chinese...
+        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
+        StringBuilder query = new StringBuilder();
+        ArrayList<String> query_args=new ArrayList<String>();
+        for (int i=0; i<elements.size(); i++) {
+            StringBuilder part_query= new StringBuilder(elements.get(i).content);
+            for (int j=0; j<Math.min(max_size, elements.size()-i); j++) {
+                query.append("SELECT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, ");
+                if (group)
+                    query.append("GROUP_CONCAT(eword.translation,', ') AS english, ");
+                else
+                    query.append("eword.translation AS english, ");
+                query.append((i*max_size) + (max_size-j)).append(" AS sort ");
+                query.append("FROM (SELECT * FROM cword WHERE cword.chinese=?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(part_query.toString());
+                if (lesson_filtered) {
+                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ").append(where_filter);
+                }
+                if (group)
+                    query.append("GROUP BY cword.cword_id ");
+
+                if (j < Math.min(max_size, elements.size()-i) - 1) {
+                    query.append(" UNION ");
+                    part_query.append(elements.get(i+j+1).content);
+                }
             }
+            if (i < elements.size() - 1)
+                query.append(" UNION ");
+        }
+        query.append("ORDER BY sort");
+        Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                handler.handle_end_of_results();
-            }
-        };
-
-        res.execute((Void[]) null);
-
-        return res;
-
+        return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
 
     ////////////////////////////////////////
     // Adding data
     ////////////////////////////////////////
-    public void addVocabulary(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
-        if (pinyin.size() != chinese.size()) {
-            Log.e(TAG, "addVocabulary : Pinyins and Hanzi tables have different sizes");
-            return;
-        }
-
-        addVocabularyReturnId(english,chinese,pinyin);
-    }
-
-    public void addVocabulary(ArrayList<String> english, ArrayList<String> chinese, ArrayList<String> pinyin) {
-        int cword_id;
-
-        if (pinyin.size() != chinese.size()) {
-            Log.e(TAG, "addVocabulary : Pinyins and Hanzi tables have different sizes");
-            return;
-        }
-
-        cword_id=addVocabularyReturnId(null,chinese,pinyin);
-        for (String eng : english) {
-            addVocabulary(eng, cword_id);
-        }
-    }
-
     public void addVocabulary(Vocabulary voc) {
-        ArrayList<String> chinese = new ArrayList<String>();
-        ArrayList<String> pinyin;
-        int i, len;
-
-        if (voc.english == null) {
-            Log.w(TAG, "Cannot add vocabulary without translations");
-            return;
-        }
-
-        len = voc.chinese.codePointCount(0, voc.chinese.length());
-        for (i = 0; i< len; i++) {
-            int from = voc.chinese.offsetByCodePoints(0, i);
-            int to = voc.chinese.offsetByCodePoints(0, i + 1);
-
-            chinese.add(voc.chinese.substring(from, to));
-        }
-        pinyin = PinyinParser.parse_string(voc.pinyin);
-        if (pinyin == null)
-            return;
-
-        addVocabulary(voc.english,chinese,pinyin);
+        addVocabulary(voc.english,voc.chinese,voc.pinyin);
     }
 
-    protected int addCword(ArrayList<String> chinese, ArrayList<String> pinyin) {
+    public void addVocabulary(ArrayList<String> english, String chinese, String pinyin) {
+        int cword_id;
+        cword_id=addVocabulary((String)null,chinese,pinyin);
+        addVocabulary(english, cword_id);
+    }
+
+    protected int addVocabulary(String english, String chinese, String pinyin) {
+        String pinyin_to_insert = PinyinParser.convert_to_lame_version(pinyin);
+
+        ArrayList<String> ch_array = new ArrayList<String>();
+        int len = chinese.codePointCount(0, chinese.length());
+        for (int i = 0; i< len; i++) {
+            int from = chinese.offsetByCodePoints(0, i);
+            int to = chinese.offsetByCodePoints(0, i + 1);
+
+            ch_array.add(chinese.substring(from, to));
+        }
+        ArrayList<String> pin_array = PinyinParser.parse_string(pinyin_to_insert);
+        if ((pin_array == null) || (pin_array.size() != ch_array.size()))
+            return -1;
+
         int cword_id, char_pinyin_id;
-        int i;
-        String chinese_str = "", pinyin_str = "";
         String han, pin;
 
-        for (i = 0; i < chinese.size(); i++) {
-            chinese_str += chinese.get(i);
-            pinyin_str += pinyin.get(i);
-        }
-
         ContentValues cv = new ContentValues();
-        cv.put("chinese", chinese_str);
-        cv.put("pinyin", pinyin_str);
-        cv.put("length", chinese_str.codePointCount(0, chinese_str.length()));
+        cv.put("chinese", chinese);
+        cv.put("pinyin", pinyin_to_insert);
+        cv.put("length", chinese.codePointCount(0, chinese.length()));
         db.insert("cword", null, cv);
-        //db.insertWithOnConflict("cword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
-
-        cword_id = getWordId(chinese_str, pinyin_str);
-        if (cword_id == -1) {
-            Log.w(TAG, "Add a cword id, but got no ID");
-        }
-
-        for (i = 0; i<chinese.size(); i++) {
-            han = chinese.get(i);
-            pin = pinyin.get(i);
-            char_pinyin_id = getCharPinyinId(han, pin);
-            if (char_pinyin_id == -1) {
-                char_pinyin_id = addCharPinyin(han, pin);
-            }
-            cv.clear();
-            cv.put("cword_id", cword_id);
-            cv.put("char_pinyin_id", char_pinyin_id);
-            cv.put("pos", i);
-            db.insert("cword_segment", null, cv);
-            //db.insertWithOnConflict("cword_segment", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
-        }
-        return cword_id;
-    }
-
-    protected int addCharPinyin(String hanzi, String pinyin) {
-        int res;
-
-        ContentValues cv = new ContentValues();
-        cv.put("hanzi", hanzi);
-        cv.put("pinyin", pinyin);
-        db.insert("char_pinyin", null, cv);
-        //db.insertWithOnConflict("char_pinyin", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
-
-        res = getCharPinyinId(hanzi, pinyin);
-        if (res == -1) {
-            Log.w(TAG, "Add a char_pinyin id, but could not find it");
-        }
-
-        return res;
-    }
-
-    protected int addVocabularyReturnId(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
-        int i;
-        String chinese_str = "", pinyin_str = "";
-        Integer cword_id;
-
-        for (i = 0; i < chinese.size(); i++)
-        {
-            chinese_str += chinese.get(i);
-            pinyin_str += pinyin.get(i);
-        }
-
-        cword_id = getWordId(chinese_str, pinyin_str);
-        if (cword_id == -1) {
-            cword_id = addCword(chinese, pinyin);
-        }
-
-        if (english != null) {
-            addVocabulary(english, cword_id);
-        }
 
         cached_num_chars=-1;
+
+        cword_id = getWordId(chinese, pinyin_to_insert);
+        if (cword_id == -1) {
+            Log.w(TAG, "Added a cword id, but got no ID");
+        }
+        else {
+            for (int i = 0; i<ch_array.size(); i++) {
+                han = ch_array.get(i);
+                pin = pin_array.get(i);
+
+                // add the character/pinyin pair
+                cv.clear();
+                cv.put("hanzi", han);
+                cv.put("pinyin", pin);
+                db.insert("char_pinyin", null, cv);
+                char_pinyin_id = getCharPinyinId(han, pin);
+
+                // add the link between the work and the char_pinyin pair
+                cv.clear();
+                cv.put("cword_id", cword_id);
+                cv.put("char_pinyin_id", char_pinyin_id);
+                cv.put("pos", i);
+                db.insert("cword_segment", null, cv);
+            }
+        }
+
+        if ((cword_id != -1) && (english != null))
+            addVocabulary(english, cword_id);
 
         return cword_id;
     }
@@ -1505,54 +1439,151 @@ public class HanziDB extends SQLiteOpenHelper {
         //db.insertWithOnConflict("eword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
+    protected void addVocabulary(ArrayList<Vocabulary> voc) {
+        class bridge_input {
+            public int cword_id;
+            public int char_pinyin_id;
+            public int position;
+            public String word_chinese;
+            public String word_pinyin;
+            public String chinese;
+            public String pinyin;
+            public ArrayList<String> english;
+            public bridge_input(String word_chinese, String word_pinyin, String chinese, String pinyin, int position) {
+                this.word_chinese=word_chinese;
+                this.word_pinyin=word_pinyin;
+                this.char_pinyin_id=-1;
+                this.position=position;
+                this.chinese =chinese;
+                this.pinyin=pinyin;
+            }
+            public bridge_input(String word_chinese, String word_pinyin, String chinese, String pinyin, int position, ArrayList<String> english) {
+                this.word_chinese=word_chinese;
+                this.word_pinyin=word_pinyin;
+                this.char_pinyin_id=-1;
+                this.position=position;
+                this.chinese =chinese;
+                this.pinyin=pinyin;
+                this.english=english;
+            }
+        }
+        ArrayList<bridge_input> to_add = new ArrayList<bridge_input>();
+
+        DatabaseUtils.InsertHelper cword_ih = new DatabaseUtils.InsertHelper(db, "cword");
+        final int cword_chinese_column = cword_ih.getColumnIndex("chinese");
+        final int cword_pinyin_column = cword_ih.getColumnIndex("pinyin");
+        final int cword_length_column = cword_ih.getColumnIndex("length");
+        String pinyin_to_insert;
+        ArrayList<String> pin_array;
+        for (Vocabulary v:voc) {
+            pinyin_to_insert = PinyinParser.convert_to_lame_version(v.pinyin);
+            pin_array  = PinyinParser.parse_string(pinyin_to_insert);
+            int pin_count=0;
+            int len = v.chinese.codePointCount(0, v.chinese.length());
+            for (int i = 0; i< len; i++) {
+                int from = v.chinese.offsetByCodePoints(0, i);
+                int to = v.chinese.offsetByCodePoints(0, i + 1);
+
+                if (pin_count==0) {
+                    to_add.add(new bridge_input(v.chinese, pinyin_to_insert, v.chinese.substring(from, to), pin_array.get(pin_count), pin_count, v.english));
+                } else {
+                    to_add.add(new bridge_input(v.chinese, pinyin_to_insert, v.chinese.substring(from, to), pin_array.get(pin_count), pin_count));
+                }
+                pin_count++;
+            }
+            cword_ih.prepareForInsert();
+            cword_ih.bind(cword_chinese_column, v.chinese);
+            cword_ih.bind(cword_pinyin_column, pinyin_to_insert);
+            cword_ih.bind(cword_length_column, len);
+            cword_ih.execute();
+        }
+        cword_ih.close();
+
+        DatabaseUtils.InsertHelper char_pinyin_ih = new DatabaseUtils.InsertHelper(db, "char_pinyin");
+        final int char_pinyin_hanzi_column = char_pinyin_ih.getColumnIndex("hanzi");
+        final int char_pinyin_pinyin_column = char_pinyin_ih.getColumnIndex("pinyin");
+        String cached_chinese=null;
+        String cached_pinyin=null;
+        int cached_cword_id=-1;
+        for (bridge_input br:to_add) {
+            if ((cached_cword_id==-1) || (!cached_chinese.equals(br.word_chinese) || (!cached_pinyin.equals(br.word_pinyin)))) {
+                cached_chinese=br.word_chinese;
+                cached_pinyin=br.word_pinyin;
+                cached_cword_id = getWordId(cached_chinese, PinyinParser.convert_to_lame_version(cached_pinyin));
+            }
+            br.cword_id = cached_cword_id;
+            char_pinyin_ih.prepareForInsert();
+            char_pinyin_ih.bind(char_pinyin_hanzi_column, br.chinese);
+            char_pinyin_ih.bind(char_pinyin_pinyin_column, br.pinyin);
+            char_pinyin_ih.execute();
+        }
+        char_pinyin_ih.close();
+
+        DatabaseUtils.InsertHelper cword_segment_ih = new DatabaseUtils.InsertHelper(db, "cword_segment");
+        final int cword_segment_cword_id_column = cword_segment_ih.getColumnIndex("cword_id");
+        final int cword_segment_char_pinyin_id_column = cword_segment_ih.getColumnIndex("char_pinyin_id");
+        final int cword_segment_pos_column = cword_segment_ih.getColumnIndex("pos");
+        for (bridge_input br:to_add) {
+            br.char_pinyin_id=getCharPinyinId(br.chinese, br.pinyin);
+            cword_segment_ih.prepareForInsert();
+            cword_segment_ih.bind(cword_segment_cword_id_column, br.cword_id);
+            cword_segment_ih.bind(cword_segment_char_pinyin_id_column, br.char_pinyin_id);
+            cword_segment_ih.bind(cword_segment_pos_column, br.position);
+            cword_segment_ih.execute();
+        }
+        cword_segment_ih.close();
+
+        DatabaseUtils.InsertHelper eword_ih = new DatabaseUtils.InsertHelper(db, "eword");
+        final int eword_cword_id_column = eword_ih.getColumnIndex("cword_id");
+        final int eword_translation_column = eword_ih.getColumnIndex("translation");
+        for (bridge_input br:to_add) {
+            if (br.position==0) {
+                for (String en:br.english) {
+                    eword_ih.prepareForInsert();
+                    eword_ih.bind(eword_cword_id_column, br.cword_id);
+                    eword_ih.bind(eword_translation_column, en);
+                    eword_ih.execute();
+                }
+            }
+        }
+        eword_ih.close();
+    }
+
+    protected void addVocabulary(ArrayList<String> english, int cword_id) {
+        DatabaseUtils.InsertHelper ih = new DatabaseUtils.InsertHelper(db, "eword");
+        final int cword_id_column = ih.getColumnIndex("cword_id");
+        final int translation_column = ih.getColumnIndex("translation");
+        for (String en:english) {
+            ih.prepareForInsert();
+            ih.bind(cword_id_column, cword_id);
+            ih.bind(translation_column, en);
+            ih.execute();
+        }
+        ih.close();
+    }
+
     ////////////////////////////////////////
     // Deleting data
     ////////////////////////////////////////
-    public void delVocabulary(ArrayList<String> chinese, ArrayList<String> pinyin) {
-        int i;
+    public void delVocabulary(String chinese, String pinyin) {
         int cword_id;
-        String chinese_str="", pinyin_str="";
 
-        if (pinyin.size() != chinese.size()) {
-            Log.e(TAG, "delVocabulary : Pinyins and Hanzi tables have different sizes");
-            return;
-        }
-
-        for (i = 0; i < chinese.size(); i++)
-        {
-            chinese_str += chinese.get(i);
-            pinyin_str += pinyin.get(i);
-        }
-        cword_id = getWordId(chinese_str,pinyin_str);
+        cword_id = getWordId(chinese,pinyin);
 
         if (cword_id != -1) {
-            ArrayList<Integer> eng_ids = getEWordId(cword_id);
-            for (int eng_id:eng_ids)
-                delEword(eng_id);
+            delCwordTranslations(cword_id);
             checkIsolatedCword(cword_id);
         }
     }
 
-    public void delVocabulary(String english, ArrayList<String> chinese, ArrayList<String> pinyin) {
-        int eng_id, cword_id, i;
-        String chinese_str="", pinyin_str="";
-
-        if (pinyin.size() != chinese.size()) {
-            Log.e(TAG, "delVocabulary : Pinyins and Hanzi tables have different sizes");
-            return;
-        }
-
-        for (i = 0; i < chinese.size(); i++)
-        {
-            chinese_str += chinese.get(i);
-            pinyin_str += pinyin.get(i);
-        }
+    public void delVocabulary(String english, String chinese, String pinyin) {
+        int eng_id, cword_id;
 
         Cursor cur = db.rawQuery("SELECT eng_id, eword.cword_id AS cword_id " +
                 "FROM eword " +
                 "  JOIN cword ON cword.cword_id=eword.cword_id " +
                 "WHERE eword.translation=? AND cword.chinese=? AND cword.pinyin=?",
-                new String[] {english,chinese_str,pinyin_str});
+                new String[] {english,chinese,pinyin});
         if (cur.moveToFirst()) {
             eng_id = cur.getInt(cur.getColumnIndex("eng_id"));
             cword_id = cur.getInt(cur.getColumnIndex("cword_id"));
@@ -1563,7 +1594,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    public void delVocabulary(ArrayList<String> english, ArrayList<String> chinese, ArrayList<String> pinyin) {
+    public void delVocabulary(ArrayList<String> english, String chinese, String pinyin) {
         if (english == null) {
             delVocabulary(chinese,pinyin);
         }
@@ -1575,33 +1606,22 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void delVocabulary(Vocabulary voc) {
-        ArrayList<String> chinese = new ArrayList<String>();
-        ArrayList<String> pinyin;
-        int i, len;
-
-        len = voc.chinese.codePointCount(0, voc.chinese.length());
-        for (i = 0; i< len; i++) {
-            int from = voc.chinese.offsetByCodePoints(0, i);
-            int to = voc.chinese.offsetByCodePoints(0, i + 1);
-
-            chinese.add(voc.chinese.substring(from, to));
-        }
-        pinyin = PinyinParser.parse_string(voc.pinyin);
-        if (pinyin == null)
-            return;
-
         if (voc.english == null) {
-            delVocabulary(chinese, pinyin);
+            delVocabulary(voc.chinese, voc.pinyin);
         }
         else {
-            delVocabulary(voc.english,chinese,pinyin);
+            delVocabulary(voc.english,voc.chinese,voc.pinyin);
         }
     }
 
     protected void delEword(int eng_id) {
-        db.delete("eword", "eng_id=?", new String[] {Integer.toString(eng_id)} );
-
         db.delete("lesson_word", "eng_id=?", new String[] {Integer.toString(eng_id)});
+        db.delete("eword", "eng_id=?", new String[] {Integer.toString(eng_id)} );
+    }
+
+    protected void delCwordTranslations(int cword_id) {
+        db.delete("lesson_word", "eng_id IN (SELECT eng_id FROM eword WHERE cword_id=?)", new String[] {Integer.toString(cword_id)});
+        db.delete("eword", "cword_id=?", new String[] {Integer.toString(cword_id)} );
     }
 
     protected void delCharPinyin(int char_pinyin_id) {
@@ -1611,6 +1631,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "WHERE char_pinyin_id=?;", new String[] {Integer.toString(char_pinyin_id)});
         if (cur.moveToFirst()) {
             hanzi = cur.getString(cur.getColumnIndex("hanzi"));
+            cur.close();
         }
         else {
             cur.close();
@@ -1635,22 +1656,22 @@ public class HanziDB extends SQLiteOpenHelper {
                 char_pinyin_id.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
             }while(cur.moveToNext());
         }
+        cur.close();
         db.delete("cword", "cword_id=?", new String[] {Integer.toString(cword_id)});
         db.delete("cword_segment", "cword_id=?", new String[] {Integer.toString(cword_id)});
+
+        cached_num_chars=-1;
 
         for (int cpid : char_pinyin_id) {
             if (getCwordWithChar(cpid).size() == 0) {
                 delCharPinyin(cpid);
             }
         }
-
-        cur.close();
     }
 
     protected void checkIsolatedCword(int cword_id) {
         if (getTranslations(cword_id) == null) {
             delCword(cword_id);
-            cached_num_chars=-1;
         }
     }
 
@@ -1681,7 +1702,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Merge Database
     ////////////////////////////////////////
-
     public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
@@ -1719,30 +1739,13 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     backup_ready=true;
 
-                    // merge it
                     HanziDB other_db = new HanziDB(appContext, app, new_db_name);
-                    ArrayList<String> chars = other_db.getAllChar();
-                    for (int i=0; i<chars.size(); i++) {
-                        publishProgress(10+(i*50)/chars.size());
-                        if (isCancelled()) {
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-                        String c=chars.get(i);
-                        ArrayList<Vocabulary> voc = other_db.getWordsWithPinyin(c);
-                        for(Vocabulary v:voc)
-                            addVocabulary(v);
-                        if (other_db.getBoxForChar(c) != 0) {
-                            setBoxForChar(c, other_db.getBoxForChar(c));
-                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
-                        }
 
-                    }
-
+                    // merge it
                     ArrayList<String> original_lessons = getLessons();
                     ArrayList<String> lessons = other_db.getLessons();
                     for (int i=0; i<lessons.size(); i++) {
-                        publishProgress(60+(i*30)/lessons.size());
+                        publishProgress(10+(i*50)/(lessons.size()+1));
                         if (isCancelled()) {
                             clean_up_on_cancel(false);
                             return null;
@@ -1750,9 +1753,29 @@ public class HanziDB extends SQLiteOpenHelper {
                         String l = lessons.get(i);
                         if (!original_lessons.contains(l))
                             addLesson(l);
+
                         ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
+                        addVocabulary(voc);
                         for (Vocabulary v:voc) {
                             assignWordLesson(l,v);
+                        }
+                    }
+
+                    // add the vocabulary that's not in any lesson
+                    ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
+                    addVocabulary(voc);
+
+                    ArrayList<String> chars = other_db.getAllChar();
+                    for (int i=0; i<chars.size(); i++) {
+                        publishProgress(60+(i*30)/chars.size());
+                        if (isCancelled()) {
+                            clean_up_on_cancel(false);
+                            return null;
+                        }
+                        String c=chars.get(i);
+                        if (other_db.getBoxForChar(c) != 0) {
+                            setBoxForChar(c, other_db.getBoxForChar(c));
+                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
                         }
                     }
 
@@ -1778,7 +1801,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     publishProgress(100);
 
                     if (isCancelled()) { // everything went through anyway...
-                        onPostExecute(null);
+                        onPostExecute((Void) null);
                     }
                 }
 
@@ -1853,8 +1876,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                 mProgressDialog.dismiss();
 
                             if (error) {
-                                Toast toast = Toast.makeText(context, "An error occured while importing the database", 5);
-                                toast.show();
+                                Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
@@ -1882,56 +1904,43 @@ public class HanziDB extends SQLiteOpenHelper {
                         clean_up_on_cancel(true);
                         return null;
                     }
-                }
-                else {
+                } else if (!filtered_lessons) {
+                    if (!app.copyFile(db.getPath(), HanziDB.this.appContext.getDatabasePath(new_db_name).getPath())) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
+                    new_db = new HanziDB(appContext, app, new_db_name);
+                    new_db.resetAllScores();
+                    new_db.close();
+
+                    if (!app.copyFile(HanziDB.this.appContext.getDatabasePath(new_db_name).getPath(), path)) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
+
+                    appContext.deleteDatabase(new_db_name);
+                } else {
                     new_db = new HanziDB(appContext, app, new_db_name);
 
-                    ArrayList<Vocabulary> vocabulary;
-                    if (filtered_lessons)
-                        vocabulary=getVocabularyInLessons(lesson_filter);
-                    else {
-                        ArrayList<String> all_lessons=getLessons();
-                        all_lessons.add("");
-                        vocabulary=getVocabularyInLessons(all_lessons);
-                    }
-
-                    for (int i=0; i<vocabulary.size(); i++) {
-                        Vocabulary v=vocabulary.get(i);
-                        publishProgress((i*50)/vocabulary.size());
-                        if (isCancelled()) {
-                            Log.d(TAG, "getting out");
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-
-                        new_db.addVocabulary(v);
-                        Log.d(TAG, "exporting vocabulary "+v.chinese);
-                    }
-
-                    ArrayList<String> lessons;
-                    if (filtered_lessons)
-                        lessons=lesson_filter;
-                    else
-                        lessons=getLessons();
-
-                    for (int i=0; i<lessons.size(); i++) {
-                        String lesson = lessons.get(i);
+                    for (int i=0; i<lesson_filter.size(); i++) {
+                        String lesson = lesson_filter.get(i);
                         if (isCancelled()) {
                             clean_up_on_cancel(false);
                             return null;
                         }
-                        publishProgress(50+(i*30)/lessons.size());
+                        publishProgress((i*80)/lesson_filter.size());
                         Log.d(TAG, "exporting lesson "+lesson);
                         if (lesson.equals(""))
                             continue;
                         new_db.addLesson(lesson);
 
                         ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
+                        new_db.addVocabulary(lesson_voc);
                         for (Vocabulary v : lesson_voc) {
                             new_db.assignWordLesson(lesson, v);
                         }
                     }
-                    new_db.sortLessons(lessons);
+                    new_db.sortLessons(lesson_filter);
 
                     if (with_scores) {
                         ArrayList<String> chars = new_db.getAllChar();
@@ -1951,11 +1960,11 @@ public class HanziDB extends SQLiteOpenHelper {
                         }
                     }
 
+
                     if (!app.copyFile(new_db.getWritableDatabase().getPath(), path)) {
                         clean_up_on_cancel(true);
                         return null;
                     }
-
                     new_db.close();
 
                     publishProgress(90);
@@ -1963,7 +1972,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     appContext.deleteDatabase(new_db_name);
 
                     if (isCancelled()) { // everything went through anyway...
-                        onPostExecute(null);
+                        onPostExecute((Void) null);
                     }
                 }
                 return null;
@@ -1974,7 +1983,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 super.onPreExecute();
                 // create the progress dialog if needed
                 if (with_dialog) {
-                    if ((with_scores) && (!filtered_lessons)) {
+                    if (!filtered_lessons) {
                         mProgressDialog = ProgressDialog.show(context, "Exporting Database", "Copying...", false);
                         mProgressDialog.setIndeterminate(true);
                     }
@@ -2028,8 +2037,7 @@ public class HanziDB extends SQLiteOpenHelper {
                                 mProgressDialog.dismiss();
 
                             if (error) {
-                                Toast toast = Toast.makeText(context, "An error occured while exporting the database", 5);
-                                toast.show();
+                                Toast.makeText(context, "An error occured while exporting the database", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
@@ -2037,7 +2045,7 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         };
 
-        res.execute();
+        res.execute((Void) null);
 
         return res;
     }
@@ -2311,6 +2319,57 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public Cursor getVocabularyCursorInLessons(ArrayList<String> lessons, boolean group) {
+        StringBuilder query=new StringBuilder();
+
+        if ((lessons.size() == 1) && (lessons.contains(""))) {
+            // only words not in any lesson
+            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
+            if (group)
+                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
+            else
+                query.append("e.translation AS english ");
+            query.append("FROM eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ");
+            if (group)
+                query.append("GROUP BY c.cword_id ");
+        } else if (!lessons.contains("")) {
+            // words that have some lessons associated with them
+            String whereQuery = buildWhereQuery(lessons);
+
+            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
+            if (group)
+                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
+            else
+                query.append("e.translation AS english ");
+
+            query.append("FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lesson_word " +
+                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id ");
+            if (group)
+                query.append("GROUP BY c.cword_id ");
+        } else {
+            // a little bit of both
+            lessons.remove("");
+            String whereQuery = buildWhereQuery(lessons);
+            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
+            if (group)
+                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
+            else
+                query.append("e.translation AS english ");
+            query.append("FROM eword AS e " +
+                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
+                    " WHERE (e.eng_id NOT IN (SELECT eng_id FROM lesson_word)) " +
+                    " OR (e.eng_id IN " +
+                    "   (SELECT eword.eng_id FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lessons" +
+                    "   JOIN eword ON lessons.eng_id=eword.eng_id))");
+            if (group)
+                query.append("GROUP BY c.cword_id ");
+        }
+        return db.rawQuery(query.toString(), null);
+    }
+
     protected String buildWhereQuery(ArrayList<String> lessons) {
         String whereQuery = "WHERE lesson_word.lesson_id IN (";
         int size = lessons.size();
@@ -2363,6 +2422,37 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use lesson filter
     ////////////////////////////////////////
+    /*
+    public int getNumWordsFiltered() {
+        int res;
+        Cursor cur = db.rawQuery("SELECT eword.cword_id " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "GROUP BY eword.cword_id ", null);
+        res= cur.getCount();
+
+        cur.close();
+        return res;
+    }
+
+    public int getNumCharsFiltered() {
+        int res;
+        if (cached_num_chars != -1)
+            return cached_num_chars;
+        Cursor cur = db.rawQuery("SELECT char_pinyin.hanzi " +
+                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                "JOIN cword_segment ON cword_segment.cword_id=eword.cword_id " +
+                "JOIN char_pinyin ON cword_segment.char_pinyin_id=char_pinyin.char_pinyin_id " +
+                "GROUP BY hanzi", null);
+        res= cur.getCount();
+        cached_num_chars=res;
+
+        cur.close();
+        return res;
+    }
+    */
+
     public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -2424,31 +2514,52 @@ public class HanziDB extends SQLiteOpenHelper {
             return getTranslations(chinese, pinyin);
     }
 
-    public ArrayList<Vocabulary> getFilteredCTranslations(String english) {
-        return getFilteredCTranslations(english, SEQUENCE_EXACT);
-    }
-
-    public ArrayList<Vocabulary> getFilteredCTranslations(String english, int start) {
+    public Cursor getFilteredCTranslations(String english) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            Cursor cur = db.rawQuery("SELECT DISTINCT cword.chinese AS chinese,cword.pinyin AS pinyin " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN (SELECT * FROM eword WHERE translation=?) AS eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON cword.cword_id=eword.cword_id "
-                    , new String[] {english});
-            if (cur.moveToFirst()) {
-                res.ensureCapacity(cur.getCount());
-                do{
-                    res.add(new Vocabulary
-                            (cur.getString(cur.getColumnIndex("chinese")), cur.getString(cur.getColumnIndex("pinyin")),english));
-                }while(cur.moveToNext());
-            }
+            ArrayList<String> query_arg=new ArrayList<String>();
+            String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
+                    "FROM ( " +
+                    "    SELECT DISTINCT cword.cword_id AS cword_id, " +
+                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
+                    "    WHEN eword.translation LIKE ? THEN 2 WHEN eword.translation LIKE ? THEN 3 ELSE 4 END AS sort " +
+                    "    FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "    JOIN (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword ON eword.eng_id=lesson_word.eng_id " +
+                    "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
+                    "JOIN cword AS c ON c.cword_id=selection.cword_id " +
+                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
+            query_arg.add(english);
+            query_arg.add(english+" %");
+            query_arg.add("% "+english);
+            query_arg.add("% "+english+" %");
+            query_arg.add("%"+english+"%");
 
-            cur.close();
-            return res;
+            return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
         }
         else
-            return getCTranslations(english, start);
+            return getCTranslations(english);
+    }
+
+    public Cursor getFilteredStartingCTranslations(String english) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            ArrayList<String> query_arg=new ArrayList<String>();
+            String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
+                    "FROM ( " +
+                    "    SELECT DISTINCT cword.cword_id AS cword_id, " +
+                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
+                    "    ELSE 2 END AS sort " +
+                    "    FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "    JOIN (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword ON eword.eng_id=lesson_word.eng_id " +
+                    "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
+                    "JOIN cword AS c ON c.cword_id=selection.cword_id " +
+                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
+            query_arg.add(english);
+            query_arg.add(english+" %");
+            query_arg.add(english+"%");
+
+            return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
+        }
+        else
+            return getStartingCTranslations(english);
     }
 
     public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi) {
@@ -2494,6 +2605,50 @@ public class HanziDB extends SQLiteOpenHelper {
             return getWordsWithPinyin(hanzi);
         }
     }
+
+    public ArrayList<Vocabulary> getFilteredWordsWithPinyinForTesting(String hanzi) {
+            if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+                ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
+                Vocabulary to_add=null;
+                Cursor cur = db.rawQuery("SELECT DISTINCT cword_segment.cword_id AS cword_id, cword.chinese AS chinese, " +
+                        "cword.pinyin AS pinyin, eword.translation AS translation " +
+                        "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                        "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                        "JOIN cword ON cword.cword_id=eword.cword_id " +
+                        "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                        "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                        "WHERE char_pinyin.hanzi=? ORDER BY cword.score ASC", new String[] {hanzi});
+                int id_column_index      = cur.getColumnIndex("cword_id");
+                int chinese_column_index = cur.getColumnIndex("chinese");
+                int pinyin_column_index  = cur.getColumnIndex("pinyin");
+                int english_column_index = cur.getColumnIndex("translation");
+                int current_id = -1;
+                if (cur.moveToFirst()) {
+                    do{
+                        int new_id = cur.getInt(id_column_index);
+                        String chinese = cur.getString(chinese_column_index);
+                        String pinyin =  cur.getString(pinyin_column_index);
+                        String english = cur.getString(english_column_index);
+
+                        if (new_id != current_id) {
+                            if (to_add != null)
+                                res.add(to_add);
+                            to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
+                            current_id = new_id;
+                        }
+                        assert to_add != null;
+                        to_add.english.add(english);
+                    }while(cur.moveToNext());
+                }
+                if (to_add != null)
+                    res.add(to_add);
+                cur.close();
+                return res;
+            }
+            else {
+                return getWordsWithPinyinForTesting(hanzi);
+            }
+        }
 
     public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi, String pinyin) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
@@ -2634,6 +2789,153 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+/*
+    public int getNumCharsFilteredInBox(int box) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            int res;
+
+            if (box < 0)
+                return 0;
+
+            Cursor cur;
+            if (box == 0)
+                // add the characters that do not have any box...
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE (box IS NULL) OR (box=0)) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)", null);
+            else
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE box=?) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Integer.toString(box)});
+
+            cur.moveToFirst();
+            res= cur.getInt(cur.getColumnIndex("count"));
+            cur.close();
+
+            return res;
+        }
+        else {
+            return getNumCharsInBox(box);
+        }
+    }
+
+    public int getNumCharsFilteredInBoxOrAbove(int box) {
+        int res;
+
+        if (box < 0)
+            return 0;
+
+        if (box == 0)
+            return getNumCharsFiltered();
+
+        Cursor cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                "FROM char_pinyin " +
+                "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE box>=?) AS expired_chars " +
+                "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                new String[] {Integer.toString(box)});
+
+        cur.moveToFirst();
+        res= cur.getInt(cur.getColumnIndex("count"));
+
+        cur.close();
+
+        return res;
+    }
+
+    public int getNumCharsFilteredExpiredInBox(int box) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            int res;
+
+            if (box < 0)
+                return 0;
+
+            if (box == 0)
+                return getNumCharsFilteredInBox(0);
+            else {
+                Cursor cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE box=? AND leitner.exp_time<?) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
+                cur.moveToFirst();
+                res= cur.getInt(cur.getColumnIndex("count"));
+
+                cur.close();
+            }
+            return res;
+        }
+        else
+            return getNumCharsExpiredInBox(box);
+    }
+
+    public int getNumCharsFilteredExpiredInBoxOrAbove(int box) {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            int res;
+
+            if (box < 0)
+                return 0;
+
+            Cursor cur;
+
+            if (box == 0)
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE (box IS NULL) OR (box=0) OR ((box>0) AND (exp_time<?))) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Long.toString(System.currentTimeMillis())});
+            else
+                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
+                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
+                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
+                        "FROM char_pinyin " +
+                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                        "WHERE box>=? AND leitner.exp_time<?) AS expired_chars " +
+                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
+                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
+                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
+                        new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
+
+            cur.moveToFirst();
+            res= cur.getInt(cur.getColumnIndex("count"));
+
+            cur.close();
+            return res;
+        }
+        else {
+            return getNumCharsExpiredInBoxOrAbove(box);
+        }
+    }
+    */
+
+
     public int getBoxForChar(String hanzi) {
         int res;
 
@@ -2705,6 +3007,9 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     public void resetAllScores() {
         db.delete("leitner", null, null);
+        ContentValues cv=new ContentValues();
+        cv.put("score", 0);
+        db.update("cword", cv, "", null);
     }
 
     public void resetTime(String hanzi) {
@@ -2799,6 +3104,17 @@ public class HanziDB extends SQLiteOpenHelper {
         setExpirationTimeForChar(hanzi, System.currentTimeMillis());
     }
 
+    public void guessedWord(boolean correct, String hanzi, String pinyin) {
+        String update_score = correct ? "score=score+1" : "score=score-1";
+        db.execSQL("UPDATE cword SET "+update_score+" WHERE chinese=? AND pinyin=?", new String[] {hanzi, pinyin});
+    }
+
+    public void guessedWord(boolean correct, String hanzi) {
+        String update_score = correct ? "score=score+1" : "score=score-1";
+        db.execSQL("UPDATE cword SET "+update_score+" WHERE chinese=?", new String[] {hanzi});
+
+    }
+
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
@@ -2813,11 +3129,12 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> res=new ArrayList<String>();
         Cursor cur;
 
-        cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time " +
+        cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
                 "FROM char_pinyin " +
                 "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
                 "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                "ORDER BY exp_time ASC",
+                "ORDER BY forced_box DESC, exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis())});
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());
@@ -2828,7 +3145,17 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
 
         return res;
+    }
 
+    protected Cursor getCursorToStudy() {
+        return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
+                "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                "FROM char_pinyin " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "ORDER BY forced_box DESC, exp_time ASC",
+                new String[] {Long.toString(System.currentTimeMillis())});
     }
 
     public void getMoreStudy(int how_many) {
@@ -2844,27 +3171,20 @@ public class HanziDB extends SQLiteOpenHelper {
      *
      *
      */
-    public String getNextFilteredToStudy() {
-        ArrayList<String> all = getAllFilteredToStudy();
-        if (all.size() > 0)
-            return all.get((int) (all.size() * Math.pow(Math.random(),2)));
-        return null;
-    }
-
     public ArrayList<String> getAllFilteredToStudy() {
         ArrayList<String> res=new ArrayList<String>();
-        Cursor cur;
 
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            cur = db.rawQuery("SELECT DISTINCT char_pinyin.hanzi AS hanzi, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time " +
+            Cursor cur = db.rawQuery("SELECT DISTINCT char_pinyin.hanzi AS hanzi, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
                     "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY exp_time DESC",
+                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
                     new String[] {Long.toString(System.currentTimeMillis())});
             if (cur.moveToFirst()) {
                 res.ensureCapacity(cur.getCount());
@@ -2877,6 +3197,26 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         else {
             return getAllToStudy();
+        }
+    }
+
+    public Cursor getCursorFilteredToStudy() {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
+                    "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
+                    new String[] {Long.toString(System.currentTimeMillis())});
+        }
+        else {
+            return getCursorToStudy();
         }
     }
 }

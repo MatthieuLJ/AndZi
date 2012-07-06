@@ -5,7 +5,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -20,21 +19,12 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class GuessEnglish extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
     private Vocabulary solution=null;
     private int current_view=0;
     private String last_guess="";
     private int last_good=0;
 
     private final String TAG="GuessEnglish";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -88,10 +78,10 @@ public class GuessEnglish extends TestActivity {
         String candidate;
         solution=null;
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
 
         while ((words.size() > 0) && (solution == null)) {
-            candidate = words.remove((int) (words.size()*Math.random())).chinese;
+            candidate = words.remove(0).chinese;
             ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
             if ((voc.size() == 0) || (voc.size() > 1)) // one case has multiple pinyins...
                 continue;
@@ -174,6 +164,7 @@ public class GuessEnglish extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(true, solution.chinese);
         }
         else {
             for (int i=0; i<solution.chinese.length();) {
@@ -182,6 +173,7 @@ public class GuessEnglish extends TestActivity {
                 Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(false, solution.chinese);
         }
     }
 
@@ -204,7 +196,7 @@ public class GuessEnglish extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false, true);
+        Details.populate_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessEnglish.this);

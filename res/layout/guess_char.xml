@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<com.matthieu.widget.AdaptiveLinearLayout
+<LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical"
@@ -24,13 +23,12 @@
                 android:layout_height="0dp"
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
-                app:hidable="true" />
-    <ScrollView
+            />
+    <com.matthieu.widget.ShrinkingScrollView
             android:scrollbars="vertical"
             android:layout_height="0dp"
             android:layout_width="fill_parent"
             android:layout_weight="4"
-            app:scroll="true"
             >
 
         <TableLayout
@@ -39,7 +37,7 @@
                 android:layout_width="fill_parent"
                 android:stretchColumns="1"
                 />
-    </ScrollView>
+    </com.matthieu.widget.ShrinkingScrollView>
     <View
             android:layout_height="0dp"
             android:layout_width="fill_parent"
@@ -72,10 +70,10 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="#000000"
-            app:hidable="true" />
+            />
     <View
             android:layout_height="0dp"
             android:layout_width="fill_parent"
             android:layout_weight="1"
-            app:hidable="true" />
-</com.matthieu.widget.AdaptiveLinearLayout>
+            />
+</LinearLayout>

@@ -3,7 +3,12 @@
  */
 package com.matthieu;
 
+import android.graphics.Color;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 
 public class PinyinParser {
@@ -13,7 +18,7 @@ public class PinyinParser {
     static public ArrayList<String> parse_string(String pinyin_string)
     {
         int split_index;
-        ArrayList<String> result=null;
+        ArrayList<String> result;
         ArrayList<String> temp;
         
         // Try to find strophe to split the string
@@ -311,6 +316,7 @@ public class PinyinParser {
         return null;
     }
 
+    @Nullable
     static public ArrayList<HanziDB.StringElement> parse_mixed_string(String input) {
         ArrayList<HanziDB.StringElement> res = new ArrayList<HanziDB.StringElement>();
         for (int i=0; i<input.length(); ) {
@@ -339,42 +345,81 @@ public class PinyinParser {
                 }
                 res.addAll(more);
                 i=j-1;
-
             }
         }
         if (res == null)
             Log.d(TAG, "Failed to parse string ["+input+"]");
         else
             Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
+
         return res;
     }
 
-    public static String convert_to_pretty_version(String input)
-    {
+    public static String convert_to_pretty_version(String input) {
         int i;
-        String result = "";
+        StringBuilder result = new StringBuilder();
         if (input.equals(""))
-            return result;
+            return result.toString();
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
-        for (i = 0; i < parsed.size(); i++)
-        {
-            result += parsed.get(i).get_pretty();
+        for (i = 0; i < parsed.size(); i++) {
+            result.append(parsed.get(i).get_pretty());
         }
-        return result;
+        return result.toString();
     }
 
-    public static String convert_to_html_version(String input)
-    {
+    public static String convert_to_html_version(String input) {
         int i;
-        String result = "";
+        StringBuilder result = new StringBuilder();
         if (input.equals(""))
-            return result;
+            return result.toString();
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         if (parsed == null)
             return input;
-        for (i = 0; i < parsed.size(); i++)
-        {
-            result += parsed.get(i).get_color();
+        for (i = 0; i < parsed.size(); i++) {
+            result.append(parsed.get(i).get_color());
+        }
+        return result.toString();
+    }
+
+    public static SpannableString convert_to_spannable_version(String input) {
+        int i;
+        if (input.equals(""))
+            return new SpannableString("");
+
+        ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
+        if (parsed == null)
+            return new SpannableString("");
+
+        StringBuilder result_builder = new StringBuilder();
+        for (i = 0; i < parsed.size(); i++) {
+            result_builder.append(parsed.get(i).get_pretty());
+        }
+        SpannableString result = new SpannableString(result_builder.toString());
+        int offset=0;
+        for (i = 0; i < parsed.size(); i++) {
+            int size=parsed.get(i).get_radical().length();
+            ForegroundColorSpan color;
+            switch (parsed.get(i).get_tone()) {
+                case 1:
+                    color = new ForegroundColorSpan(Color.parseColor("#FF0000"));
+                    break;
+                case 2:
+                    color = new ForegroundColorSpan(Color.parseColor("#FF8000"));
+                    break;
+                case 3:
+                    color = new ForegroundColorSpan(Color.parseColor("#00AA00"));
+                    break;
+                case 4:
+                    color = new ForegroundColorSpan(Color.parseColor("#0000FF"));
+                    break;
+                case 0:
+                case 5:
+                default:
+                    continue;
+            }
+
+            result.setSpan(color, offset, offset+size, 0);
+            offset += size;
         }
         return result;
     }
@@ -388,8 +433,7 @@ public class PinyinParser {
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         if (parsed == null)
             return input;
-        for (i = 0; i < parsed.size(); i++)
-        {
+        for (i = 0; i < parsed.size(); i++) {
             result += parsed.get(i).get_lame();
         }
         return result;

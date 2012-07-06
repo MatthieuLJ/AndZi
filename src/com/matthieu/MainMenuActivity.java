@@ -26,11 +26,15 @@ public class MainMenuActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ProgressService.clear_notification(this);
+
         final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         SplashStateSaver myState = (SplashStateSaver) getLastNonConfigurationInstance();
 
-        if ((myState == null) || ((myState != null) && (myState.showSplash))) {
+        boolean skip_splash = getIntent().getBooleanExtra("skip_splash", false);
+
+        if ((!skip_splash) && ((myState == null) || (myState.showSplash))) {
             Log.d(TAG, "Showing splash");
             showing_splash=true;
             setContentView(R.layout.main_menu_splash);
@@ -57,7 +61,6 @@ public class MainMenuActivity extends Activity {
                     });
                 }
             }, 1000);
-
         }
         else {
             start_it();
@@ -145,8 +148,8 @@ public class MainMenuActivity extends Activity {
         startActivity(intent);
     }
 
-    public void handle_credits(View v) {
-        Intent intent = new Intent(this, Credits.class);
+    public void handle_help(View v) {
+        Intent intent = new Intent(this, Help.class);
         startActivity(intent);
     }
 }

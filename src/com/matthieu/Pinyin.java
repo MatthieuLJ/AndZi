@@ -106,8 +106,10 @@ public class Pinyin {
         if (entry.length()==0)
             return;
 
-        if (!map_initialized)
-            create_pinyin_map();
+        synchronized (pinyin_by_first_letter) {
+            if (!map_initialized)
+                create_pinyin_map();
+        }
 
         String initial = entry.substring(0,1);
         if (!pinyin_by_first_letter.containsKey(initial))
@@ -128,6 +130,10 @@ public class Pinyin {
 
             }
         }
+    }
+
+    public static void prepare_pinyin_process() {
+        create_pinyin_map();
     }
 
     private static void create_pinyin_map() {
@@ -253,8 +259,10 @@ public class Pinyin {
         int i;
         String temp="";
 
-        if (!map_initialized)
-            create_pinyin_map();
+        synchronized (pinyin_by_first_letter) {
+            if (!map_initialized)
+                create_pinyin_map();
+        }
 
         if (entry.length()==0)
             return false;

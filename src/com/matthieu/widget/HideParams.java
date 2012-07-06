@@ -16,7 +16,6 @@ public class HideParams extends LinearLayout.LayoutParams {
         TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.ModifiableLinearLayout);
 
         hidable = a.getBoolean(R.styleable.ModifiableLinearLayout_hidable, false);
-        scroll = a.getBoolean(R.styleable.ModifiableLinearLayout_scroll, false);
 
         a.recycle();
     }

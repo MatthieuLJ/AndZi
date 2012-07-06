@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -18,8 +17,10 @@ public abstract class TestActivity extends Activity {
     protected int answered=-1;
     protected int show_result=1;
     protected int last_result;
-    protected boolean single_test;
     protected String hanzi;
+
+    protected HanziDB myDB=null;
+    protected HanziDB refDB=null;
 
     private static final String TAG="TestActivity";
 
@@ -31,16 +32,13 @@ public abstract class TestActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        single_test=getIntent().getBooleanExtra("SingleTest", false);
-        if (single_test)
-            Log.d(TAG, "Running single test");
-        else
-            Log.d(TAG, "Running continuous test");
+
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
 
         hanzi=getIntent().getStringExtra("hanzi");
         if ((hanzi==null) || (hanzi.equals(""))) {
             nothing_to_test();
-            return;
         }
     }
 
@@ -79,12 +77,7 @@ public abstract class TestActivity extends Activity {
         answered=0;
     }
     protected void nothing_to_test() {
-        if (single_test) {
-            setResult(NOTHING_TO_TEST);
-        }
-        else {
-            Toast.makeText(this, "Sorry, nothing to test you on", 5).show();
-        }
+        setResult(NOTHING_TO_TEST);
         finish();
     }
     abstract protected void display_test();
@@ -123,10 +116,10 @@ public abstract class TestActivity extends Activity {
                 update_scores(last_result);
 
                 if (last_result == INCORRECT) {
-                    toast = Toast.makeText(this, "Wrong answer...", 2);
+                    toast = Toast.makeText(this, "Wrong answer...", Toast.LENGTH_SHORT);
                 }
                 else {
-                    toast = Toast.makeText(this, "Well done !", 2);
+                    toast = Toast.makeText(this, "Well done !", Toast.LENGTH_SHORT);
                 }
                 toast.show();
                 another_test_or_quit();
@@ -136,12 +129,8 @@ public abstract class TestActivity extends Activity {
     }
 
     public void another_test_or_quit() {
-        if (single_test) {
-            setResult(last_result);
-            finish();
-        }
-        else
-            set_next_study();
+        setResult(last_result);
+        finish();
     }
 
     public void handle_next(View v) {

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<com.matthieu.widget.AdaptiveLinearLayout
+<LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res/com.matthieu"
         android:id="@+id/adaptive_layout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
@@ -24,14 +23,13 @@
             android:layout_height="0dp"
             android:layout_width="fill_parent"
             android:layout_weight="1" />
-    <ScrollView
+    <com.matthieu.widget.ShrinkingScrollView
             android:scrollbars="vertical"
             android:layout_height="0dp"
             android:layout_width="fill_parent"
             android:measureAllChildren="true"
             android:layout_weight="8"
             android:fillViewport="false"
-            app:scroll="true"
             >
         <TextView
                 android:id="@+id/guess_chinese_word_voc"
@@ -41,7 +39,7 @@
                 android:textColor="#000000"
                 android:gravity="center_horizontal"
                 />
-    </ScrollView>
+    </com.matthieu.widget.ShrinkingScrollView>
     <View
             android:layout_height="0dp"
             android:layout_width="fill_parent"
@@ -63,8 +61,6 @@
             android:measureAllChildren="true"
             android:layout_weight="3"
             android:fillViewport="false"
-            app:hidable="true"
-            app:scroll="true"
             >
         <TextView
                 android:id="@+id/guess_chinese_word_more_voc"
@@ -78,7 +74,7 @@
             android:layout_height="0dp"
             android:layout_width="fill_parent"
             android:layout_weight="1"
-            app:hidable="true" />
+            />
     <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -106,6 +102,6 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="#000000"
-            app:hidable="true" />
+            />
 
-</com.matthieu.widget.AdaptiveLinearLayout>
+</LinearLayout>

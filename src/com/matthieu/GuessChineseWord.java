@@ -5,7 +5,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -15,14 +14,11 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
-import com.matthieu.widget.AdaptiveLinearLayout;
-import com.matthieu.widget.HideParams;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
 public class GuessChineseWord extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
     private int current_view=0;
@@ -31,13 +27,6 @@ public class GuessChineseWord extends TestActivity {
     private boolean showing_more_voc;
 
     private final String TAG="GuessChineseWord";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -60,10 +49,10 @@ public class GuessChineseWord extends TestActivity {
         String candidate;
         solution=null;
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
 
         while ((words.size() > 0) && (solution == null)) {
-            candidate = words.remove((int) (words.size()*Math.random())).chinese;
+            candidate = words.remove(0).chinese;
 
             if (candidate.codePointCount(0, candidate.length())>3)
                 continue;
@@ -130,16 +119,12 @@ public class GuessChineseWord extends TestActivity {
 
             ScrollView scroll = (ScrollView) findViewById(R.id.guess_chinese_word_more_voc_scroll);
             scroll.setVisibility(View.GONE);
-            ((HideParams)scroll.getLayoutParams()).setHidable(false);
-            AdaptiveLinearLayout parent_layout = (AdaptiveLinearLayout) findViewById(R.id.adaptive_layout);
-            parent_layout.refreshContent();
 
             Button more = (Button) findViewById(R.id.guess_chinese_word_more_voc_button);
             View more_spacer = findViewById(R.id.guess_chinese_word_more_spacer);
             if (more_translations.size() == 0) {
                 more.setVisibility(View.GONE);
                 more_spacer.setVisibility(View.GONE);
-                ((HideParams)more_spacer.getLayoutParams()).setHidable(false);
             }
             else {
                 more.setVisibility(View.VISIBLE);
@@ -217,6 +202,7 @@ public class GuessChineseWord extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(true, solution.chinese);
         }
         else {
             for (int i=0; i<solution.chinese.length();) {
@@ -225,10 +211,11 @@ public class GuessChineseWord extends TestActivity {
                 Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
+            myDB.guessedWord(false, solution.chinese);
         }
     }
 
-    public void more_voc(View v) {
+    public void more_voc(@Nullable View v) {
         Button more = (Button) findViewById(R.id.guess_chinese_word_more_voc_button);
         more.setVisibility(View.GONE);
 
@@ -241,9 +228,6 @@ public class GuessChineseWord extends TestActivity {
         }
         ScrollView scroll = (ScrollView) findViewById(R.id.guess_chinese_word_more_voc_scroll);
         scroll.setVisibility(View.VISIBLE);
-        ((HideParams)scroll.getLayoutParams()).setHidable(true);
-        AdaptiveLinearLayout parent_layout = (AdaptiveLinearLayout) findViewById(R.id.adaptive_layout);
-        parent_layout.refreshContent();
         showing_more_voc=true;
     }
 
@@ -266,7 +250,7 @@ public class GuessChineseWord extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, false, true);
+        Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessChineseWord.this);
@@ -276,7 +260,7 @@ public class GuessChineseWord extends TestActivity {
             bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             FrameLayout bad_guess_details = new FrameLayout(this);
-            Details.populate_details_view(GuessChineseWord.this, bad_guess_details, guess, true, true);
+            Details.populate_details_view(GuessChineseWord.this, bad_guess_details, guess, refDB);
             bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);

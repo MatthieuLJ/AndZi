@@ -5,7 +5,6 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -17,26 +16,14 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.util.ArrayList;
 
-public class GuessChar extends TestActivity {
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
-    private ArrayList<Vocabulary> words;
-    private ArrayList<String> previous_guess;
+public class GuessMissingChar extends TestActivity {
+    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
+    private ArrayList<String> previous_guess=new ArrayList<String>();
     private String last_guess="";
     private int last_good=0;
 
-    private final String TAG="GuessChar";
+    private final String TAG="GuessMissingChar";
     private int current_view=0;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-
-        words=new ArrayList<Vocabulary>();
-        previous_guess=new ArrayList<String>();
-    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -59,7 +46,7 @@ public class GuessChar extends TestActivity {
     protected void set_next_study() {
         super.set_next_study();
 
-        words = myDB.getFilteredWordsWithPinyin(hanzi);
+        words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
             if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || (w.chinese.replace(hanzi, "").equals("")))
@@ -94,7 +81,7 @@ public class GuessChar extends TestActivity {
         previous_guess.clear();
 
         while(words.size()>5) {
-            words.remove((int)(words.size()*Math.random()));
+            words.remove(5);
         }
 
         Log.d(TAG, "Testing for character "+hanzi+" got "+words.size()+" words");
@@ -106,7 +93,7 @@ public class GuessChar extends TestActivity {
             TableRow tr = new TableRow(this);
 
             TextView chinese = new TextView(this);
-            chinese.setTextAppearance(GuessChar.this, android.R.style.TextAppearance_Medium_Inverse);
+            chinese.setTextAppearance(GuessMissingChar.this, android.R.style.TextAppearance_Medium_Inverse);
             chinese.setClickable(false);
             chinese.setText(w.chinese.replaceAll(hanzi, "\\?"));
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -115,7 +102,7 @@ public class GuessChar extends TestActivity {
             tr.addView(chinese);
 
             TextView trans = new TextView(this);
-            trans.setTextAppearance(GuessChar.this, android.R.style.TextAppearance_Medium_Inverse);
+            trans.setTextAppearance(GuessMissingChar.this, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
@@ -238,10 +225,10 @@ public class GuessChar extends TestActivity {
         current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
-        Details.populate_details_view(GuessChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, false);
+        Details.populate_details_view(GuessMissingChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessChar.this);
+            TextView bad_guess_text = new TextView(GuessMissingChar.this);
             bad_guess_text.setText("You guessed: "+guess);
             bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
             bad_guess_text.setTextColor(0xffdd0000);

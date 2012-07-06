@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tlv="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical"
         style="@style/AndZiTheme">
 
     <com.matthieu.widget.TouchListView
             android:id="@+id/lesson_list"
             android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="fill_parent"
             android:drawSelectorOnTop="false"
             tlv:grabber="@+id/edit_lesson_grab"
             />
 
-</LinearLayout>
+</FrameLayout>
         
