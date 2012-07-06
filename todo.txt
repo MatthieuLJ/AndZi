@@ -4,8 +4,7 @@ ONGOING (4):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
-* Tone test is wrong when testing for 绿
+BUGS (1):
 * Dictionay is showing duplicated entries (search for dictionary...)
 
 FUTURE (13):
@@ -34,7 +33,8 @@ More information includes:
 - Total number of characters
 Delay to repeat a character is increased when the character was late for review
 
-DONE (129):
+DONE (130):
+* Tone test is wrong when testing for 绿
 * Add help (overview, different screens, IME, ref DB)
 * Fix words getting duplicated in review list when repeating expand/collapse
 * Fix when it will duplicate number to study in review list

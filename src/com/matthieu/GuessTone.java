@@ -81,7 +81,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
         for (String p : pinyins) {
             Pinyin tmp_p=new Pinyin(p);
-            if (tmp_p.get_radical().equals(radical)) {
+            if (tmp_p.get_radical().equals(pinyin.get_radical())) {
                 tones.add(tmp_p.get_tone());
             }
         }
