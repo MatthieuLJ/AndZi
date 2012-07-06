@@ -2,11 +2,14 @@
     <color name="separation_line_color">#999999</color>
     <color name="graph_box0">#ff0000</color>
     <color name="graph_box1">#ffc000</color>
-    <color name="graph_box1_expired">#ffdf80</color>
     <color name="graph_box2">#00dc00</color>
-    <color name="graph_box2_expired">#6edc6e</color>
     <color name="graph_box3">#00b000</color>
-    <color name="graph_box3_expired">#58b058</color>
     <color name="graph_box4">#008000</color>
+
+    <!--
+    <color name="graph_box1_expired">#ffdf80</color>
+    <color name="graph_box2_expired">#6edc6e</color>
+    <color name="graph_box3_expired">#58b058</color>
     <color name="graph_box4_expired">#408040</color>
+    -->
 </resources>

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +24,7 @@ public class Help extends Activity {
     }
 
     private class HelpPageAdapter extends PagerAdapter {
-        HashMap<Integer, SoftReference<View>> view_storage = new HashMap<Integer, SoftReference<View>>();
+        SparseArray<SoftReference<View>> view_storage = new SparseArray<SoftReference<View>>();
         ArrayList<String> pages = new ArrayList<String>(Arrays.asList(
                 "file:///android_asset/help_introduction.html",
                 "file:///android_asset/help_installation.html",
@@ -55,7 +56,7 @@ public class Help extends Activity {
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
             View new_view=null;
-            if (view_storage.containsKey(position)) {
+            if (view_storage.get(position) != null) {
                 new_view = view_storage.get(position).get();
             }
 
