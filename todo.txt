@@ -1,12 +1,11 @@
-ONGOING (4):
+ONGOING (5):
 * Test performance with huge database
 * Make it pretty
+* Customize notification
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (2):
-* Tone test is wrong when testing for 绿
-* Dictionay is showing duplicated entries (search for dictionary...)
+BUGS (00):
 
 FUTURE (13):
 * Can reset score per lesson
@@ -34,7 +33,8 @@ More information includes:
 - Total number of characters
 Delay to repeat a character is increased when the character was late for review
 
-DONE (129):
+DONE (130):
+* Tone test is wrong when testing for 绿
 * Add help (overview, different screens, IME, ref DB)
 * Fix words getting duplicated in review list when repeating expand/collapse
 * Fix when it will duplicate number to study in review list
@@ -189,11 +189,19 @@ DONE (129):
 
 
 Lint output:
-res/layout/details.xml:17: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
-                android:layout_width="fill_parent"
-                ^
-bin/classes/com/matthieu/Credits.class: Warning: The <activity> com.matthieu.Credits is not registered in the manifest [Registered]
-src/com/matthieu/widget/ProgressGraph.java:305: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+src/com/matthieu/Help.java:67: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]
+                wv.getSettings().setJavaScriptEnabled(true);
+                 ^
+AndroidManifest.xml:78: Warning: Exported receiver does not require permission [ExportedReceiver]
+        <receiver android:name=".BootBroadcastReceiver">
+        ^
+AndroidManifest.xml:66: Warning: Exported activity does not require permission [ExportedActivity]
+        <activity android:name=".settings.ExportDB">
+        ^
+AndroidManifest.xml:69: Warning: Exported activity does not require permission [ExportedActivity]
+        <activity android:name=".settings.EmailDB">
+        ^
+src/com/matthieu/widget/ProgressGraph.java:306: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     data0 = new ProgressData();
                              ^
 src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
@@ -202,14 +210,8 @@ src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object alloc
 res/layout/edit_lessons.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]
 <FrameLayout
 ^
-src/com/matthieu/Help.java:25: Warning: Use new SparseArray<SoftReference<View>>(...) instead for better performance [UseSparseArrays]
-        HashMap<Integer, SoftReference<View>> view_storage = new HashMap<Integer, SoftReference<View>>();
-                                                              ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
 res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
-res/values/strings.xml:36: Warning: The resource R.string.description_splash appears to be unused [UnusedResources]
-    <string name="description_splash">splash screen</string>
-    ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -258,8 +260,8 @@ res/layout/main_menu.xml:23: Warning: [I18N] Hardcoded string "Edit Lessons", sh
 res/layout/main_menu.xml:36: Warning: [I18N] Hardcoded string "Test me!", should use @string resource [HardcodedText]
                 android:text="Test me!"
                 ^
-res/layout/main_menu.xml:42: Warning: [I18N] Hardcoded string "Credits", should use @string resource [HardcodedText]
-                android:text="Credits"
+res/layout/main_menu.xml:42: Warning: [I18N] Hardcoded string "Help", should use @string resource [HardcodedText]
+                android:text="Help"
                 ^
 res/layout/main_menu.xml:54: Warning: [I18N] Hardcoded string "Review list", should use @string resource [HardcodedText]
                 android:text="Review list"
@@ -273,7 +275,4 @@ res/layout/main_menu.xml:71: Warning: [I18N] Hardcoded string "Settings", should
 res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should use @string resource [HardcodedText]
                 android:text="Stats"
                 ^
-res/layout/main_menu_splash.xml:13: Warning: [I18N] Hardcoded string "splash screen", should use @string resource [HardcodedText]
-            android:contentDescription="splash screen"
-            ^
-0 errors, 39 warnings
+0 errors, 38 warnings

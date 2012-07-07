@@ -56,8 +56,8 @@ public class Test extends Activity {
                 AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(Test.this);
                 nothing_to_study.setCancelable(false);
                 if (myDB.isFilterEnabled()) {
-                    nothing_to_study.setMessage(getResources().getText(R.string.test_mastering_disable_filter));
-                    nothing_to_study.setPositiveButton(getResources().getText(R.string.ok), new DialogInterface.OnClickListener() {
+                    nothing_to_study.setMessage(getResources().getString(R.string.test_mastering_disable_filter));
+                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             dialog.dismiss();
                             myDB.enableFilter(false);
@@ -65,8 +65,8 @@ public class Test extends Activity {
                         }
                     });
                 } else {
-                    nothing_to_study.setMessage(getResources().getText(R.string.test_mastering));
-                    nothing_to_study.setPositiveButton(getResources().getText(R.string.ok), new DialogInterface.OnClickListener() {
+                    nothing_to_study.setMessage(getResources().getString(R.string.test_mastering));
+                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             dialog.dismiss();
                             continue_with_more_chars=true;
@@ -74,7 +74,7 @@ public class Test extends Activity {
                         }
                     });
                 }
-                nothing_to_study.setNegativeButton(getResources().getText(R.string.cancel), new DialogInterface.OnClickListener() {
+                nothing_to_study.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                         finish();

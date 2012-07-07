@@ -9,11 +9,11 @@
                 android:title="@string/settings_colored_pinyins"
                 android:key="color_pinyin"
                 android:defaultValue="true"
-                android:summary="Show different tones with colors"
+                android:summary="@string/settings_colored_pinyins_summary"
                 />
         <ListPreference
                 android:title="@string/settings_show_correct_answer"
-                android:summary="Customize when you want to see the correct answer when doing a test"
+                android:summary="@string/settings_show_correct_answer_summary"
                 android:key="show_result"
                 android:defaultValue="1"
                 android:entries="@array/result_preference"
@@ -64,7 +64,7 @@
         <CheckBoxPreference
                 android:title="@string/settings_ref_db_enable"
                 android:defaultValue="true"
-                android:summary="Enable the use for reference database"
+                android:summary="@string/settings_ref_db_enable_summary"
                 android:key="ref_enabled"
                 />
         <Preference

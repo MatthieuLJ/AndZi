@@ -3,24 +3,23 @@
 <PreferenceScreen
         xmlns:android="http://schemas.android.com/apk/res/android">
     <CheckBoxPreference
-            android:title="Include scores"
+            android:title="@string/settings_include_scores"
             android:defaultValue="false"
-            android:summary="Include current scores with database"
             android:key="include_scores"
             />
     <CheckBoxPreference
-            android:title="Export filtered lessons"
+            android:title="@string/settings_include_filters"
             android:defaultValue="false"
-            android:summary="Only include current filtered lessons"
+            android:summary="@string/settings_include_filters_summary"
             android:key="only_filtered"
             />
     <EditTextPreference
-            android:title="File path"
-            android:summary="Destination"
+            android:title="@string/settings_file_path"
+            android:summary="@string/settings_file_path_summary"
             android:key="export_path"
             />
     <Preference
-            android:title="Export"
+            android:title="@string/settings_export"
             android:key="do_export"
             />
 </PreferenceScreen>

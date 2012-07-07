@@ -15,10 +15,10 @@
     height: 7%; /* 50px / 723px */
 }
 
-.hints:hover {
-    border: 1px solid red;
-    margin: -1px 0 0 -1px;
+.hint_link {
+    -webkit-tap-highlight-color:rgba(0,0,0,0);
 }
+
 
 #target_help {
     margin-left: 45%;

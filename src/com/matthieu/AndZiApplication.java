@@ -126,54 +126,31 @@ public class AndZiApplication extends Application {
         edit.commit();
     }
 
-    public void installRefDB(String path, boolean erase_source) {
-        eraseRefDB();
-        String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
-        if (!copyDataBase(path, dest)) {
-            new File(dest).delete();
-            return;
-        }
-        if (erase_source) {
-            File to_delete= new File(path);
-            to_delete.delete();
-        }
-
-        refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
-        ref_present=true;
-        Log.d(TAG, "Done installing reference db " + dest);
-    }
-
-    public void eraseRefDB() {
-        if (refDB != null) {
-            refDB.close();
-            refDB = null;
-        }
-        ContextWrapper cw = new ContextWrapper(getApplicationContext());
-        cw.deleteDatabase(REF_DB_NAME);
-        ref_present=false;
-    }
-
     public boolean check_exporting_space(String path) {
+        return check_exporting_space(path, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME));
+    }
+    public boolean check_exporting_progress_space(String path) {
+        return check_exporting_space(path, getApplicationContext().getDatabasePath(PROGRESS_DB_NAME));
+    }
+    public boolean check_exporting_space(String path, File source_path) {
         // exporting is a several steps process:
         // create another temporary database with the data to export
         // copy the temporary file to the destination
         // delete the temporary file
         String destination_mp = FileMountPoint.mount_point(path);
-        String localDB_mp = FileMountPoint.mount_point(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
+        String localDB_mp = FileMountPoint.mount_point(source_path.getPath());
 
         if (destination_mp.equals(localDB_mp)) {
             StatFs stats = new StatFs(destination_mp);
             int available_space = stats.getAvailableBlocks();
 
-            File f = getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME);
-            long dbSize = f.length()/stats.getBlockSize();
+            long dbSize = source_path.length()/stats.getBlockSize();
 
             if (available_space < 2*dbSize)
                 return false;
         }
         else {
-            File f = getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME);
-            long dbSize = f.length();
+            long dbSize = source_path.length();
 
             StatFs stats = new StatFs(destination_mp);
             int available_space = stats.getAvailableBlocks();
@@ -190,6 +167,20 @@ public class AndZiApplication extends Application {
 
         return true;
     }
+
+    public boolean check_replace_progress(String path) {
+        StatFs stats = new StatFs(FileMountPoint.mount_point(getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath()));
+        long available_space = stats.getAvailableBlocks();
+
+        File current = new File(getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath());
+        long current_size = current.length();
+
+        File f = new File(path);
+        long dbSize = f.length();
+
+        return available_space-current_size/stats.getBlockSize() >= dbSize/stats.getBlockSize();
+    }
+
 
     public boolean check_merging_space(String path) {
         // merging is a several steps process:
@@ -244,10 +235,13 @@ public class AndZiApplication extends Application {
     }
 
     public boolean copyMyDataBase(String destination) {
-        return copyDataBase(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
+        return copyFile(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
     }
+    public boolean copyProgressDataBase(String destination) {
+            return copyFile(getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath(), destination);
+        }
 
-    public boolean copyDataBase(String source, String destination) {
+    public boolean copyFile(String source, String destination) {
         InputStream input;
         try {
             input = new FileInputStream(source);
@@ -290,9 +284,45 @@ public class AndZiApplication extends Application {
         myDB=null;
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(DEFAULT_DATABASE_NAME);
-        if (!copyDataBase(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath())) {
-
-        }
+        copyFile(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
         initialize_my_db();
+    }
+
+    public void installRefDB(String path, boolean erase_source) {
+        eraseRefDB();
+        String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
+        if (!copyFile(path, dest)) {
+            new File(dest).delete();
+            return;
+        }
+        if (erase_source) {
+            File to_delete= new File(path);
+            to_delete.delete();
+        }
+
+        refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
+        ref_present=true;
+        Log.d(TAG, "Done installing reference db " + dest);
+    }
+
+    public void eraseRefDB() {
+        if (refDB != null) {
+            refDB.close();
+            refDB = null;
+        }
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        cw.deleteDatabase(REF_DB_NAME);
+        ref_present=false;
+    }
+
+    public void replaceProgressDataBase(String source) {
+        if (prog != null) {
+            prog.close();
+            prog = null;
+        }
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        cw.deleteDatabase(PROGRESS_DB_NAME);
+        copyFile(source, getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath());
+        prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
     }
 }

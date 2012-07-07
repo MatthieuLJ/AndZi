@@ -22,7 +22,7 @@ import com.matthieu.R;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
+import java.util.Calendar;
 
 public class Settings extends PreferenceActivity {
     protected HanziDB myDB=null;
@@ -30,14 +30,17 @@ public class Settings extends PreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
-        addPreferencesFromResource(R.xml.settings_main);
+        if (true)
+            addPreferencesFromResource(R.xml.settings_main);
+        else
+            addPreferencesFromResource(R.xml.settings_main_extra);
 
         Preference reset_db = findPreference("ResetDB");
         reset_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
                 AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
-                alert.setMessage("Are you sure you want to restart the study for everything?");
-                alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                alert.setMessage(R.string.settings_confirm_reset_scores);
+                alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, int i) {
                         new AsyncTask<Void,Void,Void>() {
                             ProgressDialog mProgressDialog;
@@ -45,7 +48,7 @@ public class Settings extends PreferenceActivity {
                             protected void onPreExecute() {
                                 super.onPreExecute();
                                 dialog.dismiss();
-                                mProgressDialog = ProgressDialog.show(Settings.this, "Reset Database", "", false);
+                                mProgressDialog = ProgressDialog.show(Settings.this, getResources().getString(R.string.settings_reset_db_progress), "", false);
                             }
 
                             @Override
@@ -62,7 +65,7 @@ public class Settings extends PreferenceActivity {
                         }.execute((Void)null);
                     }
                 });
-                alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                     }
@@ -77,14 +80,14 @@ public class Settings extends PreferenceActivity {
         clear_db.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
                 AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
-                alert.setMessage("Are you sure you want to clear all your database?");
-                alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                alert.setMessage(R.string.settings_confirm_clear_db);
+                alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         myDB.clearDB();
                         dialog.dismiss();
                     }
                 });
-                alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                     }
@@ -124,8 +127,8 @@ public class Settings extends PreferenceActivity {
         del_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
                 AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
-                alert.setMessage("Are you sure you want to delete the reference database?");
-                alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                alert.setMessage(R.string.settings_confirm_ref_db_erase);
+                alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         ((AndZiApplication) getApplication()).eraseRefDB();
                         enable_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
@@ -133,7 +136,7 @@ public class Settings extends PreferenceActivity {
                         dialog.dismiss();
                     }
                 });
-                alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                     }
@@ -144,6 +147,72 @@ public class Settings extends PreferenceActivity {
                 return true;
             }
         });
+
+        Preference export_progress = findPreference("ExportProgress");
+        if (export_progress != null) {
+            export_progress.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                private void do_export_progress(final String destination) {
+                    File export_db = new File(destination);
+                    try {
+                        if (!export_db.createNewFile()) {
+                            Toast.makeText(Settings.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    } catch (IOException e) {
+                        Toast.makeText(Settings.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (((AndZiApplication) getApplication()).check_exporting_progress_space(destination)) {
+                        ((AndZiApplication) getApplication()).copyProgressDataBase(destination);
+                        Toast.makeText(Settings.this, getString(R.string.settings_export_progress_success,destination), Toast.LENGTH_SHORT).show();
+
+                    }
+                    else {
+                        Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_export, Toast.LENGTH_SHORT).show();
+                    }
+
+                    return;
+                }
+                public boolean onPreferenceClick(Preference preference) {
+                    String dest = Environment.getExternalStorageDirectory().getPath()+"/progress-"+ (1+ Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
+                    do_export_progress(dest);
+                    return true;
+                }
+            });
+        }
+
+        Preference import_progress = findPreference("ImportProgress");
+        if (import_progress != null) {
+            import_progress.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                private void do_import_progress(final String destination) {
+                    File export_db = new File(destination);
+                    try {
+                        if (!export_db.createNewFile()) {
+                            Toast.makeText(Settings.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    } catch (IOException e) {
+                        Toast.makeText(Settings.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (((AndZiApplication) getApplication()).check_exporting_progress_space(destination)) {
+                        ((AndZiApplication) getApplication()).copyProgressDataBase(destination);
+                        Toast.makeText(Settings.this, R.string.settings_import_progress_success, Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();
+                    }
+
+                    return;
+                }
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent intent = new Intent(Settings.this, com.matthieu.widget.file_dialog.FileDialog.class);
+                    intent.putExtra(com.matthieu.widget.file_dialog.FileDialog.START_PATH, Environment.getExternalStorageDirectory().getPath());
+                    startActivityForResult(intent, 1);
+                    return true;
+                }
+            });
+        }
 
         int intent_action=getIntent().getIntExtra("Settings_action", -1);
         switch(intent_action) {
@@ -159,7 +228,7 @@ public class Settings extends PreferenceActivity {
         // should come here after the activity startedin import_database completes
         if (resultCode == Activity.RESULT_OK) {
 
-            if ((requestCode != 0) && (requestCode != 1)) {
+            if ((requestCode < 0) || (requestCode > 1)) {
                 return;
             }
             final String filePath = data.getStringExtra(com.matthieu.widget.file_dialog.FileDialog.RESULT_PATH);
@@ -168,9 +237,17 @@ public class Settings extends PreferenceActivity {
                 if (((AndZiApplication)getApplication()).check_merging_space(filePath))
                     myDB.create_merge_task(filePath, true, this, null);
                 else {
-                    Toast.makeText(Settings.this, "Not enough space on device to import database", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();
                 }
             }
+            else if (requestCode == 1) {
+                if (((AndZiApplication)getApplication()).check_replace_progress(filePath))
+                    ((AndZiApplication)getApplication()).replaceProgressDataBase(filePath);
+                else {
+                    Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();
+                }
+            }
+
         } else if (resultCode == Activity.RESULT_CANCELED) {
             return;
         }
@@ -201,7 +278,7 @@ public class Settings extends PreferenceActivity {
             super.onPreExecute();
 
             mProgressDialog = new ProgressDialog(Settings.this);
-            mProgressDialog.setMessage("Downloading reference database");
+            mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_download_progress));
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(100);
             mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -217,13 +294,12 @@ public class Settings extends PreferenceActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             if (enough_space) {
-                mProgressDialog.setMessage("Installing...");
+                mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_install_progress));
                 ((AndZiApplication) getApplication()).installRefDB(PATH, true);
-                Log.d(TAG, "installed");
             }
             mProgressDialog.dismiss();
             if (!enough_space) {
-                Toast.makeText(Settings.this, "Not enough space on device to download and install reference database", Toast.LENGTH_SHORT).show();
+                Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_install_ref, Toast.LENGTH_SHORT).show();
             }
 
             final Preference enable_ref = findPreference("ref_enabled");
@@ -247,11 +323,6 @@ public class Settings extends PreferenceActivity {
                 connection.connect();
                 int lengthOfFile = connection.getContentLength();
                 long startTime = System.currentTimeMillis();
-
-                Log.d(TAG, "download beginning");
-                Log.d(TAG, "download url:" + url);
-                Log.d(TAG, "downloaded file name:" + fileName);
-                Log.d(TAG, "file size:" + lengthOfFile);
 
                 enough_space = ((AndZiApplication) getApplication()).check_ref_download_space(PATH, lengthOfFile);
                 if (!enough_space) {
@@ -284,14 +355,10 @@ public class Settings extends PreferenceActivity {
                 output.close();
                 input.close();
 
-                Log.d(TAG, "download ready after "
-                                        + ((System.currentTimeMillis() - startTime) / 1000)
-                                        + " sec");
             } catch (IOException e) {
-                Log.d(TAG, "Error: " + e);
+                Log.e(TAG, "Error: " + e);
                 enough_space = false;
             }
-
         }
     }
 }
