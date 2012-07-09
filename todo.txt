@@ -1,6 +1,6 @@
 ONGOING (5):
 * Test performance with huge database
-* Make it pretty
+* Make it pretty(ier)
 * Customize notification
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
@@ -207,9 +207,6 @@ src/com/matthieu/widget/ProgressGraph.java:306: Warning: Avoid object allocation
 src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     post(new Runnable() {
                           ^
-res/layout/edit_lessons.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]
-<FrameLayout
-^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
 res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
@@ -275,4 +272,4 @@ res/layout/main_menu.xml:71: Warning: [I18N] Hardcoded string "Settings", should
 res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should use @string resource [HardcodedText]
                 android:text="Stats"
                 ^
-0 errors, 38 warnings
+0 errors, 37 warnings

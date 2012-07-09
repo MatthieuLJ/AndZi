@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<FrameLayout
+<merge
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tlv="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="fill_parent"
@@ -15,5 +15,5 @@
             tlv:grabber="@+id/edit_lesson_grab"
             />
 
-</FrameLayout>
+</merge>
         
