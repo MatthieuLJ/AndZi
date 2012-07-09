@@ -41,6 +41,7 @@ public class Help extends Activity {
                 "file:///android_asset/help_dictionary1.html",
                 "file:///android_asset/help_dictionary2.html",
                 "file:///android_asset/help_dictionary3.html",
+                "file:///android_asset/help_stats.html",
                 "file:///android_asset/credits.html"));
 
         @Override
@@ -77,6 +78,5 @@ public class Help extends Activity {
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView((View) object);
         }
-
     }
 }

@@ -6,7 +6,6 @@ package com.matthieu.widget;
 import android.content.Context;
 import android.graphics.*;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -86,6 +85,8 @@ public class ProgressGraph extends View {
         while (max_score > max_scale) {
             max_scale += pow(10,scale_magnitude);
         }
+        if (max_score > 5*pow(10, scale_magnitude+1))
+            scale_magnitude++;
 
         left_scale=null;
     }
@@ -230,17 +231,17 @@ public class ProgressGraph extends View {
             first_offset=getMeasuredHeight()-bottom_size-left_axis_r.height();
 
             // draw some intermediary values
-            int int_value= (int) (max_scale-pow(10, scale_magnitude));
-            while(int_value >0) {
+            int int_value= 0;
+            while(int_value < max_scale) {
                 left_scale_canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
                         (float) ((1.0-log_scale(int_value, max_scale)))*(getMeasuredHeight()-bottom_size), left_size-1, (float) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size)), p);
                 if (((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2 > last_offset) &&
                         ((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2<first_offset)) {
                     left_scale_canvas.drawText(Integer.toString(int_value),(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                             (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2, p);
-                    last_offset = (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2;
+                    first_offset = (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2;
                 }
-                int_value -= pow(10, scale_magnitude);
+                int_value += pow(10, scale_magnitude);
             }
 
             // draw a line along

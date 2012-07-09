@@ -64,6 +64,7 @@ public class ReviewList extends ListActivity {
 
             @Override
             protected void onPostExecute(Void aVoid) {
+                getListView().setAdapter(null);
                 if (lesson == null) {
                     if (expired_filtered == 0) {
                         AlertDialog.Builder no_words_dialog = new AlertDialog.Builder(ReviewList.this);
@@ -78,21 +79,30 @@ public class ReviewList extends ListActivity {
                         no_words_dialog.create();
                         no_words_dialog.show();
                     }
-                    LayoutInflater inflater = getLayoutInflater();
-                    TextView header = (TextView) inflater.inflate(R.layout.review_list_header, getListView(), false);
+
 
                     int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
+                    String header_text;
                     if (expired != expired_filtered) {
-                        header.setText(getString(R.string.review_list_num_to_study_filtered, expired_filtered, expired));
+                        header_text = getString(R.string.review_list_num_to_study_filtered, expired_filtered, expired);
                     }
                     else {
-                        header.setText(getString(R.string.review_list_num_to_study, expired));
+                        header_text = getString(R.string.review_list_num_to_study, expired);
                     }
-                    View old_header = (View) getListView().getTag(R.id.header_view);
-                    if (old_header != null)
-                        getListView().removeHeaderView(old_header);
-                    getListView().addHeaderView(header, null, false);
-                    getListView().setTag(R.id.header_view ,header);
+
+                    TextView old_header = (TextView) getListView().getTag(R.id.header_view);
+                    if (old_header != null) {
+                        old_header.setText(header_text);
+                    } else {
+                        LayoutInflater inflater = getLayoutInflater();
+                        TextView header = (TextView) inflater.inflate(R.layout.review_list_header, getListView(), false);
+                        header.setText(header_text);
+                        getListView().addHeaderView(header, null, false);
+                        getListView().setTag(R.id.header_view ,header);
+                    }
+
+
+
                     setListAdapter(new CharacterCursorAdapter(ReviewList.this, cur, myDB, true));
                 } else {
                     setListAdapter(new VocabularyCursorAdapter(ReviewList.this, cur));
