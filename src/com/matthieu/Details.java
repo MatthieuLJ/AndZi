@@ -6,9 +6,11 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Html;
@@ -84,7 +86,7 @@ public class Details extends Activity {
         return super.onKeyDown(keyCode, event);
     }
 
-    static VocabularyCursorAdapter populate_details_view(final Activity context, ViewGroup section, final String hanzi, HanziDB db) {
+    static void populate_details_view(final Activity context, ViewGroup section, final String hanzi, final HanziDB db) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
@@ -132,19 +134,42 @@ public class Details extends Activity {
             i+=Character.charCount(hanzi.codePointAt(i));
         }
 
-        ListView list= (ListView) new_view.findViewById(R.id.details_list);
-        ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
+        final ListView list= (ListView) new_view.findViewById(R.id.details_list);
+        final ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
         for (int i=0; i<hanzi.length(); ) {
             elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
                     hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))));
             i+=Character.charCount(hanzi.codePointAt(i));
         }
-        Cursor cursor = db.getWordsWithSequence(elements, true, true);
-        VocabularyCursorAdapter res = new VocabularyCursorAdapter(context, cursor);
-        if (list != null)
-            list.setAdapter(res);
+        AsyncTask<Void,Void,Void> populate = new AsyncTask<Void,Void,Void>() {
+            Cursor cursor;
+            ProgressDialog mProgressDialog;
 
-        return res;
+            @Override
+            protected void onPreExecute() {
+                mProgressDialog = new ProgressDialog(context);
+                mProgressDialog.setMessage(context.getResources().getString(R.string.loading));
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mProgressDialog.show();
+            }
+            @Override
+            protected Void doInBackground(Void... voids) {
+                cursor = db.getWordsWithSequence(elements, true, true);
+                cursor.getCount();  // force the "calculation"
+                return (Void) null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                VocabularyCursorAdapter res = new VocabularyCursorAdapter(context, cursor);
+                if (list != null)
+                    list.setAdapter(res);
+                mProgressDialog.dismiss();
+            }
+        };
+        populate.execute();
     }
 
     @Override
