@@ -56,7 +56,7 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
         mContext = context;
         progress_db = ((AndZiApplication)context.getApplicationContext()).getProgress();
 
-        long oldest = progress_db.get_data().get(0).date;
+        long oldest = progress_db.get_data(0).get(0).date;
         long current = System.currentTimeMillis();
         if (current - oldest > delays[6]) {
             max_range=7;
