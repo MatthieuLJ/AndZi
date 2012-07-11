@@ -40,7 +40,7 @@ public class DBActivity extends Activity {
         tv.setText(""+expired);
 
         final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
-        update_graph();
+        graph.set_data(((AndZiApplication)getApplication()).getProgress());
 
         Button zoomin= (Button) findViewById(R.id.graph_in);
         zoomin.setOnClickListener(new View.OnClickListener() {
@@ -70,7 +70,7 @@ public class DBActivity extends Activity {
                     }
                 });
             }
-        }, 0, 10*60*1000);
+        }, 10*60*1000, 10*60*1000);
     }
 
     @Override
@@ -81,9 +81,7 @@ public class DBActivity extends Activity {
 
     private void update_graph() {
         final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
-        ArrayList<ProgressDB.ProgressData> to_display = ((AndZiApplication) getApplication()).getProgress().get_data();
-        to_display.add(((AndZiApplication) getApplication()).getCurrentProgress());
-        graph.set_data(to_display);
+        graph.update_graph();
     }
 
     private void update_buttons() {
