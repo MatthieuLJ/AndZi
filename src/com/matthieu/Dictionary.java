@@ -35,7 +35,7 @@ public class Dictionary extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
-        new update_delayer().start();
+        new update_delayer().execute((Void[])null);
 
         setContentView(R.layout.dictionary);
         mode=0;
@@ -77,68 +77,50 @@ public class Dictionary extends Activity {
             current_cursor.close();
     }
 
-    private class update_delayer extends Thread {
-        private Timer next_update=null;
-        private int last_mode=-1;
-        private String last_query;
+    private class update_delayer extends AsyncTask<Void,Cursor, Void> {
+        String msg_query;
+        int msg_mode;
+
         @Override
-        public void run() {
+        protected Void doInBackground(Void... voids) {
             Looper.prepare();
-            setPriority(MIN_PRIORITY);
 
             update_handler = new Handler() {
                 @Override
                 public void handleMessage(Message msg) {
-                    if (next_update != null)
-                        next_update.cancel();
-                    next_update = new Timer();
-                    final String query = (String) msg.obj;
-                    final int mode = msg.arg1;
+                    msg_query = (String) msg.obj;
+                    msg_mode = msg.arg1;
 
-                    last_mode=mode;
-                    last_query=query;
+                    Log.w(TAG, "Got a query for "+msg_query);
 
-                    TimerTask next_update_task = new TimerTask() {
-                        @Override
-                        public void run() {
-                            next_update=null;
-                            update_list(mode, query);
-                        }
-                    };
-                    next_update.schedule(next_update_task, 500);
+                    update_list();
                 }
             };
 
             Looper.loop();
+            return null;
         }
 
-        private void update_list(final int mode, final String orig) {
+
+        private void update_list() {
             EditText query = (EditText) findViewById(R.id.dict_query);
             if (query == null)
                 return;
-            if (!query.getText().toString().equals(orig))
+
+            if ((msg_mode != mode) || (!msg_query.equals(query.getText().toString())))
                 return;
 
-            Log.d(TAG, "Starting a new query for "+orig);
+            Log.d(TAG, "Starting a new query for "+msg_query);
 
-            final ListView results = (ListView) findViewById(R.id.dict_results);
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    setProgressBarIndeterminateVisibility(true);
-                    Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
-                    ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(null);
-                    if (old_cursor != null)
-                        old_cursor.close();
-                }
-            });
+            publishProgress((Cursor[])null);
 
-            if (orig.length()==0) {
+            if (msg_query.length()==0) {
                 current_cursor=null;
             }
             else {
                 HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
-                if (mode == 0) {
-                    ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(orig);
+                if (msg_mode == 0) {
+                    ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
                     boolean all_chinese=true;
                     if (elems != null)
                         for (HanziDB.StringElement e : elems) {
@@ -154,40 +136,47 @@ public class Dictionary extends Activity {
                         else
                             current_cursor = refDB.getWordsStartingWithSequence(elems, true, true);
                     }
-                    else if ((all_chinese) && (elems.size() >= 3) && (refDB.getTranslations(orig).size()==0))
+                    else if ((all_chinese) && (elems.size() >= 3) && (refDB.getTranslations(msg_query).size()==0))
                         current_cursor = refDB.getDecomposedParts(elems, 4, true, true);
                     else
                         current_cursor = refDB.getWordsWithSequence(elems, true, true);
                 }
-                else if (mode == 1) {
-                    if (orig.length()<2)
+                else if (msg_mode == 1) {
+                    if (msg_query.length()<2)
                         current_cursor=null;
-                    else if (orig.length()<3)
-                        current_cursor = refDB.getFilteredStartingCTranslations(orig);
+                    else if (msg_query.length()<3)
+                        current_cursor = refDB.getFilteredStartingCTranslations(msg_query);
                     else
-                        current_cursor = refDB.getFilteredCTranslations(orig);
+                        current_cursor = refDB.getFilteredCTranslations(msg_query);
                 }
                 else
                     current_cursor =null;
             }
 
             // Just to make sure the query actually happens in this thread (and not the UI thread)
-            if ((mode == last_mode) && (orig.equals(last_query)) && (current_cursor != null)) {
-                Log.d(TAG, "Start query! "+System.currentTimeMillis());
+            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null)) {
+                Log.w(TAG, "Start query! "+System.currentTimeMillis());
                 current_cursor.getCount();
-                Log.d(TAG, "Finish query! "+System.currentTimeMillis());
+                current_cursor.moveToFirst();
+                Log.w(TAG, "Finish query! "+System.currentTimeMillis());
             }
 
-            if ((mode == last_mode) && (orig.equals(last_query)))
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
-                        ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(current_cursor);
-                        if (old_cursor != null)
-                            old_cursor.close();
-                        setProgressBarIndeterminateVisibility(false);
-                    }
-                });
+            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
+                Log.w(TAG, "Displaying results of query for "+msg_query+" at "+System.currentTimeMillis());
+                publishProgress(current_cursor);
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Cursor... values) {
+            final ListView results = (ListView) findViewById(R.id.dict_results);
+
+            setProgressBarIndeterminateVisibility(values==null);
+            Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
+            ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(values==null?null:values[0]);
+            Log.w(TAG, "Done displaying results of query at "+System.currentTimeMillis());
+            if (old_cursor != null)
+                old_cursor.close();
         }
     }
 
@@ -196,7 +185,7 @@ public class Dictionary extends Activity {
         toSend.obj = query;
         toSend.arg1 = mode;
         if (update_handler!=null)
-            update_handler.dispatchMessage(toSend);
+            update_handler.sendMessage(toSend);
     }
 
     private class Dictionary_query_parse implements TextWatcher {
