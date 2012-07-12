@@ -83,6 +83,14 @@ public class AndZiApplication extends Application {
         new_data.num_chars_in_box[4]=myDB.getNumCharsInBoxOrAbove(4);
         new_data.num_chars_expired_in_box[4]=myDB.getNumCharsExpiredInBoxOrAbove(4);
         new_data.date = System.currentTimeMillis();
+        /*
+        Log.w(TAG, "Current progress is "+new_data.num_chars_in_box[0]+" ("+new_data.num_chars_expired_in_box[0]+"), "
+                +new_data.num_chars_in_box[1]+" ("+new_data.num_chars_expired_in_box[1]+"), "
+                +new_data.num_chars_in_box[2]+" ("+new_data.num_chars_expired_in_box[2]+"), "
+                +new_data.num_chars_in_box[3]+" ("+new_data.num_chars_expired_in_box[3]+"), "
+                +new_data.num_chars_in_box[4]+" ("+new_data.num_chars_expired_in_box[4]+") => total of "+
+                (new_data.num_chars_in_box[0]+new_data.num_chars_in_box[1]+new_data.num_chars_in_box[2]+new_data.num_chars_in_box[3]+new_data.num_chars_in_box[4]));
+                */
         return new_data;
     }
 
