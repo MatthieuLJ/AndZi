@@ -6,9 +6,11 @@
 package com.matthieu;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -324,5 +326,13 @@ public class AndZiApplication extends Application {
         cw.deleteDatabase(PROGRESS_DB_NAME);
         copyFile(source, getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath());
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
+    }
+
+    public boolean isOnline() {
+        ConnectivityManager cm =
+            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null &&
+           cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

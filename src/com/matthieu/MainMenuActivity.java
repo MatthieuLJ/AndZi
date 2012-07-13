@@ -35,7 +35,6 @@ public class MainMenuActivity extends Activity {
         boolean skip_splash = getIntent().getBooleanExtra("skip_splash", false);
 
         if ((!skip_splash) && ((myState == null) || (myState.showSplash))) {
-            Log.d(TAG, "Showing splash");
             showing_splash=true;
             setContentView(R.layout.main_menu_splash);
             TextView tversion = (TextView) findViewById(R.id.splash_version);
@@ -68,34 +67,36 @@ public class MainMenuActivity extends Activity {
     }
 
     private void start_it() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
-        boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
-        if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
-            alert.setMessage("Everything would be so much better if you downloaded the reference data...");
-            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int i) {
-                    dialog.dismiss();
-                }
-            });
-            alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int i) {
-                    SharedPreferences.Editor edit = prefs.edit();
-                    edit.putBoolean("first_time_ref", false);
-                    edit.commit();
-                    dialog.dismiss();
-                }
-            });
-            alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int i) {
-                    Intent in = new Intent(MainMenuActivity.this, Settings.class);
-                    in.putExtra("Settings_action", 0);
-                    startActivity(in);
-                    dialog.dismiss();
-                }
-            });
-            alert.create();
-            alert.show();
+        if (((AndZiApplication) getApplication()).isOnline()) {
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
+            boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
+            if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
+                alert.setMessage("Everything would be so much better if you downloaded the dictionary...");
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                });
+                alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        SharedPreferences.Editor edit = prefs.edit();
+                        edit.putBoolean("first_time_ref", false);
+                        edit.commit();
+                        dialog.dismiss();
+                    }
+                });
+                alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        Intent in = new Intent(MainMenuActivity.this, Settings.class);
+                        in.putExtra("Settings_action", 0);
+                        startActivity(in);
+                        dialog.dismiss();
+                    }
+                });
+                alert.create();
+                alert.show();
+            }
         }
 
         showing_splash = false;

@@ -20,12 +20,14 @@ import com.matthieu.HanziDB;
 import com.matthieu.R;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.util.Calendar;
 
 public class Settings extends PreferenceActivity {
     protected HanziDB myDB=null;
+
+    private static final String dictionaryURL="http://db.tt/RdRHvoJa12";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,7 +119,7 @@ public class Settings extends PreferenceActivity {
         Preference download_ref = findPreference("DownloadRef");
         download_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
-                final String params[]= {"http://db.tt/RdRHvoJa"};
+                final String params[]= {dictionaryURL};
                 ref_downloader down = new ref_downloader();
                 down.execute(params);
                 return true;
@@ -217,7 +219,7 @@ public class Settings extends PreferenceActivity {
         int intent_action=getIntent().getIntExtra("Settings_action", -1);
         switch(intent_action) {
             case 0: // download reference
-                final String params[]= {"http://db.tt/RdRHvoJa"};
+                final String params[]= {dictionaryURL};
                 ref_downloader down = new ref_downloader();
                 down.execute(params);
                 break;
@@ -256,7 +258,7 @@ public class Settings extends PreferenceActivity {
     private class ref_downloader extends AsyncTask<String,Integer,Void> {
         ProgressDialog mProgressDialog;
         String PATH, URL;
-        boolean enough_space;
+        boolean enough_space=true, connection_success=true, download_success=true;
         private final String TAG="ref_downloader";
 
         @Override
@@ -265,11 +267,11 @@ public class Settings extends PreferenceActivity {
                 PATH= File.createTempFile("ref", "db").getPath();
             } catch (IOException e) {
                 e.printStackTrace();
-                //PATH=DBActivity.getApplicationContext().getFilesDir()+"/cedict_ref/";
+                return null;
             }
             URL=strings[0];
 
-            DownloadFromUrl(URL, PATH);
+            download_success = DownloadFromUrl(URL, PATH);
             return null;
         }
 
@@ -293,13 +295,20 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            if (enough_space) {
+            if (download_success) {
                 mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_install_progress));
                 ((AndZiApplication) getApplication()).installRefDB(PATH, true);
+                mProgressDialog.dismiss();
             }
-            mProgressDialog.dismiss();
-            if (!enough_space) {
-                Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_install_ref, Toast.LENGTH_SHORT).show();
+            else {
+                mProgressDialog.dismiss();
+                if (!enough_space) {
+                    Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_install_ref, Toast.LENGTH_SHORT).show();
+                } else if (!connection_success) {
+                    Toast.makeText(Settings.this, R.string.settings_error_cannot_connect, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(Settings.this, R.string.settings_error_install_ref, Toast.LENGTH_SHORT).show();
+                }
             }
 
             final Preference enable_ref = findPreference("ref_enabled");
@@ -315,18 +324,25 @@ public class Settings extends PreferenceActivity {
             mProgressDialog.setProgress(values[0]);
         }
 
-        private void DownloadFromUrl(String download_URL, String fileName) {
+        private boolean DownloadFromUrl(String download_URL, String fileName) {
             int count;
+            HttpURLConnection connection=null;
+
             try {
                 URL url = new URL(download_URL);
-                URLConnection connection = url.openConnection();
+                connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
+                int respCode = connection.getResponseCode();
+                if (respCode / 100 >=4) {
+                    return false;
+                }
+
+                connection_success=true;
                 int lengthOfFile = connection.getContentLength();
-                long startTime = System.currentTimeMillis();
 
                 enough_space = ((AndZiApplication) getApplication()).check_ref_download_space(PATH, lengthOfFile);
                 if (!enough_space) {
-                    return;
+                    return false;
                 }
 
                 // download the file
@@ -343,7 +359,7 @@ public class Settings extends PreferenceActivity {
                         output.close();
                         input.close();
                         new File(fileName).delete();
-                        return;
+                        return false;
                     }
                     total += count;
                     // publishing the progress....
@@ -355,10 +371,18 @@ public class Settings extends PreferenceActivity {
                 output.close();
                 input.close();
 
+                return true;
+            } catch (SocketException e) {
+                Log.e(TAG, "Cannot connect");
+                connection_success = false;
             } catch (IOException e) {
                 Log.e(TAG, "Error: " + e);
-                enough_space = false;
             }
+            finally {
+                if (connection!=null)
+                    connection.disconnect();
+            }
+            return false;
         }
     }
 }
