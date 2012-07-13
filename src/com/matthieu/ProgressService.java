@@ -21,30 +21,23 @@ public class ProgressService extends Service {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
-                db.add_data(current_data);
-                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                int expired = current_data.num_chars_expired_in_box[0] + current_data.num_chars_expired_in_box[1] + current_data.num_chars_expired_in_box[2] +
-                        current_data.num_chars_expired_in_box[3] + current_data.num_chars_expired_in_box[4];
-                if (expired > 10) {
-                    Notification notification = new Notification(R.drawable.icon, "More to study", System.currentTimeMillis());
-                    notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
-                    notification.setLatestEventInfo(ProgressService.this, "More Chinese to study", "You have " + expired + " to study",
-                            PendingIntent.getActivity(ProgressService.this, 0, new Intent(ProgressService.this, Test.class), 0));
-                    nm.notify(NOTIFICATION_ID, notification);
-                }
-                else {
-                    nm.cancel(NOTIFICATION_ID);
+                if (!((AndZiApplication) getApplication()).isApplicationForeground()) {
+                    update_notification(true);
+                }else {
+                    clear_notification(ProgressService.this);
                 }
             }
         };
 
-        timer.scheduleAtFixedRate(task, 0, 2*60*60*1000); // every 2 hours
+        timer.scheduleAtFixedRate(task, 30*1000, 2*60*60*1000); // every 2 hours
         //timer.scheduleAtFixedRate(task, 0, 120*1000); // every 4 minutes for test...
     }
 
-    public void update_notification() {
+    public void update_notification(boolean store) {
+        ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
+        if (store)
+            db.add_data(current_data);
 
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int expired = current_data.num_chars_expired_in_box[0] + current_data.num_chars_expired_in_box[1] + current_data.num_chars_expired_in_box[2] +

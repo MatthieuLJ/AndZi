@@ -19,6 +19,8 @@ import com.matthieu.widget.ObjectSerializer;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
@@ -338,12 +340,22 @@ public class AndZiApplication extends Application {
 
     int visibility=0;
     public void activityPaused() {
-        visibility--;
-        Log.w(TAG, "PAUSING!");
+        Timer timer = new Timer();
+        TimerTask pausing_task = new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (AndZiApplication.this) {
+                    visibility--;
+                }
+            }
+        };
+        timer.schedule(pausing_task, 30*1000); // give 30 seconds before another Activity may take over
     }
+
     public void activityResumed() {
-        visibility++;
-        Log.w(TAG, "RESUMING!");
+        synchronized (AndZiApplication.this) {
+            visibility++;
+        }
     }
     public boolean isApplicationForeground() {
         return (visibility>0);
