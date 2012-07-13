@@ -5,14 +5,14 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.*;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.View;
-import android.view.Window;
+import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
@@ -25,6 +25,7 @@ public class Dictionary extends Activity {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Cursor current_cursor =null;
     Handler update_handler=null;
+    HanziDB refDB, myDB, currentDB;
     private static final String TAG="Dictionary";
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
@@ -34,6 +35,13 @@ public class Dictionary extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+
+        if (((AndZiApplication) getApplication()).getRefDBPresent())
+            currentDB=refDB;
+        else
+            currentDB=myDB;
 
         new update_delayer().execute((Void[])null);
 
@@ -118,7 +126,7 @@ public class Dictionary extends Activity {
                 current_cursor=null;
             }
             else {
-                HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
+
                 if (msg_mode == 0) {
                     ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
                     boolean all_chinese=true;
@@ -134,20 +142,20 @@ public class Dictionary extends Activity {
                         if (elems.get(0).type == HanziDB.StringElement.INCOMPLETE_PINYIN)
                             current_cursor = null;
                         else
-                            current_cursor = refDB.getWordsStartingWithSequence(elems, true, true);
+                            current_cursor = currentDB.getWordsStartingWithSequence(elems, true, true);
                     }
-                    else if ((all_chinese) && (elems.size() >= 3) && (refDB.getTranslations(msg_query).size()==0))
-                        current_cursor = refDB.getDecomposedParts(elems, 4, true, true);
+                    else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
+                        current_cursor = currentDB.getDecomposedParts(elems, 4, true, true);
                     else
-                        current_cursor = refDB.getWordsWithSequence(elems, true, true);
+                        current_cursor = currentDB.getWordsWithSequence(elems, true, true);
                 }
                 else if (msg_mode == 1) {
                     if (msg_query.length()<2)
                         current_cursor=null;
                     else if (msg_query.length()<3)
-                        current_cursor = refDB.getFilteredStartingCTranslations(msg_query);
+                        current_cursor = currentDB.getFilteredStartingCTranslations(msg_query);
                     else
-                        current_cursor = refDB.getFilteredCTranslations(msg_query);
+                        current_cursor = currentDB.getFilteredCTranslations(msg_query);
                 }
                 else
                     current_cursor =null;
@@ -200,5 +208,47 @@ public class Dictionary extends Activity {
 
         public void afterTextChanged(Editable editable) {
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (((AndZiApplication)getApplication()).getRefDBPresent()) {
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.dictionary_menu, menu);
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem add_word = menu.findItem(R.id.dictionary_switch_dic);
+        if (currentDB == myDB) {
+            add_word.setTitle("Use the dictionary");
+        }
+        else {
+            add_word.setTitle("Use my vocabulary list");
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.dictionary_switch_dic:
+                EditText query = (EditText) findViewById(R.id.dict_query);
+                if (query == null)
+                    return false;
+                currentDB= (currentDB == refDB) ? myDB : refDB;
+                start_new_query(mode, query.getText().toString());
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
     }
 }
