@@ -3,7 +3,6 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,15 +10,15 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.matthieu.settings.Settings;
+import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.DBCheckProgressHandler;
 
 
-public class MainMenuActivity extends Activity {
+public class MainMenuActivity extends AndZiActivity {
     boolean showing_splash=false;
     private final String TAG="MainMenuActivity";
     @Override

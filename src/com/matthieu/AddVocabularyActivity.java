@@ -10,7 +10,6 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -26,11 +25,12 @@ import android.text.TextWatcher;
 //import android.util.Log;
 import android.view.*;
 import android.widget.*;
+import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.EditTextAutomaticSize;
 import com.matthieu.widget.ExtendingLinearLayout;
 import java.util.ArrayList;
 
-public class AddVocabularyActivity extends Activity
+public class AddVocabularyActivity extends AndZiActivity
 {
     //private static final String TAG="AddVocabularyActivity";
 

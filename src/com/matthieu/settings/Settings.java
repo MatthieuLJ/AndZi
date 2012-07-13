@@ -18,12 +18,13 @@ import android.widget.Toast;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
+import com.matthieu.widget.AndZiPreferenceActivity;
 
 import java.io.*;
 import java.net.*;
 import java.util.Calendar;
 
-public class Settings extends PreferenceActivity {
+public class Settings extends AndZiPreferenceActivity {
     protected HanziDB myDB=null;
 
     private static final String dictionaryURL="http://db.tt/RdRHvoJa12";

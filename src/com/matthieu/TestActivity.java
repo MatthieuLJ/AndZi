@@ -3,7 +3,6 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -12,8 +11,9 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
+import com.matthieu.widget.AndZiActivity;
 
-public abstract class TestActivity extends Activity {
+public abstract class TestActivity extends AndZiActivity {
     protected int answered=-1;
     protected int show_result=1;
     protected int last_result;

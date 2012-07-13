@@ -18,13 +18,14 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
+import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.VocabularyCursorAdapter;
 
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Details extends Activity {
+public class Details extends AndZiActivity {
     private static final String TAG="Details";
     private HanziDB db;
 

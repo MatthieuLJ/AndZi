@@ -335,4 +335,17 @@ public class AndZiApplication extends Application {
         return cm.getActiveNetworkInfo() != null &&
            cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
+
+    int visibility=0;
+    public void activityPaused() {
+        visibility--;
+        Log.w(TAG, "PAUSING!");
+    }
+    public void activityResumed() {
+        visibility++;
+        Log.w(TAG, "RESUMING!");
+    }
+    public boolean isApplicationForeground() {
+        return (visibility>0);
+    }
 }

@@ -3,18 +3,16 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.*;
 import android.widget.Button;
 import android.widget.TextView;
+import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.ProgressGraph;
 
 import java.util.*;
 
-public class DBActivity extends Activity {
+public class DBActivity extends AndZiActivity {
     protected HanziDB myDB=null;
     Timer timer;
 
@@ -40,7 +38,7 @@ public class DBActivity extends Activity {
         tv.setText(""+expired);
 
         final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
-        graph.set_data(((AndZiApplication)getApplication()).getProgress());
+        graph.set_data(((AndZiApplication) getApplication()).getProgress());
 
         Button zoomin= (Button) findViewById(R.id.graph_in);
         zoomin.setOnClickListener(new View.OnClickListener() {
