@@ -24,6 +24,7 @@ public class ProgressService extends Service {
                 if (!((AndZiApplication) getApplication()).isApplicationForeground()) {
                     update_notification(true);
                 }else {
+                    ((AndZiApplication) getApplication()).showSplash(true);
                     clear_notification(ProgressService.this);
                 }
             }

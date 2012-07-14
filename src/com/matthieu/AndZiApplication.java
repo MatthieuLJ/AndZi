@@ -360,4 +360,11 @@ public class AndZiApplication extends Application {
     public boolean isApplicationForeground() {
         return (visibility>0);
     }
+    private boolean show_splash=true;
+    public void showSplash(boolean set) {
+        show_splash=set;
+    }
+    public boolean getShowSplash() {
+        return show_splash;
+    }
 }

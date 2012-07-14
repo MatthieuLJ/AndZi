@@ -19,7 +19,6 @@ import com.matthieu.widget.DBCheckProgressHandler;
 
 
 public class MainMenuActivity extends AndZiActivity {
-    boolean showing_splash=false;
     private final String TAG="MainMenuActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,12 +28,9 @@ public class MainMenuActivity extends AndZiActivity {
 
         final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
-        SplashStateSaver myState = (SplashStateSaver) getLastNonConfigurationInstance();
+        boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
 
-        boolean skip_splash = getIntent().getBooleanExtra("skip_splash", false);
-
-        if ((!skip_splash) && ((myState == null) || (myState.showSplash))) {
-            showing_splash=true;
+        if (showing_splash) {
             setContentView(R.layout.main_menu_splash);
             TextView tversion = (TextView) findViewById(R.id.splash_version);
             tversion.setText(((AndZiApplication) getApplication()).get_version());
@@ -66,6 +62,7 @@ public class MainMenuActivity extends AndZiActivity {
     }
 
     private void start_it() {
+        ((AndZiApplication) getApplication()).showSplash(false);
         if (((AndZiApplication) getApplication()).isOnline()) {
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
             boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
@@ -98,19 +95,7 @@ public class MainMenuActivity extends AndZiActivity {
             }
         }
 
-        showing_splash = false;
         setContentView(R.layout.main_menu);
-    }
-
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        SplashStateSaver state = new SplashStateSaver();
-        state.showSplash = showing_splash;
-        return state;
-    }
-
-    private class SplashStateSaver {
-        public boolean showSplash = false;
     }
 
     public void handle_add_vocabulary(View v) {
