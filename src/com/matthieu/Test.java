@@ -3,18 +3,18 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import com.matthieu.widget.AndZiActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class Test extends Activity {
+public class Test extends AndZiActivity {
     private ArrayList<Class> tests = new ArrayList<Class>(Arrays.asList(GuessMissingChar.class, GuessChineseWord.class, GuessContaining.class,
             GuessEnglish.class, GuessPinyin.class, GuessTone.class));
     private HanziDB myDB;

@@ -3,13 +3,10 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,13 +14,13 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import com.matthieu.widget.MessageCursor;
+import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class EditLessonsActivity extends Activity {
+public class EditLessonsActivity extends AndZiActivity {
     protected HanziDB myDB=null;
 
     protected ArrayList<Lesson> current_lessons;

@@ -18,11 +18,14 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
+import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.VocabularyCursorAdapter;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Details extends Activity {
+public class Details extends AndZiActivity {
     private static final String TAG="Details";
     private HanziDB db;
 
@@ -144,6 +147,7 @@ public class Details extends Activity {
         AsyncTask<Void,Void,Void> populate = new AsyncTask<Void,Void,Void>() {
             Cursor cursor;
             ProgressDialog mProgressDialog;
+            Timer show_progress_timer = new Timer();
 
             @Override
             protected void onPreExecute() {
@@ -152,7 +156,18 @@ public class Details extends Activity {
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.show();
+                TimerTask show_progress = new TimerTask() {
+                    @Override
+                    public void run() {
+                        context.runOnUiThread(new Runnable() {
+                            public void run() {
+                                mProgressDialog.show();
+                            }
+                        });
+                    }
+                };
+                show_progress_timer.schedule(show_progress,500);
+
             }
             @Override
             protected Void doInBackground(Void... voids) {
@@ -163,10 +178,11 @@ public class Details extends Activity {
 
             @Override
             protected void onPostExecute(Void aVoid) {
+                show_progress_timer.cancel();
+                mProgressDialog.dismiss();
                 VocabularyCursorAdapter res = new VocabularyCursorAdapter(context, cursor);
                 if (list != null)
                     list.setAdapter(res);
-                mProgressDialog.dismiss();
             }
         };
         populate.execute();

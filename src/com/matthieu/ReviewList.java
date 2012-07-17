@@ -32,8 +32,15 @@ public class ReviewList extends ListActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        ((AndZiApplication)getApplication()).activityPaused();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        ((AndZiApplication)getApplication()).activityResumed();
 
         AsyncTask<Void, Void,Void> loader = new AsyncTask<Void, Void, Void>() {
             int expired_filtered;

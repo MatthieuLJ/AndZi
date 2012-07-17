@@ -6,9 +6,11 @@
 package com.matthieu;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -20,6 +22,8 @@ import org.acra.annotation.ReportsCrashes;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @ReportsCrashes(formKey = "", // will not be used
                 mailTo = "matthieu.jeanson@gmail.com",
@@ -91,6 +95,14 @@ public class AndZiApplication extends Application {
         new_data.num_chars_in_box[4]=myDB.getNumCharsInBoxOrAbove(4);
         new_data.num_chars_expired_in_box[4]=myDB.getNumCharsExpiredInBoxOrAbove(4);
         new_data.date = System.currentTimeMillis();
+        /*
+        Log.w(TAG, "Current progress is "+new_data.num_chars_in_box[0]+" ("+new_data.num_chars_expired_in_box[0]+"), "
+                +new_data.num_chars_in_box[1]+" ("+new_data.num_chars_expired_in_box[1]+"), "
+                +new_data.num_chars_in_box[2]+" ("+new_data.num_chars_expired_in_box[2]+"), "
+                +new_data.num_chars_in_box[3]+" ("+new_data.num_chars_expired_in_box[3]+"), "
+                +new_data.num_chars_in_box[4]+" ("+new_data.num_chars_expired_in_box[4]+") => total of "+
+                (new_data.num_chars_in_box[0]+new_data.num_chars_in_box[1]+new_data.num_chars_in_box[2]+new_data.num_chars_in_box[3]+new_data.num_chars_in_box[4]));
+                */
         return new_data;
     }
 
@@ -324,5 +336,44 @@ public class AndZiApplication extends Application {
         cw.deleteDatabase(PROGRESS_DB_NAME);
         copyFile(source, getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath());
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
+    }
+
+    public boolean isOnline() {
+        ConnectivityManager cm =
+            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null &&
+           cm.getActiveNetworkInfo().isConnectedOrConnecting();
+    }
+
+    int visibility=0;
+    public void activityPaused() {
+        Timer timer = new Timer();
+        TimerTask pausing_task = new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (AndZiApplication.this) {
+                    visibility--;
+                }
+            }
+        };
+        timer.schedule(pausing_task, 30*1000); // give 30 seconds before another Activity may take over
+    }
+
+    public void activityResumed() {
+        ProgressService.clear_notification(this);
+        synchronized (AndZiApplication.this) {
+            visibility++;
+        }
+    }
+    public boolean isApplicationForeground() {
+        return (visibility>0);
+    }
+    private boolean show_splash=true;
+    public void showSplash(boolean set) {
+        show_splash=set;
+    }
+    public boolean getShowSplash() {
+        return show_splash;
     }
 }

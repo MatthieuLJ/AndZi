@@ -87,6 +87,7 @@ public class ProgressGraph extends View {
                     ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
+                        current_data.add(((AndZiApplication) context.getApplicationContext()).getCurrentProgress());
                         current_range = query;
                     }
                     ProgressGraph.this.postInvalidate();
@@ -452,6 +453,7 @@ public class ProgressGraph extends View {
 
                 int value[]=new int[data_to_use.size()+1];
                 float score_y;
+                int total_now=0;
 
                 for (int graph_color = 0; graph_color < 5; graph_color++) {
                     graph_path.reset();
@@ -541,9 +543,30 @@ public class ProgressGraph extends View {
                     }
                     p.setStyle(Paint.Style.FILL);
                     canvas.drawPath(graph_path, p);
+
                     if (current_offset_x<0) {
                         graph_path.reset();
-                        score_y = (float) ((1.0-log_scale(value[data_to_use.size()-1], max_scale))*(getMeasuredHeight()-bottom_size));
+
+                        switch(graph_color) {
+                            case 0:
+                                total_now = data_to_use.get(data_to_use.size()-1).num_chars_in_box[0]+data_to_use.get(data_to_use.size()-1).num_chars_in_box[1]+
+                                        data_to_use.get(data_to_use.size()-1).num_chars_in_box[2]+data_to_use.get(data_to_use.size()-1).num_chars_in_box[3]+
+                                        data_to_use.get(data_to_use.size()-1).num_chars_in_box[4];
+                                break;
+                            case 1:
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[0];
+                                break;
+                            case 2:
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[1];
+                                break;
+                            case 3:
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[2];
+                                break;
+                            case 4:
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[3];
+                                break;
+                        }
+                        score_y = (float) ((1.0-log_scale(total_now, max_scale))*(getMeasuredHeight()-bottom_size));
                         graph_path.moveTo(getMeasuredWidth()+current_offset_x+4, score_y);
                         graph_path.lineTo(getMeasuredWidth()+current_offset_x+6+3*label_size, score_y+3*label_size+6);
                         graph_path.lineTo(getMeasuredWidth()+current_offset_x+6+3*label_size, score_y+label_size+2);
@@ -555,7 +578,7 @@ public class ProgressGraph extends View {
                         canvas.drawPath(graph_path, p);
                         p.setTextAlign(Paint.Align.RIGHT);
                         p.setColor(Color.WHITE);
-                        canvas.drawText(Integer.toString(value[data_to_use.size()-1]), getMeasuredWidth()+current_offset_x+right_size-4, score_y+label_size, p);
+                        canvas.drawText(Integer.toString(total_now), getMeasuredWidth()+current_offset_x+right_size-4, score_y+label_size, p);
                     }
                 }
             }

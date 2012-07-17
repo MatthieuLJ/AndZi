@@ -48,6 +48,7 @@
     <string name="settings_colored_pinyins_summary">Show different tones with colors</string>
     <string name="settings_show_correct_answer">Show correct answer</string>
     <string name="settings_show_correct_answer_summary">If you want to see the correct answer after a test</string>
+    <string name="settings_notification">Enable study notification</string>
     <string name="settings_db_operations">Database operations</string>
     <string name="settings_db_export">Export Database to file…</string>
     <string name="settings_db_email">Email Database…</string>
@@ -55,11 +56,11 @@
     <string name="settings_db_clear">Clear Database</string>
     <string name="settings_db_forget_progress">Forget old progress…</string>
     <string name="settings_db_import">Import Database…</string>
-    <string name="settings_ref_db">Reference Database</string>
-    <string name="settings_ref_db_enable">Reference Database enabled</string>
+    <string name="settings_ref_db">Dictionary</string>
+    <string name="settings_ref_db_enable">Dictionary enabled</string>
     <string name="settings_ref_db_enable_summary">Use the dictionary</string>
-    <string name="settings_ref_db_download">Download Reference Database</string>
-    <string name="settings_ref_db_erase">Erase Reference Database</string>
+    <string name="settings_ref_db_download">Download Dictionary</string>
+    <string name="settings_ref_db_erase">Erase Dictionary</string>
     <string name="settings_export_progress">Export Progress</string>
     <string name="settings_import_progress">Import Progress</string>
 
@@ -74,15 +75,17 @@
     <string name="settings_confirm_reset_scores">Are you sure you want to restart the study for everything?</string>
     <string name="settings_reset_db_progress">Reset Database</string>
     <string name="settings_confirm_clear_db">Are you sure you want to clear all your database?</string>
-    <string name="settings_confirm_ref_db_erase">Are you sure you want to delete the reference database?</string>
+    <string name="settings_confirm_ref_db_erase">Are you sure you want to delete the dictionary?</string>
     <string name="settings_error_create_file">There was an error creating the file</string>
     <string name="settings_export_progress_success">Successfully copied progress to\n%s</string>
     <string name="settings_import_progress_success">Successfully imported progress</string>
     <string name="settings_error_not_enough_space_export">Not enough space on device to copy database</string>
     <string name="settings_error_not_enough_space_import">Not enough space on device to import database</string>
-    <string name="settings_ref_db_download_progress">Downloading reference database</string>
+    <string name="settings_ref_db_download_progress">Downloading Dictionary</string>
     <string name="settings_ref_db_install_progress">Installing…</string>
-    <string name="settings_error_not_enough_space_install_ref">Not enough space on device to download and install reference database</string>
+    <string name="settings_error_not_enough_space_install_ref">Not enough space on device to download and install Dictionary</string>
+    <string name="settings_error_cannot_connect">Cannot connect</string>
+    <string name="settings_error_install_ref">An error occured</string>
     <string name="settings_export_destination">Destination: %s</string>
     <string name="settings_export_check_overwrite">The file [%s] already exists, do you want to overwrite?</string>
     <string name="settings_export_success">Database was copied to %s</string>

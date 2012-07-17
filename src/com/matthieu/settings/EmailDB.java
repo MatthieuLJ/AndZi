@@ -13,11 +13,12 @@ import android.preference.PreferenceManager;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
+import com.matthieu.widget.AndZiPreferenceActivity;
 
 import java.io.File;
 import java.io.IOException;
 
-public class EmailDB extends PreferenceActivity {
+public class EmailDB extends AndZiPreferenceActivity {
     protected HanziDB myDB=null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
