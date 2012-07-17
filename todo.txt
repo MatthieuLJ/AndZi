@@ -1,7 +1,6 @@
-ONGOING (5):
+ONGOING (4):
 * Test performance with huge database
 * Make it pretty(ier)
-* Customize notification
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
@@ -33,7 +32,35 @@ More information includes:
 - Total number of characters
 Delay to repeat a character is increased when the character was late for review
 
-DONE (131):
+* Build up list of similar characters:
+Examples...
+于 干
+土 士
+午 牛 年
+本 木
+体 休
+已 己
+人 入
+找 我
+段 锻 煅
+包 抱 饱
+分 份 纷
+工 红 江
+会 令 今
+括 活 话
+斤 厅
+里 星
+美 关 天 夫 失
+良 食 艮
+世 也
+衣 死 夜
+内 肉 两
+
+士土工干千 戌戍成 田由甲申
+母毋 勿匆 人入 未末 采釆 凹凸
+
+DONE (132):
+* Customize notification (can enable / disable)
 * Much better graph interface
 * Tone test is wrong when testing for 绿
 * Add help (overview, different screens, IME, ref DB)

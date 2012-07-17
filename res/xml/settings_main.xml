@@ -19,6 +19,11 @@
                 android:entries="@array/result_preference"
                 android:entryValues="@array/result_preference_values"
                 />
+        <android.preference.CheckBoxPreference
+                android:title="@string/settings_notification"
+                android:key="notification_enabled"
+                android:defaultValue="true"
+                />
     </PreferenceCategory>
 
     <PreferenceCategory

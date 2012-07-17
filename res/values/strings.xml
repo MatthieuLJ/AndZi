@@ -47,6 +47,7 @@
     <string name="settings_colored_pinyins_summary">Show different tones with colors</string>
     <string name="settings_show_correct_answer">Show correct answer</string>
     <string name="settings_show_correct_answer_summary">If you want to see the correct answer after a test</string>
+    <string name="settings_notification">Enable study notification</string>
     <string name="settings_db_operations">Database operations</string>
     <string name="settings_db_export">Export Database to file…</string>
     <string name="settings_db_email">Email Database…</string>

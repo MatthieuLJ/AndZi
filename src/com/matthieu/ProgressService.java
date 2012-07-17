@@ -6,7 +6,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,7 +45,10 @@ public class ProgressService extends Service {
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int expired = current_data.num_chars_expired_in_box[0] + current_data.num_chars_expired_in_box[1] + current_data.num_chars_expired_in_box[2] +
                 current_data.num_chars_expired_in_box[3] + current_data.num_chars_expired_in_box[4];
-        if (expired > 10) {
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean notification_enabled = sp.getBoolean("settings_notification", true);
+        if ((notification_enabled) && (expired > 25)) {
             Notification notification = new Notification(R.drawable.icon, "More to study", System.currentTimeMillis());
             notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
             notification.setLatestEventInfo(ProgressService.this, "More Chinese to study", "You have " + expired + " to study",

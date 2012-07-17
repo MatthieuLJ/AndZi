@@ -353,6 +353,7 @@ public class AndZiApplication extends Application {
     }
 
     public void activityResumed() {
+        ProgressService.clear_notification(this);
         synchronized (AndZiApplication.this) {
             visibility++;
         }
