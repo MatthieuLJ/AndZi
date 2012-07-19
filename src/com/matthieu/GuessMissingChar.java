@@ -19,29 +19,8 @@ import java.util.ArrayList;
 public class GuessMissingChar extends TestActivity {
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private ArrayList<String> previous_guess=new ArrayList<String>();
-    private String last_guess="";
-    private int last_good=0;
 
     private final String TAG="GuessMissingChar";
-    private int current_view=0;
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        if (current_view==R.layout.guess_char) {
-            EditText word_guess = (EditText) findViewById(R.id.char_finder_chinese);
-            if (word_guess==null)
-                return;
-            String guess = word_guess.getText().toString();
-            super.onConfigurationChanged(newConfig);
-            word_guess = (EditText) findViewById(R.id.char_finder_chinese);
-            word_guess.setText(guess);
-        } else if (current_view == R.layout.test_result) {
-            super.onConfigurationChanged(newConfig);
-            show_solution(last_guess, last_good);
-        } else {
-            super.onConfigurationChanged(newConfig);
-        }
-    }
 
     protected void set_next_study() {
         super.set_next_study();
@@ -63,7 +42,6 @@ public class GuessMissingChar extends TestActivity {
     @Override
     protected void display_test() {
         setContentView(R.layout.guess_char);
-        current_view = R.layout.guess_char;
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -221,7 +199,6 @@ public class GuessMissingChar extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
         Details.populate_details_view(GuessMissingChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);

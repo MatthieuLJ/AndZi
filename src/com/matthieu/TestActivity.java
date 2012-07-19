@@ -14,8 +14,14 @@ import android.widget.Toast;
 import com.matthieu.widget.AndZiActivity;
 
 public abstract class TestActivity extends AndZiActivity {
-    protected int answered=-1;
+    protected final int STATE_UNKNOWN=0;
+    protected final int STATE_ASKED=1;
+    protected final int STATE_ANSWERED=2;
+
+    protected int test_state = STATE_UNKNOWN;
     protected int show_result=1;
+    protected String last_guess="";
+    protected int last_good=0;
     protected int last_result;
     protected String hanzi;
 
@@ -59,10 +65,7 @@ public abstract class TestActivity extends AndZiActivity {
             show_result = 3;
         }
 
-        if (answered==1) {
-            another_test_or_quit();
-        }
-        else if (answered==-1) {
+        if (test_state == STATE_UNKNOWN) {
             set_next_study();
         }
     }
@@ -70,11 +73,21 @@ public abstract class TestActivity extends AndZiActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        display_test();
+        switch (test_state) {
+            case STATE_UNKNOWN:
+                another_test_or_quit();
+                break;
+            case STATE_ASKED:
+                display_test();
+                break;
+            case STATE_ANSWERED:
+                show_solution(last_guess, last_good);
+                break;
+        }
     }
 
     protected void set_next_study() {
-        answered=0;
+        test_state = STATE_ASKED;
     }
     protected void nothing_to_test() {
         setResult(NOTHING_TO_TEST);
@@ -103,7 +116,7 @@ public abstract class TestActivity extends AndZiActivity {
         if (last_result == OTHER)
             return last_result;
 
-        answered = 1;
+        test_state = STATE_ANSWERED;
 
         if (((show_result == 2) || (show_result == 1)) && (last_result == INCORRECT)) {
             show_solution(guess, last_result);

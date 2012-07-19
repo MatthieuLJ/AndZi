@@ -19,28 +19,9 @@ import java.util.ArrayList;
 public class GuessPinyin extends TestActivity {
     private String pinyin;
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
-    private int current_view=0;
-    private String last_guess="";
-    private int last_good=0;
     private boolean show_words=false;
 
     private static final String TAG="GuessPinyin";
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        if (current_view==R.layout.guess_pinyin) {
-            EditText word_guess = (EditText) findViewById(R.id.guess_pinyin_guess);
-            String guess = word_guess.getText().toString();
-            super.onConfigurationChanged(newConfig);
-            word_guess = (EditText) findViewById(R.id.guess_pinyin_guess);
-            word_guess.setText(guess);
-        } else if (current_view == R.layout.test_result) {
-            super.onConfigurationChanged(newConfig);
-            show_solution(last_guess, last_good);
-        } else {
-            super.onConfigurationChanged(newConfig);
-        }
-    }
 
     @Override
     protected void set_next_study() {
@@ -93,7 +74,6 @@ public class GuessPinyin extends TestActivity {
     @Override
     protected void display_test() {
         setContentView(R.layout.guess_pinyin);
-        current_view=R.layout.guess_pinyin;
 
         EditText guess = (EditText) findViewById(R.id.guess_pinyin_guess);
         guess.setText("");
@@ -216,7 +196,6 @@ public class GuessPinyin extends TestActivity {
 
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
         Details.populate_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);

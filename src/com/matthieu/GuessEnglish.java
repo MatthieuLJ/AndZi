@@ -20,27 +20,8 @@ import java.util.ArrayList;
 
 public class GuessEnglish extends TestActivity {
     private Vocabulary solution=null;
-    private int current_view=0;
-    private String last_guess="";
-    private int last_good=0;
 
     private final String TAG="GuessEnglish";
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        if (current_view==R.layout.guess_english) {
-            EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
-            String guess = word_guess.getText().toString();
-            super.onConfigurationChanged(newConfig);
-            word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
-            word_guess.setText(guess);
-        } else if (current_view == R.layout.test_result) {
-            super.onConfigurationChanged(newConfig);
-            show_solution(last_guess, last_good);
-        } else {
-            super.onConfigurationChanged(newConfig);
-        }
-    }
 
     @Override
     protected int check_guess(String guess) {
@@ -118,7 +99,6 @@ public class GuessEnglish extends TestActivity {
     @Override
     protected void display_test() {
         setContentView(R.layout.guess_english);
-        current_view=R.layout.guess_english;
 
         EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -189,7 +169,6 @@ public class GuessEnglish extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
         Details.populate_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
