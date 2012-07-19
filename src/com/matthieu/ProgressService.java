@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 
@@ -19,21 +20,20 @@ public class ProgressService extends Service {
     public void onCreate() {
         super.onCreate();
         Timer timer = new Timer();
-        final ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 if (!((AndZiApplication) getApplication()).isApplicationForeground()) {
                     update_notification(true);
-                }else {
                     ((AndZiApplication) getApplication()).showSplash(true);
+                }else {
                     clear_notification(ProgressService.this);
                 }
             }
         };
 
-        timer.scheduleAtFixedRate(task, 30*1000, 2*60*60*1000); // every 2 hours
-        //timer.scheduleAtFixedRate(task, 0, 120*1000); // every 4 minutes for test...
+        //timer.scheduleAtFixedRate(task, 30*1000, 2*60*60*1000); // every 2 hours
+        timer.scheduleAtFixedRate(task, 0, 60*1000); // every minute for test...
     }
 
     public void update_notification(boolean store) {
@@ -49,10 +49,13 @@ public class ProgressService extends Service {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean notification_enabled = sp.getBoolean("settings_notification", true);
         if ((notification_enabled) && (expired > 25)) {
-            Notification notification = new Notification(R.drawable.icon, "More to study", System.currentTimeMillis());
+            Notification notification = new Notification(R.drawable.icon, getResources().getString(R.string.notification_ticker), System.currentTimeMillis());
             notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
-            notification.setLatestEventInfo(ProgressService.this, "More Chinese to study", "You have " + expired + " to study",
-                    PendingIntent.getActivity(ProgressService.this, 0, new Intent(ProgressService.this, Test.class), 0));
+            Intent start_test = new Intent(this, MainMenuActivity.class);
+            start_test.putExtra("start_test", true);
+            start_test.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, PendingIntent.FLAG_CANCEL_CURRENT);
+            notification.setLatestEventInfo(getApplicationContext(), getResources().getString(R.string.notification_title), getResources().getString(R.string.notification_content, expired), pi);
             nm.notify(NOTIFICATION_ID, notification);
         }
         else {
