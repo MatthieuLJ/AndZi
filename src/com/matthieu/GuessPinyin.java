@@ -180,7 +180,6 @@ public class GuessPinyin extends TestActivity {
 
     @Override
     protected void update_scores(int good) {
-        Log.d(TAG, "update_scores ("+hanzi+") "+good);
         switch(good) {
             case INCORRECT:
                 myDB.restartStudy(hanzi);

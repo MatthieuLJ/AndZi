@@ -111,8 +111,6 @@ public class GuessContaining extends TestActivity {
 
     @Override
     protected void update_scores(int good) {
-        Log.d(TAG, "update_scores ("+hanzi+") "+good);
-        
         switch(good) {
             case CORRECT:
                 ArrayList<String> good_chars=new ArrayList<String>();
@@ -126,10 +124,8 @@ public class GuessContaining extends TestActivity {
                     myDB.guessedWord(true, answers);
                 }
                 for (String c:good_chars) {
-                    Log.d(TAG, "Reset time for "+c);
                     myDB.resetTime(c);
                 }
-                Log.d(TAG, "Better box for "+hanzi);
                 myDB.betterBox(hanzi);
                 break;
             case INCORRECT:

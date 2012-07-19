@@ -137,7 +137,6 @@ public class GuessEnglish extends TestActivity {
 
     @Override
     protected void update_scores(int good) {
-        Log.d(TAG, "update_scores ("+hanzi+") "+good);
 
         int min_box = 5;
 
@@ -155,11 +154,9 @@ public class GuessEnglish extends TestActivity {
                 int box = myDB.getBoxForChar(hanzi);
                 if (box == min_box) {
                     myDB.betterBox(hanzi);
-                    Log.d(TAG, hanzi +" moves up");
                 }
                 else {
                     myDB.resetTime(hanzi);
-                    Log.d(TAG, hanzi +" will come back later");
                 }
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
@@ -170,7 +167,6 @@ public class GuessEnglish extends TestActivity {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 myDB.restartStudy(hanzi);
-                Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
             myDB.guessedWord(false, solution.chinese);

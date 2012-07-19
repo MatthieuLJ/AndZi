@@ -182,7 +182,6 @@ public class GuessMissingChar extends TestActivity {
     }
 
     protected void update_scores(int good) {
-        Log.d(TAG, "update_scores ("+hanzi+") "+good);
         
         if (good==CORRECT) {
             myDB.betterBox(hanzi);
