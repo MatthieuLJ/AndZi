@@ -456,36 +456,35 @@ public class AddVocabularyActivity extends AndZiActivity
             Vocabulary tr;
 
             current_pinyin_word=get_current_pinyin();
-            if (current_pinyin_word.equals(""))
-                return;
+            if (! current_pinyin_word.equals("")) {
+                // figure out the list of translations based on the current pinyin chosen
 
-            // figure out the list of translations based on the current pinyin chosen
-
-            tr = myDB.getTranslations(current_chinese_word, current_pinyin_word);
-
-            if (tr != null)
-                for (String e : tr.english) {
-                    tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
-                }
-
-            if (refDB != null) {
-                tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
+                tr = myDB.getTranslations(current_chinese_word, current_pinyin_word);
 
                 if (tr != null)
                     for (String e : tr.english) {
-                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
+                        tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
                     }
-            }
 
-            ArrayList<String> bare_translations = new ArrayList<String>();
-            for (VocabularyItem v : tmp_translations_in_db) {
-                String bare = HanziDB.bare_translation(v.translation);
-                if (!bare.equals(""))
-                    bare_translations.add(bare);
-            }
-            for (VocabularyItem v : tmp_translations_from_ref) {
-                if (!bare_translations.contains(HanziDB.bare_translation(v.translation)))
-                    tmp_translations_displayed_from_ref.add(v);
+                if (refDB != null) {
+                    tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
+
+                    if (tr != null)
+                        for (String e : tr.english) {
+                            tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
+                        }
+                }
+
+                ArrayList<String> bare_translations = new ArrayList<String>();
+                for (VocabularyItem v : tmp_translations_in_db) {
+                    String bare = HanziDB.bare_translation(v.translation);
+                    if (!bare.equals(""))
+                        bare_translations.add(bare);
+                }
+                for (VocabularyItem v : tmp_translations_from_ref) {
+                    if (!bare_translations.contains(HanziDB.bare_translation(v.translation)))
+                        tmp_translations_displayed_from_ref.add(v);
+                }
             }
 
             translations_in_db=tmp_translations_in_db;
@@ -789,6 +788,7 @@ public class AddVocabularyActivity extends AndZiActivity
                             return;
 
                         final VocabularyItem voc = (VocabularyItem) compoundButton.getTag(R.id.add_vocabulary_item);
+                        voc.lessons.clear();
                         translations_in_db.remove(voc);
                         hide_duplicates_in_ref();
                         //Log.d(TAG, "translation "+voc.translation+" is changed");
