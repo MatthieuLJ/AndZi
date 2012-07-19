@@ -34,7 +34,6 @@ Delay to repeat a character is increased when the character was late for review
 
 * Build up list of similar characters:
 Examples...
-于 干
 土 士
 午 牛 年
 本 木
@@ -56,14 +55,14 @@ Examples...
 世 也
 衣 死 夜
 内 肉 两
-工干千
-戌戍成
-田由甲申
-母毋
-勿匆
-未末
-采釆
-凹凸
+干 千 于
+戌 戍 成
+田 由 甲 申
+母 毋
+勿 匆
+未 末
+采 釆
+凹 凸
 
 DONE (132):
 * Customize notification (can enable / disable)
