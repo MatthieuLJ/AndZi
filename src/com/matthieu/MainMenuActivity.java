@@ -19,7 +19,6 @@ import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.DBCheckProgressHandler;
 import org.jetbrains.annotations.Nullable;
 
-
 public class MainMenuActivity extends AndZiActivity {
     private final String TAG="MainMenuActivity";
 
@@ -29,6 +28,7 @@ public class MainMenuActivity extends AndZiActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         start_test=false;
+
         Log.w(TAG, "onCreate, start_test is "+((start_test)?"true":"false"));
     }
 
@@ -160,4 +160,7 @@ public class MainMenuActivity extends AndZiActivity {
         Intent intent = new Intent(this, Help.class);
         startActivity(intent);
     }
+
+
+
 }

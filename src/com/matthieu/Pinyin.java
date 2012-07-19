@@ -6,6 +6,7 @@
 package com.matthieu;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,9 +19,12 @@ public class Pinyin {
 
     private static boolean map_initialized=false;
 
+    private static final Object init_sync = new Object();
+
     private static Map<String, ArrayList<String>> pinyin_by_first_letter=null;
     private static Map<String, Integer> vowels_to_tone=null;
     private static Map<String, String> lame_vowels=null;
+    private static Map<String, ArrayList<String>> similar_radicals=null;
 
     public  Pinyin(String entry) {
         int i,j;
@@ -106,10 +110,7 @@ public class Pinyin {
         if (entry.length()==0)
             return;
 
-        synchronized (pinyin_by_first_letter) {
-            if (!map_initialized)
-                create_pinyin_map();
-        }
+        prepare_pinyin_process();
 
         String initial = entry.substring(0,1);
         if (!pinyin_by_first_letter.containsKey(initial))
@@ -132,8 +133,63 @@ public class Pinyin {
         }
     }
 
+    public float distanceTo(Pinyin other) {
+        if ((tone==-1) || (other.tone==-1))
+            return -1;
+
+        if (html_color_print.equals(other.html_color_print))
+            return 0;
+
+        // same radical different tone ?
+        if (radical.equals(other.radical))
+            return 1;
+
+        int diff=1;
+        if (!get_initial().equals(other.get_initial())) {
+            if (similar_radicals.get(get_initial()).contains(other.get_initial()))
+                diff++;
+            else
+                diff += 2;
+        }
+        if (!get_final().equals(other.get_final())) {
+        if (similar_radicals.get(get_final()).contains(other.get_final()))
+            diff++;
+        else
+            diff += 2;
+        }
+        if (get_tone() != other.get_tone())
+            diff++;
+
+        return diff;
+    }
+
+    public float distanceTo(ArrayList<Pinyin> others) {
+        float min=-1;
+        for (Pinyin p : others) {
+            float dist = distanceTo(p);
+            if ((min==-1) || (dist<min))
+                min=dist;
+        }
+        return min;
+    }
+
+    public static float distanceBetween(ArrayList<Pinyin> list1, ArrayList<Pinyin> list2) {
+        float min=-1;
+        for (Pinyin p : list1) {
+            float dist = p.distanceTo(list2);
+            if ((min==-1) || (dist<min))
+                min=dist;
+        }
+        return min;
+    }
+
     public static void prepare_pinyin_process() {
-        create_pinyin_map();
+        synchronized (init_sync) {
+            if (!map_initialized) {
+                create_pinyin_map();
+                create_similar_pinyin_map();
+            }
+        }
     }
 
     private static void create_pinyin_map() {
@@ -255,14 +311,154 @@ public class Pinyin {
         map_initialized=true;
     }
 
+    private static void create_similar_pinyin_map() {
+        similar_radicals = new HashMap<String, ArrayList<String>>();
+
+        //finals
+        similar_radicals.put("a", new ArrayList<String>(Arrays.asList("ai", "ao", "an")));
+        similar_radicals.put("o", new ArrayList<String>(Arrays.asList("ao", "ou")));
+        similar_radicals.put("e", new ArrayList<String>(Arrays.asList("ei", "en", "ie", "ve")));
+        similar_radicals.put("ai", new ArrayList<String>(Arrays.asList("a", "ian", "uai")));
+        similar_radicals.put("ei", new ArrayList<String>(Arrays.asList("e", "ie")));
+        similar_radicals.put("ao", new ArrayList<String>(Arrays.asList("a", "o", "iao")));
+        similar_radicals.put("ou", new ArrayList<String>(Arrays.asList("o", "uo", "u")));
+        similar_radicals.put("an", new ArrayList<String>(Arrays.asList("a", "ang", "uan")));
+        similar_radicals.put("ang", new ArrayList<String>(Arrays.asList("an", "iang")));
+        similar_radicals.put("en", new ArrayList<String>(Arrays.asList("e", "eng")));
+        similar_radicals.put("eng", new ArrayList<String>(Arrays.asList("en")));
+        similar_radicals.put("ong", new ArrayList<String>(Arrays.asList("iong")));
+        similar_radicals.put("u", new ArrayList<String>(Arrays.asList("ou", "uo", "iu", "v")));
+        similar_radicals.put("ua", new ArrayList<String>(Arrays.asList("uan")));
+        similar_radicals.put("uo", new ArrayList<String>(Arrays.asList("u", "ou")));
+        similar_radicals.put("uai", new ArrayList<String>(Arrays.asList("ai")));
+        similar_radicals.put("ui", new ArrayList<String>(Arrays.asList("i")));
+        similar_radicals.put("uan", new ArrayList<String>(Arrays.asList("an", "ua", "uang", "van")));
+        similar_radicals.put("uang", new ArrayList<String>(Arrays.asList("uan")));
+        similar_radicals.put("un", new ArrayList<String>(Arrays.asList("ueng", "vn")));
+        similar_radicals.put("ueng", new ArrayList<String>(Arrays.asList("un")));
+        similar_radicals.put("i", new ArrayList<String>(Arrays.asList("ui")));
+        similar_radicals.put("ia", new ArrayList<String>(Arrays.asList("ian")));
+        similar_radicals.put("ie", new ArrayList<String>(Arrays.asList("e", "ei")));
+        similar_radicals.put("iao", new ArrayList<String>(Arrays.asList("ao")));
+        similar_radicals.put("iu", new ArrayList<String>(Arrays.asList("u")));
+        similar_radicals.put("ian", new ArrayList<String>(Arrays.asList("ia", "ai", "iang")));
+        similar_radicals.put("iang", new ArrayList<String>(Arrays.asList("ian", "ang")));
+        similar_radicals.put("in", new ArrayList<String>(Arrays.asList("ing")));
+        similar_radicals.put("ing", new ArrayList<String>(Arrays.asList("in")));
+        similar_radicals.put("iong", new ArrayList<String>(Arrays.asList("ong")));
+        similar_radicals.put("v", new ArrayList<String>(Arrays.asList("u")));
+        similar_radicals.put("ve", new ArrayList<String>(Arrays.asList("e")));
+        similar_radicals.put("van", new ArrayList<String>(Arrays.asList("uan")));
+        similar_radicals.put("vn", new ArrayList<String>(Arrays.asList("un")));
+
+        // initials
+        similar_radicals.put("b", new ArrayList<String>(Arrays.asList("p")));
+        similar_radicals.put("p", new ArrayList<String>(Arrays.asList("b")));
+        similar_radicals.put("m", new ArrayList<String>(Arrays.asList("n")));
+        similar_radicals.put("f", new ArrayList<String>());
+        similar_radicals.put("d", new ArrayList<String>(Arrays.asList("t")));
+        similar_radicals.put("t", new ArrayList<String>(Arrays.asList("d")));
+        similar_radicals.put("n", new ArrayList<String>(Arrays.asList("m")));
+        similar_radicals.put("l", new ArrayList<String>());
+        similar_radicals.put("g", new ArrayList<String>(Arrays.asList("k")));
+        similar_radicals.put("k", new ArrayList<String>(Arrays.asList("g")));
+        similar_radicals.put("h", new ArrayList<String>(Arrays.asList("", "r")));
+        similar_radicals.put("z", new ArrayList<String>(Arrays.asList("zh", "j")));
+        similar_radicals.put("c", new ArrayList<String>(Arrays.asList("ch", "q")));
+        similar_radicals.put("s", new ArrayList<String>(Arrays.asList("sh", "x")));
+        similar_radicals.put("zh", new ArrayList<String>(Arrays.asList("z", "j")));
+        similar_radicals.put("ch", new ArrayList<String>(Arrays.asList("c", "q")));
+        similar_radicals.put("sh", new ArrayList<String>(Arrays.asList("s", "x")));
+        similar_radicals.put("r", new ArrayList<String>(Arrays.asList("", "h")));
+        similar_radicals.put("j", new ArrayList<String>(Arrays.asList("z", "zh")));
+        similar_radicals.put("q", new ArrayList<String>(Arrays.asList("c", "ch")));
+        similar_radicals.put("x", new ArrayList<String>(Arrays.asList("s", "sh")));
+        similar_radicals.put("", new ArrayList<String>(Arrays.asList("h", "r")));
+    }
+
+    private String get_initial() {
+        String two_letters_initials[] = {"ch", "sh", "zh"};
+        for (String i:two_letters_initials)
+            if (radical.startsWith(i))
+                return i;
+
+        if ((radical.startsWith("w")) || (radical.startsWith("y")))
+            return "";
+        if ((radical.startsWith("a")) || (radical.startsWith("o")) || (radical.startsWith("e")))
+            return "";
+
+        return radical.substring(0, 1);
+    }
+
+    private String get_final() {
+        String two_letters_initials[] = {"ch", "sh", "zh"};
+        String res="";
+        for (String i:two_letters_initials)
+            if (radical.startsWith(i))
+                return radical.substring(2);
+
+        if ((radical.startsWith("w")) || (radical.startsWith("y"))) {
+            if (radical.equals("wu"))
+                return "u";
+            if (radical.equals("wa"))
+                return "ua";
+            if (radical.equals("wo"))
+                return "uo";
+            if (radical.equals("wai"))
+                return "uai";
+            if (radical.equals("wei"))
+                return "ui";
+            if (radical.equals("wan"))
+                return "uan";
+            if (radical.equals("wang"))
+                return "uang";
+            if (radical.equals("wen"))
+                return "un";
+            if (radical.equals("weng"))
+                return "ueng";
+            if (radical.equals("yi"))
+                return "i";
+            if (radical.equals("ya"))
+                return "ia";
+            if (radical.equals("ye"))
+                return "ie";
+            if (radical.equals("yao"))
+                return "iao";
+            if (radical.equals("you"))
+                return "iu";
+            if (radical.equals("yan"))
+                return "ian";
+            if (radical.equals("yang"))
+                return "iang";
+            if (radical.equals("yin"))
+                return "in";
+            if (radical.equals("ying"))
+                return "ing";
+            if (radical.equals("yong"))
+                return "iong";
+            if (radical.equals("yu"))
+                return "v";
+            if (radical.equals("yue"))
+                return "ve";
+            if (radical.equals("yuan"))
+                return "van";
+            if (radical.equals("yun"))
+                return "vn";
+        }
+        if ((radical.startsWith("a")) || (radical.startsWith("o")) || (radical.startsWith("e")))
+            return radical;
+        if (((radical.startsWith("j")) || (radical.startsWith("q")) || (radical.startsWith("x"))) && (radical.substring(1,2).equals("u"))) {
+            return "v"+radical.substring(2);
+        }
+
+        return radical.substring(1);
+    }
+
     public static boolean verify_pinyin(String entry) {
         int i;
         String temp="";
 
-        synchronized (pinyin_by_first_letter) {
-            if (!map_initialized)
-                create_pinyin_map();
-        }
+        prepare_pinyin_process();
 
         if (entry.length()==0)
             return false;
