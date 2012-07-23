@@ -15,13 +15,11 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivi
     private final String TAG="ProgressDBTest";
     protected static final String DbName = "progress_test_db";
     private ProgressDB target_db;
-    private AndZiApplication app;
     private Context appContext;
 
     @Override
     protected void setUp() {
         Log.d(TAG, " setting up");
-        app = (AndZiApplication) getActivity().getApplication();
         appContext = getActivity().getApplicationContext();
         ContextWrapper cw = new ContextWrapper(appContext);
         cw.deleteDatabase(DbName);
@@ -39,20 +37,20 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivi
     }
 
     public void testAddData() {
-        assertTrue(target_db.get_data().size()==0);
+        assertTrue(target_db.get_data(0).size()==0);
         ProgressDB.ProgressData data = new ProgressDB.ProgressData();
         data.num_chars_expired_in_box=new int[] {10,10,10,10,10};
         data.num_chars_in_box=new int[] {20,20,20,20,20};
         data.date=100000L;
         target_db.add_data(data);
-        assertTrue(target_db.get_data().size()==1);
-        assertTrue(target_db.get_data().get(0).date==100000L);
-        assertTrue(target_db.get_data().get(0).num_chars_in_box[1]==20);
-        assertTrue(target_db.get_data().get(0).num_chars_expired_in_box[1]==10);
+        assertTrue(target_db.get_data(0).size()==1);
+        assertTrue(target_db.get_data(0).get(0).date==100000L);
+        assertTrue(target_db.get_data(0).get(0).num_chars_in_box[1]==20);
+        assertTrue(target_db.get_data(0).get(0).num_chars_expired_in_box[1]==10);
     }
 
     public void testSortedData() {
-        assertTrue(target_db.get_data().size()==0);
+        assertTrue(target_db.get_data(0).size()==0);
         ProgressDB.ProgressData data = new ProgressDB.ProgressData();
         data.num_chars_expired_in_box=new int[] {10,10,10,10,10};
         data.num_chars_in_box=new int[] {20,20,20,20,20};
@@ -66,9 +64,9 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivi
         data.num_chars_in_box=new int[] {30,30,30,30,30};
         data.date=150000L;
         target_db.add_data(data);
-        assertTrue(target_db.get_data().size()==3);
-        assertTrue(target_db.get_data().get(0).date==50000L);
-        assertTrue(target_db.get_data().get(1).date==100000L);
-        assertTrue(target_db.get_data().get(2).date==150000L);
+        assertTrue(target_db.get_data(0).size()==3);
+        assertTrue(target_db.get_data(0).get(0).date==50000L);
+        assertTrue(target_db.get_data(0).get(1).date==100000L);
+        assertTrue(target_db.get_data(0).get(2).date==150000L);
     }
 }

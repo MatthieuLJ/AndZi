@@ -22,7 +22,7 @@ public class ProgressDB extends SQLiteOpenHelper {
 
     private static final String TAG="ProgressDB";
     private static final int DATABASE_VERSION = 2;
-    private static final int DEFAULT_MAX=40;
+    private static final int DEFAULT_MAX=30;
     private SQLiteDatabase db;
 
     public ProgressDB(Context context, String db_name) {
@@ -69,7 +69,7 @@ public class ProgressDB extends SQLiteOpenHelper {
         ContentValues cv= new ContentValues();
         cv.put("zoom", zoom);
 
-        Cursor check = db.rawQuery("SELECT date FROM tmp_progress WHERE date>=? AND date<=? AND zoom=-1",
+        Cursor check = db.rawQuery("SELECT date FROM progress WHERE date>=? AND date<=? AND zoom=-1",
                 new String[] {Long.toString(min_date), Long.toString(max_date)});
         if (!check.moveToFirst()) {
             check.close();
@@ -79,18 +79,27 @@ public class ProgressDB extends SQLiteOpenHelper {
 
         for (int i=0; i<=max_num; i++) {
             long tmp_date = min_date + (i*increment);
-            Cursor c = db.rawQuery("SELECT date, ABS(date-?) AS distance FROM tmp_progress WHERE date>=? AND date<=? AND zoom=-1 ORDER BY distance ASC LIMIT 1",
-                    new String[] {Long.toString(tmp_date), Long.toString(tmp_date-increment/2),
-                            Long.toString(tmp_date+increment/2)});
+            if ((i>0) && (i<max_num)) {
+                Cursor c = db.rawQuery("SELECT date, ABS(date-?) AS distance FROM progress WHERE date>=? AND date<=? AND zoom=-1 ORDER BY distance ASC LIMIT 1",
+                        new String[] {Long.toString(tmp_date), Long.toString(tmp_date-increment/2),
+                                Long.toString(tmp_date+increment/2)});
 
-            if (c.moveToFirst()) {
-                int date_column = c.getColumnIndex("date");
-                long date = c.getLong(date_column);
-                db.update("tmp_progress", cv, "date=?", new String[] {Long.toString(date)});
+                if (c.moveToFirst()) {
+                    int date_column = c.getColumnIndex("date");
+                    long date = c.getLong(date_column);
+                    Log.d(TAG, "Setting data with date "+date+" with zoom "+zoom);
+                    db.update("progress", cv, "date=?", new String[] {Long.toString(date)});
+                }
+                c.close();
             }
-            c.close();
-            if ((i>0) && (zoom < max_zoom))
-                distribute_one_level(db, tmp_date - increment, tmp_date, max_num, zoom+1, max_zoom);
+            if (zoom < max_zoom) {
+                if (i==0)
+                    distribute_one_level(db, min_date, tmp_date, max_num, zoom+1, max_zoom);
+                else if (i==max_num)
+                    distribute_one_level(db, tmp_date - increment, max_date, max_num, zoom+1, max_zoom);
+                else
+                    distribute_one_level(db, tmp_date - increment, tmp_date, max_num, zoom+1, max_zoom);
+            }
         }
     }
 
@@ -100,74 +109,48 @@ public class ProgressDB extends SQLiteOpenHelper {
         Thread distributer = new Thread() {
             @Override
             public void run() {
-                // setup a new table as a copy for the zoom values
-                db.execSQL("DROP TABLE IF EXISTS tmp_progress");
-                db.execSQL("CREATE TABLE tmp_progress (" +
-                        "date INTEGER PRIMARY KEY NOT NULL, " +
-                        "total_box_1 INTEGER, " +
-                        "total_box_2 INTEGER, " +
-                        "total_box_3 INTEGER, " +
-                        "total_box_4 INTEGER, " +
-                        "total_box_5 INTEGER, " +
-                        "expired_box_2 INTEGER, " +
-                        "expired_box_3 INTEGER, " +
-                        "expired_box_4 INTEGER, " +
-                        "expired_box_5 INTEGER," +
-                        "zoom INTEGER DEFAULT 0)");
-                db.execSQL("INSERT INTO tmp_progress SELECT date,total_box_1, total_box_2, total_box_3," +
-                        "total_box_4, total_box_5, expired_box_2, expired_box_3, expired_box_4, expired_box_5, zoom " +
-                        "FROM progress");
+                synchronized (this) {
+                    // setup a new table as a copy for the zoom values
+                    db.beginTransaction();
 
-                // set everything to -1
-                ContentValues cv= new ContentValues();
-                cv.put("zoom", -1);
-                db.update("tmp_progress", cv, "", null);
+                    try {
+                        // get the maximum zoom level
+                        Cursor c = db.rawQuery("SELECT MIN(date) AS date_min, MAX(date) AS date_max " +
+                                "FROM progress", null);
+                        if (!c.moveToFirst()) {// really does not look like there is anything to distribute
+                            c.close();
+                            return;
+                        }
+                        long min_date = c.getLong(c.getColumnIndex("date_min"));
+                        long max_date = c.getLong(c.getColumnIndex("date_max"));
+                        Log.d(TAG, "Got dates between "+min_date+" and "+max_date);
+                        c.close();
+                        if (min_date == max_date)
+                            return;
+                        int max_zoom = ProgressGraph.getMax_zoom(min_date, max_date);
+                        Log.w(TAG, "Max zoom is "+max_zoom);
 
-                // get the maximum zoom level
-                Cursor c = db.rawQuery("SELECT MIN(date) AS date_min, MAX(date) AS date_max " +
-                        "FROM tmp_progress", null);
-                if (!c.moveToFirst()) {// really does not look like there is anything to distribute
-                    c.close();
-                    return;
+                        // set everything to -1
+                        ContentValues cv= new ContentValues();
+                        cv.put("zoom", -1);
+                        db.update("progress", cv, "", null);
+
+                        // set the extremeties at the level 0
+                        cv.put("zoom", 0);
+                        db.update("progress", cv, "date=? OR date=?", new String[] {Long.toString(min_date), Long.toString(max_date)});
+
+                        // start the recursiveness
+                        distribute_one_level(db, min_date, max_date, DEFAULT_MAX, 0, max_zoom-1);
+
+                        // delete anything that would be left
+                        db.delete("progress", "zoom=?", new String[] {"-1"});
+
+                        db.setTransactionSuccessful();
+                    }
+                    finally {
+                        db.endTransaction();
+                    }
                 }
-                long min_date = c.getLong(c.getColumnIndex("date_min"));
-                long max_date = c.getLong(c.getColumnIndex("date_max"));
-                c.close();
-                if (min_date == max_date)
-                    return;
-                int max_zoom = ProgressGraph.getMax_zoom(min_date, max_date);
-                Log.w(TAG, "Max zoom is "+max_zoom);
-
-                // set the extremeties at the level 0
-                cv.put("zoom", 0);
-                db.update("tmp_progress", cv, "date=? OR date=?", new String[] {Long.toString(min_date), Long.toString(max_date)});
-
-                // start the recursiveness
-                distribute_one_level(db, min_date, max_date, DEFAULT_MAX, 0, max_zoom-1);
-
-                // delete anything that would be left
-                db.delete("tmp_progress", "zoom=?", new String[] {"-1"});
-
-                db.execSQL("BEGIN TRANSACTION");
-                db.execSQL("DROP TABLE progress");
-                db.execSQL("CREATE TABLE progress (" +
-                        "date INTEGER PRIMARY KEY NOT NULL, " +
-                        "total_box_1 INTEGER, " +
-                        "total_box_2 INTEGER, " +
-                        "total_box_3 INTEGER, " +
-                        "total_box_4 INTEGER, " +
-                        "total_box_5 INTEGER, " +
-                        "expired_box_2 INTEGER, " +
-                        "expired_box_3 INTEGER, " +
-                        "expired_box_4 INTEGER, " +
-                        "expired_box_5 INTEGER," +
-                        "zoom INTEGER DEFAULT 0)");
-                db.execSQL("CREATE INDEX progress_date ON progress(date)");
-                db.execSQL("INSERT INTO progress SELECT date,total_box_1, total_box_2, total_box_3," +
-                        "total_box_4, total_box_5, expired_box_2, expired_box_3, expired_box_4, expired_box_5, zoom " +
-                        "FROM tmp_progress");
-                db.execSQL("DROP TABLE tmp_progress");
-                db.execSQL("COMMIT");
             }
         };
 
@@ -177,13 +160,14 @@ public class ProgressDB extends SQLiteOpenHelper {
     private void check_to_distribute(final SQLiteDatabase db) {
         // check how many at level 0 towards the end
         Cursor c = db.rawQuery("SELECT COUNT(date) AS count FROM progress WHERE date > (SELECT MAX(date) FROM progress WHERE zoom!=0)", new String[] {});
-        if (!c.moveToFirst())
+        if (!c.moveToFirst()) {
+            c.close();
             return;
+        }
         int count = c.getInt(c.getColumnIndex("count"));
         c.close();
-        if (count > 10)
+        if (count >= 10)
             distribute(db);
-
     }
 
     @Override

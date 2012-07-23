@@ -51,13 +51,19 @@ Examples...
 斤 厅
 里 星
 美 关 天 夫 失
+亲 章 幸 莘 辛
 良 食 艮
 世 也
 衣 死 夜
 内 肉 两
-
-士土工干千 戌戍成 田由甲申
-母毋 勿匆 人入 未末 采釆 凹凸
+工干千
+戌戍成
+田由甲申
+母毋
+勿匆
+未末
+采釆
+凹凸
 
 DONE (132):
 * Customize notification (can enable / disable)

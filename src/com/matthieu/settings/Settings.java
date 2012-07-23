@@ -27,7 +27,7 @@ import java.util.Calendar;
 public class Settings extends AndZiPreferenceActivity {
     protected HanziDB myDB=null;
 
-    private static final String dictionaryURL="http://db.tt/RdRHvoJa12";
+    private static final String dictionaryURL="http://db.tt/RdRHvoJa";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

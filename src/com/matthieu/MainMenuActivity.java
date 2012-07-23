@@ -10,24 +10,80 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.matthieu.settings.Settings;
 import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.DBCheckProgressHandler;
+import org.jetbrains.annotations.Nullable;
 
 
 public class MainMenuActivity extends AndZiActivity {
     private final String TAG="MainMenuActivity";
+
+    boolean start_test;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        start_test=false;
+    }
 
-        final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
-
+    private void start_it() {
         boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
+        ((AndZiApplication) getApplication()).showSplash(false);
+        if (start_test) {
+            handle_test(null);
+            start_test=false;
+        }
+        else if (((AndZiApplication) getApplication()).isOnline() && showing_splash) {
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
+            boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
+            if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
+                alert.setMessage("Everything would be so much better if you downloaded the dictionary...");
+                alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                });
+                alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        SharedPreferences.Editor edit = prefs.edit();
+                        edit.putBoolean("first_time_ref", false);
+                        edit.commit();
+                        dialog.dismiss();
+                    }
+                });
+                alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        Intent in = new Intent(MainMenuActivity.this, Settings.class);
+                        in.putExtra("Settings_action", 0);
+                        startActivity(in);
+                        dialog.dismiss();
+                    }
+                });
+                alert.create();
+                alert.show();
+            }
+        }
+        setContentView(R.layout.main_menu);
+    }
 
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        start_test=intent.getBooleanExtra("start_test", false);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
+        boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
         if (showing_splash) {
             setContentView(R.layout.main_menu_splash);
             TextView tversion = (TextView) findViewById(R.id.splash_version);
@@ -59,43 +115,6 @@ public class MainMenuActivity extends AndZiActivity {
         }
     }
 
-    private void start_it() {
-        ((AndZiApplication) getApplication()).showSplash(false);
-        if (((AndZiApplication) getApplication()).isOnline()) {
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
-            boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
-            if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
-                alert.setMessage("Everything would be so much better if you downloaded the dictionary...");
-                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        dialog.dismiss();
-                    }
-                });
-                alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        SharedPreferences.Editor edit = prefs.edit();
-                        edit.putBoolean("first_time_ref", false);
-                        edit.commit();
-                        dialog.dismiss();
-                    }
-                });
-                alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        Intent in = new Intent(MainMenuActivity.this, Settings.class);
-                        in.putExtra("Settings_action", 0);
-                        startActivity(in);
-                        dialog.dismiss();
-                    }
-                });
-                alert.create();
-                alert.show();
-            }
-        }
-
-        setContentView(R.layout.main_menu);
-    }
-
     public void handle_add_vocabulary(View v) {
         Intent intent = new Intent(this, AddVocabularyActivity.class);
         startActivity(intent);
@@ -121,7 +140,7 @@ public class MainMenuActivity extends AndZiActivity {
         startActivity(intent);
     }
     
-    public void handle_test(View v) {
+    public void handle_test(@Nullable View v) {
         Intent intent = new Intent(this, Test.class);
         startActivity(intent);
     }

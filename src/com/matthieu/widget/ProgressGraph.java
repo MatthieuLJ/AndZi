@@ -418,24 +418,26 @@ public class ProgressGraph extends View {
                 p.getTextBounds(date_string, 0, date_string.length(), r);
                 last_offset -= r.width();
 
-                p.setTextAlign(Paint.Align.CENTER);
-                for (int i=last_date_index; i>=first_date_index; i--) {
-                    date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(data_to_use.get(i).date)+" - ";
-                    p.getTextBounds(date_string, 0, date_string.length(), r);
+                if (!finger_down) {
+                    p.setTextAlign(Paint.Align.CENTER);
+                    for (int i=last_date_index; i>=first_date_index; i--) {
+                        date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(data_to_use.get(i).date)+" - ";
+                        p.getTextBounds(date_string, 0, date_string.length(), r);
 
-                    if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)+r.width()/2 >= last_offset)
-                        continue;
-                    if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)-r.width()/2 <= first_offset)
-                        continue;
+                        if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)+r.width()/2 >= last_offset)
+                            continue;
+                        if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)-r.width()/2 <= first_offset)
+                            continue;
 
-                    canvas.drawLine(
-                            (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
-                            getMeasuredHeight()-bottom_size,
-                            (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
-                            getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
-                    canvas.drawText(date_string, (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
-                            getMeasuredHeight()-bottom_size+bottom_axis_r.height()+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4+2, getResources().getDisplayMetrics()), p);
-                    last_offset=(int) ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)-r.width()/2);
+                        canvas.drawLine(
+                                (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
+                                getMeasuredHeight()-bottom_size,
+                                (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
+                                getMeasuredHeight()-bottom_size+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()), p);
+                        canvas.drawText(date_string, (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
+                                getMeasuredHeight()-bottom_size+bottom_axis_r.height()+TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4+2, getResources().getDisplayMetrics()), p);
+                        last_offset=(int) ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)-r.width()/2);
+                    }
                 }
             }
 

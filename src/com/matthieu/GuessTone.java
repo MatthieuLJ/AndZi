@@ -18,31 +18,8 @@ import java.util.ArrayList;
 public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
     private Pinyin pinyin;
     private ArrayList<Integer> tones=new ArrayList<Integer>();
-    private int current_view=0;
-    private String last_guess="";
-    private int last_good=0;
 
     private final String TAG="GuessTone";
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        if (current_view == R.layout.guess_tone) {
-            boolean check1 = ((CheckBox)findViewById(R.id.guess_tone_first_tone)).isChecked();
-            boolean check2 = ((CheckBox)findViewById(R.id.guess_tone_second_tone)).isChecked();
-            boolean check3 = ((CheckBox)findViewById(R.id.guess_tone_third_tone)).isChecked();
-            boolean check4 = ((CheckBox)findViewById(R.id.guess_tone_fourth_tone)).isChecked();
-            super.onConfigurationChanged(newConfig);
-            ((CheckBox)findViewById(R.id.guess_tone_first_tone)).setChecked(check1);
-            ((CheckBox)findViewById(R.id.guess_tone_second_tone)).setChecked(check2);
-            ((CheckBox)findViewById(R.id.guess_tone_third_tone)).setChecked(check3);
-            ((CheckBox)findViewById(R.id.guess_tone_fourth_tone)).setChecked(check4);
-        } else if (current_view == R.layout.test_result) {
-            super.onConfigurationChanged(newConfig);
-            show_solution(last_guess, last_good);
-        } else {
-            super.onConfigurationChanged(newConfig);
-        }
-    }
 
     protected void set_next_study() {
         super.set_next_study();
@@ -70,7 +47,6 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         String radical;
 
         setContentView(R.layout.guess_tone);
-        current_view = R.layout.guess_tone;
 
         GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.guess_tone_gestureview);
         overlay.addOnGesturePerformedListener(this);
@@ -126,7 +102,6 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
     @Override
     protected void update_scores(int good) {
-        Log.d(TAG, "update_scores ("+hanzi+") "+good);
         if (good == CORRECT)
             myDB.resetTime(hanzi);
         else
@@ -265,7 +240,6 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        current_view = R.layout.test_result;
         last_guess=guess;
         last_good=good;
         Details.populate_details_view(GuessTone.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);

@@ -21,28 +21,9 @@ import java.util.ArrayList;
 public class GuessChineseWord extends TestActivity {
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
-    private int current_view=0;
-    private String last_guess="";
-    private int last_good=0;
     private boolean showing_more_voc;
 
     private final String TAG="GuessChineseWord";
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        if (current_view == R.layout.guess_chinese_word) {
-            EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
-            String guess = word_guess.getText().toString();
-            super.onConfigurationChanged(newConfig);
-            word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
-            word_guess.setText(guess);
-        } else if (current_view == R.layout.test_result) {
-            super.onConfigurationChanged(newConfig);
-            show_solution(last_guess, last_good);
-        } else {
-            super.onConfigurationChanged(newConfig);
-        }
-    }
 
     protected void set_next_study() {
         super.set_next_study();
@@ -86,7 +67,6 @@ public class GuessChineseWord extends TestActivity {
         ArrayList<String> bare_translations = new ArrayList<String>();
 
         setContentView(R.layout.guess_chinese_word);
-        current_view=R.layout.guess_chinese_word;
         EditText word_guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -175,8 +155,6 @@ public class GuessChineseWord extends TestActivity {
     }
 
     protected void update_scores(int good) {
-        Log.d(TAG, "update_scores ("+hanzi+") "+good);
-
         int min_box = 5;
 
         if (good == CORRECT) {
@@ -193,11 +171,9 @@ public class GuessChineseWord extends TestActivity {
                 int box = myDB.getBoxForChar(hanzi);
                 if (box == min_box) {
                     myDB.betterBox(hanzi);
-                    Log.d(TAG, hanzi +" moves up");
                 }
                 else {
                     myDB.resetTime(hanzi);
-                    Log.d(TAG, hanzi +" will come back later");
                 }
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
@@ -208,7 +184,6 @@ public class GuessChineseWord extends TestActivity {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 myDB.restartStudy(hanzi);
-                Log.d(TAG, hanzi +" starts over");
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
             myDB.guessedWord(false, solution.chinese);
@@ -247,7 +222,6 @@ public class GuessChineseWord extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         setContentView(R.layout.test_result);
-        current_view=R.layout.test_result;
         last_guess=guess;
         last_good=good;
         Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);

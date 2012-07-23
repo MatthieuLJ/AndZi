@@ -49,13 +49,13 @@
     <string name="settings_show_correct_answer">Show correct answer</string>
     <string name="settings_show_correct_answer_summary">If you want to see the correct answer after a test</string>
     <string name="settings_notification">Enable study notification</string>
-    <string name="settings_db_operations">Database operations</string>
-    <string name="settings_db_export">Export Database to file…</string>
-    <string name="settings_db_email">Email Database…</string>
+    <string name="settings_db_operations">Vocabulary list operations</string>
+    <string name="settings_db_export">Export list to file…</string>
+    <string name="settings_db_email">Email list…</string>
+    <string name="settings_db_clear">Clear list</string>
     <string name="settings_db_reset_scores">Reset scores</string>
-    <string name="settings_db_clear">Clear Database</string>
     <string name="settings_db_forget_progress">Forget old progress…</string>
-    <string name="settings_db_import">Import Database…</string>
+    <string name="settings_db_import">Import list…</string>
     <string name="settings_ref_db">Dictionary</string>
     <string name="settings_ref_db_enable">Dictionary enabled</string>
     <string name="settings_ref_db_enable_summary">Use the dictionary</string>
@@ -73,14 +73,14 @@
     <string name="settings_file_path_summary">Destination</string>
 
     <string name="settings_confirm_reset_scores">Are you sure you want to restart the study for everything?</string>
-    <string name="settings_reset_db_progress">Reset Database</string>
-    <string name="settings_confirm_clear_db">Are you sure you want to clear all your database?</string>
+    <string name="settings_reset_db_progress">Reset progress</string>
+    <string name="settings_confirm_clear_db">Are you sure you want to clear all your list?</string>
     <string name="settings_confirm_ref_db_erase">Are you sure you want to delete the dictionary?</string>
     <string name="settings_error_create_file">There was an error creating the file</string>
     <string name="settings_export_progress_success">Successfully copied progress to\n%s</string>
     <string name="settings_import_progress_success">Successfully imported progress</string>
-    <string name="settings_error_not_enough_space_export">Not enough space on device to copy database</string>
-    <string name="settings_error_not_enough_space_import">Not enough space on device to import database</string>
+    <string name="settings_error_not_enough_space_export">Not enough space on device to copy list</string>
+    <string name="settings_error_not_enough_space_import">Not enough space on device to import list</string>
     <string name="settings_ref_db_download_progress">Downloading Dictionary</string>
     <string name="settings_ref_db_install_progress">Installing…</string>
     <string name="settings_error_not_enough_space_install_ref">Not enough space on device to download and install Dictionary</string>
@@ -88,7 +88,7 @@
     <string name="settings_error_install_ref">An error occured</string>
     <string name="settings_export_destination">Destination: %s</string>
     <string name="settings_export_check_overwrite">The file [%s] already exists, do you want to overwrite?</string>
-    <string name="settings_export_success">Database was copied to %s</string>
+    <string name="settings_export_success">List was copied to %s</string>
     <string name="settings_trim_all">Delete everything</string>
     <string name="settings_trim_one_day">Keep the last day</string>
     <string name="settings_trim_three_days">Keep the last 3 days</string>
@@ -117,4 +117,8 @@
     <string name="review_list_nothing_to_study">Nothing to study</string>
     <string name="review_list_num_to_study_filtered">You have %1$d characters to study (%2$d total)</string>
     <string name="review_list_num_to_study">You have %1$d characters to study</string>
+
+    <string name="notification_ticker">More to study</string>
+    <string name="notification_title">More Chinese to study</string>
+    <string name="notification_content">You have %s characters to study</string>
 </resources>
