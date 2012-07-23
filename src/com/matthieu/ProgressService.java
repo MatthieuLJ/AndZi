@@ -32,8 +32,8 @@ public class ProgressService extends Service {
             }
         };
 
-        //timer.scheduleAtFixedRate(task, 30*1000, 2*60*60*1000); // every 2 hours
-        timer.scheduleAtFixedRate(task, 0, 60*1000); // every minute for test...
+        timer.scheduleAtFixedRate(task, 30*1000, 2*60*60*1000); // every 2 hours
+        //timer.scheduleAtFixedRate(task, 0, 120*1000); // every 2 minutes for test...
     }
 
     public void update_notification(boolean store) {
