@@ -29,13 +29,10 @@ public class MainMenuActivity extends AndZiActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         start_test=false;
-        Log.w(TAG, "onCreate, start_test is "+((start_test)?"true":"false"));
     }
 
     private void start_it() {
-        Log.w(TAG, "start_it, start_test is "+(start_test?"true":"false"));
         boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
-        Log.w(TAG, "start_it, set showSplash false");
         ((AndZiApplication) getApplication()).showSplash(false);
         if (start_test) {
             handle_test(null);
@@ -80,16 +77,13 @@ public class MainMenuActivity extends AndZiActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         start_test=intent.getBooleanExtra("start_test", false);
-        Log.w(TAG, "onNewIntent, start_test is "+(start_test?"true":"false"));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.w(TAG, "onResume, start_test is "+((start_test)?"true":"false"));
         final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
         boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
-        Log.w(TAG, "onResume, showing_splash is "+(showing_splash?"true":"false"));
         if (showing_splash) {
             setContentView(R.layout.main_menu_splash);
             TextView tversion = (TextView) findViewById(R.id.splash_version);
