@@ -1,0 +1,139 @@
+cjklib strokes:
+select * from Strokes;
+ StrokeAbbrev|Name|Stroke
+ T|提|㇀
+ WG|彎鉤|㇁
+ WSG|彎豎鉤|㇁
+ XG|斜鉤|㇂
+ NG|捺鉤|㇂
+ BXG|扁斜鉤|㇃
+ SW|豎彎|㇄
+ SWH|豎彎橫|㇄
+ HZZ|横折折|㇅
+ HZSZH|橫折豎折橫|㇅
+ HZG|横折鉤|㇆
+ HZSG|橫折豎鉤|㇆
+ HP|横撇|㇇
+ HZP|橫折撇|㇇
+ HZWG|横折彎鉤|㇈
+ SZWG|豎折彎鉤|㇉
+ HZT|横折提|㇊
+ HZSZT|橫折豎折提|㇊
+ HZZP|横折折撇|㇋
+ HZSZHZP|横折竖折横折撇|㇋
+ HPWG|横撇彎鉤|㇌
+ HZW|横折彎|㇍
+ HZSWH|橫折豎彎橫|㇍
+ HZZZ|横折折折|㇎
+ HZSZHZS|横折竖折横折竖|㇎
+ N|捺|㇏
+ H|横|㇐
+ S|豎|㇑
+ P|撇|㇒
+ SP|豎撇|㇓
+ D|點|㇔
+ HZ|横折|㇕
+ HZS|橫折豎|㇕
+ HG|横鉤|㇖
+ SZ|豎折|㇗
+ SZH|豎折橫|㇗
+ SWZ|豎彎左|㇘
+ ST|豎提|㇙
+ SZT|豎折提|㇙
+ SG|豎鉤|㇚
+ PD|撇點|㇛
+ PZD|撇折點|㇛
+ PZ|撇折|㇜
+ PZH|撇折橫|㇜
+ TN|提捺|㇝
+ SZZ|豎折折|㇞
+ SZHZS|竖折横折竖|㇞
+ SWG|豎彎鉤|㇟
+ HXWG|横斜彎鉤|㇠
+ HZZZG|横折折折鉤|㇡
+ PG|撇鉤|㇢
+ Q|圈|㇣
+
+
+select * from StrokeOrder LIMIT 5;
+ChineseCharacter|StrokeOrder|Glyph|Flags
+
+
+土|H-S-H|0|
+士|H-S-H|0|
+午|P-H-H-S|0|
+牛|P-H-H-S|0|
+年|P-H-H-S-H-S|0|
+本|H-S-P-N-H|0|
+木|H-S-P-N|0|
+体
+休
+已|HZ-H-SWG|0|
+己|HZ-H-SWG|0|
+人|SP-N|0|
+入|P-TN|0|
+找
+我|P-H-SG-T-XG-P-D|0|
+段
+锻
+煅
+包|P-HZG HZ-H-SWG|0|
+抱
+饱
+分
+份
+纷
+工
+红
+江
+会
+令|P-N D-HG-D|0|
+今|P-N D HP|0|
+括
+活
+话
+斤
+厅
+里
+星
+美
+关
+天
+夫
+失
+亲
+章
+幸
+莘
+辛
+良
+食
+艮
+世
+也
+衣
+死
+夜
+内
+肉
+两
+干
+千
+于
+戌
+戍
+成
+田
+由
+甲
+申
+母
+毋
+勿
+匆
+未
+末
+采
+釆
+凹
+凸

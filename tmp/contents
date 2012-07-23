@@ -1,7 +1,7 @@
 acra/
  ACRA project library
 cangjie/
- data from the Cangjie input method for character contents http://www.m17n.org/m17n-lib-en/index.html and 
+ data from the Cangjie input method for character contents http://www.m17n.org/m17n-lib-en/index.html and http://opensource.apple.com/source/emacs/emacs-84/emacs/leim/MISC-DIC/cangjie-table.b5 and https://github.com/acevery/ibus-table-cangjie http://cdpx.iis.sinica.edu.tw/dbdownload/
 cjklib/
  Comes from CJKLIB project on google code, lots of character information http://code.google.com/p/cjklib/
 commons-composition/
@@ -10,8 +10,15 @@ images/
  Random pictures and made GIMP images that could be used for the app
 libtabe/
  Library code that should have frequency lists http://sourceforge.net/projects/libtabe/
+simmetrics/
+ Simmetrics to calculate Levenshtein distance between strings http://sourceforge.net/projects/simmetrics/
+wubihua/
+ From ibus-t9 project https://code.google.com/p/ibus-t9/
 
 More on frequency list:
     http://technology.chtsai.org/wordlist/
     http://corpus.leeds.ac.uk/list.html
+
+Decomposition data:
+http://groovy.codeplex.com/wikipage?title=cjk-decomp
 
