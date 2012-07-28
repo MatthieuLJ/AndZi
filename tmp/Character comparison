@@ -59,25 +59,26 @@ select * from StrokeOrder LIMIT 5;
 ChineseCharacter|StrokeOrder|Glyph|Flags
 
 
-土|H-S-H|0|
-士|H-S-H|0|
-午|P-H-H-S|0|
-牛|P-H-H-S|0|
-年|P-H-H-S-H-S|0|
-本|H-S-P-N-H|0|
-木|H-S-P-N|0|
+土
+士
+午
+牛
+年
+本
+木
 体
 休
-已|HZ-H-SWG|0|
-己|HZ-H-SWG|0|
-人|SP-N|0|
-入|P-TN|0|
+已
+己
+人
+入
 找
-我|P-H-SG-T-XG-P-D|0|
+我
+钱
 段
 锻
 煅
-包|P-HZG HZ-H-SWG|0|
+包
 抱
 饱
 分
@@ -87,8 +88,8 @@ ChineseCharacter|StrokeOrder|Glyph|Flags
 红
 江
 会
-令|P-N D-HG-D|0|
-今|P-N D HP|0|
+令
+今
 括
 活
 话
@@ -137,3 +138,11 @@ ChineseCharacter|StrokeOrder|Glyph|Flags
 釆
 凹
 凸
+猫
+描
+岗
+尚
+低
+底
+抵
+纸
