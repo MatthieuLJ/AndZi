@@ -106,13 +106,17 @@ public class ProgressGraph extends View {
         this.db = db;
         this.data0=db.get_data(0);
 
-        this.data0.add(((AndZiApplication) context.getApplicationContext()).getCurrentProgress());
+        ProgressDB.ProgressData new_data = ((AndZiApplication) context.getApplicationContext()).getCurrentProgress();
+        this.data0.add(new_data);
+        int current_char_count = new_data.num_chars_in_box[0] + new_data.num_chars_in_box[1] + new_data.num_chars_in_box[2] + new_data.num_chars_in_box[3] + new_data.num_chars_in_box[4];
 
         min_date=data0.get(0).date;
         max_date=data0.get(data0.size()-1).date;
         max_zoom = getMax_zoom(min_date, max_date);
 
         int max_score = db.get_max_chars();
+        if (current_char_count > max_score)
+            max_score = current_char_count;
 
         scale_magnitude = 1;
         while (max_score > pow(10,scale_magnitude)) {

@@ -43,7 +43,7 @@ public class Dictionary extends AndZiActivity {
         new update_delayer().execute((Void[])null);
 
         setContentView(R.layout.dictionary);
-        mode=0;
+        mode=CHINESE_TO_ENGLISH_MODE;
 
         final ListView results = (ListView) findViewById(R.id.dict_results);
         results.setAdapter(new VocabularyCursorAdapter(Dictionary.this, null));
@@ -124,7 +124,7 @@ public class Dictionary extends AndZiActivity {
             }
             else {
 
-                if (msg_mode == 0) {
+                if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
                     ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
                     boolean all_chinese=true;
                     if (elems != null)
@@ -146,7 +146,7 @@ public class Dictionary extends AndZiActivity {
                     else
                         current_cursor = currentDB.getWordsWithSequence(elems, true, true);
                 }
-                else if (msg_mode == 1) {
+                else if (msg_mode == ENGLISH_TO_CHINESE_MODE) {
                     if (msg_query.length()<2)
                         current_cursor=null;
                     else if (msg_query.length()<3)
