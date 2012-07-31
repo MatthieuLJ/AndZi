@@ -1,0 +1,4 @@
+chars.txt is a copy/paste of charsData so that there is no weird code that would prevent the file to be a proper utf-8 format.
+
+./build_db.py chars.txt char.db
+  creates a database with the content of chars.txt
