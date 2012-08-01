@@ -54,11 +54,6 @@ select * from Strokes;
  PG|撇鉤|㇢
  Q|圈|㇣
 
-
-select * from StrokeOrder LIMIT 5;
-ChineseCharacter|StrokeOrder|Glyph|Flags
-
-
 土
 士
 午
@@ -150,5 +145,13 @@ ChineseCharacter|StrokeOrder|Glyph|Flags
 昭
 绍
 邵
+超
 经
 轻
+赏
+觉
+见
+苋
+山
+仙
+出
