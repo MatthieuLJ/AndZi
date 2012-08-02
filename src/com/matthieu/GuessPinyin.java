@@ -162,7 +162,7 @@ public class GuessPinyin extends TestActivity {
     protected void update_scores(int good) {
         switch(good) {
             case INCORRECT:
-                myDB.restartStudy(hanzi);
+                myDB.worseBox(hanzi);
                 break;
             case CORRECT:
                 myDB.betterBox(hanzi);
@@ -195,9 +195,7 @@ public class GuessPinyin extends TestActivity {
     }
 
     protected void show_solution(String guess, int good) {
-        setContentView(R.layout.test_result);
-        last_guess=guess;
-        last_good=good;
+        super.show_solution(guess, good);
         Details.populate_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);

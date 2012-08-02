@@ -146,7 +146,7 @@ public class GuessEnglish extends TestActivity {
         else {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                myDB.restartStudy(hanzi);
+                myDB.worseBox(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
             myDB.guessedWord(false, solution.chinese);
@@ -168,9 +168,7 @@ public class GuessEnglish extends TestActivity {
 
     @Override
     protected void show_solution(String guess, int good) {
-        setContentView(R.layout.test_result);
-        last_guess=guess;
-        last_good=good;
+        super.show_solution(guess, good);
         Details.populate_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);

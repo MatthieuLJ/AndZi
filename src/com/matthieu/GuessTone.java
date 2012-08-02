@@ -103,9 +103,9 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
     @Override
     protected void update_scores(int good) {
         if (good == CORRECT)
-            myDB.resetTime(hanzi);
+            myDB.betterBox(hanzi);
         else
-            myDB.restartStudy(hanzi);
+            myDB.worseBox(hanzi);
     }
 
     public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
@@ -239,9 +239,7 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
 
     @Override
     protected void show_solution(String guess, int good) {
-        setContentView(R.layout.test_result);
-        last_guess=guess;
-        last_good=good;
+        super.show_solution(guess, good);
         Details.populate_details_view(GuessTone.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if (good == INCORRECT) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);

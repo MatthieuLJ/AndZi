@@ -4,7 +4,8 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.content.res.Configuration;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -16,7 +17,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.util.ArrayList;
 
-public class GuessMissingChar extends TestActivity {
+public class GuessMissingChar extends TestActivity implements TextWatcher {
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private ArrayList<String> previous_guess=new ArrayList<String>();
 
@@ -41,7 +42,7 @@ public class GuessMissingChar extends TestActivity {
 
     @Override
     protected void display_test() {
-        setContentView(R.layout.guess_char);
+        setContentView(R.layout.guess_missing_char);
 
         EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -51,6 +52,7 @@ public class GuessMissingChar extends TestActivity {
                 return true;
             }
         });
+        guess.addTextChangedListener(this);
         guess.setText("");
         guess.requestFocus();
 
@@ -160,12 +162,11 @@ public class GuessMissingChar extends TestActivity {
     }
 
     protected void update_scores(int good) {
-        
         if (good==CORRECT) {
             myDB.betterBox(hanzi);
         }
         else {
-            myDB.restartStudy(hanzi);
+            myDB.worseBox(hanzi);
         }
 
         // reset the time for all characters displayed or restart study
@@ -179,7 +180,7 @@ public class GuessMissingChar extends TestActivity {
                     myDB.resetTime(other_hanzi);
                 }
                 else
-                    myDB.restartStudy(other_hanzi);
+                    myDB.worseBox(other_hanzi);
             }
         }
     }
@@ -198,9 +199,7 @@ public class GuessMissingChar extends TestActivity {
 
     @Override
     protected void show_solution(String guess, int good) {
-        setContentView(R.layout.test_result);
-        last_guess=guess;
-        last_good=good;
+        super.show_solution(guess, good);
         Details.populate_details_view(GuessMissingChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
@@ -212,5 +211,20 @@ public class GuessMissingChar extends TestActivity {
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
         }
+    }
+
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    }
+
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        if (charSequence.toString().codePointCount(0, charSequence.toString().length()) > 1) {
+            findViewById(R.id.ok).setEnabled(false);
+        } else {
+            findViewById(R.id.ok).setEnabled(true);
+        }
+
+    }
+
+    public void afterTextChanged(Editable editable) {
     }
 }

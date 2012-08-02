@@ -125,11 +125,15 @@ public class GuessChineseWord extends TestActivity {
             return CORRECT;
         }
         else {
+            if ((solution.chinese.contains(guess)) || (guess.contains(solution.chinese))) {
+                return OTHER;
+            }
             // check if the word guessed is in the database and relates somewhat...
             ArrayList<Vocabulary> guess_translations = myDB.getTranslations(guess);
             if (refDB != null) {
                 guess_translations.addAll(refDB.getTranslations(guess));
             }
+
             for (String hint:solution.english) {
                 for(Vocabulary voc : guess_translations) {
                     for (String en : voc.english) {
@@ -155,12 +159,12 @@ public class GuessChineseWord extends TestActivity {
     }
 
     protected void update_scores(int good) {
-        int min_box = 5;
+        int min_box = -1;
 
         if (good == CORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
-                if (new_box < min_box) {
+                if ((min_box == -1) || (new_box < min_box)) {
                     min_box = new_box;
                 }
 
@@ -180,13 +184,28 @@ public class GuessChineseWord extends TestActivity {
             }
             myDB.guessedWord(true, solution.chinese);
         }
-        else {
+        else if (good == INCORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 myDB.restartStudy(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
             myDB.guessedWord(false, solution.chinese);
+        }
+        else if (good == OTHER) {
+            for (int i=0; i<solution.chinese.length();) {
+                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
+                myDB.resetTime(hanzi);
+                i+=Character.charCount(solution.chinese.codePointAt(i));
+            }
+            for (String tries : previous_guess) {
+                for (int i=0; i<tries.length();) {
+                    String hanzi = tries.substring(i, i+Character.charCount(tries.codePointAt(i)));
+                    myDB.resetTime(hanzi);
+                    i+=Character.charCount(solution.chinese.codePointAt(i));
+                }
+                myDB.guessedWord(true, tries);
+            }
         }
     }
 
@@ -215,15 +234,17 @@ public class GuessChineseWord extends TestActivity {
         
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(guess) == OTHER)
+        if (handle_submit(guess) == OTHER) {
             word_guess.setText("");
+            if (!previous_guess.contains(guess)) {
+                show_or_next(guess);
+            }
+        }
     }
 
     @Override
     protected void show_solution(String guess, int good) {
-        setContentView(R.layout.test_result);
-        last_guess=guess;
-        last_good=good;
+        super.show_solution(guess, good);
         Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
