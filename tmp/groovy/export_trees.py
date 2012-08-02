@@ -11,6 +11,10 @@ import CharDB
 
 def write_char_tree(character, db, output):
     data = db.get_char_data(character)
+    if data is None:
+        print "Cannot find information about character ",character
+        return None
+
     if (data[1] == u'c'):
         output.write(data[0])
     else:
