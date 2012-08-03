@@ -1,7 +1,10 @@
 package com.matthieu;
 
 import android.test.ActivityInstrumentationTestCase2;
+import android.widget.EditText;
 import com.jayway.android.robotium.solo.Solo;
+
+import java.util.ArrayList;
 
 /**
  * This is a simple framework for a test of an Application.  See
@@ -31,7 +34,17 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.clickOnButton(getActivity().getResources().getString(R.string.later));
         solo.clickOnButton("Test me!");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.review_list_nothing_to_study)));
+        solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
+        solo.clickOnButton("Review list");
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.review_list_nothing_to_study)));
+        solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
 
+        solo.clickOnButton("Add Vocabulary");
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        ArrayList<EditText> entries = solo.getCurrentEditTexts();
+        assertTrue(entries.size()==1);
+        solo.enterText(entries.get(0), "abc");
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_only_chinese)));
 
     }
 
