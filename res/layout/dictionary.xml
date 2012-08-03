@@ -20,6 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:singleLine="true"
+            android:textColor="#000000"
             android:inputType="text"/>
     <TextView
             android:id="@+id/dict_warning"
