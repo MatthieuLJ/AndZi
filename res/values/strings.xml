@@ -18,6 +18,11 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
+    <string name="download_dictionary">Do you want to downloaded the dictionary…</string>
+    <string name="later">later</string>
+    <string name="do_not_ask_again">do not remind me</string>
+    <string name="download">download</string>
+
     <string name="find_tone">Find the tone for:</string>
     <string name="guess_char">Find the missing character:</string>
     <string name="guess_chinese">Find the Chinese translation for:</string>
