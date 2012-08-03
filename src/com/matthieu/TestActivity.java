@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -86,6 +87,16 @@ public abstract class TestActivity extends AndZiActivity {
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            if (test_state == STATE_ANSWERED) {
+                update_scores(last_result);
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     protected void set_next_study() {
         test_state = STATE_ASKED;
     }
@@ -96,7 +107,6 @@ public abstract class TestActivity extends AndZiActivity {
     abstract protected void display_test();
     abstract protected int check_guess(String guess);
     abstract protected void update_scores(int good);
-    abstract protected void show_solution(String guess, int good);
 
     public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         if (requestCode != 0)
@@ -110,11 +120,16 @@ public abstract class TestActivity extends AndZiActivity {
     }
 
     protected int handle_submit(String guess) {
-        Toast toast;
         last_result = check_guess(guess);
 
         if (last_result == OTHER)
             return last_result;
+
+        return show_or_next(guess);
+    }
+
+    protected int show_or_next(String guess) {
+        Toast toast;
 
         test_state = STATE_ANSWERED;
 
@@ -139,6 +154,12 @@ public abstract class TestActivity extends AndZiActivity {
             }
         }
         return last_result;
+    }
+
+    protected void show_solution(String guess, int good) {
+           setContentView(R.layout.test_result);
+           last_guess=guess;
+           last_good=good;
     }
 
     public void another_test_or_quit() {

@@ -64,7 +64,7 @@ public class Test extends AndZiActivity {
                             start_test();
                         }
                     });
-                } else {
+                } else if (myDB.getNumChars() > 0) {
                     nothing_to_study.setMessage(getResources().getString(R.string.test_mastering));
                     nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
@@ -74,12 +74,24 @@ public class Test extends AndZiActivity {
                         }
                     });
                 }
-                nothing_to_study.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        dialog.dismiss();
-                        finish();
-                    }
-                });
+
+                if (myDB.getNumChars() == 0) {
+                    nothing_to_study.setMessage(getResources().getString(R.string.review_list_nothing_to_study));
+                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    });
+                }
+                else {
+                    nothing_to_study.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    });
+                }
                 nothing_to_study.create();
                 nothing_to_study.show();
             } else {

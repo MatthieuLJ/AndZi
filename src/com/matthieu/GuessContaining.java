@@ -83,9 +83,7 @@ public class GuessContaining extends TestActivity {
                 res = CORRECT;
                 correct_answers.add(guesses[i]);
             }
-
         }
-        Log.d(TAG, "Answer is "+res);
         return res;
     }
 
@@ -109,7 +107,7 @@ public class GuessContaining extends TestActivity {
                 myDB.betterBox(hanzi);
                 break;
             case INCORRECT:
-                myDB.restartStudy(hanzi);
+                myDB.worseBox(hanzi);
                 break;
             case OTHER:
                 myDB.resetTime(hanzi);
@@ -127,21 +125,12 @@ public class GuessContaining extends TestActivity {
         String guess = word_guess.getText().toString();
 
         if (handle_submit(guess) == OTHER) {
-            if ((show_result == 2) || (show_result == 1)) {
-                show_solution(guess, CORRECT);
-            }
-            else {
-                update_scores(OTHER);
-                Toast.makeText(this, "Wrong tone", Toast.LENGTH_SHORT).show();
-                another_test_or_quit();
-            }
+            show_or_next(guess);
         }
     }
 
     public void show_solution(String guess, int good) {
-        setContentView(R.layout.test_result);
-        last_guess=guess;
-        last_good=good;
+        super.show_solution(guess, good);
         Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 public class HanziDB extends SQLiteOpenHelper {
     private static final String TAG = "HanziDB";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     protected Context appContext;
     protected AndZiApplication app;
@@ -118,7 +118,11 @@ public class HanziDB extends SQLiteOpenHelper {
         database.execSQL("CREATE TABLE leitner (" +
                 "hanzi VARCHAR(2) PRIMARY KEY NOT NULL," +
                 "box INTEGER NOT NULL," +
-                "exp_time INTEGER NOT NULL)");
+                "exp_time INTEGER NOT NULL," +
+                "num_tested INTEGER DEFAULT 0," +
+                "num_wrong INTEGER DEFAULT 0," +
+                "streak INTEGER DEFAULT 0," +
+                "date_added INTEGER)");
         database.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
 
         cached_num_chars=0;
@@ -163,6 +167,13 @@ public class HanziDB extends SQLiteOpenHelper {
 
         if (i<3) {
             db.execSQL("ALTER TABLE cword ADD COLUMN score INTEGER DEFAULT 0");
+        }
+
+        if (i<4) {
+            db.execSQL("ALTER TABLE leitner ADD COLUMN num_tested INTEGER DEFAULT 0");
+            db.execSQL("ALTER TABLE leitner ADD COLUMN num_wrong INTEGER DEFAULT 0");
+            db.execSQL("ALTER TABLE leitner ADD COLUMN streak INTEGER DEFAULT 0");
+            db.execSQL("ALTER TABLE leitner ADD COLUMN date_added INTEGER");
         }
     }
 
@@ -2806,10 +2817,8 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
         if (cur.moveToFirst()) {
-            do{
-                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
-                res = cur.getInt(cur.getColumnIndex("box"));
-            }while(cur.moveToNext());
+            //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
+            res = cur.getInt(cur.getColumnIndex("box"));
         }
         else {
             res = 0;
@@ -2825,9 +2834,7 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT exp_time FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
         if (cur.moveToFirst()) {
-            do{
-                res = cur.getLong(cur.getColumnIndex("exp_time"));
-            }while(cur.moveToNext());
+            res = cur.getLong(cur.getColumnIndex("exp_time"));
         }
         else {
             res = 0;
@@ -2843,11 +2850,26 @@ public class HanziDB extends SQLiteOpenHelper {
 
         long box_delay = (long) 6 * 60 * 60 * 1000; // 6 hours is basic
 
-        double multiplicator = 1;//Math.max(Math.log10(getNumChars()), 1);
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        return (long) (box_delay * Math.pow(2, box + multiplicator));
+        return (long) (box_delay * Math.pow(2, box + 1));
 
         //System.out.println("With "+getNumChars()+" characters, mult is "+multiplicator+", so delay is "+(res/(1000*60*60)+" hours for box "+box));
+    }
+
+    protected long getExpiryTime (int box, int num_tested, int num_wrong, long date_started, long last_expiration) {
+        if (box==0)
+            return 0;
+
+        long box_delay = (long) 6 * 60 * 60 * 1000; // 6 hours is basic
+        if ((last_expiration != 0) && (last_expiration < System.currentTimeMillis()))
+            box_delay += (System.currentTimeMillis() - last_expiration)/2;
+
+        double multiplicand=2;
+        if (num_tested > 3) {
+            multiplicand += (0.5-(num_wrong/num_tested))*8/5; // multiplicand becomes between 1.2 and 2.8 depending on results so far
+        }
+        // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
+        return (long) (box_delay * Math.pow(multiplicand, box + 1));
     }
 
     protected ArrayList<String> getMostAdvancedExpiring(int num) {
@@ -2877,40 +2899,86 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void resetTime(String hanzi) {
-        if (getBoxForChar(hanzi)==0)
+        if (getBoxForChar(hanzi)==0) {
             betterBox(hanzi);
+            return;
+        }
 
-        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
+        Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
+        cur.moveToFirst();
+
         ContentValues cv = new ContentValues();
+        int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
+        cv.put("num_tested", num_tested);
+
         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(getBoxForChar(hanzi)));
+        db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
+    }
+
+    public void betterBox(String hanzi) {
+        Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
+                        new String[] {hanzi});
+
+        ContentValues cv = new ContentValues();
 
         if (cur.getCount() == 0) {
             cv.put("hanzi", hanzi);
-            cv.put("box", 0);
+            cv.put("box", 1);
+            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(1));
+            cv.put("num_tested",1);
+            cv.put("num_wrong",0);
+            cv.put("streak",1);
+            cv.put("date_added", System.currentTimeMillis());
             db.insert("leitner", null, cv);
         }
         else {
-            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(getBoxForChar(hanzi)));
+            cur.moveToFirst();
+            int current_box = 1 + cur.getInt(cur.getColumnIndex("box"));
+            cv.put("box", current_box);
+            int streak = cur.getInt(cur.getColumnIndex("streak"));
+            if (streak>3) {
+                int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
+                cv.put("num_wrong", wrong-1);
+            }
+            cv.put("streak", streak+1);
+            int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
+            cv.put("num_tested", num_tested);
+            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, cur.getInt(cur.getColumnIndex("num_wrong")),cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();
     }
 
-    public void betterBox(String hanzi) {
-        int current_box = getBoxForChar(hanzi);
-        current_box ++;
-
+    public void worseBox(String hanzi) {
         ContentValues cv = new ContentValues();
-        cv.put("box", current_box);
-        cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box));
-        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
+
+        Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
+
         if (cur.getCount() == 0) {
             cv.put("hanzi", hanzi);
+            cv.put("box", 0);
+            cv.put("exp_time", System.currentTimeMillis());
+            cv.put("num_tested",1);
+            cv.put("num_wrong", 1);
+            cv.put("date_added", System.currentTimeMillis());
             db.insert("leitner", null, cv);
         }
         else {
+            cur.moveToFirst();
+            int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
+            cv.put("num_tested", num_tested);
+            int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
+            cv.put("num_wrong", wrong+1);
+            int current_box = cur.getInt(cur.getColumnIndex("box"));
+            if (current_box > 2)
+                current_box-=3;
+            else
+                current_box=0;
+            cv.put("box", current_box);
+            cv.put("streak", 0);
+            cv.put("exp_time", System.currentTimeMillis());
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();
@@ -2920,13 +2988,24 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("box", 0);
         cv.put("exp_time", System.currentTimeMillis());
-        Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
+        Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
+
         if (cur.getCount() == 0) {
             cv.put("hanzi", hanzi);
+            cv.put("exp_time", System.currentTimeMillis());
+            cv.put("num_tested",1);
+            cv.put("num_wrong", 1);
+            cv.put("date_added", System.currentTimeMillis());
             db.insert("leitner", null, cv);
         }
         else {
+            cur.moveToFirst();
+            int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
+            cv.put("num_tested", num_tested);
+            int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
+            cv.put("num_wrong", wrong+1);
+            cv.put("streak", 0);
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();

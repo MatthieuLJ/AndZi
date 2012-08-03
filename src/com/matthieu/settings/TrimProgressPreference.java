@@ -56,26 +56,28 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
         mContext = context;
         progress_db = ((AndZiApplication)context.getApplicationContext()).getProgress();
 
-        long oldest = progress_db.get_data(0).get(0).date;
-        long current = System.currentTimeMillis();
-        if (current - oldest > delays[6]) {
-            max_range=7;
-        } else if (current - oldest > delays[5]) {
-            max_range=6;
-        } else if (current - oldest > delays[4]) {
-            max_range=5;
-        } else if (current - oldest > delays[3]) {
-            max_range=4;
-        } else if (current - oldest > delays[2]) {
-            max_range=3;
-        } else if (current - oldest > delays[1]) {
-            max_range=2;
-        } else if (current - oldest > delays[0]) {
-            max_range=1;
-        } else {
+        if (progress_db.get_data(0).size() > 1) {
+            long oldest = progress_db.get_data(0).get(0).date;
+            long current = System.currentTimeMillis();
+            if (current - oldest > delays[6]) {
+                max_range=7;
+            } else if (current - oldest > delays[5]) {
+                max_range=6;
+            } else if (current - oldest > delays[4]) {
+                max_range=5;
+            } else if (current - oldest > delays[3]) {
+                max_range=4;
+            } else if (current - oldest > delays[2]) {
+                max_range=3;
+            } else if (current - oldest > delays[1]) {
+                max_range=2;
+            } else if (current - oldest > delays[0]) {
+                max_range=1;
+            } else {
+                max_range=0;
+            }
+        } else
             max_range=0;
-        }
-
     }
     @Override
     protected View onCreateDialogView() {

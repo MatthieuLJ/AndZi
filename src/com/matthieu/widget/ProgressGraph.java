@@ -64,6 +64,10 @@ public class ProgressGraph extends View {
     Handler update_handler;
 
     private class update_delayer extends Thread {
+        ProgressData recent_data;
+        public update_delayer() {
+            recent_data = ((AndZiApplication) context.getApplicationContext()).getCurrentProgress();
+        }
         @Override
         public void run() {
             Looper.prepare();
@@ -87,7 +91,7 @@ public class ProgressGraph extends View {
                     ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
-                        current_data.add(((AndZiApplication) context.getApplicationContext()).getCurrentProgress());
+                        current_data.add(recent_data);
                         current_range = query;
                     }
                     ProgressGraph.this.postInvalidate();
@@ -373,7 +377,7 @@ public class ProgressGraph extends View {
                 data_at_edge = new ProgressData();
                 data_at_edge.date = range_date_max;
                 for (int i=0; i<5; i++) {
-                    Log.d(TAG, "last_date_index: "+last_date_index+", size of data_to_use: "+data_to_use.size());
+                    //Log.d(TAG, "last_date_index: "+last_date_index+", size of data_to_use: "+data_to_use.size());
                     data_at_edge.num_chars_in_box[i] = (int) (data_to_use.get(last_date_index).num_chars_in_box[i] +
                             (float)(data_to_use.get(last_date_index+1).num_chars_in_box[i] - data_to_use.get(last_date_index).num_chars_in_box[i]) *
                                     (range_date_max - data_to_use.get(last_date_index).date) / (data_to_use.get(last_date_index+1).date - data_to_use.get(last_date_index).date));

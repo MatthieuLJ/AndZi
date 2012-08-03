@@ -43,13 +43,13 @@ public class MainMenuActivity extends AndZiActivity {
             boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
             if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
                 AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
-                alert.setMessage("Everything would be so much better if you downloaded the dictionary...");
-                alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                alert.setMessage(R.string.download_dictionary);
+                alert.setNegativeButton(R.string.later, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                     }
                 });
-                alert.setNeutralButton("Do not ask me again", new DialogInterface.OnClickListener() {
+                alert.setNeutralButton(R.string.do_not_ask_again, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         SharedPreferences.Editor edit = prefs.edit();
                         edit.putBoolean("first_time_ref", false);
@@ -57,7 +57,7 @@ public class MainMenuActivity extends AndZiActivity {
                         dialog.dismiss();
                     }
                 });
-                alert.setPositiveButton("Download", new DialogInterface.OnClickListener() {
+                alert.setPositiveButton(R.string.download, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
                         Intent in = new Intent(MainMenuActivity.this, Settings.class);
                         in.putExtra("Settings_action", 0);

@@ -94,11 +94,11 @@ public class ProgressDB extends SQLiteOpenHelper {
             }
             if (zoom < max_zoom) {
                 if (i==0)
-                    distribute_one_level(db, min_date, tmp_date, max_num, zoom+1, max_zoom);
+                    distribute_one_level(db, min_date, tmp_date, 2, zoom+1, max_zoom);
                 else if (i==max_num)
-                    distribute_one_level(db, tmp_date - increment, max_date, max_num, zoom+1, max_zoom);
+                    distribute_one_level(db, tmp_date - increment, max_date, 2, zoom+1, max_zoom);
                 else
-                    distribute_one_level(db, tmp_date - increment, tmp_date, max_num, zoom+1, max_zoom);
+                    distribute_one_level(db, tmp_date - increment, tmp_date, 2, zoom+1, max_zoom);
             }
         }
     }
@@ -143,7 +143,12 @@ public class ProgressDB extends SQLiteOpenHelper {
                         distribute_one_level(db, min_date, max_date, DEFAULT_MAX, 0, max_zoom-1);
 
                         // delete anything that would be left
-                        db.delete("progress", "zoom=?", new String[] {"-1"});
+                        if (false) {
+                            db.delete("progress", "zoom=?", new String[] {"-1"});
+                        } else {
+                            cv.put("zoom", max_zoom+1);
+                            db.update("progress", cv, "zoom=?", new String[] {"-1"});
+                        }
 
                         db.setTransactionSuccessful();
                     }
