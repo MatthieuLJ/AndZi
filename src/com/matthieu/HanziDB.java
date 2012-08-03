@@ -2978,7 +2978,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 current_box=0;
             cv.put("box", current_box);
             cv.put("streak", 0);
-            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, wrong, cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
+            cv.put("exp_time", System.currentTimeMillis());
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();
