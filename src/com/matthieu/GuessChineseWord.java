@@ -125,9 +125,6 @@ public class GuessChineseWord extends TestActivity {
             return CORRECT;
         }
         else {
-            if ((solution.chinese.contains(guess)) || (guess.contains(solution.chinese))) {
-                return OTHER;
-            }
             // check if the word guessed is in the database and relates somewhat...
             ArrayList<Vocabulary> guess_translations = myDB.getTranslations(guess);
             if (refDB != null) {
@@ -138,6 +135,9 @@ public class GuessChineseWord extends TestActivity {
                 for(Vocabulary voc : guess_translations) {
                     for (String en : voc.english) {
                         if (HanziDB.compare_translations(en, hint)) {
+                            if ((solution.chinese.contains(guess)) || (guess.contains(solution.chinese))) {
+                                return OTHER;
+                            }
                             if (!previous_guess.contains(guess))
                                 previous_guess.add(guess);
                             TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
