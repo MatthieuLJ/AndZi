@@ -6,25 +6,24 @@ import java.util.ArrayList;
 
 public class CharacterStructure {
     private static final String TAG = "CharacterStructure";
-    
-    static class character_tree {
-        String root;
-        int height;
-        character_tree parent;
-        String layout;
-        ArrayList<character_tree> children;
-    }
 
-    private character_tree build_tree(String desc) {
+    String root;
+    int height;
+    int num_strokes;
+    CharacterStructure parent;
+    String layout;
+    ArrayList<CharacterStructure> children;
+
+    private static CharacterStructure build_tree(String desc) {
         int tmp=0;
-        character_tree res = new character_tree();
+        CharacterStructure res = new CharacterStructure();
         res.parent = null;
 
         tmp = Character.charCount(desc.codePointAt(0));
         res.root = desc.substring(0, tmp);
-        res.children = new ArrayList<character_tree>();
+        res.children = new ArrayList<CharacterStructure>();
 
-        tmp += 1; // =
+        tmp += 1; // '='
 
         int degree=0;
         StringBuffer next_part = new StringBuffer();
@@ -39,27 +38,62 @@ public class CharacterStructure {
             } else if (entry.equals(")"))
                 degree--;
 
+            if (degree==0)
+                break;
+
             if ((degree == 1) && (entry.equals(","))) {
-                character_tree one_child = build_tree(next_part.toString());
+                CharacterStructure one_child = build_tree(next_part.toString());
                 one_child.parent = res;
                 res.children.add(one_child);
                 next_part = new StringBuffer();
-            } else if (((degree != 1) || (!entry.equals("("))) && ((degree != 0) || (!entry.equals(")")))) {
+            } else if ((degree != 1) || (!entry.equals("("))) {
                 next_part.append(entry);
             }
 
             i+=Character.charCount(desc.codePointAt(i));
         }
         if (next_part.length() != 0) {
-            character_tree one_child = build_tree(next_part.toString());
+            CharacterStructure one_child = build_tree(next_part.toString());
             one_child.parent = res;
             res.children.add(one_child);
         }
-        res.height=0;
-        for (character_tree child : res.children) {
-            res.height = Math.max(res.height, child.height+1);
+
+        if (res.children.size() == 0) {
+            res.height=0;
+            res.num_strokes = 1;
+        } else {
+            res.num_strokes = 0;
+            for (CharacterStructure child : res.children) {
+                res.height = Math.max(res.height, child.height+1);
+                res.num_strokes += child.num_strokes;
+            }
         }
         return res;
+    }
+
+    public int distanceTo(CharacterStructure other) {
+        if (other.root.equals(this.root))
+            return 0;
+
+        CharacterStructure smaller, taller;
+
+        if (this.height > other.height) {
+            smaller = other;
+        } else if (this.height < other.height) {
+            smaller = this;
+        } else if (this.children.size() > other.children.size()) {
+            smaller = other;
+        } else if (this.children.size() < other.children.size()) {
+            smaller = this;
+        } else if (this.num_strokes > other.num_strokes) {
+            smaller = other;
+        } else if (this.num_strokes < other.num_strokes) {
+            smaller = this;
+        } else {
+            smaller = (this.root.compareTo(other.root)<0) ? this:other;
+        }
+
+        return -1;
     }
 
     private void do_things_with_characters() {
@@ -169,7 +203,7 @@ public class CharacterStructure {
                 "素=d(龶=msp(丰=lock(三=d(㇐,二=rd(㇐)),㇑)),糸=d(幺=wbr(37217=rd(㇛),㇔),小=w(㇚,八=a(㇓,㇏))))"
         };
 
-        character_tree res = build_tree(trees[0]);
+        CharacterStructure res = build_tree(trees[0]);
         Log.d(TAG, "Got a tree...");
     }
 }
