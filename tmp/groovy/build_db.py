@@ -206,53 +206,69 @@ def build_wubi_db(filename):
     return wdb
 
 wubi_strokes = {
-    u'㇁' : "z",
-    u'㇂' : "n",
-    u'㇃' : "z",
-    u'㇄' : "z",
-    u'㇅' : "z",
-    u'㇆' : "z",
-    u'㇇' : "z",
-    u'㇈' : "z",
-    u'㇉' : "z",
-    u'㇊' : "z",
-    u'㇋' : "z",
-    u'㇌' : "z",
-    u'㇍' : "z",
-    u'㇎' : "z",
-    u'㇕' : "z",
-    u'㇖' : "z",
-    u'㇗' : "z",
-    u'㇙' : "z",
-    u'㇛' : "z",
-    u'㇜' : "z",
-    u'㇞' : "z",
-    u'㇟' : "z",
-    u'㇠' : "z",
-    u'㇡' : "z",
-    u'㇀' : "n",
-    u'㇏' : "n",
-    u'㇔' : "n",
-    u'㇝' : "n",
-    u'㇒' : "p",
-    u'㇓' : "p",
-    u'㇢' : "p",
-    u'㇑' : "s",
-    u'㇚' : "s",
-    u'㇐' : "h" }
+    "HZSZHZS" : "z",
+    "HZSZHZP" : "z",
+    "HZZZG" : "z",
+    "HZSZH" : "z",
+    "HZSZT" : "z",
+    "HZSWH" : "z",
+    "SZHZS" : "z",
+    "HZSG" : "z",
+    "HZWG" : "z",
+    "SZWG" : "z",
+    "HZZP" : "z",
+    "HPWG" : "z",
+    "HZZZ" : "z",
+    "HXWG" : "z",
+    "HZW" : "z",
+    "WSG" : "z",
+    "BXG" : "z",
+    "SWH" : "z",
+    "HZZ" : "z",
+    "HZG" : "z",
+    "HZP" : "z",
+    "HZT" : "z",
+    "SZH" : "z",
+    "HZS" : "z",
+    "SZT" : "z",
+    "PZD" : "z",
+    "PZH" : "z",
+    "SZZ" : "z",
+    "SWG" : "z",
+    "HP" : "z",
+    "WG" : "z",
+    "SW" : "z",
+    "HZ" : "z",
+    "HG" : "z",
+    "SZ" : "z",
+    "ST" : "z",
+    "PD" : "z",
+    "PZ" : "z",
+    "XG" : "n",
+    "NG" : "n",
+    "TN" : "n",
+    "PG" : "p",
+    "SP" : "p",
+    "SG" : "s",
+    "N" : "n",
+    "T" : "n",
+    "D" : "n",
+    "H" : "h",
+    "S" : "s",
+    "P" : "p"
+    }
 
 
 def get_wubi_from_cjk(char):
     cjk = characterlookup.CharacterLookup('C')
-    strokes = cjk.getStrokeOrder(char)
+    strokes = cjk.getStrokeOrderAbbrev(char)
     if strokes is not None:
-        res=""
-        for s in strokes:
-            new_stroke = wubi_strokes[s]
-            if new_stroke=="z" and res.endswith("z"):
-                pass
-            res+=new_stroke
-        return res
+        for s in wubi_strokes.keys():
+            strokes = strokes.replace(s, wubi_strokes[s])
+        strokes = strokes.replace("z-z", "z")
+        strokes = strokes.replace("-", "")
+        strokes = strokes.replace(" ", "")
+        return strokes
     else:
         return None
 
