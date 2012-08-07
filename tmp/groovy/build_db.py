@@ -7,6 +7,7 @@ import re
 import codecs
 import string
 import sqlite3
+from cjklib import characterlookup
 
 class groovy_db:
     """A class to manage the character database"""
@@ -114,7 +115,9 @@ class char_db:
 
     def add_char(self, char, wubi, tree):
         if wubi is None:
-            wubi=""
+            wubi=get_wubi_from_cjk(char)
+            if wubi is None:
+                wubi=""
         query="INSERT INTO chars VALUES ('"+char+"', '"+wubi+"', '"+tree+"'"+");"
         self.connection.execute(query)
         self.connection.commit()
@@ -202,6 +205,57 @@ def build_wubi_db(filename):
 
     return wdb
 
+wubi_strokes = {
+    u'㇁' : "z",
+    u'㇂' : "n",
+    u'㇃' : "z",
+    u'㇄' : "z",
+    u'㇅' : "z",
+    u'㇆' : "z",
+    u'㇇' : "z",
+    u'㇈' : "z",
+    u'㇉' : "z",
+    u'㇊' : "z",
+    u'㇋' : "z",
+    u'㇌' : "z",
+    u'㇍' : "z",
+    u'㇎' : "z",
+    u'㇕' : "z",
+    u'㇖' : "z",
+    u'㇗' : "z",
+    u'㇙' : "z",
+    u'㇛' : "z",
+    u'㇜' : "z",
+    u'㇞' : "z",
+    u'㇟' : "z",
+    u'㇠' : "z",
+    u'㇡' : "z",
+    u'㇀' : "n",
+    u'㇏' : "n",
+    u'㇔' : "n",
+    u'㇝' : "n",
+    u'㇒' : "p",
+    u'㇓' : "p",
+    u'㇢' : "p",
+    u'㇑' : "s",
+    u'㇚' : "s",
+    u'㇐' : "h" }
+
+
+def get_wubi_from_cjk(char):
+    cjk = characterlookup.CharacterLookup('C')
+    strokes = cjk.getStrokeOrder(char)
+    if strokes is not None:
+        res=""
+        for s in strokes:
+            new_stroke = wubi_strokes[s]
+            if new_stroke=="z" and res.endswith("z"):
+                pass
+            res+=new_stroke
+        return res
+    else:
+        return None
+
 if len(sys.argv) != 5:
     print "not enough argument "+sys.argv[0]+" charData(groovy) charData(wubi/ibus-t9) input_set database-output"
     sys.exit()
@@ -262,6 +316,6 @@ while True:
         sys.stdout.write("Processing line "+str(current_line)+" out of "+str(total_num_lines)+" for output\r")
         sys.stdout.flush()
 
-    sys.stderr.write("Processing character "+line[0]+"\n")
+    #sys.stderr.write("Processing character "+line[0]+"\n")
     output.add_char(line[0], wdb.get_char_data(line[0]), get_char_tree(line[0], gdb))
 
