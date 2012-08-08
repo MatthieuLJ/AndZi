@@ -65,66 +65,80 @@ z HZZZG|横折折折鉤|㇡
 p PG|撇鉤|㇢
  Q|圈|㇣
 
- ra
- d
- a
- msp
- lock
- rrefr
- rrefl
- wt
- sl
- r3tr
- ba
- s
- stl
- r3gw
- r4sq
- sbl
- rd
- str
- sbr
- r3a
- w
- bd
- r5x
- r4dia
- st
- wr
- wtr
- wbr
- wb
- r3d
+across:
+ a     (across)
+#ra    (repeat across)
+#r3a   (repeat 3x across)
+#r4a   (repeat 4x across)
+#ba    (second between first across)
+#rrefr (repeat with reflection on the right)
+#rrefl (repeat with reflection on the left)
+
+down:
+ d     (down)
+#rd    (repeat down)
+#r3d   (repeat 3x down)
+#r4d   (repeat 4x down)
+#bd    (second between first down)
+#r3tr  (repeat 3 in triangle)
+#r4sq  (repeat 4 in square)
+
+similar:
+#me    (equivalent)
+
+modified:
+ mt    (top radical)
+ mb    (bottom radical)
+ ml    (left radical)
+ mr    (right radical)
+ mtl   (top left radical)
+ msp   (modified special)
+ refh  (horizontal reflection)
+ mo    (outline)
+
+component:
+ c
+
+together...
+ lock  (locked together)
+ s     (surrounds)
+ st    (surrounds top)
+ sb    (surrounds bottom)
+ sr    (surrounds right)
+ sl    (surrounds left)
+ stl   (surrounds top left)
+ sbl   (surrounds bottom left)
+ str   (surrounds top right)
+ sbr   (surrounds bottom right)
+ w     (within)
+ wt    (within top)
+ wb    (within bottom)
+ wr    (within right)
+ wl    (within left)
+ wtr   (within top right)
+ wbr   (within bottom right)
+ wtl   (within top left)
+ wbl   (within bottom left)
+
+ignore
  rtr
- wtl
- r3st
+ r5p
+ r3gw
  refv
- sb
- r4a
- wl
- mo
- refh
- me
+ r3st
  rsb
  rrotu
- sr
  rot
- r5p
  rstl
  rrotd
- wbl
  r3str
  rrotr
  r4ref
- r4d
- mt
- mb
- ml
  rsbl
- mr
- c
- mtl
  rst
  rsbr
  r3stl
  rrefd
+ r5x   (repeat 5 times in X)
+ r4dia (repeat 4 times in +)
+

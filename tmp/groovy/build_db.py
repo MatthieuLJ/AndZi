@@ -7,6 +7,7 @@ import re
 import codecs
 import string
 import sqlite3
+import cjklib
 from cjklib import characterlookup
 
 class groovy_db:
@@ -114,10 +115,18 @@ class char_db:
         self.connection.close()
 
     def add_char(self, char, wubi, tree):
+        if tree is None:
+            #sys.stdout.write("\nNo tree for "+char+"\n")
+            return
         if wubi is None:
             wubi=get_wubi_from_cjk(char)
             if wubi is None:
                 wubi=""
+                #sys.stdout.write("\nNo wubi for "+char+"\n")
+        #sys.stdout.write("Inserting into database")
+        #sys.stdout.write("".join(char))
+        #sys.stdout.write("".join(wubi))
+        #sys.stdout.write("".join(tree))
         query="INSERT INTO chars VALUES ('"+char+"', '"+wubi+"', '"+tree+"'"+");"
         self.connection.execute(query)
         self.connection.commit()
@@ -206,68 +215,65 @@ def build_wubi_db(filename):
     return wdb
 
 wubi_strokes = {
-    "HZSZHZS" : "z",
-    "HZSZHZP" : "z",
-    "HZZZG" : "z",
-    "HZSZH" : "z",
-    "HZSZT" : "z",
-    "HZSWH" : "z",
-    "SZHZS" : "z",
-    "HZSG" : "z",
-    "HZWG" : "z",
-    "SZWG" : "z",
-    "HZZP" : "z",
-    "HPWG" : "z",
-    "HZZZ" : "z",
-    "HXWG" : "z",
-    "HZW" : "z",
-    "WSG" : "z",
-    "BXG" : "z",
-    "SWH" : "z",
-    "HZZ" : "z",
-    "HZG" : "z",
-    "HZP" : "z",
-    "HZT" : "z",
-    "SZH" : "z",
-    "HZS" : "z",
-    "SZT" : "z",
-    "PZD" : "z",
-    "PZH" : "z",
-    "SZZ" : "z",
-    "SWG" : "z",
-    "HP" : "z",
-    "WG" : "z",
-    "SW" : "z",
-    "HZ" : "z",
-    "HG" : "z",
-    "SZ" : "z",
-    "ST" : "z",
-    "PD" : "z",
-    "PZ" : "z",
-    "XG" : "n",
-    "NG" : "n",
-    "TN" : "n",
-    "PG" : "p",
-    "SP" : "p",
-    "SG" : "s",
-    "N" : "n",
-    "T" : "n",
-    "D" : "n",
-    "H" : "h",
-    "S" : "s",
-    "P" : "p"
+    "HZSZHZS" : "Z",
+    "HZSZHZP" : "Z",
+    "HZZZG" : "Z",
+    "HZSZH" : "Z",
+    "HZSZT" : "Z",
+    "HZSWH" : "Z",
+    "SZHZS" : "Z",
+    "HZSG" : "Z",
+    "HZWG" : "Z",
+    "SZWG" : "Z",
+    "HZZP" : "Z",
+    "HPWG" : "Z",
+    "HZZZ" : "Z",
+    "HXWG" : "Z",
+    "HZW" : "Z",
+    "WSG" : "Z",
+    "BXG" : "Z",
+    "SWH" : "Z",
+    "HZZ" : "Z",
+    "HZG" : "Z",
+    "HZP" : "Z",
+    "HZT" : "Z",
+    "SZH" : "Z",
+    "HZS" : "Z",
+    "SZT" : "Z",
+    "PZD" : "Z",
+    "PZH" : "Z",
+    "SZZ" : "Z",
+    "SWG" : "Z",
+    "HP" : "Z",
+    "WG" : "Z",
+    "SW" : "Z",
+    "HZ" : "Z",
+    "HG" : "Z",
+    "SZ" : "Z",
+    "ST" : "Z",
+    "PD" : "Z",
+    "PZ" : "Z",
+    "XG" : "N",
+    "NG" : "N",
+    "TN" : "N",
+    "PG" : "P",
+    "SP" : "P",
+    "SG" : "S",
+    "T" : "N",
+    "D" : "N"
     }
 
 
 def get_wubi_from_cjk(char):
     cjk = characterlookup.CharacterLookup('C')
-    strokes = cjk.getStrokeOrderAbbrev(char)
+    try:
+        strokes = cjk.getStrokeOrderAbbrev(char)
+    except cjklib.exception.NoInformationError:
+        return None
     if strokes is not None:
         for s in wubi_strokes.keys():
             strokes = strokes.replace(s, wubi_strokes[s])
-        strokes = strokes.replace("z-z", "z")
-        strokes = strokes.replace("-", "")
-        strokes = strokes.replace(" ", "")
+        strokes = strokes.replace("Z-Z", "Z").replace("-", "").replace(" ", "").lower()
         return strokes
     else:
         return None
