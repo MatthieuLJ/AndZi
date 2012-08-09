@@ -153,8 +153,14 @@ public class CharacterStructure {
             res = 3*children.get(0).weight();
         } else if (layout.startsWith("r4")) {
             res = 4*children.get(0).weight();
-        } else if (layout.startsWith("m") || layout.equals("refh")) {
-            res = (float) (1.5*children.get(0).weight());
+        } else if (layout.equals("me")) {
+            res = children.get(0).weight();
+        } else if (layout.equals("msp") || layout.equals("refh")) {
+            res = (float) (1.2*children.get(0).weight());
+        } else if (layout.equals("mo")) {
+            res = 2*children.get(0).weight();
+        } else if (layout.startsWith("m")) {
+            res = (float) (0.8*children.get(0).weight());
         } else if (layout.startsWith("s") || layout.startsWith("w") || layout.equals("ba") || layout.equals("bd")) {
             res = (float) (1.5*children.get(0).weight() + 0.5*children.get(1).weight());
         } else if (layout.equals("c")) {
@@ -192,31 +198,13 @@ public class CharacterStructure {
     }
 
     private int get_depth(CharacterStructure branch) {
-        LinkedList<CharacterStructure> next_level_search = new LinkedList<CharacterStructure>();
-        LinkedList<CharacterStructure> current_level_search = new LinkedList<CharacterStructure>();
-        current_level_search.add(this);
         int depth=0;
-        while (current_level_search.size()>0) {
-            for (CharacterStructure c : current_level_search) {
-                if (c.equals(branch)) {
-                    return depth;
-                } else {
-                    for (CharacterStructure child : c.children) {
-                        if (child.height != 0) {
-                            next_level_search.add(child);
-                        }
-                    }
-                }
-            }
-            current_level_search.clear();
-            current_level_search.addAll(next_level_search);
-            next_level_search.clear();
+        while (branch.parent!=null) {
             depth++;
+            branch = branch.parent;
         }
-        return -1;
+        return depth;
     }
-
-
 
     public float distanceTo(CharacterStructure other) {
         if (other.root.equals(this.root))
@@ -288,12 +276,13 @@ public class CharacterStructure {
         while ((highest.parent!=null) && (highest.parent.layout.equals("me")))
             highest = highest.parent;
 
-        float difference = taller.weight() - highest.weight();
-
         res = find_in_tree(highest.root, smaller);
         CharacterStructure matching = res.get(0);
         while ((matching.parent!=null) && (matching.parent.layout.equals("me")))
             matching = matching.parent;
+
+        float difference = (float) (Math.pow(taller.weight() / matching.weight(), 2) * (1+ smaller.height - matching.height));
+        float factor=1;
 
         if (matching.parent != null) {
             // only a part of the smaller character can be found in the bigger one
@@ -301,15 +290,19 @@ public class CharacterStructure {
             String highest_layout = highest.parent.layout;
             if (matching_layout.equals(highest_layout)) {
                 if (((matching_layout.equals("a")) || (matching_layout.equals("b")) || (matching_layout.startsWith("s")) || (matching_layout.startsWith("w")))
-                        && (matching.parent.children.indexOf(matching) != highest.parent.children.indexOf(highest))) {
-                    difference *= 1.2;
+                        && ((matching.parent.children.indexOf(matching) != highest.parent.children.indexOf(highest)) || (matching.parent.children.size() != highest.parent.children.size()))) {
+                    factor = (float) 1.5;
                 }
+                // else do not change it (same layout, same order if it matters)
             } else if (similar_layouts.get(matching_layout).equals(similar_layouts.get(highest_layout))) {
-                difference *= 1.5;
+                factor = 2;
             } else {
-                difference *= 2;
+                factor= 4;
             }
         }
+        difference *= factor;
+
+        Log.d(TAG, "Distance between "+taller.root+" and "+smaller.root+" is "+difference+", factor is "+factor+", highest matching found is "+highest.root);
 
         return difference;
     }
@@ -426,9 +419,8 @@ public class CharacterStructure {
             trees[i] = build_tree(chars[i]);
         }
         for (int i=0; i<chars.length; i++) {
-            for (int j=i; j<chars.length; j++) {
-                float diff = trees[i].distanceTo(trees[j]);
-                Log.d(TAG, "Distance between "+chars[i].substring(0,1)+" and "+chars[j].substring(0,1)+" is "+diff);
+            for (int j=i+1; j<chars.length; j++) {
+                trees[i].distanceTo(trees[j]);
             }
         }
 
