@@ -91,50 +91,48 @@ public class CharacterStructure {
         int tmp=0;
         CharacterStructure res = new CharacterStructure();
         res.parent = null;
-
-        tmp = Character.charCount(desc.codePointAt(0));
-        res.root = desc.substring(0, tmp);
         res.children = new ArrayList<CharacterStructure>();
 
-        tmp += 1; // '='
-
-        int degree=0;
-        StringBuffer next_part = new StringBuffer();
-        for (int i=tmp; i<desc.length(); ) {
-            final String entry = desc.substring(i, i + Character.charCount(desc.codePointAt(i)));
-            if (entry.equals("(") ) {
-                if (degree == 0) {
-                    res.layout = next_part.toString();
-                    next_part = new StringBuffer();
-                }
-                degree++;
-            } else if (entry.equals(")"))
-                degree--;
-
-            if (degree==0)
-                break;
-
-            if ((degree == 1) && (entry.equals(","))) {
-                CharacterStructure one_child = build_tree(next_part.toString());
-                one_child.parent = res;
-                res.children.add(one_child);
-                next_part = new StringBuffer();
-            } else if ((degree != 1) || (!entry.equals("("))) {
-                next_part.append(entry);
-            }
-
-            i+=Character.charCount(desc.codePointAt(i));
-        }
-        if (next_part.length() != 0) {
-            CharacterStructure one_child = build_tree(next_part.toString());
-            one_child.parent = res;
-            res.children.add(one_child);
-        }
-
-        if (res.children.size() == 0) {
+        tmp = desc.indexOf('=');
+        if (tmp == -1) {
+            res.layout="c";
             res.height=0;
             res.num_strokes = 1;
         } else {
+            res.root = desc.substring(0, tmp);
+
+            tmp += 1; // '='
+
+            int degree=0;
+            StringBuffer next_part = new StringBuffer();
+            for (int i=tmp; i<desc.length(); ) {
+                final String entry = desc.substring(i, i + Character.charCount(desc.codePointAt(i)));
+                if (entry.equals("(") ) {
+                    if (degree == 0) {
+                        res.layout = next_part.toString();
+                        next_part = new StringBuffer();
+                    }
+                    degree++;
+                } else if (entry.equals(")"))
+                    degree--;
+
+                if ((degree == 1) && (entry.equals(","))) {
+                    CharacterStructure one_child = build_tree(next_part.toString());
+                    one_child.parent = res;
+                    res.children.add(one_child);
+                    next_part = new StringBuffer();
+                } else if (((degree != 1) || (!entry.equals("("))) && ((degree != 0) || (!entry.equals(")")))) {
+                    next_part.append(entry);
+                }
+
+                i+=Character.charCount(desc.codePointAt(i));
+            }
+            if (next_part.length() != 0) {
+                CharacterStructure one_child = build_tree(next_part.toString());
+                one_child.parent = res;
+                res.children.add(one_child);
+            }
+
             res.num_strokes = 0;
             for (CharacterStructure child : res.children) {
                 res.height = Math.max(res.height, child.height+1);
@@ -156,7 +154,7 @@ public class CharacterStructure {
         } else if (layout.startsWith("r4")) {
             res = 4*children.get(0).weight();
         } else if (layout.startsWith("m") || layout.equals("refh")) {
-            res = children.get(0).weight();
+            res = (float) (1.5*children.get(0).weight());
         } else if (layout.startsWith("s") || layout.startsWith("w") || layout.equals("ba") || layout.equals("bd")) {
             res = (float) (1.5*children.get(0).weight() + 0.5*children.get(1).weight());
         } else if (layout.equals("c")) {
@@ -319,7 +317,7 @@ public class CharacterStructure {
     public static void do_things_with_characters() {
         String chars[] = new String[] {
                 "土=d(十=lock(㇐,㇑),㇐)",
-                "士=msp(土=d(十=lock(㇐,㇑),㇐))" /*,
+                "士=msp(土=d(十=lock(㇐,㇑),㇐))",
                 "午=wtl(干=d(㇐,十=lock(㇐,㇑)),㇔)",
                 "牛=wtl(37024=lock(二=rd(㇐),㇑),㇔)",
                 "年=d(𠂉=a(㇓,㇐),㐄=lock(十=lock(㇐,㇑),㇜))",
@@ -420,7 +418,7 @@ public class CharacterStructure {
                 "仙=a(亻=d(㇒,㇑),山=lock(㇑,凵=lock(㇗,㇑)))",
                 "出=rd(山=lock(㇑,凵=lock(㇗,㇑)))",
                 "辈=d(非=rrefl(56871=a(㇑,三=d(㇐,二=rd(㇐)))),车=lock(七=w(㇟,㇐),十=lock(㇐,㇑)))",
-                "素=d(龶=msp(丰=lock(三=d(㇐,二=rd(㇐)),㇑)),糸=d(幺=wbr(37217=rd(㇛),㇔),小=w(㇚,八=a(㇓,㇏))))"*/
+                "素=d(龶=msp(丰=lock(三=d(㇐,二=rd(㇐)),㇑)),糸=d(幺=wbr(37217=rd(㇛),㇔),小=w(㇚,八=a(㇓,㇏))))"
         };
 
         CharacterStructure trees[] = new CharacterStructure[chars.length];
@@ -430,7 +428,7 @@ public class CharacterStructure {
         for (int i=0; i<chars.length; i++) {
             for (int j=i; j<chars.length; j++) {
                 float diff = trees[i].distanceTo(trees[j]);
-                Log.d(TAG, "Distance between "+chars[i].codePointAt(0)+" and "+chars[j].codePointAt(0)+" is "+diff);
+                Log.d(TAG, "Distance between "+chars[i].substring(0,1)+" and "+chars[j].substring(0,1)+" is "+diff);
             }
         }
 
