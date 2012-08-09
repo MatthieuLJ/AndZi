@@ -1,8 +1,9 @@
 package com.matthieu;
 
 import android.util.Log;
-
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class CharacterStructure {
     private static final String TAG = "CharacterStructure";
@@ -13,6 +14,78 @@ public class CharacterStructure {
     CharacterStructure parent;
     String layout;
     ArrayList<CharacterStructure> children;
+
+    static final HashMap<String, Integer> similar_layouts;
+        static {
+            similar_layouts = new HashMap<String, Integer>();
+            similar_layouts.put("a", 1);
+            similar_layouts.put("ra", 1);
+            similar_layouts.put("r3a", 1);
+            similar_layouts.put("r4a", 1);
+            similar_layouts.put("rrefr", 1);
+            similar_layouts.put("rrefl", 1);
+            similar_layouts.put("ba", 1);
+
+            similar_layouts.put("d", 2);
+            similar_layouts.put("rd", 2);
+            similar_layouts.put("r3d", 2);
+            similar_layouts.put("r4d", 2);
+            similar_layouts.put("bd", 2);
+
+            similar_layouts.put("mt", 3);
+            similar_layouts.put("mb", 3);
+            similar_layouts.put("ml", 3);
+            similar_layouts.put("mr", 3);
+            similar_layouts.put("mtl", 3);
+            similar_layouts.put("msp", 3);
+            similar_layouts.put("refh", 3);
+            similar_layouts.put("mo", 3);
+
+            similar_layouts.put("lock", 4);
+            similar_layouts.put("s", 4);
+            similar_layouts.put("st", 4);
+            similar_layouts.put("sb", 4);
+            similar_layouts.put("sr", 4);
+            similar_layouts.put("sl", 4);
+            similar_layouts.put("stl", 4);
+            similar_layouts.put("sbl", 4);
+            similar_layouts.put("str", 4);
+            similar_layouts.put("sbr", 4);
+            similar_layouts.put("w", 4);
+            similar_layouts.put("wt", 4);
+            similar_layouts.put("wb", 4);
+            similar_layouts.put("wr", 4);
+            similar_layouts.put("wl", 4);
+            similar_layouts.put("wtr", 4);
+            similar_layouts.put("wbr", 4);
+            similar_layouts.put("wtl", 4);
+            similar_layouts.put("wbl", 4);
+
+            similar_layouts.put("r3tr", 5);
+            similar_layouts.put("r4sq", 5);
+        }
+
+    public CharacterStructure() {
+    }
+
+    public CharacterStructure(String desc) {
+        this(build_tree(desc));
+    }
+
+    public CharacterStructure(CharacterStructure orig) {
+        root = orig.root;
+        height = orig.height;
+        num_strokes = orig.num_strokes;
+        layout = orig.layout;
+
+        parent=null;
+        children = new ArrayList<CharacterStructure>();
+        for (CharacterStructure c : this.children) {
+            CharacterStructure new_child = new CharacterStructure(c);
+            new_child.parent = this;
+            children.add(new_child);
+        }
+    }
 
     private static CharacterStructure build_tree(String desc) {
         int tmp=0;
@@ -71,7 +144,83 @@ public class CharacterStructure {
         return res;
     }
 
-    public int distanceTo(CharacterStructure other) {
+    private float weight() {
+        float res=0;
+        if (layout.equals("a") || layout.equals("d") || layout.equals("lock")) {
+            for (CharacterStructure c : children)
+                res += c.weight();
+        } else if (layout.equals("ra") || layout.equals("rd") || layout.equals("rrefr") || layout.equals("rrefl") || layout.equals("mo")) {
+            res = 2*children.get(0).weight();
+        } else if (layout.startsWith("r3")) {
+            res = 3*children.get(0).weight();
+        } else if (layout.startsWith("r4")) {
+            res = 4*children.get(0).weight();
+        } else if (layout.startsWith("m") || layout.equals("refh")) {
+            res = children.get(0).weight();
+        } else if (layout.startsWith("s") || layout.startsWith("w") || layout.equals("ba") || layout.equals("bd")) {
+            res = (float) (1.5*children.get(0).weight() + 0.5*children.get(1).weight());
+        } else if (layout.equals("c")) {
+            res=1;
+        }
+
+        return res;
+    }
+
+    private ArrayList<CharacterStructure> find_in_tree(String to_search, CharacterStructure tree) {
+        ArrayList<CharacterStructure> res = null;
+
+        LinkedList<CharacterStructure> next_level_search = new LinkedList<CharacterStructure>();
+        LinkedList<CharacterStructure> current_level_search = new LinkedList<CharacterStructure>();
+        current_level_search.add(tree);
+        while ((res == null) && (current_level_search.size() > 0)) {
+            for (CharacterStructure c : current_level_search) {
+                if (c.root.equals(to_search)) {
+                    if (res == null)
+                        res= new ArrayList<CharacterStructure>();
+                    res.add(c);
+                } else {
+                    for (CharacterStructure child : c.children) {
+                        if (child.height != 0) {
+                            next_level_search.add(child);
+                        }
+                    }
+                }
+            }
+            current_level_search.clear();
+            current_level_search.addAll(next_level_search);
+            next_level_search.clear();
+        }
+        return res;
+    }
+
+    private int get_depth(CharacterStructure branch) {
+        LinkedList<CharacterStructure> next_level_search = new LinkedList<CharacterStructure>();
+        LinkedList<CharacterStructure> current_level_search = new LinkedList<CharacterStructure>();
+        current_level_search.add(this);
+        int depth=0;
+        while (current_level_search.size()>0) {
+            for (CharacterStructure c : current_level_search) {
+                if (c.equals(branch)) {
+                    return depth;
+                } else {
+                    for (CharacterStructure child : c.children) {
+                        if (child.height != 0) {
+                            next_level_search.add(child);
+                        }
+                    }
+                }
+            }
+            current_level_search.clear();
+            current_level_search.addAll(next_level_search);
+            next_level_search.clear();
+            depth++;
+        }
+        return -1;
+    }
+
+
+
+    public float distanceTo(CharacterStructure other) {
         if (other.root.equals(this.root))
             return 0;
 
@@ -92,14 +241,85 @@ public class CharacterStructure {
         } else {
             smaller = (this.root.compareTo(other.root)<0) ? this:other;
         }
+        taller = (smaller == this ? other : this);
 
-        return -1;
+        LinkedList<CharacterStructure> next_level_search = new LinkedList<CharacterStructure>();
+        LinkedList<CharacterStructure> current_level_search = new LinkedList<CharacterStructure>();
+        current_level_search.add(smaller);
+
+        ArrayList<CharacterStructure> res = new ArrayList<CharacterStructure>();
+        while ((res.size() == 0) && (current_level_search.size() > 0)) {
+            for (CharacterStructure c : current_level_search) {
+                ArrayList<CharacterStructure> search = find_in_tree(c.root, taller);
+                if (search != null) {
+                    res.addAll(search);
+                } else {
+                    for (CharacterStructure child : c.children) {
+                        if (child.height != 0) {
+                            next_level_search.add(child);
+                        }
+                    }
+                }
+            }
+            current_level_search.clear();
+            current_level_search.addAll(next_level_search);
+            next_level_search.clear();
+        }
+
+        if (res.size() == 0) {
+            return -1;
+        }
+
+        // pick the part with the maximum height or the higher in the tree
+        CharacterStructure highest = res.get(0);
+        int max_height = -1, depth=-1;
+        for (CharacterStructure c : res) {
+            if ((max_height == -1) || (max_height < c.height)) {
+                highest = c;
+                depth = taller.get_depth(c);
+                max_height = c.height;
+            } else if (max_height == c.height) {
+                int new_depth = taller.get_depth(c);
+                if (new_depth < depth) {
+                    highest = c;
+                    depth = new_depth;
+                    max_height = c.height;
+                }
+            }
+        }
+        while ((highest.parent!=null) && (highest.parent.layout.equals("me")))
+            highest = highest.parent;
+
+        float difference = taller.weight() - highest.weight();
+
+        res = find_in_tree(highest.root, smaller);
+        CharacterStructure matching = res.get(0);
+        while ((matching.parent!=null) && (matching.parent.layout.equals("me")))
+            matching = matching.parent;
+
+        if (matching.parent != null) {
+            // only a part of the smaller character can be found in the bigger one
+            String matching_layout = matching.parent.layout;
+            String highest_layout = highest.parent.layout;
+            if (matching_layout.equals(highest_layout)) {
+                if (((matching_layout.equals("a")) || (matching_layout.equals("b")) || (matching_layout.startsWith("s")) || (matching_layout.startsWith("w")))
+                        && (matching.parent.children.indexOf(matching) != highest.parent.children.indexOf(highest))) {
+                    difference *= 1.2;
+                }
+            } else if (similar_layouts.get(matching_layout).equals(similar_layouts.get(highest_layout))) {
+                difference *= 1.5;
+            } else {
+                difference *= 2;
+            }
+        }
+
+        return difference;
     }
 
-    private void do_things_with_characters() {
-        String trees[] = new String[] {
+    public static void do_things_with_characters() {
+        String chars[] = new String[] {
                 "土=d(十=lock(㇐,㇑),㇐)",
-                "士=msp(土=d(十=lock(㇐,㇑),㇐))",
+                "士=msp(土=d(十=lock(㇐,㇑),㇐))" /*,
                 "午=wtl(干=d(㇐,十=lock(㇐,㇑)),㇔)",
                 "牛=wtl(37024=lock(二=rd(㇐),㇑),㇔)",
                 "年=d(𠂉=a(㇓,㇐),㐄=lock(十=lock(㇐,㇑),㇜))",
@@ -200,10 +420,19 @@ public class CharacterStructure {
                 "仙=a(亻=d(㇒,㇑),山=lock(㇑,凵=lock(㇗,㇑)))",
                 "出=rd(山=lock(㇑,凵=lock(㇗,㇑)))",
                 "辈=d(非=rrefl(56871=a(㇑,三=d(㇐,二=rd(㇐)))),车=lock(七=w(㇟,㇐),十=lock(㇐,㇑)))",
-                "素=d(龶=msp(丰=lock(三=d(㇐,二=rd(㇐)),㇑)),糸=d(幺=wbr(37217=rd(㇛),㇔),小=w(㇚,八=a(㇓,㇏))))"
+                "素=d(龶=msp(丰=lock(三=d(㇐,二=rd(㇐)),㇑)),糸=d(幺=wbr(37217=rd(㇛),㇔),小=w(㇚,八=a(㇓,㇏))))"*/
         };
 
-        CharacterStructure res = build_tree(trees[0]);
-        Log.d(TAG, "Got a tree...");
+        CharacterStructure trees[] = new CharacterStructure[chars.length];
+        for (int i=0; i<chars.length; i++) {
+            trees[i] = build_tree(chars[i]);
+        }
+        for (int i=0; i<chars.length; i++) {
+            for (int j=i; j<chars.length; j++) {
+                float diff = trees[i].distanceTo(trees[j]);
+                Log.d(TAG, "Distance between "+chars[i].codePointAt(0)+" and "+chars[j].codePointAt(0)+" is "+diff);
+            }
+        }
+
     }
 }
