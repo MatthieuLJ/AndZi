@@ -42,27 +42,27 @@ public class CharacterStructure {
             similar_layouts.put("mo", 3);
 
             similar_layouts.put("lock", 4);
-            similar_layouts.put("s", 4);
-            similar_layouts.put("st", 4);
-            similar_layouts.put("sb", 4);
-            similar_layouts.put("sr", 4);
-            similar_layouts.put("sl", 4);
-            similar_layouts.put("stl", 4);
-            similar_layouts.put("sbl", 4);
-            similar_layouts.put("str", 4);
-            similar_layouts.put("sbr", 4);
-            similar_layouts.put("w", 4);
-            similar_layouts.put("wt", 4);
-            similar_layouts.put("wb", 4);
-            similar_layouts.put("wr", 4);
-            similar_layouts.put("wl", 4);
-            similar_layouts.put("wtr", 4);
-            similar_layouts.put("wbr", 4);
-            similar_layouts.put("wtl", 4);
-            similar_layouts.put("wbl", 4);
+            similar_layouts.put("s", 5);
+            similar_layouts.put("st", 5);
+            similar_layouts.put("sb", 5);
+            similar_layouts.put("sr", 5);
+            similar_layouts.put("sl", 5);
+            similar_layouts.put("stl", 5);
+            similar_layouts.put("sbl", 5);
+            similar_layouts.put("str", 5);
+            similar_layouts.put("sbr", 5);
+            similar_layouts.put("w", 6);
+            similar_layouts.put("wt", 6);
+            similar_layouts.put("wb", 6);
+            similar_layouts.put("wr", 6);
+            similar_layouts.put("wl", 6);
+            similar_layouts.put("wtr", 6);
+            similar_layouts.put("wbr", 6);
+            similar_layouts.put("wtl", 6);
+            similar_layouts.put("wbl", 6);
 
-            similar_layouts.put("r3tr", 5);
-            similar_layouts.put("r4sq", 5);
+            similar_layouts.put("r3tr", 7);
+            similar_layouts.put("r4sq", 7);
         }
 
     public CharacterStructure() {
@@ -84,6 +84,19 @@ public class CharacterStructure {
             CharacterStructure new_child = new CharacterStructure(c);
             new_child.parent = this;
             children.add(new_child);
+        }
+    }
+
+    private static void attach_branch(CharacterStructure tree, CharacterStructure new_child) {
+        if (false) {
+        //if ((tree.layout.equals(("a")) && new_child.layout.equals("a")) || (tree.layout.equals(("d")) && new_child.layout.equals("d"))) {
+            for (CharacterStructure c : new_child.children) {
+                tree.children.add(c);
+                c.parent = tree;
+            }
+        } else {
+            new_child.parent = tree;
+            tree.children.add(new_child);
         }
     }
 
@@ -118,8 +131,7 @@ public class CharacterStructure {
 
                 if ((degree == 1) && (entry.equals(","))) {
                     CharacterStructure one_child = build_tree(next_part.toString());
-                    one_child.parent = res;
-                    res.children.add(one_child);
+                    attach_branch(res, one_child);
                     next_part = new StringBuffer();
                 } else if (((degree != 1) || (!entry.equals("("))) && ((degree != 0) || (!entry.equals(")")))) {
                     next_part.append(entry);
@@ -129,8 +141,7 @@ public class CharacterStructure {
             }
             if (next_part.length() != 0) {
                 CharacterStructure one_child = build_tree(next_part.toString());
-                one_child.parent = res;
-                res.children.add(one_child);
+                attach_branch(res, one_child);
             }
 
             res.num_strokes = 0;
@@ -144,29 +155,49 @@ public class CharacterStructure {
 
     private float weight() {
         float res=0;
-        if (layout.equals("a") || layout.equals("d") || layout.equals("lock")) {
+        if (layout.equals("a") || layout.equals("d") || layout.equals("lock") || layout.startsWith("s")) {
             for (CharacterStructure c : children)
                 res += c.weight();
+            res = res * (children.size()+1) / (children.size() * children.size());
         } else if (layout.equals("ra") || layout.equals("rd") || layout.equals("rrefr") || layout.equals("rrefl") || layout.equals("mo")) {
-            res = 2*children.get(0).weight();
+            res = 3*children.get(0).weight()/2;
         } else if (layout.startsWith("r3")) {
-            res = 3*children.get(0).weight();
+            res = 4*children.get(0).weight()/3;
         } else if (layout.startsWith("r4")) {
-            res = 4*children.get(0).weight();
+            res = 5*children.get(0).weight()/4;
         } else if (layout.equals("me")) {
             res = children.get(0).weight();
         } else if (layout.equals("msp") || layout.equals("refh")) {
-            res = (float) (1.2*children.get(0).weight());
+            res = children.get(0).weight();
         } else if (layout.equals("mo")) {
             res = 2*children.get(0).weight();
         } else if (layout.startsWith("m")) {
             res = (float) (0.8*children.get(0).weight());
-        } else if (layout.startsWith("s") || layout.startsWith("w") || layout.equals("ba") || layout.equals("bd")) {
-            res = (float) (1.5*children.get(0).weight() + 0.5*children.get(1).weight());
+        } else if (layout.startsWith("w") || layout.equals("ba") || layout.equals("bd")) {
+            res = (float) (children.get(0).weight() + 0.5*children.get(1).weight());
         } else if (layout.equals("c")) {
             res=1;
         }
 
+        return res;
+    }
+
+    private float weight_of_branch() {
+        CharacterStructure branch = this;
+        float res = branch.weight();
+        while (branch.parent != null) {
+            String parent_layout = branch.parent.layout;
+            if (parent_layout.equals("a") || parent_layout.equals("d") || parent_layout.equals("lock") || parent_layout.startsWith("s")) {
+                res = res * (branch.parent.children.size()+1) / (branch.parent.children.size() * branch.parent.children.size());
+            } else if (parent_layout.startsWith("m")) {
+                res = (float) (0.8*res);
+            } else if (parent_layout.startsWith("w") || parent_layout.equals("ba") || parent_layout.equals("bd")) {
+                if (branch.parent.children.indexOf(branch) == 1) {
+                    res = (float) (0.5 * res);
+                }
+            }
+            branch = branch.parent;
+        }
         return res;
     }
 
@@ -197,8 +228,41 @@ public class CharacterStructure {
         return res;
     }
 
-    private int get_depth(CharacterStructure branch) {
+    private ArrayList<CharacterStructure> find_in_tree(String to_search, CharacterStructure tree, ArrayList<CharacterStructure> except) {
+        ArrayList<CharacterStructure> res = null;
+        if (except.contains(tree))
+            return res;
+
+        LinkedList<CharacterStructure> next_level_search = new LinkedList<CharacterStructure>();
+        LinkedList<CharacterStructure> current_level_search = new LinkedList<CharacterStructure>();
+        current_level_search.add(tree);
+        while ((res == null) && (current_level_search.size() > 0)) {
+            for (CharacterStructure c : current_level_search) {
+                if (except.contains(c))
+                    continue;
+                if (c.root.equals(to_search)) {
+                    if (res == null)
+                        res= new ArrayList<CharacterStructure>();
+                    res.add(c);
+                } else {
+                    for (CharacterStructure child : c.children) {
+                        if (child.height != 0) {
+                            next_level_search.add(child);
+                        }
+                    }
+                }
+            }
+            current_level_search.clear();
+            current_level_search.addAll(next_level_search);
+            next_level_search.clear();
+        }
+        return res;
+    }
+
+
+    private int get_depth() {
         int depth=0;
+        CharacterStructure branch = this;
         while (branch.parent!=null) {
             depth++;
             branch = branch.parent;
@@ -209,6 +273,9 @@ public class CharacterStructure {
     public float distanceTo(CharacterStructure other) {
         if (other.root.equals(this.root))
             return 0;
+
+        if (num_strokes<=5 && other.num_strokes<=5)
+            return -2;
 
         CharacterStructure smaller, taller;
 
@@ -232,16 +299,27 @@ public class CharacterStructure {
         LinkedList<CharacterStructure> next_level_search = new LinkedList<CharacterStructure>();
         LinkedList<CharacterStructure> current_level_search = new LinkedList<CharacterStructure>();
         current_level_search.add(smaller);
+        int depth=0;
 
-        ArrayList<CharacterStructure> res = new ArrayList<CharacterStructure>();
-        while ((res.size() == 0) && (current_level_search.size() > 0)) {
+        ArrayList<CharacterStructure> matching_parts = new ArrayList<CharacterStructure>();
+        while ((current_level_search.size() > 0) && (depth <= 2)){
             for (CharacterStructure c : current_level_search) {
-                ArrayList<CharacterStructure> search = find_in_tree(c.root, taller);
+                ArrayList<CharacterStructure> search = find_in_tree(c.root, taller, matching_parts);
                 if (search != null) {
-                    res.addAll(search);
+                    for (CharacterStructure s : search) {
+                        boolean found = false;
+                        for (CharacterStructure r : matching_parts) {
+                            if (r.root.equals(s.root)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                            matching_parts.add(s);
+                    }
                 } else {
                     for (CharacterStructure child : c.children) {
-                        if (child.height != 0) {
+                        if (child.height > 1) {
                             next_level_search.add(child);
                         }
                     }
@@ -250,59 +328,54 @@ public class CharacterStructure {
             current_level_search.clear();
             current_level_search.addAll(next_level_search);
             next_level_search.clear();
+            depth++;
         }
 
-        if (res.size() == 0) {
+        if (matching_parts.size() == 0) {
             return -1;
         }
 
-        // pick the part with the maximum height or the higher in the tree
-        CharacterStructure highest = res.get(0);
-        int max_height = -1, depth=-1;
-        for (CharacterStructure c : res) {
-            if ((max_height == -1) || (max_height < c.height)) {
-                highest = c;
-                depth = taller.get_depth(c);
-                max_height = c.height;
-            } else if (max_height == c.height) {
-                int new_depth = taller.get_depth(c);
-                if (new_depth < depth) {
-                    highest = c;
-                    depth = new_depth;
-                    max_height = c.height;
+        StringBuilder matches = new StringBuilder();
+        for (CharacterStructure m : matching_parts) {
+            matches.append(m.root);
+        }
+
+//        Log.d(TAG, ""+taller.root+" vs "+smaller.root);
+//        Log.d(TAG, "taller: "+taller.weight()+" / "+taller.height+", smaller: "+smaller.weight()+" / "+smaller.height+" matched "+matches);
+        float difference = 1;
+
+        for (CharacterStructure r : matching_parts) {
+            while ((r.parent!=null) && (r.parent.layout.equals("me")))
+                r = r.parent;
+
+            ArrayList<CharacterStructure> originals = find_in_tree(r.root, smaller);
+            CharacterStructure matching = originals.get(0);
+            while ((matching.parent!=null) && (matching.parent.layout.equals("me")))
+                matching = matching.parent;
+
+            float factor=1;
+
+            if (matching.parent != null) {
+                // only a part of the smaller character can be found in the bigger one
+                String matching_layout = matching.parent.layout;
+                String highest_layout = r.parent.layout;
+                if (matching_layout.equals(highest_layout)) {
+                    if (((matching_layout.equals("a")) || (matching_layout.equals("b")) || (matching_layout.startsWith("s")) || (matching_layout.startsWith("w")))
+                            && ((matching.parent.children.indexOf(matching) != r.parent.children.indexOf(r)) || (matching.parent.children.size() != r.parent.children.size()))) {
+                        factor = (float) 1.2;
+                    }
+                    // else do not change it (same layout, same order if it matters)
+                } else if (similar_layouts.get(matching_layout).equals(similar_layouts.get(highest_layout))) {
+                    factor = (float) 1.6;
+                } else {
+                    factor= (float) 3;
                 }
             }
+            difference *= factor * ((taller.weight() / r.weight_of_branch()) -1) * ((smaller.weight() / matching.weight_of_branch()));
+//            Log.d(TAG, "Matched part "+r.root+", factor is "+factor+", matching "+r.weight_of_branch()+" ("+r.get_depth()+") / "+matching.weight_of_branch()+" ("+matching.get_depth()+")");
         }
-        while ((highest.parent!=null) && (highest.parent.layout.equals("me")))
-            highest = highest.parent;
-
-        res = find_in_tree(highest.root, smaller);
-        CharacterStructure matching = res.get(0);
-        while ((matching.parent!=null) && (matching.parent.layout.equals("me")))
-            matching = matching.parent;
-
-        float difference = (float) (Math.pow(taller.weight() / matching.weight(), 2) * (1+ smaller.height - matching.height));
-        float factor=1;
-
-        if (matching.parent != null) {
-            // only a part of the smaller character can be found in the bigger one
-            String matching_layout = matching.parent.layout;
-            String highest_layout = highest.parent.layout;
-            if (matching_layout.equals(highest_layout)) {
-                if (((matching_layout.equals("a")) || (matching_layout.equals("b")) || (matching_layout.startsWith("s")) || (matching_layout.startsWith("w")))
-                        && ((matching.parent.children.indexOf(matching) != highest.parent.children.indexOf(highest)) || (matching.parent.children.size() != highest.parent.children.size()))) {
-                    factor = (float) 1.5;
-                }
-                // else do not change it (same layout, same order if it matters)
-            } else if (similar_layouts.get(matching_layout).equals(similar_layouts.get(highest_layout))) {
-                factor = 2;
-            } else {
-                factor= 4;
-            }
-        }
-        difference *= factor;
-
-        Log.d(TAG, "Distance between "+taller.root+" and "+smaller.root+" is "+difference+", factor is "+factor+", highest matching found is "+highest.root);
+//        Log.d(TAG, "difference: "+difference);
+//        Log.d(TAG, "---------------------------");
 
         return difference;
     }
@@ -420,7 +493,10 @@ public class CharacterStructure {
         }
         for (int i=0; i<chars.length; i++) {
             for (int j=i+1; j<chars.length; j++) {
-                trees[i].distanceTo(trees[j]);
+                float diff = trees[i].distanceTo(trees[j]);
+                if ((diff > 0) && (diff < 10)) {
+                    Log.d(TAG, "" +trees[i].root+" and "+trees[j].root+" ("+diff+")");
+                }
             }
         }
 
