@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.*;
 import android.widget.*;
@@ -118,7 +119,10 @@ public class ReviewList extends ListActivity {
             }
         };
 
-        loader.execute();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            loader.execute((Void[])null);
 
     }
 

@@ -21,7 +21,8 @@
 
     <application
             android:label="@string/app_name"
-            android:name="AndZiApplication">
+            android:name="AndZiApplication"
+            android:hardwareAccelerated="false">
         <activity
                 android:name=".MainMenuActivity"
                 android:label="@string/app_name">

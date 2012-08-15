@@ -40,9 +40,14 @@ public class Dictionary extends AndZiActivity {
         else
             currentDB=myDB;
 
-        new update_delayer().execute((Void[])null);
+        update_delayer update_thread = new update_delayer();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            update_thread.execute((Void[])null);
 
         setContentView(R.layout.dictionary);
+        setProgressBarIndeterminateVisibility(false);
         mode=CHINESE_TO_ENGLISH_MODE;
 
         final ListView results = (ListView) findViewById(R.id.dict_results);
@@ -77,7 +82,8 @@ public class Dictionary extends AndZiActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        update_handler.getLooper().quit();
+        if (update_handler != null)
+            update_handler.getLooper().quit();
         if (current_cursor != null)
             current_cursor.close();
     }
@@ -89,6 +95,7 @@ public class Dictionary extends AndZiActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             Looper.prepare();
+            Log.w(TAG, "Looper ready");
 
             update_handler = new Handler() {
                 @Override

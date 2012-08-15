@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -77,7 +78,11 @@ public class EditLessonsActivity extends AndZiActivity {
         });
         registerForContextMenu(list);
 
-        new InitLessons().execute((Void[])null);
+        InitLessons init_lessons_thread = new InitLessons();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            init_lessons_thread.execute((Void[])null);
     }
 
     @Override
