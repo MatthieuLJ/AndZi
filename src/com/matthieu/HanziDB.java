@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.*;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.widget.DBCheckProgressHandler;
@@ -511,7 +512,10 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         };
 
-        res.execute((Void[]) null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            res.execute((Void[])null);
 
         return res;
     }
@@ -1310,8 +1314,10 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("cword_id", cword_id);
         cv.put("translation", english);
-        db.insert("eword", null, cv);
-        //db.insertWithOnConflict("eword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+            db.insertWithOnConflict("eword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        else
+            db.insert("eword", null, cv);
     }
 
     protected void addVocabulary(ArrayList<Vocabulary> voc) {
@@ -1758,7 +1764,10 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         };
 
-        res.execute((Void[])null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            res.execute((Void[])null);
 
         return res;
     }
@@ -1920,7 +1929,10 @@ public class HanziDB extends SQLiteOpenHelper {
             }
         };
 
-        res.execute((Void) null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            res.execute((Void[])null);
 
         return res;
     }
@@ -1945,8 +1957,10 @@ public class HanziDB extends SQLiteOpenHelper {
     public void addLesson(String name) {
         ContentValues cv = new ContentValues();
         cv.put("name", name);
-        db.insert("lessons", null, cv);
-        //db.insertWithOnConflict("lessons", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+            db.insertWithOnConflict("lessons", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        else
+            db.insert("lessons", null, cv);
     }
 
     public void delLesson(String name) {
@@ -2050,8 +2064,11 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("lesson_id", lesson_id);
         cv.put("eng_id", Integer.toString(eng_id));
-        db.insert("lesson_word", null, cv);
-        //db.insertWithOnConflict("lesson_word", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+            db.insertWithOnConflict("lesson_word", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        else
+            db.insert("lesson_word", null, cv);
     }
 
     public void assignWordLesson(String lesson, Vocabulary voc) {
@@ -2978,7 +2995,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 current_box=0;
             cv.put("box", current_box);
             cv.put("streak", 0);
-            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, wrong, cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
+            cv.put("exp_time", System.currentTimeMillis());
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();
