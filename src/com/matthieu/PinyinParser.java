@@ -415,6 +415,7 @@ public class PinyinParser {
                 case 0:
                 case 5:
                 default:
+                    offset += size;
                     continue;
             }
 
