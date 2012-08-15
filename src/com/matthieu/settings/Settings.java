@@ -9,6 +9,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
@@ -45,7 +46,7 @@ public class Settings extends AndZiPreferenceActivity {
                 alert.setMessage(R.string.settings_confirm_reset_scores);
                 alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, int i) {
-                        new AsyncTask<Void,Void,Void>() {
+                        AsyncTask<Void, Void, Void> reset_db_thread = new AsyncTask<Void,Void,Void>() {
                             ProgressDialog mProgressDialog;
                             @Override
                             protected void onPreExecute() {
@@ -65,7 +66,11 @@ public class Settings extends AndZiPreferenceActivity {
                                 myDB.resetAllScores();
                                 return null;
                             }
-                        }.execute((Void)null);
+                        };
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                            reset_db_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                        else
+                            reset_db_thread.execute((Void[])null);
                     }
                 });
                 alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
