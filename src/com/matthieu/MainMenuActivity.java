@@ -19,7 +19,6 @@ import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.DBCheckProgressHandler;
 import org.jetbrains.annotations.Nullable;
 
-
 public class MainMenuActivity extends AndZiActivity {
     private final String TAG="MainMenuActivity";
 

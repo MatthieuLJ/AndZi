@@ -20,6 +20,49 @@ FUTURE (12):
 * Teach to write characters
 * Voice recognition... ?
 
+Notes:
+* About the spaced repetition algorithm
+Should store more information and calculate the time between repetition accordingly.
+More information includes:
+- Number of times tested
+- Number of times wrong
+- Success streak
+- Date added
+- Total number of characters
+Delay to repeat a character is increased when the character was late for review
+
+* Build up list of similar characters:
+Examples...
+土 士
+午 牛 年
+本 木
+体 休
+已 己
+人 入
+找 我
+段 锻 煅
+包 抱 饱
+分 份 纷
+工 红 江
+会 令 今
+括 活 话
+斤 厅
+里 星
+美 关 天 夫 失
+亲 章 幸 莘 辛
+良 食 艮
+世 也
+衣 死 夜
+内 肉 两
+干 千 于
+戌 戍 成
+田 由 甲 申
+母 毋
+勿 匆
+未 末
+采 釆
+凹 凸
+
 DONE (133):
 * Change scoring / spaces repetition algorithm
 * Customize notification (can enable / disable)
