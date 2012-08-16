@@ -109,7 +109,7 @@
 
     <string name="add_voc_enter_chinese">Enter a Chinese word</string>
     <string name="add_voc_only_chinese">Only enter chinese characters</string>
-    <string name="add_voc_pick_pinyin">Pick a pinyin for character </string>
+    <string name="add_voc_pick_pinyin">Pick a pinyin for </string>
     <string name="add_voc_local_db">Vocabulary from your list</string>
     <string name="add_voc_ref_db">Vocabulary from dictionary</string>
     <string name="add_voc_edit_lessons">Edit lessons</string>
