@@ -39,6 +39,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="AndZi" />
     <orderEntry type="library" name="android-support-v4" level="project" />
+    <orderEntry type="library" name="acra-4.2.3" level="project" />
   </component>
 </module>
 
