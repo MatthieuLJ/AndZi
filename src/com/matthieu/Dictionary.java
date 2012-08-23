@@ -22,6 +22,7 @@ public class Dictionary extends AndZiActivity {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Cursor current_cursor =null;
     Handler update_handler=null;
+    update_delayer update_thread=null;
     HanziDB refDB, myDB, currentDB;
     private static final String TAG="Dictionary";
 
@@ -40,11 +41,13 @@ public class Dictionary extends AndZiActivity {
         else
             currentDB=myDB;
 
-        update_delayer update_thread = new update_delayer();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            update_thread.execute((Void[])null);
+        if (update_thread == null) {
+            update_thread = new update_delayer();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+            else
+                update_thread.execute((Void[])null);
+        }
 
         setContentView(R.layout.dictionary);
         setProgressBarIndeterminateVisibility(false);
@@ -82,8 +85,11 @@ public class Dictionary extends AndZiActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (update_handler != null)
+        if (update_handler != null) {
             update_handler.getLooper().quit();
+            update_thread = null;
+            update_handler = null;
+        }
         if (current_cursor != null)
             current_cursor.close();
     }

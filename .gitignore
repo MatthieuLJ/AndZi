@@ -9,5 +9,3 @@ local.properties
 build.properties
 build.xml
 proguard.cfg
-*.iml
-
