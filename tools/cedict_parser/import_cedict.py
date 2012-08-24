@@ -13,7 +13,7 @@ db = hanzidb.HanziDB(sys.argv[2])
 total_lines = parser.total_lines()
 i = 0
 for voc in parser:
-    i = i + 1
+    i += 1
     if i % 50 == 0:
         sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
     cw = db.add_cword(*voc[0:2])

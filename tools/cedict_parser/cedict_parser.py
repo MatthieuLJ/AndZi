@@ -4,7 +4,6 @@
 import sys
 import re
 import codecs
-import string
 
 pinyin_radicals=("a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca", "sa", "zha", "cha", "sha", "ga", "ka", "ha",
         "o", "bo", "po", "mo", "fo",
@@ -25,6 +24,7 @@ pinyin_radicals=("a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca"
         "ya", "lia", "jia", "qia", "xia",
         "yao", "biao", "piao", "miao", "diao", "tiao", "niao", "liao", "jiao", "qiao", "xiao",
         "ye", "bie", "pie", "mie", "die", "tie", "nie", "lie", "jie", "qie", "xie",
+
         "you", "miu", "diu", "niu", "liu", "jiu", "qiu", "xiu",
         "yan", "bian", "pian", "mian", "dian", "tian", "nian", "lian", "jian", "qian", "xian",
         "yin", "bin", "pin", "min", "nin", "lin", "jin", "qin", "xin",
@@ -45,7 +45,7 @@ pinyin_radicals=("a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca"
         "yun", "jun", "qun", "xun")
 
 def check_chinese_character(c):
-    if ((c < u'\u2e00') or (c > u'\u31ff')) and ((c < u'\u3400') or (c > u'\u4dbf')) and ((c < u'\u4e00') or (c > u'\u9fff')):
+    if (c < u'\u2e00' or c > u'\u31ff') and (c < u'\u3400' or c > u'\u4dbf') and (c < u'\u4e00' or c > u'\u9fff'):
         #print "wrong chinese character in ", chinese, " index ", i
         return False
     return True
@@ -63,13 +63,13 @@ def check_pinyins(pinyin):
     """check for valid pinyin (all radicals with tones)"""
     for i in range(0, len(pinyin)):
         p=pinyin[i]
-        if (p.find("u:") != -1):
+        if p.find("u:") != -1:
             pinyin[i]=p.replace("u:", "v")
             p=pinyin[i]
         if (p not in pinyin_radicals) and (p[:-1] not in pinyin_radicals):
             #print p, " does not look like a valid pinyin"
             return False
-        if (p in pinyin_radicals):
+        if p in pinyin_radicals:
             pinyin[i] = p+"5"
     return True
 
@@ -78,29 +78,29 @@ def check_translations(translations):
     new_t=[]
     for i in range(0, len(translations)):
         t=translations[i]
-        if (re.match("erhua variant of", t) is not None):
+        if re.match("erhua variant of", t) is not None:
             continue
-        if (re.match("Taiwan pr.", t) is not None):
+        if re.match("Taiwan pr.", t) is not None:
             continue
-        if (re.match("CL:", t) is not None):
+        if re.match("CL:", t) is not None:
             continue
-        if (re.match("old varia", t) is not None):
+        if re.match("old varia", t) is not None:
             continue
-        if (re.match("trad.", t) is not None):
+        if re.match("trad.", t) is not None:
             continue
-        if (re.match("variant of", t) is not None):
+        if re.match("variant of", t) is not None:
             continue
-        if (re.match("archaic variant of", t) is not None):
+        if re.match("archaic variant of", t) is not None:
             continue
-        if (re.match("Japanese variant", t) is not None):
+        if re.match("Japanese variant", t) is not None:
             continue
-        if (re.match("abbr. of", t) is not None):
+        if re.match("abbr. of", t) is not None:
             continue
-        if (re.match("abbr. for", t) is not None):
+        if re.match("abbr. for", t) is not None:
             continue
-        if (re.match("also written", t) is not None):
+        if re.match("also written", t) is not None:
             continue
-        if (re.match("also pr.", t) is not None):
+        if re.match("also pr.", t) is not None:
             continue
         m = re.match("see (.).+", t)
         if (m is not None) and check_chinese_character(m.groups()[0]):
@@ -119,17 +119,17 @@ def check_translations(translations):
 def filter_out(chinese, pinyin, translations):
     """Filter out some Cedict entries (non-chinese characters, wrong pinyins, erhua variants...etc...)"""
 
-    if (len(chinese) != len(pinyin)):
+    if len(chinese) != len(pinyin):
         return
-    if (not check_chinese(chinese)):
+    if not check_chinese(chinese):
         return
-    if (not check_pinyins(pinyin)):
+    if not check_pinyins(pinyin):
         return
     new_translations = check_translations(translations)
-    if (len(new_translations) == 0):
+    if len(new_translations) == 0:
         return
 
-    return (chinese, pinyin, new_translations)
+    return chinese, pinyin, new_translations
 
 
 class CedictParser:
@@ -161,7 +161,7 @@ class CedictParser:
         while True:
             while True:
                 m=re.match(r".+ (.+) \[(.+)\] (.+)", self.file.next())
-                self.current_line=self.current_line+1
+                self.current_line += 1
                 if m is not None:
                      break
 
@@ -175,8 +175,8 @@ class CedictParser:
             translations=m.groups()[2].split("/")[1:-1]
 
             res = filter_out(chinese, pinyins, translations)
-            if (res is not None):
-                break;
+            if res is not None:
+                break
 
         return res
     
