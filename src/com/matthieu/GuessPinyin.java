@@ -5,6 +5,8 @@ package com.matthieu;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -16,7 +18,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.util.ArrayList;
 
-public class GuessPinyin extends TestActivity {
+public class GuessPinyin extends TestActivity  implements TextWatcher {
     private String pinyin;
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private boolean show_words=false;
@@ -84,6 +86,7 @@ public class GuessPinyin extends TestActivity {
                 return true;
             }
         });
+        guess.addTextChangedListener(this);
         guess.requestFocus();
 
         Log.d(TAG, "Testing for character " + hanzi + " got " + words.size() + " words");
@@ -207,5 +210,19 @@ public class GuessPinyin extends TestActivity {
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
         }
+    }
+
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    }
+
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        if ((charSequence.toString().codePointCount(0, charSequence.toString().length()) > 0) && (!Pinyin.verify_pinyin(charSequence.toString()))) {
+            findViewById(R.id.ok).setEnabled(false);
+        } else {
+            findViewById(R.id.ok).setEnabled(true);
+        }
+    }
+
+    public void afterTextChanged(Editable editable) {
     }
 }
