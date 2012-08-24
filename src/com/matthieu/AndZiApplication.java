@@ -292,12 +292,13 @@ public class AndZiApplication extends Application {
         initialize_my_db();
     }
 
-    public void installRefDB(String path, boolean erase_source) {
+    public boolean installRefDB(String path, boolean erase_source) {
+        boolean res=false;
         eraseRefDB();
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
         if (!copyFile(path, dest)) {
             new File(dest).delete();
-            return;
+            return res;
         }
         if (erase_source) {
             File to_delete= new File(path);
@@ -305,8 +306,12 @@ public class AndZiApplication extends Application {
         }
 
         refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
-        ref_present=true;
+        if (refDB.getNumWords() > 0) {
+            ref_present=true;
+            res = true;
+        }
         Log.d(TAG, "Done installing reference db " + dest);
+        return res;
     }
 
     public void eraseRefDB() {
