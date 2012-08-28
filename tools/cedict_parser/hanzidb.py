@@ -15,7 +15,7 @@ class HanziDB:
         self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US');")
         self.connection.execute("INSERT INTO android_metadata VALUES ('en_US');")
 
-        self.connection.execute("PRAGMA user_version=1;")
+        self.connection.execute("PRAGMA user_version=4;")
 
         self.connection.execute("CREATE TABLE char_pinyin ( \
                 char_pinyin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
@@ -29,6 +29,8 @@ class HanziDB:
                 cword_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
                 chinese VARCHAR(50) NOT NULL, \
                 pinyin VARCHAR(150) NOT NULL, \
+                length INTEGER DEFAULT 0, \
+                score INTEGER DEFAULT 0, \
                 UNIQUE(chinese,pinyin));")
         self.connection.execute("CREATE INDEX cword_id ON cword(cword_id);")
         self.connection.execute("CREATE INDEX cword_chinese ON cword(chinese);")
@@ -67,7 +69,11 @@ class HanziDB:
         self.connection.execute("CREATE TABLE leitner ( \
                 hanzi VARCHAR(2) PRIMARY KEY NOT NULL, \
                 box INTEGER NOT NULL, \
-                mod_time INTEGER NOT NULL);")
+                exp_time INTEGER NOT NULL, \
+                num_tested INTEGER DEFAULT 0, \
+                num_wrong INTEGER DEFAULT 0, \
+                streak INTEGER DEFAULT 0, \
+                date_added INTEGER);")
         self.connection.execute("CREATE INDEX leitner_hanzi ON leitner(hanzi);")
 
         # Make it Android compatible
@@ -75,7 +81,7 @@ class HanziDB:
 
     def __init__(self, filename):
         self.filename = filename
-        if (not os.path.exists(filename)):
+        if not os.path.exists(filename):
             self.create_database()
         else:
             self.connection = sqlite3.connect(filename)
@@ -93,7 +99,7 @@ class HanziDB:
     def add_pinyin(self, chinese, pinyin):
         if self.pinyin_list.has_key((chinese,pinyin)):
             return self.pinyin_list[(chinese, pinyin)]
-        self.pinyin_index=self.pinyin_index+1
+        self.pinyin_index += 1
         self.connection.execute("INSERT INTO char_pinyin (char_pinyin_id, hanzi, pinyin) VALUES(?,?,?)", (self.pinyin_index, chinese, pinyin))
         self.connection.commit()
         self.pinyin_list[(chinese, pinyin)]=self.pinyin_index
@@ -106,8 +112,8 @@ class HanziDB:
 
         if self.word_list.has_key((complete_chinese, complete_pinyin)):
             return self.word_list[(complete_chinese, complete_pinyin)]
-        self.word_index = self.word_index+1
-        self.connection.execute("INSERT INTO cword (cword_id, chinese, pinyin) VALUES(?,?,?)", (self.word_index, complete_chinese, complete_pinyin))
+        self.word_index += 1
+        self.connection.execute("INSERT INTO cword (cword_id, chinese, pinyin, length) VALUES(?,?,?,?)", (self.word_index, complete_chinese, complete_pinyin, len(complete_chinese)))
         self.connection.commit()
         self.word_list[(complete_chinese, complete_pinyin)] = self.word_index
         for i in range(0, len(chinese)):
@@ -120,7 +126,7 @@ class HanziDB:
         for tr in translations:
             if self.english_list.has_key((cword, tr)):
                 continue
-            self.english_index = self.english_index + 1
+            self.english_index += 1
             self.connection.execute("INSERT INTO eword (eng_id, cword_id, translation) VALUES(?,?,?)", (self.english_index, cword, tr))
             self.connection.commit()
             self.english_list[(cword, tr)]=self.english_index

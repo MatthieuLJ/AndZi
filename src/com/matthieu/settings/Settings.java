@@ -13,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.AndZiApplication;
@@ -303,7 +302,9 @@ public class Settings extends AndZiPreferenceActivity {
         protected void onPostExecute(Void aVoid) {
             if (download_success) {
                 mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_install_progress));
-                ((AndZiApplication) getApplication()).installRefDB(PATH, true);
+                if (!((AndZiApplication) getApplication()).installRefDB(PATH, true)) {
+                    Toast.makeText(Settings.this, R.string.settings_error_install_ref, Toast.LENGTH_SHORT).show();
+                }
                 mProgressDialog.dismiss();
             }
             else {

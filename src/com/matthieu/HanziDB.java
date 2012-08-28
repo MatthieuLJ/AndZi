@@ -503,12 +503,14 @@ public class HanziDB extends SQLiteOpenHelper {
 
             @Override
             protected void onProgressUpdate(Integer... values) {
-                handler.progress(values[0]);
+                if (handler != null)
+                    handler.progress(values[0]);
             }
 
             @Override
             protected void onPostExecute(Boolean aBoolean) {
-                handler.finish(aBoolean);
+                if (handler != null)
+                    handler.finish(aBoolean);
             }
         };
 
