@@ -2931,6 +2931,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
         cv.put("num_tested", num_tested);
+        cur.close();
 
         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(getBoxForChar(hanzi)));
         db.update("leitner", cv, "hanzi=?", new String[] {hanzi});

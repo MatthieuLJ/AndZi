@@ -3,7 +3,6 @@
  */
 package com.matthieu;
 
-import android.content.res.Configuration;
 import android.gesture.*;
 import android.graphics.Point;
 import android.util.Log;

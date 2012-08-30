@@ -49,6 +49,7 @@ public class Details extends AndZiActivity {
 
 
         FrameLayout frame = new FrameLayout(this);
+        frame.setId(R.id.top_level_detail_view);
         populate_details_view(this, frame, current_hanzi, db);
         setContentView(frame);
     }
@@ -72,9 +73,21 @@ public class Details extends AndZiActivity {
 
         Log.d(TAG, "Starting new intent for " + hanzi);
 
-        FrameLayout frame = new FrameLayout(this);
+        FrameLayout frame = (FrameLayout) findViewById(R.id.top_level_detail_view);
         populate_details_view(this, frame, hanzi, db);
         setContentView(frame);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        final ListView list= (ListView) findViewById(R.id.details_list);
+        if (list != null) {
+            VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
+            if (adapter != null) {
+                adapter.changeCursor(null);
+            }
+        }
     }
 
     @Override
@@ -94,7 +107,14 @@ public class Details extends AndZiActivity {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
-        View new_view = View.inflate(context, R.layout.details, section);
+        LinearLayout top_layout = (LinearLayout) section.findViewById(R.id.details_top_view);
+
+        View new_view;
+
+        if (top_layout == null)
+            new_view= View.inflate(context, R.layout.details, section);
+        else
+            new_view = top_layout;
 
         TextView info = (TextView) new_view.findViewById(R.id.details_info);
         if (hanzi.codePointCount(0, hanzi.length()) == 1) {
@@ -113,6 +133,7 @@ public class Details extends AndZiActivity {
             info_pinyins+=")";
 
             info.setText(Html.fromHtml(info_pinyins));
+            info.setVisibility(View.VISIBLE);
         }
         else {
             info.setVisibility(View.GONE);
@@ -120,6 +141,7 @@ public class Details extends AndZiActivity {
 
         // first write the word at the top
         LinearLayout top_word = (LinearLayout) new_view.findViewById(R.id.details_title);
+        top_word.removeAllViews();
         for (int i=0; i<hanzi.length(); ) {
             TextView character = new TextView(context);
             final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
@@ -139,6 +161,9 @@ public class Details extends AndZiActivity {
         }
 
         final ListView list= (ListView) new_view.findViewById(R.id.details_list);
+        VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
+        if (adapter != null)
+            adapter.changeCursor(null);
         final ArrayList<HanziDB.StringElement> elements = new ArrayList<HanziDB.StringElement>();
         for (int i=0; i<hanzi.length(); ) {
             elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,

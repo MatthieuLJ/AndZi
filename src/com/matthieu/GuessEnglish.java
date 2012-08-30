@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;

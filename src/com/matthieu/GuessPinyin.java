@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -16,6 +15,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+
 import java.util.ArrayList;
 
 public class GuessPinyin extends TestActivity  implements TextWatcher {
