@@ -7,6 +7,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import com.jayway.android.robotium.solo.Solo;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 /**
@@ -30,7 +32,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo = new Solo(getInstrumentation(), getActivity());
     }
 
-    private void clearEverything() {
+    private void clearEverything(boolean installCedict) {
         if (solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000)) {
             solo.clickOnButton(getActivity().getResources().getString(R.string.later));
             solo.waitForDialogToClose(5);
@@ -52,9 +54,11 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_trim_all)));
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(2000);
-        solo.clickOnText(getActivity().getResources().getString(R.string.settings_ref_db_erase), 0, true);
-        if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase))) {
-            // TODO
+        if (!installCedict) {
+            solo.clickOnText(getActivity().getResources().getString(R.string.settings_ref_db_erase), 0, true);
+            if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase))) {
+                // TODO
+            }
         }
         solo.goBack();
         solo.waitForActivity("MainMenuActivity");
@@ -62,13 +66,25 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         // quit it
         solo.finishOpenedActivities();
+
+        startIt();
+
+        if (installCedict)
+            setupCedictDict();
+    }
+
+    public void setupCedictDict() {
+        ((AndZiApplication)getActivity().getApplication()).installRefDB("/mnt/sdcard/cedict_db", false);
+    }
+
+    public void startIt() {
         // restart it
         this.launchActivity("com.matthieu", MainMenuActivity.class, null);
     }
 
     public void testAddVocabularyEmptyApp() {
         // First wipe out everything...
-        clearEverything();
+        clearEverything(false);
 
         // Wait until the splash screen is gone
         if(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000)) {
@@ -171,4 +187,32 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.clickOnView(add_ok);
     }
 
+    public void testAddVocabularyWithDict() {
+        // First wipe out everything...
+        clearEverything(true);
+
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        // Let's add some vocabulary
+        solo.clickOnButton("Add Vocabulary");
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        ArrayList<EditText> entries = solo.getCurrentEditTexts();
+        assertTrue(entries.size()==1);
+        solo.enterText(entries.get(0), "你");
+        assertTrue(solo.searchButton("nǐ"));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
+        assertTrue(solo.waitForText("you", 1, 2000, true));
+        ArrayList<EditText> all_entries = solo.getCurrentEditTexts();
+        assertTrue(all_entries.size()==2);
+        solo.enterText(all_entries.get(1), "you");
+        Button add_translation_ok = (Button) solo.getView(R.id.add_new_translation_ok);
+        solo.clickOnView(add_translation_ok);
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
+        Button add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
+        solo.clickOnView(add_ok);
+
+        solo.enterText(entries.get(0), "你好");
+        assertTrue(solo.waitForText("Hello!", 1, 2000, true));
+        assertTrue(solo.waitForText("Hi!", 1, 2000, true));
+        // need to find the right checkboxes to click
+    }
 }
