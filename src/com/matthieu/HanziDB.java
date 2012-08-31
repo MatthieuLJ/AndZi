@@ -191,7 +191,7 @@ public class HanziDB extends SQLiteOpenHelper {
             protected Boolean doInBackground(Void... voids) {
                 boolean res = true;
 
-                final int num_steps=13;
+                final int num_steps=14;
                 int current_step=0;
 
                 try {
@@ -492,6 +492,21 @@ public class HanziDB extends SQLiteOpenHelper {
                     current_step++;
                     publishProgress((int)(current_step*100/num_steps));
 
+                    c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE num_wrong > num_tested", null);
+                    if (c.moveToFirst()) {
+                        Log.w(TAG, "Character in has been more wrong than tested");
+                        res = false;
+                        do{
+                            Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
+                            if (fixme) {
+                                String hanzi=c.getString(c.getColumnIndex("hanzi"));
+                                db.delete("leitner", "hanzi=?", new String[]{hanzi});
+                            }
+                        }while(c.moveToNext());
+                    }
+                    c.close();
+                    current_step++;
+                    publishProgress((int)(current_step*100/num_steps));
                 }
                 catch (SQLiteException exp) {
                     Log.d(TAG, "Ran into a problem while opening database");
@@ -2931,6 +2946,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
         cv.put("num_tested", num_tested);
+        cur.close();
 
         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(getBoxForChar(hanzi)));
         db.update("leitner", cv, "hanzi=?", new String[] {hanzi});

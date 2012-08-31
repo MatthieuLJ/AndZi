@@ -4,6 +4,7 @@
 
 package com.matthieu;
 
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.*;
 import android.text.Editable;
@@ -78,8 +79,6 @@ public class Dictionary extends AndZiActivity {
         EditText query = (EditText) findViewById(R.id.dict_query);
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
-
-//        Debug.startMethodTracing("dictionary");
     }
 
     @Override
@@ -90,8 +89,56 @@ public class Dictionary extends AndZiActivity {
             update_thread = null;
             update_handler = null;
         }
-        if (current_cursor != null)
-            current_cursor.close();
+        synchronized (Dictionary.this) {
+            if (current_cursor != null)
+                current_cursor.close();
+        }
+    }
+
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        synchronized (Dictionary.this) {
+            EditText edit_query= (EditText) findViewById(R.id.dict_query);
+            String current_search = edit_query.getText().toString();
+            ListView results = (ListView) findViewById(R.id.dict_results);
+            VocabularyCursorAdapter current_adapter = (VocabularyCursorAdapter) results.getAdapter();
+
+            setContentView(R.layout.dictionary);
+
+            TextView dict_mode = (TextView) findViewById(R.id.dict_mode);
+            dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
+            dict_mode.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    switch (mode) {
+                        case CHINESE_TO_ENGLISH_MODE:
+                            mode = ENGLISH_TO_CHINESE_MODE;
+                            ((TextView) view).setText(Html.fromHtml("Chinese ← <b>English</b>"));
+                            break;
+                        case ENGLISH_TO_CHINESE_MODE:
+                            mode = CHINESE_TO_ENGLISH_MODE;
+                            ((TextView) view).setText(Html.fromHtml("<b>Chinese</b> → English"));
+                            break;
+                    }
+                    EditText edit_query= (EditText) findViewById(R.id.dict_query);
+                    start_new_query(mode, edit_query.getText().toString());
+                }
+            });
+            switch (mode) {
+                case CHINESE_TO_ENGLISH_MODE:
+                    dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
+                    break;
+                case ENGLISH_TO_CHINESE_MODE:
+                    dict_mode.setText(Html.fromHtml("Chinese ← <b>English</b>"));
+                    break;
+            }
+
+            EditText query = (EditText) findViewById(R.id.dict_query);
+            query.setText(current_search);
+            query.addTextChangedListener(new Dictionary_query_parse());
+
+            results = (ListView) findViewById(R.id.dict_results);
+            results.setAdapter(current_adapter);
+        }
     }
 
     private class update_delayer extends AsyncTask<Void,Cursor, Void> {
@@ -171,30 +218,34 @@ public class Dictionary extends AndZiActivity {
                     current_cursor =null;
             }
 
-            // Just to make sure the query actually happens in this thread (and not the UI thread)
-            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null)) {
-                Log.w(TAG, "Start query! "+System.currentTimeMillis());
-                current_cursor.getCount();
-                current_cursor.moveToFirst();
-                Log.w(TAG, "Finish query! "+System.currentTimeMillis());
-            }
+            synchronized (Dictionary.this) {
+                // Just to make sure the query actually happens in this thread (and not the UI thread)
+                if ((msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null) && (!current_cursor.isClosed())) {
+                    Log.w(TAG, "Start query! "+System.currentTimeMillis());
+                    current_cursor.getCount();
+                    current_cursor.moveToFirst();
+                    Log.w(TAG, "Finish query! "+System.currentTimeMillis());
+                }
 
-            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
-                Log.w(TAG, "Displaying results of query for "+msg_query+" at "+System.currentTimeMillis());
-                publishProgress(current_cursor);
+                if ((msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
+                    Log.w(TAG, "Displaying results of query for "+msg_query+" at "+System.currentTimeMillis());
+                    publishProgress(current_cursor);
+                }
             }
         }
 
         @Override
         protected void onProgressUpdate(Cursor... values) {
-            final ListView results = (ListView) findViewById(R.id.dict_results);
+            synchronized (Dictionary.this) {
+                final ListView results = (ListView) findViewById(R.id.dict_results);
 
-            setProgressBarIndeterminateVisibility(values==null);
-            Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
-            ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(values==null?null:values[0]);
-            Log.w(TAG, "Done displaying results of query at "+System.currentTimeMillis());
-            if (old_cursor != null)
-                old_cursor.close();
+                setProgressBarIndeterminateVisibility(values==null);
+                Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
+                ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(values==null?null:values[0]);
+                Log.w(TAG, "Done displaying results of query at "+System.currentTimeMillis());
+                if (old_cursor != null)
+                    old_cursor.close();
+            }
         }
     }
 
@@ -211,8 +262,6 @@ public class Dictionary extends AndZiActivity {
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//            if (charSequence.toString().equals(" "))
-//                Debug.stopMethodTracing();
             start_new_query(mode, charSequence.toString());
         }
 

@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.matthieu.widget.VocabularyCursorAdapter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -259,6 +260,20 @@ public class GuessChineseWord extends TestActivity {
             bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    protected void close_solution() {
+        super.close_solution();
+
+        final LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
+        ListView list= (ListView) bad_guess.findViewById(R.id.details_list);
+        if (list != null) {
+            VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
+            if (adapter != null) {
+                adapter.changeCursor(null);
+            }
         }
     }
 }

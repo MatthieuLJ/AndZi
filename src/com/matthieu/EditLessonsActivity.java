@@ -305,8 +305,11 @@ public class EditLessonsActivity extends AndZiActivity {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater=getMenuInflater();
-        inflater.inflate(R.menu.lesson_item_menu, menu);
+
+        if (((AdapterView.AdapterContextMenuInfo)menuInfo).position != 0) {
+            MenuInflater inflater=getMenuInflater();
+            inflater.inflate(R.menu.lesson_item_menu, menu);
+        }
     }
 
     private boolean lesson_exists(String lesson) {

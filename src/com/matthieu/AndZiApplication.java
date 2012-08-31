@@ -250,8 +250,8 @@ public class AndZiApplication extends Application {
         return copyFile(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
     }
     public boolean copyProgressDataBase(String destination) {
-            return copyFile(getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath(), destination);
-        }
+        return copyFile(getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath(), destination);
+    }
 
     public boolean copyFile(String source, String destination) {
         InputStream input;

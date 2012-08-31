@@ -11,8 +11,11 @@ import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 import com.matthieu.widget.AndZiActivity;
+import com.matthieu.widget.VocabularyCursorAdapter;
 
 public abstract class TestActivity extends AndZiActivity {
     protected final int STATE_UNKNOWN=0;
@@ -168,12 +171,26 @@ public abstract class TestActivity extends AndZiActivity {
     }
 
     public void handle_next(View v) {
+        close_solution();
         update_scores(last_result);
         another_test_or_quit();
     }
 
     public void handle_good(View v) {
+        close_solution();
         update_scores(CORRECT);
         another_test_or_quit();
+    }
+
+    protected void close_solution() {
+        // destroy the details list view (and clean the cursor)
+        LinearLayout correct_solution = (LinearLayout)  findViewById(R.id.test_results);
+        ListView list= (ListView) correct_solution.findViewById(R.id.details_list);
+        if (list != null) {
+            VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
+            if (adapter != null) {
+                adapter.changeCursor(null);
+            }
+        }
     }
 }

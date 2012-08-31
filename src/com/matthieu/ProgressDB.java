@@ -28,17 +28,13 @@ public class ProgressDB extends SQLiteOpenHelper {
     public ProgressDB(Context context, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);
         Log.d(TAG, "new ProgressDB "+db_name);
-        Log.d(TAG, Thread.currentThread().getStackTrace().toString());
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
         db.acquireReference();
-        Log.d(TAG, "with db "+db);
     }
 
     @Override
     public void onCreate(SQLiteDatabase database) {
-        Log.v(TAG, "onCreate ProgressDB...");
-
         database.execSQL("DROP TABLE IF EXISTS progress");
 
         database.execSQL("CREATE TABLE progress (" +
@@ -87,7 +83,6 @@ public class ProgressDB extends SQLiteOpenHelper {
                 if (c.moveToFirst()) {
                     int date_column = c.getColumnIndex("date");
                     long date = c.getLong(date_column);
-                    Log.d(TAG, "Setting data with date "+date+" with zoom "+zoom);
                     db.update("progress", cv, "date=?", new String[] {Long.toString(date)});
                 }
                 c.close();
@@ -104,8 +99,6 @@ public class ProgressDB extends SQLiteOpenHelper {
     }
 
     private void distribute(final SQLiteDatabase db) {
-        Log.w(TAG, "Distribute!");
-
         Thread distributer = new Thread() {
             @Override
             public void run() {
@@ -123,12 +116,10 @@ public class ProgressDB extends SQLiteOpenHelper {
                         }
                         long min_date = c.getLong(c.getColumnIndex("date_min"));
                         long max_date = c.getLong(c.getColumnIndex("date_max"));
-                        Log.d(TAG, "Got dates between "+min_date+" and "+max_date);
                         c.close();
                         if (min_date == max_date)
                             return;
                         int max_zoom = ProgressGraph.getMax_zoom(min_date, max_date);
-                        Log.w(TAG, "Max zoom is "+max_zoom);
 
                         // set everything to -1
                         ContentValues cv= new ContentValues();
@@ -183,7 +174,6 @@ public class ProgressDB extends SQLiteOpenHelper {
     }
 
     public void add_data(ProgressData data) {
-        Log.d(TAG, "Adding progress data");
         ContentValues cv = new ContentValues();
         cv.put("date", data.date);
         cv.put("total_box_1", data.num_chars_in_box[0]);
@@ -220,7 +210,6 @@ public class ProgressDB extends SQLiteOpenHelper {
 
                 res.add(data);
             } while (cur.moveToNext());
-            Log.d(TAG, "Got "+res.size()+" states for progress");
         }
         cur.close();
         return res;
@@ -275,7 +264,6 @@ public class ProgressDB extends SQLiteOpenHelper {
 
                 res.add(data);
             } while (cur.moveToNext());
-            Log.d(TAG, "Got "+res.size()+" states for progress");
         }
         cur.close();
 
