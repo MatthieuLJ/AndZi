@@ -7,8 +7,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import com.jayway.android.robotium.solo.Solo;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 
 /**
