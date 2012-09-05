@@ -58,7 +58,8 @@
 
         <activity android:name=".ReviewList" />
         <activity android:name=".Details"
-                  android:launchMode="singleTop" />
+                  android:launchMode="singleTop"
+                  android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".Dictionary"
                   android:windowSoftInputMode="stateHidden|adjustPan"
                   android:configChanges="keyboardHidden|orientation|screenSize" />

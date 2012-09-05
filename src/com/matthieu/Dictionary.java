@@ -148,15 +148,12 @@ public class Dictionary extends AndZiActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             Looper.prepare();
-            Log.w(TAG, "Looper ready");
 
             update_handler = new Handler() {
                 @Override
                 public void handleMessage(Message msg) {
                     msg_query = (String) msg.obj;
                     msg_mode = msg.arg1;
-
-                    Log.w(TAG, "Got a query for "+msg_query);
 
                     update_list();
                 }
@@ -165,7 +162,6 @@ public class Dictionary extends AndZiActivity {
             Looper.loop();
             return null;
         }
-
 
         private void update_list() {
             EditText query = (EditText) findViewById(R.id.dict_query);
@@ -183,7 +179,6 @@ public class Dictionary extends AndZiActivity {
                 current_cursor=null;
             }
             else {
-
                 if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
                     ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
                     boolean all_chinese=true;
@@ -218,33 +213,30 @@ public class Dictionary extends AndZiActivity {
                     current_cursor =null;
             }
 
-            synchronized (Dictionary.this) {
-                // Just to make sure the query actually happens in this thread (and not the UI thread)
-                if ((msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null) && (!current_cursor.isClosed())) {
-                    Log.w(TAG, "Start query! "+System.currentTimeMillis());
-                    current_cursor.getCount();
-                    current_cursor.moveToFirst();
-                    Log.w(TAG, "Finish query! "+System.currentTimeMillis());
-                }
-
-                if ((msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
-                    Log.w(TAG, "Displaying results of query for "+msg_query+" at "+System.currentTimeMillis());
-                    publishProgress(current_cursor);
-                }
+            // Just to make sure the query actually happens in this thread (and not the UI thread)
+            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null) && (!current_cursor.isClosed())) {
+                current_cursor.getCount();
+                current_cursor.moveToFirst();
             }
+
+            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
+                publishProgress(current_cursor);
+            }
+
         }
 
         @Override
         protected void onProgressUpdate(Cursor... values) {
             synchronized (Dictionary.this) {
+                setProgressBarIndeterminateVisibility(values==null);
+
                 final ListView results = (ListView) findViewById(R.id.dict_results);
 
-                setProgressBarIndeterminateVisibility(values==null);
-                Cursor old_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
+                if ((results == null) && (values!=null)) {
+                    values[0].close();
+                    return;
+                }
                 ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(values==null?null:values[0]);
-                Log.w(TAG, "Done displaying results of query at "+System.currentTimeMillis());
-                if (old_cursor != null)
-                    old_cursor.close();
             }
         }
     }
