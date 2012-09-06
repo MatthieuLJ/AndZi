@@ -55,17 +55,14 @@ public class GuessEnglish extends TestActivity {
     @Override
     protected void set_next_study() {
         super.set_next_study();
-        String candidate;
-        solution=null;
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
-
-        while ((words.size() > 0) && (solution == null)) {
-            candidate = words.remove(0).chinese;
-            ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
-            if ((voc.size() == 0) || (voc.size() > 1)) // one case has multiple pinyins...
-                continue;
-            solution = voc.get((int) (voc.size()*Math.random()));
+        ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(hanzi);
+        if ((voc.size() == 0) || (voc.size() > 1)) { // one case has multiple pinyins...
+            nothing_to_test();
+            return;
+        }
+        do {
+            solution = voc.remove((int) (voc.size()*Math.random()));
 
             // find a translation that's not too complicated... but still enough
             int i,j;
@@ -73,21 +70,23 @@ public class GuessEnglish extends TestActivity {
                 String[] translations=HanziDB.bare_translation(solution.english.get(i)).split(" ");
 
                 if (translations.length > 2)
+                    // too many words in this translation
                     continue;
                 for (j=0; j<translations.length; j++) {
                     if (translations[j].length() > 2)
                         break;
                 }
                 if (j==translations.length)
+                    // only short words (2 or less letters)
                     continue;
 
+                // if we get here, we found something good
                 break;
             }
             if (i<solution.english.size())
                 break;
+        } while(voc.size()>0);
 
-            solution=null;
-        }
         if (solution == null) {
             nothing_to_test();
             return;
@@ -140,7 +139,7 @@ public class GuessEnglish extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            myDB.guessedWord(true, solution.chinese);
+            myDB.betterBox(solution.chinese);
         }
         else {
             for (int i=0; i<solution.chinese.length();) {
@@ -148,7 +147,7 @@ public class GuessEnglish extends TestActivity {
                 myDB.worseBox(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            myDB.guessedWord(false, solution.chinese);
+            myDB.restartStudy(solution.chinese);
         }
     }
 

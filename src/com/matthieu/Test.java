@@ -15,19 +15,21 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class Test extends AndZiActivity {
-    private ArrayList<Class> tests = new ArrayList<Class>(Arrays.asList(GuessMissingChar.class, GuessChineseWord.class, GuessContaining.class,
-            GuessEnglish.class, GuessPinyin.class, GuessTone.class));
+    private ArrayList<Class> char_tests = new ArrayList<Class>(Arrays.asList(GuessMissingChar.class, GuessContaining.class,
+            GuessPinyin.class, GuessTone.class));
+    private ArrayList<Class> word_tests = new ArrayList<Class>(Arrays.asList(GuessChineseWord.class, GuessEnglish.class));
+
     private HanziDB myDB;
     private int current_index=0;
     private boolean continue_with_more_chars=false;
     private String current_hanzi;
+    private ArrayList<Class> tests;
 
     private static final String TAG="Test_Master";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Collections.shuffle(tests);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
         start_test();
     }
@@ -49,7 +51,7 @@ public class Test extends AndZiActivity {
     private void set_next_char_to_study() {
         ArrayList<String> hanzis=myDB.getAllFilteredToStudy();
         if (continue_with_more_chars)
-            hanzis.addAll(myDB.getMostAdvancedExpiring(5));
+            hanzis.addAll(myDB.getMostAdvancedExpiring(5, false));
 
         if (hanzis.size()==0) {
             if (!continue_with_more_chars) {
@@ -113,8 +115,16 @@ public class Test extends AndZiActivity {
     }
 
     private void start_test() {
-        Collections.shuffle(tests);
         set_next_char_to_study();
+        tests = new ArrayList<Class>();
+        if (current_hanzi.length()==1) {
+            tests.addAll(char_tests);
+            if (myDB.getWordsWithPinyin(current_hanzi).size()>0)
+                tests.addAll(word_tests);
+        } else {
+            tests.addAll(word_tests);
+        }
+        Collections.shuffle(tests);
         current_index=0;
         if (current_hanzi!=null)
             launch_test();

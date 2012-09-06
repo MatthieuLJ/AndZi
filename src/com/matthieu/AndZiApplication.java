@@ -5,6 +5,7 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -30,30 +31,15 @@ public class AndZiApplication extends Application {
     private boolean ref_present=false;
 
     static final String TAG = "AndZiApplication";
-    static final String REF_DB_NAME = "cedict_db";
-    static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
-    static final String PROGRESS_DB_NAME = "progress_db";
+    static public final String REF_DB_NAME = "cedict_db";
+    static public final String DEFAULT_DATABASE_NAME = "HANZI_DB";
+    static public final String PROGRESS_DB_NAME = "progress_db";
 
     private static final String VERSION="0.2.0";
 
     public void onCreate() {
-        initialize_my_db();
-
-        Pinyin.prepare_pinyin_process();
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        refDB = new HanziDB(getApplicationContext(), this,REF_DB_NAME);
-        if (refDB.getNumChars()==0) {
-            refDB.close();
-            ContextWrapper cw = new ContextWrapper(getApplicationContext());
-            cw.deleteDatabase(REF_DB_NAME);
-            refDB=null;
-            ref_present=false;
-        }
-        else {
-            ref_present=true;
-            ref_enabled=prefs.getBoolean("ref_enabled", true);
-        }
+        refDB=null;
+        ref_present=false;
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
@@ -79,6 +65,8 @@ public class AndZiApplication extends Application {
     public boolean getRefDBPresent() { return ref_present; }
     public ProgressDB getProgress() { return prog; }
     public ProgressDB.ProgressData getCurrentProgress() {
+        if (myDB == null)
+            return null;
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
         for (int i=0; i<4; i++) {
             new_data.num_chars_in_box[i]=myDB.getNumCharsInBox(i);
@@ -102,9 +90,9 @@ public class AndZiApplication extends Application {
         return VERSION;
     }
     
-    private void initialize_my_db() {
+    public void initialize_my_db(HanziDB db) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        myDB = new HanziDB(getApplicationContext(), this, DEFAULT_DATABASE_NAME);
+        myDB = db;
         boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
         ArrayList<String> lesson=new ArrayList<String>();
         try {
@@ -115,6 +103,21 @@ public class AndZiApplication extends Application {
         }
         myDB.enableFilter(filter_on);
         myDB.setLessonsToFilter(lesson);
+    }
+    public void initialize_ref_db(HanziDB db) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        refDB = db;
+        if (refDB.getNumChars()==0) {
+            refDB.close();
+            ContextWrapper cw = new ContextWrapper(getApplicationContext());
+            cw.deleteDatabase(REF_DB_NAME);
+            refDB=null;
+            ref_present=false;
+        }
+        else {
+            ref_present=true;
+            ref_enabled=prefs.getBoolean("ref_enabled", true);
+        }
     }
 
     public void save_database_filter(boolean on, ArrayList<String> list) {
@@ -289,7 +292,8 @@ public class AndZiApplication extends Application {
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(DEFAULT_DATABASE_NAME);
         copyFile(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
-        initialize_my_db();
+        HanziDB db = new HanziDB(this, DEFAULT_DATABASE_NAME);
+        initialize_my_db(db);
     }
 
     public boolean installRefDB(String path, boolean erase_source) {
@@ -305,7 +309,7 @@ public class AndZiApplication extends Application {
             to_delete.delete();
         }
 
-        refDB = new HanziDB(getApplicationContext(), this, REF_DB_NAME);
+        refDB = new HanziDB(this, REF_DB_NAME);
         if (refDB.getNumWords() > 0) {
             ref_present=true;
             res = true;

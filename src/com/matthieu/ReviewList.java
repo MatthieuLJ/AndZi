@@ -60,7 +60,7 @@ public class ReviewList extends ListActivity {
             @Override
             protected Void doInBackground(Void... voids) {
                 if (lesson == null) {
-                    cur = myDB.getCursorFilteredToStudy();
+                    cur = myDB.getCursorFilteredCharsToStudy();
                     expired_filtered = cur.getCount();
                 }
                 else {
@@ -88,7 +88,6 @@ public class ReviewList extends ListActivity {
                         no_words_dialog.show();
                     }
 
-
                     int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
                     String header_text;
                     if (expired != expired_filtered) {
@@ -108,8 +107,6 @@ public class ReviewList extends ListActivity {
                         getListView().addHeaderView(header, null, false);
                         getListView().setTag(R.id.header_view ,header);
                     }
-
-
 
                     setListAdapter(new CharacterCursorAdapter(ReviewList.this, cur, myDB, true));
                 } else {

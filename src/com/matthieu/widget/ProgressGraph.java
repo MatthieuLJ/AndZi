@@ -35,7 +35,6 @@ public class ProgressGraph extends View {
     Rect r=new Rect();
     private Rect left_axis_r=new Rect();
     private Rect bottom_axis_r=new Rect();
-    private Rect origin=new Rect(), dest=new Rect();
 
     public ProgressGraph(Context context) {
         super(context);

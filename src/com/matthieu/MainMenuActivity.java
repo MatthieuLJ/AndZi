@@ -7,6 +7,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -29,6 +31,13 @@ public class MainMenuActivity extends AndZiActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         start_test=false;
+
+        // Do some initialization
+        Pinyin.prepare_pinyin_process();
+        HanziDB myDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).DEFAULT_DATABASE_NAME);
+        ((AndZiApplication)getApplication()).initialize_my_db(myDB);
+        HanziDB refDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).REF_DB_NAME);
+        ((AndZiApplication)getApplication()).initialize_ref_db(refDB);
     }
 
     private void start_it() {
@@ -82,9 +91,9 @@ public class MainMenuActivity extends AndZiActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        final HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
+
         boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
-        if (showing_splash) {
+        if (showing_splash || (((AndZiApplication) getApplication()).getMyDB() == null)) {
             setContentView(R.layout.main_menu_splash);
             TextView tversion = (TextView) findViewById(R.id.splash_version);
             tversion.setText(((AndZiApplication) getApplication()).get_version());
@@ -93,22 +102,45 @@ public class MainMenuActivity extends AndZiActivity {
             progress.setIndeterminate(false);
             progress.setMax(100);
 
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                public void run() {
+            final AndZiApplication app = (AndZiApplication) getApplication();
+
+            AsyncTask<Void,Integer,Void> db_loader = new AsyncTask<Void,Integer,Void>() {
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    HanziDB myDB;
+                    if (app.getMyDB() == null) {
+                        myDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).DEFAULT_DATABASE_NAME);
+                        ((AndZiApplication)getApplication()).initialize_my_db(myDB);
+                        HanziDB refDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).REF_DB_NAME);
+                        ((AndZiApplication)getApplication()).initialize_ref_db(refDB);
+                    }
+                    else {
+                        myDB = app.getMyDB();
+                    }
+
                     myDB.checkDatabase(true, new DBCheckProgressHandler() {
                         @Override
                         public void progress(int i) {
-                            progress.setProgress(i);
-                        }
-
-                        @Override
-                        public void finish(boolean b) {
-                            start_it();
+                            publishProgress(i);
                         }
                     });
+                    return null;
                 }
-            }, 1000);
+
+                @Override
+                protected void onProgressUpdate(Integer... i) {
+                    progress.setProgress(i[0]);
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    start_it();
+                }
+            };
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+            else
+                db_loader.execute((Void[])null);
         }
         else {
             start_it();

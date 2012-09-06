@@ -45,6 +45,17 @@
                     android:textColor="#000000"
                     />
         </TableRow>
+        <TableRow>
+            <TextView
+                    android:textColor="#000000"
+                    android:text="@string/num_to_study_words"
+                    />
+            <TextView
+                    android:id="@+id/stats_to_study_words"
+                    android:gravity="right"
+                    android:textColor="#000000"
+                    />
+        </TableRow>
     </TableLayout>
     <com.matthieu.widget.ProgressGraph
             android:id="@+id/graph"
