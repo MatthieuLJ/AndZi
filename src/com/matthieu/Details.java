@@ -46,8 +46,9 @@ public class Details extends AndZiActivity {
             finish();
 
         boolean use_ref = getIntent().getBooleanExtra("use_ref", true);
-        if (use_ref)
-            db = ((AndZiApplication) getApplication()).getRefDB();
+        HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
+        if ((use_ref) && (refDB!=null))
+            db = refDB;
         else
             db = ((AndZiApplication) getApplication()).getMyDB();
 
@@ -66,8 +67,9 @@ public class Details extends AndZiActivity {
             finish();
 
         boolean use_ref = intent.getBooleanExtra("use_ref", true);
-        if (use_ref)
-            db = ((AndZiApplication) getApplication()).getRefDB();
+        HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
+        if ((use_ref) && (refDB!=null))
+            db = refDB;
         else
             db = ((AndZiApplication) getApplication()).getMyDB();
 
@@ -75,6 +77,10 @@ public class Details extends AndZiActivity {
         current_hanzi=hanzi;
 
         FrameLayout frame = (FrameLayout) findViewById(R.id.top_level_detail_view);
+        if (frame==null) {
+            frame = new FrameLayout(this);
+            frame.setId(R.id.top_level_detail_view);
+        }
         populate_details_view(this, frame, hanzi, db);
         setContentView(frame);
     }
