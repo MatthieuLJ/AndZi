@@ -9,7 +9,6 @@ import com.matthieu.widget.DBCheckProgressHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity> {
@@ -214,11 +213,11 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("long", "长", "chang2");
         assertTrue(target_db.getNumChars() == 3);
         assertTrue(target_db.getNumWords() == 4);
-        assertTrue(target_db.getAllChar().size()==3);
+        assertTrue(target_db.getAllChars().size()==3);
         target_db.delVocabulary("你好", "ni3hao3");
         assertTrue(target_db.getNumChars()==2);
         assertTrue(target_db.getNumWords()==3);
-        assertTrue(target_db.getAllChar().size()==2);
+        assertTrue(target_db.getAllChars().size()==2);
         assertTrue(checkDB(target_db, false));
     }
 
@@ -641,7 +640,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
             e.printStackTrace();
         }
         HanziDB export_db = new HanziDB(app, "exported_db");
-        assertTrue(export_db.getAllChar().size() == 5);
+        assertTrue(export_db.getAllChars().size() == 5);
         assertTrue(export_db.getLessons().size() == 2);
         assertTrue(export_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
         assertTrue(export_db.getBoxForChar("你") == 0);
@@ -713,7 +712,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
             e.printStackTrace();
         }
         HanziDB export_db = new HanziDB(app, "exported_db");
-        assertTrue(export_db.getAllChar().size()==3);
+        assertTrue(export_db.getAllChars().size()==3);
         assertTrue(export_db.getLessons().size()==2);
         assertTrue(export_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
         assertTrue(checkDB(export_db, false));
@@ -733,6 +732,8 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.assignWordLesson("lesson 1", "you", "你", "ni3");
         target_db.assignWordLesson("lesson 2", "grow", "长", "zhang3");
 
+        ContextWrapper cw = new ContextWrapper(appContext);
+        cw.deleteDatabase("other_db");
         HanziDB other_db = new HanziDB(app, "other_db");
         other_db.addVocabulary("hello", "你好", "ni3hao3");
         other_db.addVocabulary("grow", "长", "zhang3");
@@ -751,7 +752,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
-        assertTrue(target_db.getAllChar().size()==5);
+        assertTrue(target_db.getAllChars().size()==5);
         assertTrue(target_db.getLessons().size()==3);
         assertTrue(target_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 2"))).size()==2);
         assertTrue(target_db.getLessonForWord("长", "zhang3", "grow").size()==2);

@@ -908,7 +908,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    public ArrayList<String> getAllChar() {
+    public ArrayList<String> getAllChars() {
         ArrayList<String> res = new ArrayList<String>();
 
         Cursor cur = db.rawQuery("SELECT DISTINCT hanzi " +
@@ -918,6 +918,23 @@ public class HanziDB extends SQLiteOpenHelper {
             res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getString(cur.getColumnIndex("hanzi")));
+            }while(cur.moveToNext());
+        }
+
+        cur.close();
+        return res;
+    }
+
+    public ArrayList<String> getAllWords() {
+        ArrayList<String> res = new ArrayList<String>();
+
+        Cursor cur = db.rawQuery("SELECT DISTINCT chinese " +
+                "FROM cword", null);
+
+        if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
+            do{
+                res.add(cur.getString(cur.getColumnIndex("chinese")));
             }while(cur.moveToNext());
         }
 
@@ -1626,7 +1643,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
             @Override
             protected Void doInBackground(Void... voids) {
-                if (getAllChar().size()==0) {
+                if (getAllChars().size()==0) {
                     // just need to copy
                     app.replaceDataBase(path);
                 }
@@ -1681,14 +1698,28 @@ public class HanziDB extends SQLiteOpenHelper {
                     ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
                     addVocabulary(voc);
 
-                    ArrayList<String> chars = other_db.getAllChar();
+                    ArrayList<String> chars = other_db.getAllChars();
                     for (int i=0; i<chars.size(); i++) {
-                        publishProgress(60+(i*30)/chars.size());
+                        publishProgress(60+(i*15)/chars.size());
                         if (isCancelled()) {
                             clean_up_on_cancel(false);
                             return null;
                         }
                         String c=chars.get(i);
+                        if (other_db.getBoxForChar(c) != 0) {
+                            setBoxForChar(c, other_db.getBoxForChar(c));
+                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
+                        }
+                    }
+
+                    ArrayList<String> words = other_db.getAllWords();
+                    for (int i=0; i<words.size(); i++) {
+                        publishProgress(75+(i*15)/words.size());
+                        if (isCancelled()) {
+                            clean_up_on_cancel(false);
+                            return null;
+                        }
+                        String c=words.get(i);
                         if (other_db.getBoxForChar(c) != 0) {
                             setBoxForChar(c, other_db.getBoxForChar(c));
                             setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
@@ -1730,7 +1761,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 // create the progress dialog if needed
                 if (with_dialog) {
-                    if (getAllChar().size()==0) {
+                    if (getAllChars().size()==0) {
                         mProgressDialog = ProgressDialog.show(context, "Importing Database", "Copying...", false);
                         mProgressDialog.setIndeterminate(true);
                     }
@@ -1862,14 +1893,29 @@ public class HanziDB extends SQLiteOpenHelper {
                     new_db.sortLessons(lesson_filter);
 
                     if (with_scores) {
-                        ArrayList<String> chars = new_db.getAllChar();
+                        ArrayList<String> chars = new_db.getAllChars();
                         for (int i=0; i<chars.size(); i++) {
                             String c = chars.get(i);
                             if (isCancelled()) {
                                 clean_up_on_cancel(false);
                                 return null;
                             }
-                            publishProgress(80+(i*10)/chars.size());
+                            publishProgress(80+(i*5)/chars.size());
+                            int b = getBoxForChar(c);
+                            if (b!=0) {
+                                long t = getExpirationTimeForChar(c);
+                                new_db.setBoxForChar(c, b);
+                                new_db.setExpirationTimeForChar(c, t);
+                            }
+                        }
+                        ArrayList<String> words = new_db.getAllWords();
+                        for (int i=0; i<words.size(); i++) {
+                            String c = words.get(i);
+                            if (isCancelled()) {
+                                clean_up_on_cancel(false);
+                                return null;
+                            }
+                            publishProgress(85+(i*5)/words.size());
                             int b = getBoxForChar(c);
                             if (b!=0) {
                                 long t = getExpirationTimeForChar(c);
@@ -2966,7 +3012,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                 "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                 "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
-                new String[] {Long.toString(System.currentTimeMillis())});
+                new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
     }
 
@@ -3014,7 +3060,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                     "GROUP BY chinese ORDER BY forced_box DESC, exp_time DESC",
-                    new String[] {Long.toString(System.currentTimeMillis())});
+                    new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
         }
         else {

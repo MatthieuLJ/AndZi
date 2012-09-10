@@ -118,7 +118,8 @@ public class Details extends AndZiActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK)
-            return go_back_one();
+            if (go_back_one())
+                return true;
 
         return super.onKeyDown(keyCode, event);
     }

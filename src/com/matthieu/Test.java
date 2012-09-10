@@ -116,6 +116,8 @@ public class Test extends AndZiActivity {
 
     private void start_test() {
         set_next_char_to_study();
+        if (current_hanzi == null)
+            return;
         tests = new ArrayList<Class>();
         if (current_hanzi.length()==1) {
             tests.addAll(char_tests);
