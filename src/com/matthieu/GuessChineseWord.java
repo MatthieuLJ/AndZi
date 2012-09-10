@@ -157,6 +157,10 @@ public class GuessChineseWord extends TestActivity {
     protected void update_scores(int good) {
         int min_box = -1;
 
+        for (String tries : previous_guess) {
+            myDB.resetTime(tries);
+        }
+
         if (good == CORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
@@ -193,14 +197,6 @@ public class GuessChineseWord extends TestActivity {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 myDB.resetTime(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-            for (String tries : previous_guess) {
-                for (int i=0; i<tries.length();) {
-                    String hanzi = tries.substring(i, i+Character.charCount(tries.codePointAt(i)));
-                    myDB.resetTime(hanzi);
-                    i+=Character.charCount(solution.chinese.codePointAt(i));
-                }
-                myDB.resetTime(tries);
             }
         }
     }
