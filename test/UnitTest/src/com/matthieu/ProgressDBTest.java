@@ -31,8 +31,6 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivi
     protected void tearDown() {
         target_db.close();
         getActivity().finish();
-        //ContextWrapper cw = new ContextWrapper(appContext);
-        //cw.deleteDatabase(DbName);
         Log.d(TAG, " is destroyed");
     }
 

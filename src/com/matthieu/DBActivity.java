@@ -37,6 +37,10 @@ public class DBActivity extends AndZiActivity {
         tv = (TextView) findViewById(R.id.stats_to_study);
         tv.setText(""+expired);
 
+        int expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
+        tv = (TextView) findViewById(R.id.stats_to_study_words);
+        tv.setText(""+expired_words);
+
         final ProgressGraph graph = (ProgressGraph) findViewById(R.id.graph);
         graph.set_data(((AndZiApplication) getApplication()).getProgress());
 

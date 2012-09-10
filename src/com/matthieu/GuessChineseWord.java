@@ -28,37 +28,32 @@ public class GuessChineseWord extends TestActivity {
 
     protected void set_next_study() {
         super.set_next_study();
-        String candidate;
         solution=null;
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
-
-        while ((words.size() > 0) && (solution == null)) {
-            candidate = words.remove(0).chinese;
-
-            if (candidate.codePointCount(0, candidate.length())>3)
-                continue;
-
-            ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(candidate);
-            if (voc.size() == 0)
-                continue;
-            solution = voc.get((int) (voc.size()*Math.random()));
-
-            translations = solution.english;
-            if (myDB.isFilterEnabled()) {
-                more_translations = myDB.getTranslations(candidate, solution.pinyin).english;
-            }
-            else {
-                more_translations = new ArrayList<String>();
-            }
-            if ((refDB != null) && (refDB.getTranslations(candidate, solution.pinyin) != null)) {
-                more_translations.addAll(refDB.getTranslations(candidate, solution.pinyin).english);
-            }
-        }
-        if (solution == null) {
+        if (hanzi.codePointCount(0, hanzi.length())>3) {
             nothing_to_test();
             return;
         }
+
+        // need some translations
+        ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(hanzi);
+        if (voc.size() == 0) {
+            nothing_to_test();
+            return;
+        }
+        solution = voc.get((int) (voc.size()*Math.random()));
+
+        translations = solution.english;
+        if (myDB.isFilterEnabled()) {
+            more_translations = myDB.getTranslations(hanzi, solution.pinyin).english;
+        }
+        else {
+            more_translations = new ArrayList<String>();
+        }
+        if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
+            more_translations.addAll(refDB.getTranslations(hanzi, solution.pinyin).english);
+        }
+
         showing_more_voc=false;
         display_test();
     }
@@ -162,6 +157,10 @@ public class GuessChineseWord extends TestActivity {
     protected void update_scores(int good) {
         int min_box = -1;
 
+        for (String tries : previous_guess) {
+            myDB.resetTime(tries);
+        }
+
         if (good == CORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
@@ -183,29 +182,21 @@ public class GuessChineseWord extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            myDB.guessedWord(true, solution.chinese);
+            myDB.betterBox(solution.chinese);
         }
         else if (good == INCORRECT) {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                myDB.restartStudy(hanzi);
+                myDB.worseBox(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            myDB.guessedWord(false, solution.chinese);
+            myDB.restartStudy(solution.chinese);
         }
         else if (good == OTHER) {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 myDB.resetTime(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-            for (String tries : previous_guess) {
-                for (int i=0; i<tries.length();) {
-                    String hanzi = tries.substring(i, i+Character.charCount(tries.codePointAt(i)));
-                    myDB.resetTime(hanzi);
-                    i+=Character.charCount(solution.chinese.codePointAt(i));
-                }
-                myDB.guessedWord(true, tries);
             }
         }
     }
@@ -256,7 +247,7 @@ public class GuessChineseWord extends TestActivity {
             bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             FrameLayout bad_guess_details = new FrameLayout(this);
-            Details.populate_details_view(GuessChineseWord.this, bad_guess_details, guess, refDB);
+            Details.populate_details_view(GuessChineseWord.this, bad_guess_details, guess, refDB==null?myDB:refDB);
             bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);

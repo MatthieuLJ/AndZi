@@ -39,6 +39,8 @@ public class ProgressService extends Service {
     public void update_notification(boolean store) {
         ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
+        if (current_data == null)
+            return;
         if (current_data.num_chars_in_box[0] + current_data.num_chars_in_box[1] + current_data.num_chars_in_box[2] + current_data.num_chars_in_box[3] + current_data.num_chars_in_box[4] == 0)
             return;
 

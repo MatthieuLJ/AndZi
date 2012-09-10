@@ -6,7 +6,6 @@ package com.matthieu;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -26,15 +25,13 @@ import java.util.regex.Pattern;
 
 public class HanziDB extends SQLiteOpenHelper {
     private static final String TAG = "HanziDB";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
-    protected Context appContext;
     protected AndZiApplication app;
     private SQLiteDatabase db;
 
-    public HanziDB(Context context, AndZiApplication application, String db_name) {
-        super(context, db_name, null, DATABASE_VERSION);
-        appContext = context;
+    public HanziDB(AndZiApplication application, String db_name) {
+        super(application.getApplicationContext(), db_name, null, DATABASE_VERSION);
         app = application;
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
@@ -77,7 +74,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 "chinese VARCHAR(50) NOT NULL," +
                 "pinyin VARCHAR(150) NOT NULL," +
                 "length INTEGER DEFAULT 0," +
-                "score INTEGER DEFAULT 0," +
                 "UNIQUE(chinese,pinyin))");
         database.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
         database.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
@@ -117,7 +113,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         // leitner stuff
         database.execSQL("CREATE TABLE leitner (" +
-                "hanzi VARCHAR(2) PRIMARY KEY NOT NULL," +
+                "hanzi VARCHAR(50) PRIMARY KEY NOT NULL," +
                 "box INTEGER NOT NULL," +
                 "exp_time INTEGER NOT NULL," +
                 "num_tested INTEGER DEFAULT 0," +
@@ -130,8 +126,9 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
+    public void onUpgrade(SQLiteDatabase db, final int i, final int i1) {
         Log.v(TAG, "onUpgrade ("+i+","+i1+")");
+
         if (i<2) {
             // first have to manually calculate expiration time
             Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin GROUP BY hanzi", null);
@@ -167,7 +164,7 @@ public class HanziDB extends SQLiteOpenHelper {
         }
 
         if (i<3) {
-            db.execSQL("ALTER TABLE cword ADD COLUMN score INTEGER DEFAULT 0");
+            //db.execSQL("ALTER TABLE cword ADD COLUMN score INTEGER DEFAULT 0");
         }
 
         if (i<4) {
@@ -175,6 +172,56 @@ public class HanziDB extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE leitner ADD COLUMN num_wrong INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN streak INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN date_added INTEGER");
+        }
+        if (i<5) {
+            db.execSQL("DROP INDEX IF EXISTS leitner_hanzi");
+            db.execSQL("ALTER TABLE leitner RENAME TO old_leitner");
+            db.execSQL("CREATE TABLE leitner (" +
+                    "hanzi VARCHAR(50) PRIMARY KEY NOT NULL," +
+                    "box INTEGER NOT NULL," +
+                    "exp_time INTEGER NOT NULL," +
+                    "num_tested INTEGER DEFAULT 0," +
+                    "num_wrong INTEGER DEFAULT 0," +
+                    "streak INTEGER DEFAULT 0," +
+                    "date_added INTEGER)");
+            db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
+            db.execSQL("INSERT INTO leitner SELECT hanzi,box,exp_time,num_tested,num_wrong, streak, date_added FROM old_leitner");
+            db.execSQL("DROP TABLE old_leitner");
+
+            db.execSQL("DROP INDEX IF EXISTS cword_id");
+            db.execSQL("DROP INDEX IF EXISTS cword_chinese");
+            db.execSQL("DROP INDEX IF EXISTS cword_pinyin");
+
+            if (i>=3) {
+                Cursor cur = db.rawQuery("SELECT chinese, score FROM cword WHERE (score>0) AND (length(chinese)>1)", null);
+                if (cur.moveToFirst()) {
+                    int score_column_index = cur.getColumnIndex("score");
+                    int hanzi_column_index = cur.getColumnIndex("chinese");
+                    do {
+                        String hanzi=cur.getString(hanzi_column_index);
+                        int score = cur.getInt(score_column_index);
+                        ContentValues cv = new ContentValues();
+                        cv.put("box", score);
+                        cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(score));
+                        cv.put("hanzi", hanzi);
+                        db.insert("leitner", null, cv);
+                    } while(cur.moveToNext());
+                }
+                cur.close();
+
+                db.execSQL("ALTER TABLE cword RENAME TO old_cword");
+                db.execSQL("CREATE TABLE cword (" +
+                        "cword_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                        "chinese VARCHAR(50) NOT NULL," +
+                        "pinyin VARCHAR(150) NOT NULL," +
+                        "length INTEGER DEFAULT 0," +
+                        "UNIQUE(chinese,pinyin))");
+                db.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
+                db.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
+                db.execSQL("CREATE INDEX cword_pinyin ON cword(pinyin)");
+                db.execSQL("INSERT INTO cword SELECT cword_id, chinese, pinyin, length FROM old_cword");
+                db.execSQL("DROP TABLE old_cword");
+            }
         }
     }
 
@@ -185,355 +232,348 @@ public class HanziDB extends SQLiteOpenHelper {
         db.close();
     }
 
-    public AsyncTask<Void, Integer, Boolean> checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
-        AsyncTask<Void, Integer, Boolean> res = new AsyncTask<Void, Integer, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... voids) {
-                boolean res = true;
+    public boolean checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
+        boolean res = true;
 
-                final int num_steps=14;
-                int current_step=0;
+        final int num_steps=15;
+        int current_step=0;
 
-                try {
-                    //
-                    // Basics
-                    //
+        try {
+            //
+            // Basics
+            //
 
-                    // check chinese and pinyin fields in cword
-                    Cursor c= db.rawQuery("SELECT cword_id, chinese, pinyin, GROUP_CONCAT(t1_chinese,'') AS t_chinese, GROUP_CONCAT(t1_pinyin,'') AS t_pinyin FROM " +
-                            "(SELECT cw.cword_id AS cword_id,  cw.chinese AS chinese, cw.pinyin AS pinyin, " +
-                            "cp.hanzi AS t1_chinese, cp.pinyin AS t1_pinyin "+
-                            "FROM cword_segment AS cs "+
-                            "JOIN cword AS cw ON cw.cword_id=cs.cword_id "+
-                            "JOIN char_pinyin AS cp ON cp.char_pinyin_id=cs.char_pinyin_id "+
-                            "ORDER BY cs.pos ASC) "+
-                            "GROUP BY cword_id", null);
-                    if (c.moveToFirst()) {
-                        do{
-                            int cword_id = c.getInt(c.getColumnIndex("cword_id"));
+            // check chinese and pinyin fields in cword
+            Cursor c= db.rawQuery("SELECT cword_id, chinese, pinyin, GROUP_CONCAT(t1_chinese,'') AS t_chinese, GROUP_CONCAT(t1_pinyin,'') AS t_pinyin FROM " +
+                    "(SELECT cw.cword_id AS cword_id,  cw.chinese AS chinese, cw.pinyin AS pinyin, " +
+                    "cp.hanzi AS t1_chinese, cp.pinyin AS t1_pinyin "+
+                    "FROM cword_segment AS cs "+
+                    "JOIN cword AS cw ON cw.cword_id=cs.cword_id "+
+                    "JOIN char_pinyin AS cp ON cp.char_pinyin_id=cs.char_pinyin_id "+
+                    "ORDER BY cs.pos ASC) "+
+                    "GROUP BY cword_id", null);
+            if (c.moveToFirst()) {
+                do{
+                    int cword_id = c.getInt(c.getColumnIndex("cword_id"));
+                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
+                    String t_pinyin = c.getString(c.getColumnIndex("t_pinyin"));
+                    if (!pinyin.equals(t_pinyin)) {
+                        res = false;
+                        Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id+ " : " + pinyin + " != " + t_pinyin);
+                        if (fixme) {
+                            db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
+                        }
+                    }
+                    String chinese = c.getString(c.getColumnIndex("chinese"));
+                    String t_chinese = c.getString(c.getColumnIndex("t_chinese"));
+                    if (!chinese.equals(t_chinese)) {
+                        res = false;
+                        Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id + " : " + chinese + " != " + t_chinese);
+                        if (fixme) {
+                            db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
+                        }
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check every cword has at least one translation
+            c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
+            if (c.moveToFirst()) {
+                do{
+                    res = false;
+                    Log.w(TAG, "cword_id "+c.getInt(c.getColumnIndex("cword_id"))+", does not have translation");
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("cword_id"));
+                        db.delete("cword", "cword_id=?", new String[]{Integer.toString(id)});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check foreign key from cword_segment to cword_id
+            c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Foreign key cword_id not respected from cword_segment");
+                res = false;
+                do{
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("cword_id"));
+                        db.delete("cword_segment", "cword_id=?", new String[]{Integer.toString(id)});
+                    }
+                    Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check foreign key from cword_segment to char_pinyin_id
+            c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
+            if (c.moveToFirst()) {
+                res = false;
+                Log.w(TAG, "Foreign key char_pinyin_id not respected from cword_segment");
+                do{
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
+                        db.delete("cword_segment", "char_pinyin_id=?", new String[]{Integer.toString(id)});
+                    }
+                    Log.w(TAG, "bad char_pinyin_id " + c.getString(c.getColumnIndex("char_pinyin_id")));
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check all char_pinyins are used
+            c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
+            if (c.moveToFirst()) {
+                res = false;
+                do{
+                    Log.w(TAG, "char_pinyin_id " + c.getInt(c.getColumnIndex("char_pinyin_id")) + "not used in cword_segment");
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
+                        db.delete("char_pinyin", "char_pinyin_id=?", new String[]{Integer.toString(id)});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check foreign key from eword to cword_id
+            c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
+            if (c.moveToFirst()) {
+                res = false;
+                Log.w(TAG, "Foreign key cword_id not respected from eword");
+                do{
+                    Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("cword_id"));
+                        db.delete("eword", "cword_id=?", new String[]{Integer.toString(id)});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check for unique char/pinyin pairs in char_pinyin
+            c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
+                    "ORDER BY count DESC", null);
+            if (c.moveToFirst()) {
+                do{
+                    if (c.getInt(c.getColumnIndex("count")) != 1) {
+                        res = false;
+                        Log.w(TAG, "hanzi, pinyin not unique in char_pinyin table");
+
+                        if (fixme) {
+                            // pick one id
                             String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                            String t_pinyin = c.getString(c.getColumnIndex("t_pinyin"));
-                            if (!pinyin.equals(t_pinyin)) {
-                                res = false;
-                                Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id+ " : " + pinyin + " != " + t_pinyin);
-                                if (fixme) {
-                                    db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
-                                }
-                            }
+                            String hanzi = c.getString(c.getColumnIndex("hanzi"));
+                            c = db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE hanzi=? AND pinyin=?",
+                                    new String[] {hanzi, pinyin});
+                            c.moveToFirst();
+                            int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
+
+                            // replace in the other tables
+                            ContentValues cv = new ContentValues();
+                            cv.put("char_pinyin_id", id);
+                            db.update("cword_segment", cv, "char_pinyin_id IN (SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id!=? AND hanzi=? AND pinyin=?)",
+                                    new String[]{Integer.toString(id), hanzi, pinyin});
+
+                            // remove the others
+                            db.delete("char_pinyin", "char_pinyin_id!=? AND hanzi=? AND pinyin=?", new String[]{Integer.toString(id), hanzi, pinyin});
+                        }
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check for unique chinese/pinyin in cword
+            c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
+                    "ORDER BY count DESC", null);
+            if (c.moveToFirst()) {
+                do{
+                    if (c.getInt(c.getColumnIndex("count")) != 1) {
+                        res = false;
+                        Log.w(TAG, "chinese, pinyin not unique in cword table");
+
+                        if (fixme) {
+                            // pick one id
+                            String pinyin = c.getString(c.getColumnIndex("pinyin"));
                             String chinese = c.getString(c.getColumnIndex("chinese"));
-                            String t_chinese = c.getString(c.getColumnIndex("t_chinese"));
-                            if (!chinese.equals(t_chinese)) {
-                                res = false;
-                                Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id + " : " + chinese + " != " + t_chinese);
-                                if (fixme) {
-                                    db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
-                                }
-                            }
-                        }while(c.moveToNext());
+                            c = db.rawQuery("SELECT cword_id FROM cword WHERE chinese=? AND pinyin=?",
+                                    new String[] {chinese, pinyin});
+                            c.moveToFirst();
+                            int id=c.getInt(c.getColumnIndex("cword_id"));
+
+                            // replace in the other tables
+                            ContentValues cv = new ContentValues();
+                            cv.put("cword_id", id);
+                            db.update("cword_segment", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
+                                    new String[]{Integer.toString(id), chinese, pinyin});
+                            db.update("eword", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
+                                    new String[]{Integer.toString(id), chinese, pinyin});
+
+                            // remove the others
+                            db.delete("cword", "cword_id!=? AND chinese=? AND pinyin=?", new String[]{Integer.toString(id), chinese, pinyin});
+                        }
                     }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check every cword has at least one translation
-                    c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
-                    if (c.moveToFirst()) {
-                        do{
-                            res = false;
-                            Log.w(TAG, "cword_id "+c.getInt(c.getColumnIndex("cword_id"))+", does not have translation");
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("cword_id"));
-                                db.delete("cword", "cword_id=?", new String[]{Integer.toString(id)});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check foreign key from cword_segment to cword_id
-                    c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
-                    if (c.moveToFirst()) {
-                        Log.w(TAG, "Foreign key cword_id not respected from cword_segment");
-                        res = false;
-                        do{
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("cword_id"));
-                                db.delete("cword_segment", "cword_id=?", new String[]{Integer.toString(id)});
-                            }
-                            Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check foreign key from cword_segment to char_pinyin_id
-                    c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
-                    if (c.moveToFirst()) {
-                        res = false;
-                        Log.w(TAG, "Foreign key char_pinyin_id not respected from cword_segment");
-                        do{
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
-                                db.delete("cword_segment", "char_pinyin_id=?", new String[]{Integer.toString(id)});
-                            }
-                            Log.w(TAG, "bad char_pinyin_id " + c.getString(c.getColumnIndex("char_pinyin_id")));
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check all char_pinyins are used
-                    c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
-                    if (c.moveToFirst()) {
-                        res = false;
-                        do{
-                            Log.w(TAG, "char_pinyin_id " + c.getInt(c.getColumnIndex("char_pinyin_id")) + "not used in cword_segment");
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
-                                db.delete("char_pinyin", "char_pinyin_id=?", new String[]{Integer.toString(id)});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check foreign key from eword to cword_id
-                    c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
-                    if (c.moveToFirst()) {
-                        res = false;
-                        Log.w(TAG, "Foreign key cword_id not respected from eword");
-                        do{
-                            Log.w(TAG, "bad cword_id " + c.getString(c.getColumnIndex("cword_id")));
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("cword_id"));
-                                db.delete("eword", "cword_id=?", new String[]{Integer.toString(id)});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check for unique char/pinyin pairs in char_pinyin
-                    c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
-                            "ORDER BY count DESC", null);
-                    if (c.moveToFirst()) {
-                        do{
-                            if (c.getInt(c.getColumnIndex("count")) != 1) {
-                                res = false;
-                                Log.w(TAG, "hanzi, pinyin not unique in char_pinyin table");
-
-                                if (fixme) {
-                                    // pick one id
-                                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                                    String hanzi = c.getString(c.getColumnIndex("hanzi"));
-                                    c = db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE hanzi=? AND pinyin=?",
-                                            new String[] {hanzi, pinyin});
-                                    c.moveToFirst();
-                                    int id=c.getInt(c.getColumnIndex("char_pinyin_id"));
-
-                                    // replace in the other tables
-                                    ContentValues cv = new ContentValues();
-                                    cv.put("char_pinyin_id", id);
-                                    db.update("cword_segment", cv, "char_pinyin_id IN (SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id!=? AND hanzi=? AND pinyin=?)",
-                                            new String[]{Integer.toString(id), hanzi, pinyin});
-
-                                    // remove the others
-                                    db.delete("char_pinyin", "char_pinyin_id!=? AND hanzi=? AND pinyin=?", new String[]{Integer.toString(id), hanzi, pinyin});
-                                }
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check for unique chinese/pinyin in cword
-                    c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
-                            "ORDER BY count DESC", null);
-                    if (c.moveToFirst()) {
-                        do{
-                            if (c.getInt(c.getColumnIndex("count")) != 1) {
-                                res = false;
-                                Log.w(TAG, "chinese, pinyin not unique in cword table");
-
-                                if (fixme) {
-                                    // pick one id
-                                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                                    String chinese = c.getString(c.getColumnIndex("chinese"));
-                                    c = db.rawQuery("SELECT cword_id FROM cword WHERE chinese=? AND pinyin=?",
-                                            new String[] {chinese, pinyin});
-                                    c.moveToFirst();
-                                    int id=c.getInt(c.getColumnIndex("cword_id"));
-
-                                    // replace in the other tables
-                                    ContentValues cv = new ContentValues();
-                                    cv.put("cword_id", id);
-                                    db.update("cword_segment", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
-                                            new String[]{Integer.toString(id), chinese, pinyin});
-                                    db.update("eword", cv, "cword_id IN (SELECT cword_id FROM cword WHERE cword_id!=? AND chinese=? AND pinyin=?)",
-                                            new String[]{Integer.toString(id), chinese, pinyin});
-
-                                    // remove the others
-                                    db.delete("cword", "cword_id!=? AND chinese=? AND pinyin=?", new String[]{Integer.toString(id), chinese, pinyin});
-                                }
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check cword length is correct
-                    c= db.rawQuery("SELECT cword_id FROM cword WHERE length(chinese) != length", null);
-                    if (c.moveToFirst()) {
-                        Log.w(TAG, "Found some words with the wrong size");
-                        db.execSQL("UPDATE cword SET length = length(chinese)");
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check for unique cword/translation in eword
-                    c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
-                            "ORDER BY count DESC", null);
-                    if (c.moveToFirst()) {
-                        do{
-                            if (c.getInt(c.getColumnIndex("count")) != 1) {
-                                res = false;
-                                Log.w(TAG, "cword_id, translation not unique in eword table");
-
-                                if (fixme) {
-                                    // pick one id
-                                    String translation = c.getString(c.getColumnIndex("translation"));
-                                    int cword_id = c.getInt(c.getColumnIndex("cword_id"));
-                                    c = db.rawQuery("SELECT eng_id FROM eword WHERE cword_id=? AND translation=?",
-                                            new String[] {Integer.toString(cword_id), translation});
-                                    c.moveToFirst();
-                                    int id=c.getInt(c.getColumnIndex("eng_id"));
-
-                                    // replace in the other tables
-                                    ContentValues cv = new ContentValues();
-                                    cv.put("eng_id", id);
-                                    db.update("lesson_word", cv, "eng_id IN (SELECT eng_id FROM eword WHERE eng_id!=? AND cword_id=? AND translation=?)",
-                                            new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
-
-                                    // remove the others
-                                    db.delete("eword", "eng_id!=? AND cword_id=? AND translation=?",
-                                            new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
-                                }
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    //
-                    // Lessons
-                    //
-
-                    // check foreign key from lesson_word to lessons
-                    c = db.rawQuery("SELECT DISTINCT lesson_id FROM lesson_word WHERE lesson_id NOT IN (SELECT lesson_id FROM lessons)", null);
-                    if (c.moveToFirst()) {
-                        Log.w(TAG, "Foreign key lesson_id not respected from lesson_word");
-                        res = false;
-                        do{
-                            Log.w(TAG, "bad lesson_id " + c.getString(c.getColumnIndex("lesson_id")));
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("lesson_id"));
-                                db.delete("lesson_word", "lesson_id=?", new String[]{Integer.toString(id)});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    // check foreign key from lesson_word to eword
-                    c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
-                    if (c.moveToFirst()) {
-                        Log.w(TAG, "Foreign key eng_id not respected from lesson_word");
-                        res = false;
-                        do{
-                            Log.w(TAG, "bad eng_id " + c.getString(c.getColumnIndex("eng_id")));
-                            if (fixme) {
-                                int id=c.getInt(c.getColumnIndex("eng_id"));
-                                db.delete("lesson_word", "eng_id=?", new String[]{Integer.toString(id)});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    //
-                    // Leitner
-                    //
-
-                    // check all characters in leitner table are in DB
-                    c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE hanzi NOT IN (SELECT hanzi FROM char_pinyin)", null);
-                    if (c.moveToFirst()) {
-                        Log.w(TAG, "Character in leitner table is not in database");
-                        res = false;
-                        do{
-                            Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
-                            if (fixme) {
-                                String hanzi=c.getString(c.getColumnIndex("hanzi"));
-                                db.delete("leitner", "hanzi=?", new String[]{hanzi});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-
-                    c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE num_wrong > num_tested", null);
-                    if (c.moveToFirst()) {
-                        Log.w(TAG, "Character in has been more wrong than tested");
-                        res = false;
-                        do{
-                            Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
-                            if (fixme) {
-                                String hanzi=c.getString(c.getColumnIndex("hanzi"));
-                                db.delete("leitner", "hanzi=?", new String[]{hanzi});
-                            }
-                        }while(c.moveToNext());
-                    }
-                    c.close();
-                    current_step++;
-                    publishProgress((int)(current_step*100/num_steps));
-                }
-                catch (SQLiteException exp) {
-                    Log.d(TAG, "Ran into a problem while opening database");
-                    Log.d(TAG, exp.toString());
-                    res=false;
-                }
-                return res;
+                }while(c.moveToNext());
             }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
 
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                if (handler != null)
-                    handler.progress(values[0]);
+            // check cword length is correct
+            c= db.rawQuery("SELECT cword_id FROM cword WHERE length(chinese) != length", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Found some words with the wrong size");
+                db.execSQL("UPDATE cword SET length = length(chinese)");
             }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
 
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                if (handler != null)
-                    handler.finish(aBoolean);
+            // check for unique cword/translation in eword
+            c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
+                    "ORDER BY count DESC", null);
+            if (c.moveToFirst()) {
+                do{
+                    if (c.getInt(c.getColumnIndex("count")) != 1) {
+                        res = false;
+                        Log.w(TAG, "cword_id, translation not unique in eword table");
+
+                        if (fixme) {
+                            // pick one id
+                            String translation = c.getString(c.getColumnIndex("translation"));
+                            int cword_id = c.getInt(c.getColumnIndex("cword_id"));
+                            c = db.rawQuery("SELECT eng_id FROM eword WHERE cword_id=? AND translation=?",
+                                    new String[] {Integer.toString(cword_id), translation});
+                            c.moveToFirst();
+                            int id=c.getInt(c.getColumnIndex("eng_id"));
+
+                            // replace in the other tables
+                            ContentValues cv = new ContentValues();
+                            cv.put("eng_id", id);
+                            db.update("lesson_word", cv, "eng_id IN (SELECT eng_id FROM eword WHERE eng_id!=? AND cword_id=? AND translation=?)",
+                                    new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
+
+                            // remove the others
+                            db.delete("eword", "eng_id!=? AND cword_id=? AND translation=?",
+                                    new String[]{Integer.toString(id), Integer.toString(cword_id), translation});
+                        }
+                    }
+                }while(c.moveToNext());
             }
-        };
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            res.execute((Void[])null);
+            //
+            // Lessons
+            //
 
+            // check foreign key from lesson_word to lessons
+            c = db.rawQuery("SELECT DISTINCT lesson_id FROM lesson_word WHERE lesson_id NOT IN (SELECT lesson_id FROM lessons)", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Foreign key lesson_id not respected from lesson_word");
+                res = false;
+                do{
+                    Log.w(TAG, "bad lesson_id " + c.getString(c.getColumnIndex("lesson_id")));
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("lesson_id"));
+                        db.delete("lesson_word", "lesson_id=?", new String[]{Integer.toString(id)});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check foreign key from lesson_word to eword
+            c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Foreign key eng_id not respected from lesson_word");
+                res = false;
+                do{
+                    Log.w(TAG, "bad eng_id " + c.getString(c.getColumnIndex("eng_id")));
+                    if (fixme) {
+                        int id=c.getInt(c.getColumnIndex("eng_id"));
+                        db.delete("lesson_word", "eng_id=?", new String[]{Integer.toString(id)});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            //
+            // Leitner
+            //
+
+            // check all characters in leitner table are in DB
+            c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE length(hanzi)==1 AND hanzi NOT IN (SELECT hanzi FROM char_pinyin)", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Character in leitner table is not in database");
+                res = false;
+                do{
+                    Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
+                    if (fixme) {
+                        String hanzi=c.getString(c.getColumnIndex("hanzi"));
+                        db.delete("leitner", "hanzi=?", new String[]{hanzi});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            // check all characters in leitner table are in DB
+            c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE length(hanzi)>1 AND hanzi NOT IN (SELECT chinese FROM cword)", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Word in leitner table is not in database");
+                res = false;
+                do{
+                    Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
+                    if (fixme) {
+                        String hanzi=c.getString(c.getColumnIndex("hanzi"));
+                        db.delete("leitner", "hanzi=?", new String[]{hanzi});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+
+            c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE num_wrong > num_tested", null);
+            if (c.moveToFirst()) {
+                Log.w(TAG, "Character in has been more wrong than tested");
+                res = false;
+                do{
+                    Log.w(TAG, "bad character " + c.getString(c.getColumnIndex("hanzi")));
+                    if (fixme) {
+                        String hanzi=c.getString(c.getColumnIndex("hanzi"));
+                        db.delete("leitner", "hanzi=?", new String[]{hanzi});
+                    }
+                }while(c.moveToNext());
+            }
+            c.close();
+            current_step++;
+            handler.progress((int)(current_step*100/num_steps));
+        }
+        catch (SQLiteException exp) {
+            Log.d(TAG, "Ran into a problem while opening database");
+            Log.d(TAG, exp.toString());
+            res=false;
+        }
         return res;
     }
 
@@ -686,22 +726,22 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public Cursor getStartingCTranslations(String english) {
-            ArrayList<String> query_arg=new ArrayList<String>();
-            String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
-                    "FROM ( " +
-                    "    SELECT DISTINCT cword.cword_id AS cword_id, " +
-                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
-                    "    ELSE 2 END AS sort " +
-                    "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword " +
-                    "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
-                    "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
-            query_arg.add(english);
-            query_arg.add(english+" %");
-            query_arg.add(english+"%");
+        ArrayList<String> query_arg=new ArrayList<String>();
+        String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
+                "FROM ( " +
+                "    SELECT DISTINCT cword.cword_id AS cword_id, " +
+                "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
+                "    ELSE 2 END AS sort " +
+                "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword " +
+                "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
+                "JOIN cword AS c ON c.cword_id=selection.cword_id " +
+                "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
+        query_arg.add(english);
+        query_arg.add(english+" %");
+        query_arg.add(english+"%");
 
-            return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
-        }
+        return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
+    }
 
     public ArrayList<Vocabulary> getWordsWithPinyin(String hanzi) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -741,46 +781,6 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
         return res;
     }
-
-    public ArrayList<Vocabulary> getWordsWithPinyinForTesting(String hanzi) {
-            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            Vocabulary to_add=null;
-            Cursor cur = db.rawQuery("SELECT * " +
-                    "FROM cword_segment " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
-                    "JOIN eword ON eword.cword_id=cword.cword_id " +
-                    "WHERE char_pinyin.hanzi=? GROUP BY eword.eng_id " +
-                    "ORDER BY cword.score ASC", new String[] {hanzi});
-            int current_id=-1;
-
-            int id_column_index      = cur.getColumnIndex("cword_id");
-            int chinese_column_index = cur.getColumnIndex("chinese");
-            int pinyin_column_index  = cur.getColumnIndex("pinyin");
-            int english_column_index = cur.getColumnIndex("translation");
-            if (cur.moveToFirst()) {
-                do{
-                    int new_id = cur.getInt(id_column_index);
-                    String pinyin =  cur.getString(pinyin_column_index);
-                    String english = cur.getString(english_column_index);
-                    String chinese = cur.getString(chinese_column_index);
-
-                    if (new_id != current_id) {
-                        if (to_add != null)
-                            res.add(to_add);
-                        to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
-                        current_id = new_id;
-                    }
-                    assert to_add != null;
-                    to_add.english.add(english);
-                }while(cur.moveToNext());
-            }
-            if (to_add != null)
-                res.add(to_add);
-
-            cur.close();
-            return res;
-        }
 
     public ArrayList<Vocabulary> getWordsWithPinyin(String hanzi, String pinyin) {
         ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -908,7 +908,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    public ArrayList<String> getAllChar() {
+    public ArrayList<String> getAllChars() {
         ArrayList<String> res = new ArrayList<String>();
 
         Cursor cur = db.rawQuery("SELECT DISTINCT hanzi " +
@@ -918,6 +918,23 @@ public class HanziDB extends SQLiteOpenHelper {
             res.ensureCapacity(cur.getCount());
             do{
                 res.add(cur.getString(cur.getColumnIndex("hanzi")));
+            }while(cur.moveToNext());
+        }
+
+        cur.close();
+        return res;
+    }
+
+    public ArrayList<String> getAllWords() {
+        ArrayList<String> res = new ArrayList<String>();
+
+        Cursor cur = db.rawQuery("SELECT DISTINCT chinese " +
+                "FROM cword", null);
+
+        if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
+            do{
+                res.add(cur.getString(cur.getColumnIndex("chinese")));
             }while(cur.moveToNext());
         }
 
@@ -1546,9 +1563,22 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected void delCword(int cword_id) {
+        String hanzi;
+        Cursor cur = db.rawQuery("SELECT chinese  " +
+                "FROM cword " +
+                "WHERE cword_id=?;", new String[] {Integer.toString(cword_id)});
+        if (cur.moveToFirst()) {
+            hanzi = cur.getString(cur.getColumnIndex("chinese"));
+            cur.close();
+        }
+        else {
+            cur.close();
+            return;
+        }
+
         ArrayList<Integer> char_pinyin_id = new ArrayList<Integer>();
 
-        Cursor cur = db.rawQuery("SELECT char_pinyin_id FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
+        cur = db.rawQuery("SELECT char_pinyin_id FROM cword_segment WHERE cword_id=?", new String[] {Integer.toString(cword_id)});
         if (cur.moveToFirst()) {
             do{
                 char_pinyin_id.add(cur.getInt(cur.getColumnIndex("char_pinyin_id")));
@@ -1565,6 +1595,11 @@ public class HanziDB extends SQLiteOpenHelper {
                 delCharPinyin(cpid);
             }
         }
+        cur = db.rawQuery("SELECT * FROM cword WHERE chinese=?", new String[] {hanzi});
+        if (cur.getCount() == 0) {
+            db.delete("leitner", "hanzi=?",new String[] {hanzi});
+        }
+        cur.close();
     }
 
     protected void checkIsolatedCword(int cword_id) {
@@ -1608,13 +1643,13 @@ public class HanziDB extends SQLiteOpenHelper {
 
             @Override
             protected Void doInBackground(Void... voids) {
-                if (getAllChar().size()==0) {
+                if (getAllChars().size()==0) {
                     // just need to copy
                     app.replaceDataBase(path);
                 }
                 else {
                     // copy to the DB directory
-                    if (!app.copyFile(path, appContext.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                    if (!app.copyFile(path, HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
                     }
@@ -1626,7 +1661,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
 
                     // copy a backup
-                    if (!app.copyFile(db.getPath(), appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
+                    if (!app.copyFile(db.getPath(), HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
                     }
@@ -1637,7 +1672,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     backup_ready=true;
 
-                    HanziDB other_db = new HanziDB(appContext, app, new_db_name);
+                    HanziDB other_db = new HanziDB(app, new_db_name);
 
                     // merge it
                     ArrayList<String> original_lessons = getLessons();
@@ -1663,14 +1698,28 @@ public class HanziDB extends SQLiteOpenHelper {
                     ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
                     addVocabulary(voc);
 
-                    ArrayList<String> chars = other_db.getAllChar();
+                    ArrayList<String> chars = other_db.getAllChars();
                     for (int i=0; i<chars.size(); i++) {
-                        publishProgress(60+(i*30)/chars.size());
+                        publishProgress(60+(i*15)/chars.size());
                         if (isCancelled()) {
                             clean_up_on_cancel(false);
                             return null;
                         }
                         String c=chars.get(i);
+                        if (other_db.getBoxForChar(c) != 0) {
+                            setBoxForChar(c, other_db.getBoxForChar(c));
+                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
+                        }
+                    }
+
+                    ArrayList<String> words = other_db.getAllWords();
+                    for (int i=0; i<words.size(); i++) {
+                        publishProgress(75+(i*15)/words.size());
+                        if (isCancelled()) {
+                            clean_up_on_cancel(false);
+                            return null;
+                        }
+                        String c=words.get(i);
                         if (other_db.getBoxForChar(c) != 0) {
                             setBoxForChar(c, other_db.getBoxForChar(c));
                             setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
@@ -1691,11 +1740,11 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     backup_ready=false;
                     // Erase the temporary database
-                    new File(appContext.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
+                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
                     publishProgress(95);
 
                     // Erase backup
-                    new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
+                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
                     publishProgress(100);
 
                     if (isCancelled()) { // everything went through anyway...
@@ -1712,7 +1761,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 // create the progress dialog if needed
                 if (with_dialog) {
-                    if (getAllChar().size()==0) {
+                    if (getAllChars().size()==0) {
                         mProgressDialog = ProgressDialog.show(context, "Importing Database", "Copying...", false);
                         mProgressDialog.setIndeterminate(true);
                     }
@@ -1754,17 +1803,17 @@ public class HanziDB extends SQLiteOpenHelper {
 
             private void clean_up_on_cancel(final boolean error) {
                 // Erase the temporary database
-                new File(appContext.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
+                new File(HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
 
                 // restore the backup if it is ready
                 if (backup_ready) {
                     String db_path = db.getPath();
                     new File(db_path).delete();
-                    new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).renameTo(new File(db_path));
+                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).renameTo(new File(db_path));
                 }
                 else {
                     // delete the possible backup
-                    new File(appContext.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
+                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
                 }
 
                 if (with_dialog || error)
@@ -1806,22 +1855,22 @@ public class HanziDB extends SQLiteOpenHelper {
                         return null;
                     }
                 } else if (!filtered_lessons) {
-                    if (!app.copyFile(db.getPath(), HanziDB.this.appContext.getDatabasePath(new_db_name).getPath())) {
+                    if (!app.copyFile(db.getPath(), HanziDB.this.app.getDatabasePath(new_db_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
                     }
-                    new_db = new HanziDB(appContext, app, new_db_name);
+                    new_db = new HanziDB(app, new_db_name);
                     new_db.resetAllScores();
                     new_db.close();
 
-                    if (!app.copyFile(HanziDB.this.appContext.getDatabasePath(new_db_name).getPath(), path)) {
+                    if (!app.copyFile(HanziDB.this.app.getDatabasePath(new_db_name).getPath(), path)) {
                         clean_up_on_cancel(true);
                         return null;
                     }
 
-                    appContext.deleteDatabase(new_db_name);
+                    HanziDB.this.app.deleteDatabase(new_db_name);
                 } else {
-                    new_db = new HanziDB(appContext, app, new_db_name);
+                    new_db = new HanziDB(app, new_db_name);
 
                     for (int i=0; i<lesson_filter.size(); i++) {
                         String lesson = lesson_filter.get(i);
@@ -1844,14 +1893,29 @@ public class HanziDB extends SQLiteOpenHelper {
                     new_db.sortLessons(lesson_filter);
 
                     if (with_scores) {
-                        ArrayList<String> chars = new_db.getAllChar();
+                        ArrayList<String> chars = new_db.getAllChars();
                         for (int i=0; i<chars.size(); i++) {
                             String c = chars.get(i);
                             if (isCancelled()) {
                                 clean_up_on_cancel(false);
                                 return null;
                             }
-                            publishProgress(80+(i*10)/chars.size());
+                            publishProgress(80+(i*5)/chars.size());
+                            int b = getBoxForChar(c);
+                            if (b!=0) {
+                                long t = getExpirationTimeForChar(c);
+                                new_db.setBoxForChar(c, b);
+                                new_db.setExpirationTimeForChar(c, t);
+                            }
+                        }
+                        ArrayList<String> words = new_db.getAllWords();
+                        for (int i=0; i<words.size(); i++) {
+                            String c = words.get(i);
+                            if (isCancelled()) {
+                                clean_up_on_cancel(false);
+                                return null;
+                            }
+                            publishProgress(85+(i*5)/words.size());
                             int b = getBoxForChar(c);
                             if (b!=0) {
                                 long t = getExpirationTimeForChar(c);
@@ -1870,7 +1934,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     publishProgress(90);
 
-                    appContext.deleteDatabase(new_db_name);
+                    HanziDB.this.app.deleteDatabase(new_db_name);
 
                     if (isCancelled()) { // everything went through anyway...
                         onPostExecute((Void) null);
@@ -1928,7 +1992,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 if(new_db!=null)
                     new_db.close();
 
-                appContext.deleteDatabase(new_db_name);
+                HanziDB.this.app.deleteDatabase(new_db_name);
                 new File(path).delete();
 
                 if (with_dialog || error)
@@ -2331,37 +2395,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use lesson filter
     ////////////////////////////////////////
-    /*
-    public int getNumWordsFiltered() {
-        int res;
-        Cursor cur = db.rawQuery("SELECT eword.cword_id " +
-                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                "GROUP BY eword.cword_id ", null);
-        res= cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumCharsFiltered() {
-        int res;
-        if (cached_num_chars != -1)
-            return cached_num_chars;
-        Cursor cur = db.rawQuery("SELECT char_pinyin.hanzi " +
-                "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                "JOIN cword_segment ON cword_segment.cword_id=eword.cword_id " +
-                "JOIN char_pinyin ON cword_segment.char_pinyin_id=char_pinyin.char_pinyin_id " +
-                "GROUP BY hanzi", null);
-        res= cur.getCount();
-        cached_num_chars=res;
-
-        cur.close();
-        return res;
-    }
-    */
-
     public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -2515,50 +2548,6 @@ public class HanziDB extends SQLiteOpenHelper {
         }
     }
 
-    public ArrayList<Vocabulary> getFilteredWordsWithPinyinForTesting(String hanzi) {
-            if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-                ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-                Vocabulary to_add=null;
-                Cursor cur = db.rawQuery("SELECT DISTINCT cword_segment.cword_id AS cword_id, cword.chinese AS chinese, " +
-                        "cword.pinyin AS pinyin, eword.translation AS translation " +
-                        "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                        "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                        "JOIN cword ON cword.cword_id=eword.cword_id " +
-                        "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                        "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                        "WHERE char_pinyin.hanzi=? ORDER BY cword.score ASC", new String[] {hanzi});
-                int id_column_index      = cur.getColumnIndex("cword_id");
-                int chinese_column_index = cur.getColumnIndex("chinese");
-                int pinyin_column_index  = cur.getColumnIndex("pinyin");
-                int english_column_index = cur.getColumnIndex("translation");
-                int current_id = -1;
-                if (cur.moveToFirst()) {
-                    do{
-                        int new_id = cur.getInt(id_column_index);
-                        String chinese = cur.getString(chinese_column_index);
-                        String pinyin =  cur.getString(pinyin_column_index);
-                        String english = cur.getString(english_column_index);
-
-                        if (new_id != current_id) {
-                            if (to_add != null)
-                                res.add(to_add);
-                            to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
-                            current_id = new_id;
-                        }
-                        assert to_add != null;
-                        to_add.english.add(english);
-                    }while(cur.moveToNext());
-                }
-                if (to_add != null)
-                    res.add(to_add);
-                cur.close();
-                return res;
-            }
-            else {
-                return getWordsWithPinyinForTesting(hanzi);
-            }
-        }
-
     public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi, String pinyin) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
@@ -2628,7 +2617,8 @@ public class HanziDB extends SQLiteOpenHelper {
 
 
         else
-            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box=?", new String[] {Integer.toString(box)});
+            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
+                    "WHERE (length(hanzi)==1) AND (box=?)", new String[] {Integer.toString(box)});
 
         cur.moveToFirst();
         res= cur.getInt(cur.getColumnIndex("count"));
@@ -2646,7 +2636,8 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             return getNumChars();
 
-        Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box>=?", new String[] {Integer.toString(box)});
+        Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
+                "WHERE (length(hanzi)==1) AND (box>=?)", new String[] {Integer.toString(box)});
         cur.moveToFirst();
         res= cur.getInt(cur.getColumnIndex("count"));
 
@@ -2664,7 +2655,8 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             return getNumCharsInBox(0);
         else {
-            Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box=? AND exp_time<?",
+            Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
+                    "WHERE length(hanzi)==1 AND box=? AND exp_time<?",
                     new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
             cur.moveToFirst();
             res= cur.getInt(cur.getColumnIndex("count"));
@@ -2688,7 +2680,8 @@ public class HanziDB extends SQLiteOpenHelper {
                     "WHERE (exp_time<?) OR (box IS NULL)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
-            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner WHERE box>=? AND exp_time<?",
+            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
+                    "WHERE length(hanzi)==1 AND box>=? AND exp_time<?",
                     new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
 
         cur.moveToFirst();
@@ -2698,152 +2691,30 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-/*
-    public int getNumCharsFilteredInBox(int box) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            int res;
-
-            if (box < 0)
-                return 0;
-
-            Cursor cur;
-            if (box == 0)
-                // add the characters that do not have any box...
-                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
-                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
-                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
-                        "FROM char_pinyin " +
-                        "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                        "WHERE (box IS NULL) OR (box=0)) AS expired_chars " +
-                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
-                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
-                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)", null);
-            else
-                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
-                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
-                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
-                        "FROM char_pinyin " +
-                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                        "WHERE box=?) AS expired_chars " +
-                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
-                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
-                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
-                        new String[] {Integer.toString(box)});
-
-            cur.moveToFirst();
-            res= cur.getInt(cur.getColumnIndex("count"));
-            cur.close();
-
-            return res;
-        }
-        else {
-            return getNumCharsInBox(box);
-        }
-    }
-
-    public int getNumCharsFilteredInBoxOrAbove(int box) {
+    public int getNumWordsExpiredInBoxOrAbove(int box) {
         int res;
 
         if (box < 0)
             return 0;
 
-        if (box == 0)
-            return getNumCharsFiltered();
+        Cursor cur;
 
-        Cursor cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
-                "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
-                "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
-                "FROM char_pinyin " +
-                "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE box>=?) AS expired_chars " +
-                "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
-                "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
-                "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
-                new String[] {Integer.toString(box)});
+        if (box == 0)
+            cur = db.rawQuery("SELECT COUNT(cword.chinese) AS count FROM cword " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "WHERE (exp_time<?) OR (box IS NULL)",
+                    new String[] {Long.toString(System.currentTimeMillis())});
+        else
+            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
+                    "WHERE length(hanzi)>1 AND box>=? AND exp_time<?",
+                    new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
 
         cur.moveToFirst();
         res= cur.getInt(cur.getColumnIndex("count"));
 
         cur.close();
-
         return res;
     }
-
-    public int getNumCharsFilteredExpiredInBox(int box) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            int res;
-
-            if (box < 0)
-                return 0;
-
-            if (box == 0)
-                return getNumCharsFilteredInBox(0);
-            else {
-                Cursor cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
-                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
-                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
-                        "FROM char_pinyin " +
-                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                        "WHERE box=? AND leitner.exp_time<?) AS expired_chars " +
-                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
-                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
-                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
-                        new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
-                cur.moveToFirst();
-                res= cur.getInt(cur.getColumnIndex("count"));
-
-                cur.close();
-            }
-            return res;
-        }
-        else
-            return getNumCharsExpiredInBox(box);
-    }
-
-    public int getNumCharsFilteredExpiredInBoxOrAbove(int box) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            int res;
-
-            if (box < 0)
-                return 0;
-
-            Cursor cur;
-
-            if (box == 0)
-                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
-                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
-                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
-                        "FROM char_pinyin " +
-                        "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                        "WHERE (box IS NULL) OR (box=0) OR ((box>0) AND (exp_time<?))) AS expired_chars " +
-                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
-                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
-                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
-                        new String[] {Long.toString(System.currentTimeMillis())});
-            else
-                cur = db.rawQuery("SELECT COUNT(chars) AS count FROM " +
-                        "(SELECT DISTINCT expired_chars.char_pinyin_id AS chars FROM " +
-                        "(SELECT char_pinyin.char_pinyin_id AS char_pinyin_id " +
-                        "FROM char_pinyin " +
-                        "JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                        "WHERE box>=? AND leitner.exp_time<?) AS expired_chars " +
-                        "JOIN cword_segment ON cword_segment.char_pinyin_id=expired_chars.char_pinyin_id " +
-                        "JOIN eword ON eword.cword_id=cword_segment.cword_id " +
-                        "JOIN (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word ON eword.eng_id=lesson_word.eng_id)",
-                        new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
-
-            cur.moveToFirst();
-            res= cur.getInt(cur.getColumnIndex("count"));
-
-            cur.close();
-            return res;
-        }
-        else {
-            return getNumCharsExpiredInBoxOrAbove(box);
-        }
-    }
-    */
-
 
     public int getBoxForChar(String hanzi) {
         int res;
@@ -2907,12 +2778,18 @@ public class HanziDB extends SQLiteOpenHelper {
         return (long) (box_delay * Math.pow(multiplicand, box + 1) + extra_delay);
     }
 
-    protected ArrayList<String> getMostAdvancedExpiring(int num) {
+    protected ArrayList<String> getMostAdvancedExpiring(int num, boolean only_chars) {
         Cursor cur;
         ArrayList<String> res=new ArrayList<String>();
 
-        cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time ASC LIMIT ?",
-                new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
+        if (only_chars)
+            cur = db.rawQuery("SELECT hanzi FROM leitner " +
+                    "WHERE length(hanzi)==1 AND exp_time>? ORDER BY exp_time ASC LIMIT ?",
+                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
+        else
+            cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time ASC LIMIT ?",
+                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
+
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());
             do {
@@ -2929,8 +2806,6 @@ public class HanziDB extends SQLiteOpenHelper {
     public void resetAllScores() {
         db.delete("leitner", null, null);
         ContentValues cv=new ContentValues();
-        cv.put("score", 0);
-        db.update("cword", cv, "", null);
     }
 
     public void resetTime(String hanzi) {
@@ -2954,7 +2829,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     public void betterBox(String hanzi) {
         Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
-                        new String[] {hanzi});
+                new String[] {hanzi});
 
         ContentValues cv = new ContentValues();
 
@@ -3079,54 +2954,38 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    protected void setExpired(String hanzi) {
-        setExpirationTimeForChar(hanzi, System.currentTimeMillis());
-    }
-
-    public void guessedWord(boolean correct, String hanzi, String pinyin) {
-        String update_score = correct ? "score=score+1" : "score=score-1";
-        db.execSQL("UPDATE cword SET "+update_score+" WHERE chinese=? AND pinyin=?", new String[] {hanzi, pinyin});
-    }
-
-    public void guessedWord(boolean correct, String hanzi) {
-        String update_score = correct ? "score=score+1" : "score=score-1";
-        db.execSQL("UPDATE cword SET "+update_score+" WHERE chinese=?", new String[] {hanzi});
-
-    }
-
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
-    public String getNextToStudy() {
-        ArrayList<String> all = getAllToStudy();
-        if (all.size() > 0)
-            return all.get((int) (all.size() * Math.pow(Math.random(),2)));
-        return null;
-    }
-
-    protected ArrayList<String> getAllToStudy() {
+    public ArrayList<String> getAllFilteredCharsToStudy() {
         ArrayList<String> res=new ArrayList<String>();
-        Cursor cur;
 
-        cur = db.rawQuery("SELECT char_pinyin.hanzi AS hanzi, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                "FROM char_pinyin " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                "ORDER BY forced_box DESC, exp_time ASC",
-                new String[] {Long.toString(System.currentTimeMillis())});
+        Cursor cur = getCursorFilteredCharsToStudy();
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());
             do {
-                res.add(cur.getString(cur.getColumnIndex("hanzi")));
+                res.add(cur.getString(cur.getColumnIndex("chinese")));
             } while(cur.moveToNext());
         }
         cur.close();
-
         return res;
     }
 
-    protected Cursor getCursorToStudy() {
+    public ArrayList<String> getAllFilteredToStudy() {
+        ArrayList<String> res=new ArrayList<String>();
+
+        Cursor cur = getCursorFilteredToStudy();
+        if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
+            do {
+                res.add(cur.getString(cur.getColumnIndex("chinese")));
+            } while(cur.moveToNext());
+        }
+        cur.close();
+        return res;
+    }
+
+    protected Cursor getCursorCharsToStudy() {
         return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
                 "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
                 "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
@@ -3137,50 +2996,28 @@ public class HanziDB extends SQLiteOpenHelper {
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
 
-    public void getMoreStudy(int how_many) {
-        ContentValues cv = new ContentValues();
-        cv.put("exp_time", System.currentTimeMillis());
-        db.update("leitner", cv, "hanzi IN (SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time DESC LIMIT ?)",
-                new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(how_many)});
+    protected Cursor getCursorToStudy() {
+        return db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
+                "SELECT 2*char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese, " +
+                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                "FROM char_pinyin " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "UNION " +
+                "SELECT 1+2*cword.cword_id AS _id, cword.chinese AS chinese," +
+                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                "FROM cword " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
+                new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
+
     }
 
-    /*
-     *
-     *  Combining lesson database management with Leitner system
-     *
-     *
-     */
-    public ArrayList<String> getAllFilteredToStudy() {
-        ArrayList<String> res=new ArrayList<String>();
-
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            Cursor cur = db.rawQuery("SELECT DISTINCT char_pinyin.hanzi AS hanzi, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
-                    new String[] {Long.toString(System.currentTimeMillis())});
-            if (cur.moveToFirst()) {
-                res.ensureCapacity(cur.getCount());
-                do {
-                    res.add(cur.getString(cur.getColumnIndex("hanzi")));
-                } while(cur.moveToNext());
-            }
-            cur.close();
-            return res;
-        }
-        else {
-            return getAllToStudy();
-        }
-    }
-
-    public Cursor getCursorFilteredToStudy() {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+    public Cursor getCursorFilteredCharsToStudy() {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
             return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
                     "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
                     "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
@@ -3193,6 +3030,38 @@ public class HanziDB extends SQLiteOpenHelper {
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
                     "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
                     new String[] {Long.toString(System.currentTimeMillis())});
+        else
+            return getCursorCharsToStudy();
+    }
+
+    public Cursor getCursorFilteredToStudy() {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
+            return  db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
+                    "SELECT 2*char_pinyin.char_pinyin_id AS _id, " +
+                    "char_pinyin.hanzi AS chinese, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) " +
+                    "UNION " +
+                    "SELECT 1+2*cword.cword_id AS _id, " +
+                    "cword.chinese AS chinese, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                    "GROUP BY chinese ORDER BY forced_box DESC, exp_time DESC",
+                    new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
+
         }
         else {
             return getCursorToStudy();

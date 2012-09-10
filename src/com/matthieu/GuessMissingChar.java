@@ -26,7 +26,7 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
     protected void set_next_study() {
         super.set_next_study();
 
-        words = myDB.getFilteredWordsWithPinyinForTesting(hanzi);
+        words = myDB.getFilteredWordsWithPinyin(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
             if (w.chinese.equals(hanzi) || w.chinese.equals(hanzi+hanzi) || w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || (w.chinese.replace(hanzi, "").equals("")))
