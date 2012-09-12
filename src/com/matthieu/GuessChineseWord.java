@@ -114,6 +114,13 @@ public class GuessChineseWord extends TestActivity {
         previous_guess = new ArrayList<String>();
         TextView previous = (TextView) findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
+
+        EditText guess = (EditText) findViewById(R.id.guess_chinese_word_guess);
+        StringBuffer hint = new StringBuffer();
+        for (int i=0; i<solution.chinese.codePointCount(0, solution.chinese.length()); i++) {
+            hint.append("_ ");
+        }
+        guess.setHint(hint.toString());
     }
 
     protected int check_guess(String guess) {
