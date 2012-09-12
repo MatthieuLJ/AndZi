@@ -2611,8 +2611,9 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
         if (box == 0)
             // add the characters that do not have any box...
-            cur = db.rawQuery("SELECT COUNT(char_pinyin.hanzi) AS count FROM char_pinyin " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+            cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
                     "WHERE (box IS NULL) OR (box=0)", null);
 
 
@@ -2675,8 +2676,9 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
 
         if (box == 0)
-            cur = db.rawQuery("SELECT COUNT(char_pinyin.hanzi) AS count FROM char_pinyin " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+            cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
                     "WHERE (exp_time<?) OR (box IS NULL)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
