@@ -40,12 +40,6 @@ public class ProgressService extends Service {
     public void update_notification(boolean store) {
         ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
 
-        HanziDB myDB = ((AndZiApplication)getApplication()).getMyDB();
-        if (myDB == null) {
-            myDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).DEFAULT_DATABASE_NAME);
-            ((AndZiApplication)getApplication()).initialize_my_db(myDB);
-        }
-
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
         if (current_data == null)
             return;
