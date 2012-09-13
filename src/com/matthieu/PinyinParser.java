@@ -20,7 +20,7 @@ public class PinyinParser {
         int split_index;
         ArrayList<String> result;
         ArrayList<String> temp;
-        
+
         // Try to find strophe to split the string
         split_index = pinyin_string.indexOf("'");
         if (split_index != -1)
@@ -294,7 +294,7 @@ public class PinyinParser {
                 else {
                     result = new ArrayList<HanziDB.StringElement>();
                 }
-                
+
                 if (try_pinyin.tone_is_given()) {
                     result.add(0, new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, try_pinyin.get_lame()));
                 }
@@ -427,17 +427,16 @@ public class PinyinParser {
 
     public static String convert_to_lame_version(String input)
     {
-        int i;
-        String result = "";
         if (input.equals(""))
-            return result;
+            return "";
+        StringBuilder result = new StringBuilder();
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         if (parsed == null)
             return input;
-        for (i = 0; i < parsed.size(); i++) {
-            result += parsed.get(i).get_lame();
+        for (int i = 0; i < parsed.size(); i++) {
+            result.append(parsed.get(i).get_lame());
         }
-        return result;
+        return result.toString();
     }
 
     public static String convert_chinese_to_html_version(String input, ArrayList<Pinyin> pinyins) {
