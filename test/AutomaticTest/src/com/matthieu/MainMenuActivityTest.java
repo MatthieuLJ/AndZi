@@ -1,10 +1,11 @@
 package com.matthieu;
 
+import android.content.ContextWrapper;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.test.ActivityInstrumentationTestCase2;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.view.View;
+import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
 
 import java.util.ArrayList;
@@ -58,6 +59,9 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
                 // TODO
             }
         }
+        else
+            setupCedictDict();
+
         solo.goBack();
         solo.waitForActivity("MainMenuActivity");
         solo.getCurrentActivity().finish();
@@ -66,13 +70,14 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.finishOpenedActivities();
 
         startIt();
-
-        if (installCedict)
-            setupCedictDict();
     }
 
     public void setupCedictDict() {
-        ((AndZiApplication)getActivity().getApplication()).installRefDB("/mnt/sdcard/cedict_db", false);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplication());
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("ref_enabled", true);
+        if (((AndZiApplication)getActivity().getApplication()).getRefDB()==null)
+            ((AndZiApplication)getActivity().getApplication()).installRefDB("/mnt/sdcard/cedict_db", false);
     }
 
     public void startIt() {
@@ -187,14 +192,16 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
     public void testAddVocabularyWithDict() {
         // First wipe out everything...
-        clearEverything(true);
+        //clearEverything(true);
 
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 2000));
         // Let's add some vocabulary
         solo.clickOnButton("Add Vocabulary");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
         ArrayList<EditText> entries = solo.getCurrentEditTexts();
         assertTrue(entries.size()==1);
+
+        // Add custom "you" translation for 你
         solo.enterText(entries.get(0), "你");
         assertTrue(solo.searchButton("nǐ"));
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
@@ -208,9 +215,55 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         Button add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
         solo.clickOnView(add_ok);
 
-        solo.enterText(entries.get(0), "你好");
-        assertTrue(solo.waitForText("Hello!", 1, 2000, true));
-        assertTrue(solo.waitForText("Hi!", 1, 2000, true));
-        // need to find the right checkboxes to click
+        // add dictionary translations for 你好 (Hello! and Hi!)
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        entries = solo.getCurrentEditTexts();
+        solo.enterText(entries.get(0), "你");
+        solo.enterText(entries.get(0), "好");
+        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
+        assertTrue(solo.waitForText("Hi!", 1, 1000, true));
+        ArrayList<android.widget.ListView> lists = solo.getCurrentListViews();
+        assertTrue(lists.size()==1);
+        ArrayList<View> views_in_list = solo.getViews(lists.get(0));
+        View line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hello!");
+        CheckBox cb = (CheckBox) line.findViewById(R.id.add_check);
+        solo.clickOnView(cb);
+        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
+        views_in_list = solo.getViews(lists.get(0));
+        line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hi!");
+        cb = (CheckBox) line.findViewById(R.id.add_check);
+        solo.clickOnView(cb);
+        add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
+        solo.clickOnView(add_ok);
+
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        HanziDB myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
+        assertTrue(myDB.getNumWords()==2);
+        assertTrue(myDB.getNumChars()==2);
+
+        // remove translations for 你好
+        solo.enterText(entries.get(0), "你");
+        solo.enterText(entries.get(0), "好");
+        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
+        assertTrue(solo.waitForText("Hi!", 1, 1000, true));
+        lists = solo.getCurrentListViews();
+        assertTrue(lists.size()==1);
+        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
+        views_in_list = solo.getViews(lists.get(0));
+        line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hello!");
+        cb = (CheckBox) line.findViewById(R.id.add_check);
+        solo.clickOnView(cb);
+        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
+        views_in_list = solo.getViews(lists.get(0));
+        line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hi!");
+        cb = (CheckBox) line.findViewById(R.id.add_check);
+        solo.clickOnView(cb);
+        add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
+        solo.clickOnView(add_ok);
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        assertTrue(myDB.getNumWords()==1);
+        assertTrue(myDB.getNumChars()==1);
+
+
     }
 }

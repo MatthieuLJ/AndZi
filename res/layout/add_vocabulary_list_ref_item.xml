@@ -6,6 +6,7 @@
         android:layout_height="wrap_content"
         android:baselineAligned="false"
         android:orientation="horizontal"
+        android:id="@+id/add_line_item"
         style="@style/AndZiTheme">
 
     <TextView

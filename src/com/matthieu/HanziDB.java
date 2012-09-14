@@ -188,11 +188,11 @@ public class HanziDB extends SQLiteOpenHelper {
             db.execSQL("INSERT INTO leitner SELECT hanzi,box,exp_time,num_tested,num_wrong, streak, date_added FROM old_leitner");
             db.execSQL("DROP TABLE old_leitner");
 
-            db.execSQL("DROP INDEX IF EXISTS cword_id");
-            db.execSQL("DROP INDEX IF EXISTS cword_chinese");
-            db.execSQL("DROP INDEX IF EXISTS cword_pinyin");
-
             if (i>=3) {
+                db.execSQL("DROP INDEX IF EXISTS cword_id");
+                db.execSQL("DROP INDEX IF EXISTS cword_chinese");
+                db.execSQL("DROP INDEX IF EXISTS cword_pinyin");
+
                 Cursor cur = db.rawQuery("SELECT chinese, score FROM cword WHERE (score>0) AND (length(chinese)>1)", null);
                 if (cur.moveToFirst()) {
                     int score_column_index = cur.getColumnIndex("score");
@@ -2611,8 +2611,9 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
         if (box == 0)
             // add the characters that do not have any box...
-            cur = db.rawQuery("SELECT COUNT(char_pinyin.hanzi) AS count FROM char_pinyin " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+            cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
                     "WHERE (box IS NULL) OR (box=0)", null);
 
 
@@ -2675,8 +2676,9 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur;
 
         if (box == 0)
-            cur = db.rawQuery("SELECT COUNT(char_pinyin.hanzi) AS count FROM char_pinyin " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+            cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
                     "WHERE (exp_time<?) OR (box IS NULL)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else

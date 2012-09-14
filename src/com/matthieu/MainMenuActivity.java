@@ -31,13 +31,6 @@ public class MainMenuActivity extends AndZiActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         start_test=false;
-
-        // Do some initialization
-        Pinyin.prepare_pinyin_process();
-        HanziDB myDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).DEFAULT_DATABASE_NAME);
-        ((AndZiApplication)getApplication()).initialize_my_db(myDB);
-        HanziDB refDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).REF_DB_NAME);
-        ((AndZiApplication)getApplication()).initialize_ref_db(refDB);
     }
 
     private void start_it() {
@@ -107,16 +100,7 @@ public class MainMenuActivity extends AndZiActivity {
             AsyncTask<Void,Integer,Void> db_loader = new AsyncTask<Void,Integer,Void>() {
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    HanziDB myDB;
-                    if (app.getMyDB() == null) {
-                        myDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).DEFAULT_DATABASE_NAME);
-                        ((AndZiApplication)getApplication()).initialize_my_db(myDB);
-                        HanziDB refDB = new HanziDB(((AndZiApplication)getApplication()), ((AndZiApplication)getApplication()).REF_DB_NAME);
-                        ((AndZiApplication)getApplication()).initialize_ref_db(refDB);
-                    }
-                    else {
-                        myDB = app.getMyDB();
-                    }
+                    HanziDB myDB = app.getMyDB();
 
                     myDB.checkDatabase(true, new DBCheckProgressHandler() {
                         @Override

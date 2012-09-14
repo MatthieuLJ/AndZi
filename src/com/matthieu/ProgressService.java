@@ -7,15 +7,16 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class ProgressService extends Service {
     private final static int NOTIFICATION_ID=1;
+    private final static String TAG="ProgressService";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -38,9 +39,11 @@ public class ProgressService extends Service {
 
     public void update_notification(boolean store) {
         ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
+
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
         if (current_data == null)
             return;
+
         if (current_data.num_chars_in_box[0] + current_data.num_chars_in_box[1] + current_data.num_chars_in_box[2] + current_data.num_chars_in_box[3] + current_data.num_chars_in_box[4] == 0)
             return;
 

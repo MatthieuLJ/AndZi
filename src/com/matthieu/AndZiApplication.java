@@ -52,6 +52,10 @@ public class AndZiApplication extends Application {
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
         this.startService(startServiceIntent);
+
+        Pinyin.prepare_pinyin_process();
+
+        initialize_ref_db();
     }
 
     @Override
@@ -63,18 +67,25 @@ public class AndZiApplication extends Application {
             refDB.close();
     }
 
-    public HanziDB getMyDB() { return myDB; }
+    public HanziDB getMyDB() {
+        if (myDB==null) {
+            initialize_my_db();
+        }
+        return myDB;
+    }
     public HanziDB getRefDB() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         ref_enabled=prefs.getBoolean("ref_enabled", true);
         //Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
         return (ref_enabled&&ref_present)?refDB:null;
     }
+
     public boolean getRefDBPresent() { return ref_present; }
     public ProgressDB getProgress() { return prog; }
+
     public ProgressDB.ProgressData getCurrentProgress() {
         if (myDB == null)
-            return null;
+            initialize_my_db();
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
         for (int i=0; i<4; i++) {
             new_data.num_chars_in_box[i]=myDB.getNumCharsInBox(i);
@@ -97,10 +108,12 @@ public class AndZiApplication extends Application {
     public String get_version() {
         return VERSION;
     }
-    
-    public void initialize_my_db(HanziDB db) {
+
+    public void initialize_my_db() {
+        if (myDB != null)
+            myDB.close();
+        myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        myDB = db;
         boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
         ArrayList<String> lesson=new ArrayList<String>();
         try {
@@ -112,9 +125,10 @@ public class AndZiApplication extends Application {
         myDB.enableFilter(filter_on);
         myDB.setLessonsToFilter(lesson);
     }
-    public void initialize_ref_db(HanziDB db) {
+    
+    public void initialize_ref_db() {
+        refDB = new HanziDB(this, REF_DB_NAME);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        refDB = db;
         if (refDB.getNumChars()==0) {
             refDB.close();
             ContextWrapper cw = new ContextWrapper(getApplicationContext());
@@ -300,8 +314,7 @@ public class AndZiApplication extends Application {
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(DEFAULT_DATABASE_NAME);
         copyFile(source, getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath());
-        HanziDB db = new HanziDB(this, DEFAULT_DATABASE_NAME);
-        initialize_my_db(db);
+        initialize_my_db();
     }
 
     public boolean installRefDB(String path, boolean erase_source) {
