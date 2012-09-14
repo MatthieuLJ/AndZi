@@ -15,7 +15,7 @@ class HanziDB:
         self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US');")
         self.connection.execute("INSERT INTO android_metadata VALUES ('en_US');")
 
-        self.connection.execute("PRAGMA user_version=4;")
+        self.connection.execute("PRAGMA user_version=2;")
 
         self.connection.execute("CREATE TABLE char_pinyin ( \
                 char_pinyin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
@@ -30,7 +30,6 @@ class HanziDB:
                 chinese VARCHAR(50) NOT NULL, \
                 pinyin VARCHAR(150) NOT NULL, \
                 length INTEGER DEFAULT 0, \
-                score INTEGER DEFAULT 0, \
                 UNIQUE(chinese,pinyin));")
         self.connection.execute("CREATE INDEX cword_id ON cword(cword_id);")
         self.connection.execute("CREATE INDEX cword_chinese ON cword(chinese);")
@@ -55,6 +54,7 @@ class HanziDB:
 
         self.connection.execute("CREATE TABLE lessons ( \
                 lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+                list_order INTEGER DEFAULT 0, \
                 name VARCHAR(64) NOT NULL, \
                 UNIQUE(name));")
         self.connection.execute("CREATE INDEX lessons_name ON lessons(name);")
@@ -69,11 +69,7 @@ class HanziDB:
         self.connection.execute("CREATE TABLE leitner ( \
                 hanzi VARCHAR(2) PRIMARY KEY NOT NULL, \
                 box INTEGER NOT NULL, \
-                exp_time INTEGER NOT NULL, \
-                num_tested INTEGER DEFAULT 0, \
-                num_wrong INTEGER DEFAULT 0, \
-                streak INTEGER DEFAULT 0, \
-                date_added INTEGER);")
+                exp_time INTEGER NOT NULL);")
         self.connection.execute("CREATE INDEX leitner_hanzi ON leitner(hanzi);")
 
         # Make it Android compatible
