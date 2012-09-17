@@ -2998,6 +2998,58 @@ public class HanziDB extends SQLiteOpenHelper {
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
 
+    public Cursor getCursorFilteredCharsToStudy() {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
+            return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
+                    "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
+                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
+                    new String[] {Long.toString(System.currentTimeMillis())});
+        else
+            return getCursorCharsToStudy();
+    }
+
+    protected Cursor getCursorWordsToStudy() {
+        return db.rawQuery("SELECT cword.cword_id AS _id, cword.chinese AS chinese, " +
+                "cword.pinyin AS pinyin, " +
+                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
+                "GROUP_CONCAT(eword.translation,', ') AS english " +
+                "FROM cword " +
+                "JOIN eword ON eword.cword_id=cword.cword_id " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
+                new String[] {Long.toString(System.currentTimeMillis())});
+    }
+
+    public Cursor getCursorFilteredWordsToStudy() {
+        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
+            return  db.rawQuery("SELECT cword.cword_id AS _id, " +
+                    "cword.chinese AS chinese, cword.pinyin AS pinyin" +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
+                    "GROUP_CONCAT(eword.translation,', ') AS english " +
+                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
+                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
+                    "JOIN cword ON eword.cword_id=cword.cword_id " +
+                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "JOIN eword ON eword.cword_id=cword.cword_id " +
+                    "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                    "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
+                    new String[] {Long.toString(System.currentTimeMillis())});
+        else
+            return getCursorWordsToStudy();
+    }
+
     protected Cursor getCursorToStudy() {
         return db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
                 "SELECT 2*char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese, " +
@@ -3016,24 +3068,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
-    }
-
-    public Cursor getCursorFilteredCharsToStudy() {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
-            return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
-                    "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
-                    new String[] {Long.toString(System.currentTimeMillis())});
-        else
-            return getCursorCharsToStudy();
     }
 
     public Cursor getCursorFilteredToStudy() {
@@ -3061,7 +3095,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                    "GROUP BY chinese ORDER BY forced_box DESC, exp_time DESC",
+                    "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
                     new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
         }

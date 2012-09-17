@@ -120,8 +120,10 @@
     <string name="add_voc_edit_new_word">Please enter a new word:</string>
 
     <string name="review_list_nothing_to_study">Nothing to study</string>
-    <string name="review_list_num_to_study_filtered">You have %1$d characters to study (%2$d total)</string>
-    <string name="review_list_num_to_study">You have %1$d characters to study</string>
+    <string name="review_list_num_chars_to_study_filtered">You have %1$d characters to study (%2$d total)</string>
+    <string name="review_list_num_words_to_study_filtered">You have %1$d words to study (%2$d total)</string>
+    <string name="review_list_num_chars_to_study">You have %1$d characters to study</string>
+    <string name="review_list_num_words_to_study">You have %1$d words to study</string>
 
     <string name="notification_ticker">More to study</string>
     <string name="notification_title">More Chinese to study</string>

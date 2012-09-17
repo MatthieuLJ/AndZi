@@ -457,7 +457,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 alert.show();
                 break;
             case R.id.content_lesson:
-                Intent i=new Intent(this, ReviewList.class);
+                Intent i=new Intent(this, LessonList.class);
                 i.putExtra("lesson", le.label);
                 startActivity(i);
                 break;
@@ -552,7 +552,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 break;
             
             case R.id.no_lesson_list:
-                Intent i=new Intent(this, ReviewList.class);
+                Intent i=new Intent(this, LessonList.class);
                 i.putExtra("lesson", "");
                 startActivity(i);
                 break;
