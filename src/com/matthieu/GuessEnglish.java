@@ -119,6 +119,8 @@ public class GuessEnglish extends TestActivity {
         int min_box = 5;
 
         if (good == CORRECT) {
+            myDB.betterBox(solution.chinese);
+            int word_box = myDB.getBoxForChar(solution.chinese);
             for (int i=0; i<solution.chinese.length();) {
                 int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
                 if (new_box < min_box) {
@@ -130,7 +132,7 @@ public class GuessEnglish extends TestActivity {
             for (int i=0; i<solution.chinese.length();) {
                 String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
                 int box = myDB.getBoxForChar(hanzi);
-                if (box == min_box) {
+                if ((box == min_box) && (min_box < word_box)) {
                     myDB.betterBox(hanzi);
                 }
                 else {
@@ -139,7 +141,6 @@ public class GuessEnglish extends TestActivity {
 
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            myDB.betterBox(solution.chinese);
         }
         else {
             for (int i=0; i<solution.chinese.length();) {
@@ -147,7 +148,7 @@ public class GuessEnglish extends TestActivity {
                 myDB.worseBox(hanzi);
                 i+=Character.charCount(solution.chinese.codePointAt(i));
             }
-            myDB.restartStudy(solution.chinese);
+            myDB.worseBox(solution.chinese);
         }
     }
 
