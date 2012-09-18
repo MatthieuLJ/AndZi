@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -21,6 +22,16 @@ public class Help extends AndZiActivity {
         setContentView(R.layout.help);
         ViewPager pager = (ViewPager) findViewById(R.id.help);
         pager.setAdapter(new HelpPageAdapter());
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        ViewPager pager = (ViewPager) findViewById(R.id.help);
+        PagerAdapter adapter = pager.getAdapter();
+        setContentView(R.layout.help);
+        pager = (ViewPager) findViewById(R.id.help);
+        pager.setAdapter(adapter);
     }
 
     private class HelpPageAdapter extends PagerAdapter {

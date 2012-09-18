@@ -7,6 +7,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -28,8 +29,8 @@ public class EditLessonsActivity extends AndZiActivity {
     protected ArrayList<String> current_lesson_filter;
     protected boolean filter_on;
     private Handler process_handler=null;
-    private boolean loading;
     private ProgressDialog mProgressDialog;
+    private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsActivity";
 
@@ -50,13 +51,23 @@ public class EditLessonsActivity extends AndZiActivity {
         mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         mProgressDialog.show();
 
+        setup_screen();
+
+        init_lessons_thread = new InitLessons();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            init_lessons_thread.execute((Void[])null);
+    }
+
+    private void setup_screen() {
         setContentView(R.layout.edit_lessons);
         TouchListView list = (TouchListView) findViewById(R.id.lesson_list);
         list.setDropListener(new TouchListView.DropListener() {
             public void drop(int from, int to) {
                 if (from == 0)
                     return;
-                if (loading)
+                if (init_lessons_thread!=null)
                     return;
                 if (to==0)
                     to=1;
@@ -77,12 +88,6 @@ public class EditLessonsActivity extends AndZiActivity {
             }
         });
         registerForContextMenu(list);
-
-        InitLessons init_lessons_thread = new InitLessons();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            init_lessons_thread.execute((Void[])null);
     }
 
     @Override
@@ -94,27 +99,33 @@ public class EditLessonsActivity extends AndZiActivity {
         }
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        synchronized (EditLessonsActivity.this) {
+            ListAdapter adapter=null;
+            TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+            if (init_lessons_thread == null)
+                adapter = lv.getAdapter();
+            else
+                mProgressDialog.dismiss();
+            setup_screen();
+            lv = (TouchListView) findViewById(R.id.lesson_list);
+            if (init_lessons_thread == null)
+                lv.setAdapter(adapter);
+            else {
+                mProgressDialog = new ProgressDialog(EditLessonsActivity.this);
+                mProgressDialog.setMessage("Loading");
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mProgressDialog.show();
+            }
+        }
+    }
+
     private class InitLessons extends AsyncTask<Void, Void, Void> {
         ArrayList<Lesson> tmp_lessons;
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            current_lessons = tmp_lessons;
-
-            TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-            if (lv != null) {
-                lv.setAdapter(new LessonArrayAdapter());
-            }
-            mProgressDialog.dismiss();
-            loading=false;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            loading=true;
-        }
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -123,6 +134,9 @@ public class EditLessonsActivity extends AndZiActivity {
             ArrayList<String> existing_lessons = myDB.getLessons();
 
             for (int i=0; i<existing_lessons.size(); i++) {
+                if (isCancelled())
+                    return null;
+
                 String lesson = existing_lessons.get(i);
                 int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
                 Lesson new_lesson = new Lesson(lesson);
@@ -134,6 +148,24 @@ public class EditLessonsActivity extends AndZiActivity {
             }
 
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            current_lessons = tmp_lessons;
+
+            synchronized (EditLessonsActivity.this) {
+                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                if (lv != null) {
+                    lv.setAdapter(new LessonArrayAdapter());
+                }
+
+                mProgressDialog.dismiss();
+                mProgressDialog=null;
+                init_lessons_thread=null;
+            }
         }
     }
 
@@ -179,7 +211,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 new_lesson_ok.setTag(R.id.edit_new_lesson, new_lesson_field);
                 new_lesson_ok.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
-                        if (loading)
+                        if (init_lessons_thread!=null)
                             return;
                         EditText new_lesson_field = (EditText)view.getTag(R.id.edit_new_lesson);
                         final String new_lesson_label = new_lesson_field.getText().toString();
@@ -326,7 +358,7 @@ public class EditLessonsActivity extends AndZiActivity {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        if (loading)
+        if (init_lessons_thread!=null)
             return false;
 
         ContextMenu.ContextMenuInfo menuInfo=item.getMenuInfo();

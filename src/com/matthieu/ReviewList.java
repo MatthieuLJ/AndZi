@@ -3,6 +3,7 @@ package com.matthieu;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -62,6 +63,17 @@ public class ReviewList extends AndZiActivity {
         }
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        ViewPager pager = (ViewPager) findViewById(R.id.reviews);
+        PagerAdapter adapter = pager.getAdapter();
+
+        setContentView(R.layout.review_list_pages);
+        pager = (ViewPager) findViewById(R.id.reviews);
+        pager.setAdapter(adapter);
+    }
+
     private class review_loader extends AsyncTask<Void, Void, Void> {
         int expired_filtered;
         ProgressDialog mProgressDialog;
@@ -103,11 +115,11 @@ public class ReviewList extends AndZiActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            mProgressDialog.dismiss();
+            if (mProgressDialog.isShowing())
+                mProgressDialog.dismiss();
 
             if (cur == null)
                 return;
-
 
             int expired;
             String header_text="";
@@ -204,6 +216,7 @@ public class ReviewList extends AndZiActivity {
 
             if (view_storage.get(position) != null) {
                 new_view = view_storage.get(position).get();
+                ((ViewGroup)new_view.getParent()).removeView(new_view);
             }
 
             if (new_view == null) {

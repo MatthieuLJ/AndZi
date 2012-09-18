@@ -1,12 +1,11 @@
 ONGOING (5):
-* Add automatic (robotium) tests
+* Add more automatic (robotium) tests
 * Test performance with huge database
 * Make it pretty(ier)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (1):
-* App crashes in a lot of cases when screen is rotated
+BUGS (00):
 
 FUTURE (12):
 * Can reset score per lesson
@@ -23,7 +22,8 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (137):
+DONE (138):
+* App crashes in a lot of cases when screen is rotated
 * Show review lists for both chars and words
 * Show the number of characters to guess for a Chinese word
 * Fix the counting of characters in box 0

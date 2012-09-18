@@ -7,6 +7,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,12 +24,36 @@ import org.jetbrains.annotations.Nullable;
 public class MainMenuActivity extends AndZiActivity {
     private final String TAG="MainMenuActivity";
 
+    private AsyncTask<Void,Integer,Void> db_loader=null;
     boolean start_test;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         start_test=false;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        start_test=intent.getBooleanExtra("start_test", false);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        synchronized (MainMenuActivity.this) {
+            if (db_loader!=null) {
+                ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
+                int current_progress = progress.getProgress();
+                setContentView(R.layout.main_menu_splash);
+                progress = (ProgressBar) findViewById(R.id.splash_progress);
+                progress.setProgress(current_progress);
+            }
+            else {
+                setContentView(R.layout.main_menu);
+            }
+        }
     }
 
     private void start_it() {
@@ -75,12 +100,6 @@ public class MainMenuActivity extends AndZiActivity {
 
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        start_test=intent.getBooleanExtra("start_test", false);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
 
@@ -94,36 +113,7 @@ public class MainMenuActivity extends AndZiActivity {
             progress.setIndeterminate(false);
             progress.setMax(100);
 
-            final AndZiApplication app = (AndZiApplication) getApplication();
-
-            AsyncTask<Void,Integer,Void> db_loader = new AsyncTask<Void,Integer,Void>() {
-                @Override
-                protected Void doInBackground(Void... voids) {
-                    ((AndZiApplication)getApplication()).initialize_ref_db();
-
-                    publishProgress(5);
-                    HanziDB myDB = app.getMyDB();
-
-                    publishProgress(10);
-                    myDB.checkDatabase(true, new DBCheckProgressHandler() {
-                        @Override
-                        public void progress(int i) {
-                            publishProgress(10+(i*90)/100);
-                        }
-                    });
-                    return null;
-                }
-
-                @Override
-                protected void onProgressUpdate(Integer... i) {
-                    progress.setProgress(i[0]);
-                }
-
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    start_it();
-                }
-            };
+            db_loader = new splash_loader();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                 db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
             else
@@ -134,6 +124,41 @@ public class MainMenuActivity extends AndZiActivity {
             start_it();
         }
     }
+
+    private class splash_loader extends AsyncTask<Void,Integer,Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            ((AndZiApplication) getApplication()).initialize_ref_db();
+
+            publishProgress(5);
+            HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
+
+            publishProgress(10);
+            myDB.checkDatabase(true, new DBCheckProgressHandler() {
+                @Override
+                public void progress(int i) {
+                    publishProgress(10+(i*90)/100);
+                }
+            });
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... i) {
+            synchronized (MainMenuActivity.this) {
+                ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
+                progress.setProgress(i[0]);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            synchronized (MainMenuActivity.this) {
+                db_loader=null;
+                start_it();
+            }
+        }
+    };
 
     public void handle_add_vocabulary(View v) {
         Intent intent = new Intent(this, AddVocabularyActivity.class);

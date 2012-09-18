@@ -25,7 +25,7 @@
             android:hardwareAccelerated="false">
         <activity
                 android:name=".MainMenuActivity"
-                android:label="@string/app_name">
+                android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -33,6 +33,7 @@
         </activity>
         <activity android:name=".EditLessonsActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
+                  android:configChanges="keyboardHidden|orientation|screenSize"
                 />
         <activity android:name=".AddVocabularyActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
@@ -56,7 +57,10 @@
         <activity android:name=".GuessContaining"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
 
-        <activity android:name=".ReviewList" />
+        <activity android:name=".ReviewList"
+                  android:configChanges="keyboardHidden|orientation|screenSize"/>
+        <activity android:name=".LessonList"
+                  android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name=".Details"
                   android:launchMode="singleTop"
                   android:configChanges="keyboardHidden|orientation|screenSize" />
