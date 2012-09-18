@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
@@ -20,7 +19,6 @@ import com.matthieu.settings.Settings;
 import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.DBCheckProgressHandler;
 import org.jetbrains.annotations.Nullable;
-
 
 public class MainMenuActivity extends AndZiActivity {
     private final String TAG="MainMenuActivity";
@@ -36,6 +34,7 @@ public class MainMenuActivity extends AndZiActivity {
     private void start_it() {
         boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
         ((AndZiApplication) getApplication()).showSplash(false);
+
         if (start_test) {
             handle_test(null);
             start_test=false;
@@ -100,12 +99,16 @@ public class MainMenuActivity extends AndZiActivity {
             AsyncTask<Void,Integer,Void> db_loader = new AsyncTask<Void,Integer,Void>() {
                 @Override
                 protected Void doInBackground(Void... voids) {
+                    ((AndZiApplication)getApplication()).initialize_ref_db();
+
+                    publishProgress(5);
                     HanziDB myDB = app.getMyDB();
 
+                    publishProgress(10);
                     myDB.checkDatabase(true, new DBCheckProgressHandler() {
                         @Override
                         public void progress(int i) {
-                            publishProgress(i);
+                            publishProgress(10+(i*90)/100);
                         }
                     });
                     return null;
@@ -127,6 +130,7 @@ public class MainMenuActivity extends AndZiActivity {
                 db_loader.execute((Void[])null);
         }
         else {
+            ((AndZiApplication)getApplication()).initialize_ref_db();
             start_it();
         }
     }

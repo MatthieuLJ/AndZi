@@ -189,17 +189,13 @@ public class HanziDB extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE old_leitner");
 
             if (i>=3) {
-                db.execSQL("DROP INDEX IF EXISTS cword_id");
-                db.execSQL("DROP INDEX IF EXISTS cword_chinese");
-                db.execSQL("DROP INDEX IF EXISTS cword_pinyin");
-
                 Cursor cur = db.rawQuery("SELECT chinese, score FROM cword WHERE (score>0) AND (length(chinese)>1)", null);
                 if (cur.moveToFirst()) {
                     int score_column_index = cur.getColumnIndex("score");
                     int hanzi_column_index = cur.getColumnIndex("chinese");
                     do {
                         String hanzi=cur.getString(hanzi_column_index);
-                        int score = cur.getInt(score_column_index);
+                        int score = Math.min(5,cur.getInt(score_column_index));
                         ContentValues cv = new ContentValues();
                         cv.put("box", score);
                         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(score));
@@ -209,18 +205,29 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 cur.close();
 
-                db.execSQL("ALTER TABLE cword RENAME TO old_cword");
-                db.execSQL("CREATE TABLE cword (" +
-                        "cword_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                        "chinese VARCHAR(50) NOT NULL," +
-                        "pinyin VARCHAR(150) NOT NULL," +
-                        "length INTEGER DEFAULT 0," +
-                        "UNIQUE(chinese,pinyin))");
-                db.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
-                db.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
-                db.execSQL("CREATE INDEX cword_pinyin ON cword(pinyin)");
-                db.execSQL("INSERT INTO cword SELECT cword_id, chinese, pinyin, length FROM old_cword");
-                db.execSQL("DROP TABLE old_cword");
+                cur = db.rawQuery("SELECT COUNT(cword_id) AS count FROM cword", null);
+                cur.moveToFirst();
+                int num_words= cur.getInt(cur.getColumnIndex("count"));
+                cur.close();
+                if (num_words < 3000) { // forget it otherwise... it would do some ANR
+                    db.beginTransaction();
+                    db.execSQL("DROP INDEX IF EXISTS cword_id");
+                    db.execSQL("DROP INDEX IF EXISTS cword_chinese");
+                    db.execSQL("DROP INDEX IF EXISTS cword_pinyin");
+                    db.execSQL("ALTER TABLE cword RENAME TO old_cword");
+                    db.execSQL("CREATE TABLE cword (" +
+                            "cword_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                            "chinese VARCHAR(50) NOT NULL," +
+                            "pinyin VARCHAR(150) NOT NULL," +
+                            "length INTEGER DEFAULT 0," +
+                            "UNIQUE(chinese,pinyin))");
+                    db.execSQL("INSERT INTO cword SELECT cword_id, chinese, pinyin, length FROM old_cword");
+                    db.execSQL("CREATE INDEX cword_id ON cword(cword_id)");
+                    db.execSQL("CREATE INDEX cword_chinese ON cword(chinese)");
+                    db.execSQL("CREATE INDEX cword_pinyin ON cword(pinyin)");
+                    db.execSQL("DROP TABLE old_cword");
+                    db.endTransaction();
+                }
             }
         }
     }
