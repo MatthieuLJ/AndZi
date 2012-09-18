@@ -33,6 +33,7 @@ public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
     private ProgressDB prog=null;
+    private boolean ref_initialized=false;
     private boolean ref_enabled=true;
     private boolean ref_present=false;
 
@@ -46,16 +47,12 @@ public class AndZiApplication extends Application {
     public void onCreate() {
         ACRA.init(this);
 
-        refDB=null;
-        ref_present=false;
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
         this.startService(startServiceIntent);
 
         Pinyin.prepare_pinyin_process();
-
-        initialize_ref_db();
     }
 
     @Override
@@ -74,14 +71,23 @@ public class AndZiApplication extends Application {
         return myDB;
     }
     public HanziDB getRefDB() {
+        if (!ref_initialized)
+            initialize_ref_db();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         ref_enabled=prefs.getBoolean("ref_enabled", true);
         //Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
         return (ref_enabled&&ref_present)?refDB:null;
     }
 
-    public boolean getRefDBPresent() { return ref_present; }
-    public ProgressDB getProgress() { return prog; }
+    public boolean getRefDBPresent() {
+        if (!ref_initialized)
+            initialize_ref_db();
+        return ref_present;
+    }
+
+    public ProgressDB getProgress() {
+        return prog;
+    }
 
     public ProgressDB.ProgressData getCurrentProgress() {
         if (myDB == null)
@@ -127,6 +133,9 @@ public class AndZiApplication extends Application {
     }
     
     public void initialize_ref_db() {
+        if (ref_initialized)
+            return;
+
         refDB = new HanziDB(this, REF_DB_NAME);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (refDB.getNumChars()==0) {
@@ -140,6 +149,7 @@ public class AndZiApplication extends Application {
             ref_present=true;
             ref_enabled=prefs.getBoolean("ref_enabled", true);
         }
+        ref_initialized=true;
     }
 
     public void save_database_filter(boolean on, ArrayList<String> list) {

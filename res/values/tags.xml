@@ -11,4 +11,5 @@
     <item type="id" name="header_view"/>
     <item type="id" name="detail_populator"/>
     <item type="id" name="detail_query"/>
+    <item type="id" name="review_list_content"/>
 </resources>
