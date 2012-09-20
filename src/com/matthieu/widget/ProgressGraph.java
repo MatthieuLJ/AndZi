@@ -161,7 +161,7 @@ public class ProgressGraph extends View {
             Log.d(TAG, "zoom is "+current_zoom+" out of "+max_zoom);
             if (current_offset_x>0)
                 // stay centered
-                current_offset_x=2*current_offset_x+getMeasuredWidth()/2;
+                current_offset_x=2*current_offset_x+(getMeasuredWidth()-left_size)/2;
             update_graph();
         }
     }
@@ -173,7 +173,7 @@ public class ProgressGraph extends View {
             current_zoom--;
             if (current_offset_x>0)
                 // stay centered
-                current_offset_x=current_offset_x/2-getMeasuredWidth()/4;
+                current_offset_x=Math.max(-right_size,current_offset_x/2-(getMeasuredWidth()-left_size)/4);
             update_graph();
         }
     }
