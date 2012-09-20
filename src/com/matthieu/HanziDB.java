@@ -2725,6 +2725,26 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public int getNumExpired() {
+        int res;
+
+        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
+                "SELECT cword.chinese AS chinese FROM cword " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (exp_time<?) OR (box IS NULL) " +
+                "UNION " +
+                "SELECT chars.hanzi AS chinese FROM " +
+                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                "WHERE (exp_time<?) OR (box IS NULL)" +
+                ") GROUP BY chinese",
+                new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
+
+        res=cur.getCount();
+
+        cur.close();
+        return res;
+    }
     public int getBoxForChar(String hanzi) {
         int res;
 
@@ -2814,7 +2834,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     public void resetAllScores() {
         db.delete("leitner", null, null);
-        ContentValues cv=new ContentValues();
     }
 
     public void resetTime(String hanzi) {
@@ -2966,20 +2985,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
-    public ArrayList<String> getAllFilteredCharsToStudy() {
-        ArrayList<String> res=new ArrayList<String>();
-
-        Cursor cur = getCursorFilteredCharsToStudy();
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do {
-                res.add(cur.getString(cur.getColumnIndex("chinese")));
-            } while(cur.moveToNext());
-        }
-        cur.close();
-        return res;
-    }
-
     public ArrayList<String> getAllFilteredToStudy() {
         ArrayList<String> res=new ArrayList<String>();
 

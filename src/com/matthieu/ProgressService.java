@@ -39,6 +39,7 @@ public class ProgressService extends Service {
 
     public void update_notification(boolean store) {
         ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
+        HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
         if (current_data == null)
@@ -51,8 +52,7 @@ public class ProgressService extends Service {
             db.add_data(current_data);
 
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        int expired = current_data.num_chars_expired_in_box[0] + current_data.num_chars_expired_in_box[1] + current_data.num_chars_expired_in_box[2] +
-                current_data.num_chars_expired_in_box[3] + current_data.num_chars_expired_in_box[4];
+        int expired = myDB.getNumExpired();
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean notification_enabled = sp.getBoolean("settings_notification", true);
