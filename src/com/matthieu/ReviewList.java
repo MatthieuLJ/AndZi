@@ -40,6 +40,9 @@ public class ReviewList extends AndZiActivity {
             mode &= 0x1;
         }
 
+        adapters = new CursorAdapter[2];
+        Arrays.fill(adapters, null);
+
         if (mode == 0) {
             AlertDialog.Builder no_words_dialog = new AlertDialog.Builder(ReviewList.this);
             no_words_dialog.setCancelable(false);
@@ -54,9 +57,6 @@ public class ReviewList extends AndZiActivity {
             no_words_dialog.show();
         }
         else {
-            adapters = new CursorAdapter[2];
-            Arrays.fill(adapters, null);
-
             setContentView(R.layout.review_list_pages);
             ViewPager pager = (ViewPager) findViewById(R.id.reviews);
             pager.setAdapter(new ReviewPageAdapter());
