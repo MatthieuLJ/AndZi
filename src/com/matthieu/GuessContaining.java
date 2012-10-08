@@ -130,7 +130,7 @@ public class GuessContaining extends TestActivity {
 
     public void show_solution(String guess, int good) {
         super.show_solution(guess, good);
-        Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
+        //Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessContaining.this);

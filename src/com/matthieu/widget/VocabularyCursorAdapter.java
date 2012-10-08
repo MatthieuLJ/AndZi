@@ -10,14 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
-import com.matthieu.Details;
 import com.matthieu.PinyinParser;
 import com.matthieu.R;
 
 public class VocabularyCursorAdapter extends CursorAdapter {
     boolean show_pinyin_color;
+    VocabularyCursorClickHandle click_handle;
 
-    public VocabularyCursorAdapter(final Context context, final Cursor cursor) {
+    public VocabularyCursorAdapter(final Context context, final Cursor cursor, final VocabularyCursorClickHandle clicker) {
         super(context, cursor, true);
         if (cursor != null) {
             chinese_column_index = cursor.getColumnIndex("chinese");
@@ -27,6 +27,7 @@ public class VocabularyCursorAdapter extends CursorAdapter {
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         show_pinyin_color = sp.getBoolean("color_pinyin", true);
+        click_handle = clicker;
     }
 
     private int chinese_column_index;
@@ -65,12 +66,12 @@ public class VocabularyCursorAdapter extends CursorAdapter {
         TextView details_translations = (TextView) view.findViewById(R.id.details_translations);
         details_translations.setText(cursor.getString(english_column_index));
         final String chinese = cursor.getString(chinese_column_index);
-        view.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                Intent intent=new Intent(context, Details.class);
-                intent.putExtra("hanzi", chinese);
-                context.startActivity(intent);
-            }
-        });
+        if (click_handle != null) {
+            view.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    click_handle.click(chinese);
+                }
+            });
+        }
     }
 }

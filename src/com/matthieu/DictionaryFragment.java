@@ -4,40 +4,45 @@
 
 package com.matthieu;
 
+import android.app.Activity;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.*;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
+import com.matthieu.widget.VocabularyCursorClickHandle;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 
-public class Dictionary extends AndZiActivity {
+public class DictionaryFragment extends Fragment implements VocabularyCursorClickHandle {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Cursor current_cursor =null;
     Handler update_handler=null;
     update_delayer update_thread=null;
     HanziDB refDB, myDB, currentDB;
     private static final String TAG="Dictionary";
+    private Activity parent_activity;
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
     static final int ENGLISH_TO_CHINESE_MODE=1;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        parent_activity = activity;
+        //activity.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+        refDB = ((AndZiApplication) getActivity().getApplication()).getRefDB();
+        myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
 
-        if (((AndZiApplication) getApplication()).getRefDBPresent())
+        if (refDB!=null)
             currentDB=refDB;
         else
             currentDB=myDB;
@@ -49,15 +54,18 @@ public class Dictionary extends AndZiActivity {
             else
                 update_thread.execute((Void[])null);
         }
+    }
 
-        setContentView(R.layout.dictionary);
-        setProgressBarIndeterminateVisibility(false);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res = inflater.inflate(R.layout.dictionary, container, false);
+        //parent_activity.setProgressBarIndeterminateVisibility(false);
         mode=CHINESE_TO_ENGLISH_MODE;
 
-        final ListView results = (ListView) findViewById(R.id.dict_results);
-        results.setAdapter(new VocabularyCursorAdapter(Dictionary.this, null));
+        final ListView results = (ListView) res.findViewById(R.id.dict_results);
+        results.setAdapter(new VocabularyCursorAdapter(parent_activity, null, this));
 
-        TextView dict_mode = (TextView) findViewById(R.id.dict_mode);
+        TextView dict_mode = (TextView) res.findViewById(R.id.dict_mode);
         dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
         dict_mode.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -71,33 +79,41 @@ public class Dictionary extends AndZiActivity {
                         ((TextView) view).setText(Html.fromHtml("<b>Chinese</b> → English"));
                         break;
                 }
-                EditText edit_query= (EditText) findViewById(R.id.dict_query);
+                EditText edit_query= (EditText) res.findViewById(R.id.dict_query);
                 start_new_query(mode, edit_query.getText().toString());
             }
         });
 
-        EditText query = (EditText) findViewById(R.id.dict_query);
+        EditText query = (EditText) res.findViewById(R.id.dict_query);
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
+
+        return res;
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void onDetach() {
+        super.onDetach();
         if (update_handler != null) {
             update_handler.getLooper().quit();
             update_thread = null;
             update_handler = null;
         }
-        synchronized (Dictionary.this) {
+        synchronized (DictionaryFragment.this) {
             if (current_cursor != null)
                 current_cursor.close();
         }
     }
 
+    @Override
+    public void click(String item_clicked) {
+        ((ReferenceActivity)parent_activity).update_details(item_clicked);
+    }
+
+    /*
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        synchronized (Dictionary.this) {
+        synchronized (DictionaryFragment.this) {
             EditText edit_query= (EditText) findViewById(R.id.dict_query);
             String current_search = edit_query.getText().toString();
             ListView results = (ListView) findViewById(R.id.dict_results);
@@ -140,6 +156,7 @@ public class Dictionary extends AndZiActivity {
             results.setAdapter(current_adapter);
         }
     }
+    */
 
     private class update_delayer extends AsyncTask<Void,Cursor, Void> {
         String msg_query;
@@ -164,7 +181,7 @@ public class Dictionary extends AndZiActivity {
         }
 
         private void update_list() {
-            EditText query = (EditText) findViewById(R.id.dict_query);
+            EditText query = (EditText) getView().findViewById(R.id.dict_query);
             if (query == null)
                 return;
 
@@ -227,10 +244,10 @@ public class Dictionary extends AndZiActivity {
 
         @Override
         protected void onProgressUpdate(Cursor... values) {
-            synchronized (Dictionary.this) {
-                setProgressBarIndeterminateVisibility(values==null);
+            synchronized (DictionaryFragment.this) {
+                //parent_activity.setProgressBarIndeterminateVisibility(values==null);
 
-                final ListView results = (ListView) findViewById(R.id.dict_results);
+                final ListView results = (ListView) getView().findViewById(R.id.dict_results);
 
                 if ((results == null) && (values!=null)) {
                     values[0].close();
@@ -260,11 +277,11 @@ public class Dictionary extends AndZiActivity {
         public void afterTextChanged(Editable editable) {
         }
     }
-
+/*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (((AndZiApplication)getApplication()).getRefDBPresent()) {
-            MenuInflater inflater = getMenuInflater();
+        if (((AndZiApplication)parent_activity.getApplication()).getRefDBPresent()) {
+            MenuInflater inflater = parent_activity.getMenuInflater();
             inflater.inflate(R.menu.dictionary_menu, menu);
 
             return true;
@@ -291,7 +308,7 @@ public class Dictionary extends AndZiActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.dictionary_switch_dic:
-                EditText query = (EditText) findViewById(R.id.dict_query);
+                EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (query == null)
                     return false;
                 currentDB= (currentDB == refDB) ? myDB : refDB;
@@ -302,4 +319,5 @@ public class Dictionary extends AndZiActivity {
         }
         return true;
     }
+    */
 }

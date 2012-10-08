@@ -245,7 +245,7 @@ public class GuessChineseWord extends TestActivity {
     @Override
     protected void show_solution(String guess, int good) {
         super.show_solution(guess, good);
-        Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
+        //Details.populate_details_view(GuessChineseWord.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
         if ((good == INCORRECT) && (!guess.equals(""))) {
             LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
             TextView bad_guess_text = new TextView(GuessChineseWord.this);
@@ -255,7 +255,7 @@ public class GuessChineseWord extends TestActivity {
             bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
             bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             FrameLayout bad_guess_details = new FrameLayout(this);
-            Details.populate_details_view(GuessChineseWord.this, bad_guess_details, guess, refDB==null?myDB:refDB);
+            //Details.populate_details_view(GuessChineseWord.this, bad_guess_details, guess, refDB==null?myDB:refDB);
             bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);

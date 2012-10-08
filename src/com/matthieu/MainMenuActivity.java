@@ -191,7 +191,7 @@ public class MainMenuActivity extends AndZiActivity {
     }
 
     public void handle_dictionary(View v) {
-        Intent intent = new Intent(this, Dictionary.class);
+        Intent intent = new Intent(this, ReferenceActivity.class);
         startActivity(intent);
     }
 

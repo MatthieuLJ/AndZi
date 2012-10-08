@@ -105,7 +105,7 @@ public class LessonList extends Activity {
             protected void onPostExecute(Void aVoid) {
                 synchronized (LessonList.this) {
                     ListView list = (ListView) findViewById(R.id.review_list);
-                    list.setAdapter(new VocabularyCursorAdapter(LessonList.this, cur));
+                    list.setAdapter(new VocabularyCursorAdapter(LessonList.this, cur, null));
 
                     mProgressDialog.dismiss();
                     loader=null;

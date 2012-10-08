@@ -71,9 +71,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         chinese.setText(hanzi);
         chinese.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+                /*
                 Intent intent=new Intent(context, Details.class);
                 intent.putExtra("hanzi", hanzi);
                 context.startActivity(intent);
+                */
             }
         });
         final String pinyin = cursor.getString(pinyin_column_index);
@@ -132,9 +134,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
             english_word.setText(english_translations);
             row.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View view) {
+                    /*
                     Intent intent=new Intent(context, Details.class);
                     intent.putExtra("hanzi", chinese_label);
                     context.startActivity(intent);
+                    */
                 }
             });
             word_table.addView(row);

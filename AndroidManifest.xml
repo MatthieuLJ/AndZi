@@ -61,10 +61,7 @@
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name=".LessonList"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".Details"
-                  android:launchMode="singleTop"
-                  android:configChanges="keyboardHidden|orientation|screenSize" />
-        <activity android:name=".Dictionary"
+        <activity android:name=".ReferenceActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
                   android:configChanges="keyboardHidden|orientation|screenSize" />
 

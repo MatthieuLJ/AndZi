@@ -160,7 +160,7 @@ public class ReviewList extends AndZiActivity {
             CursorAdapter new_adapter=null;
             switch (list_id) {
                 case 0:
-                    new_adapter = new VocabularyCursorAdapter(ReviewList.this, cur);
+                    new_adapter = new VocabularyCursorAdapter(ReviewList.this, cur, null);
                     break;
                 case 1:
                     new_adapter = new CharacterCursorAdapter(ReviewList.this, cur, myDB, true);
