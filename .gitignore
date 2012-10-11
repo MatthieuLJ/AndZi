@@ -6,6 +6,7 @@
 .idea/
 
 local.properties
+project.properties
 build.properties
 build.xml
 proguard.cfg

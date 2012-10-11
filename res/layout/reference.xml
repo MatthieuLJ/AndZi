@@ -1,10 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.v4.view.ViewPager
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/reference_pager"
+<LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        style="@style/AndZiTheme">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        >
+    <android.support.v4.view.ViewPager
+            android:id="@+id/reference_pager"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            style="@style/AndZiTheme">
+    </android.support.v4.view.ViewPager>
 
-</android.support.v4.view.ViewPager>
+    <com.viewpagerindicator.UnderlinePageIndicator
+            android:id="@+id/pager_indicator"
+            android:layout_height="2dp"
+            android:layout_width="fill_parent" />
+</LinearLayout>

@@ -6,8 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import com.matthieu.widget.AndZiFragmentActivity;
-
-import java.util.ArrayList;
+import com.viewpagerindicator.PageIndicator;
 
 public class ReferenceActivity extends AndZiFragmentActivity {
     String current_details="";
@@ -27,6 +26,9 @@ public class ReferenceActivity extends AndZiFragmentActivity {
         ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
         if (pager != null) {
             pager.setAdapter(new reference_pager(getSupportFragmentManager()));
+
+            PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
+            mIndicator.setViewPager(pager);
         }
         else {
             // When we are on a larger screen without a pager
