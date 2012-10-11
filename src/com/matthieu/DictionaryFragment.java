@@ -5,7 +5,6 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
@@ -14,13 +13,15 @@ import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.*;
+import android.view.Window;
 import android.widget.*;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.*;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 
 public class DictionaryFragment extends Fragment implements VocabularyCursorClickHandle {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
@@ -38,9 +39,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         parent_activity = activity;
-        //activity.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        refDB = ((AndZiApplication) getActivity().getApplication()).getRefDB();
-        myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
+        refDB = ((AndZiApplication) parent_activity.getApplication()).getRefDB();
+        myDB = ((AndZiApplication) parent_activity.getApplication()).getMyDB();
 
         if (refDB!=null)
             currentDB=refDB;
@@ -59,7 +59,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.dictionary, container, false);
-        //parent_activity.setProgressBarIndeterminateVisibility(false);
+        ((SherlockFragmentActivity)parent_activity).setSupportProgressBarIndeterminateVisibility(false);
         mode=CHINESE_TO_ENGLISH_MODE;
 
         final ListView results = (ListView) res.findViewById(R.id.dict_results);
@@ -245,7 +245,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         @Override
         protected void onProgressUpdate(Cursor... values) {
             synchronized (DictionaryFragment.this) {
-                //parent_activity.setProgressBarIndeterminateVisibility(values==null);
+                ((SherlockFragmentActivity)parent_activity).setSupportProgressBarIndeterminateVisibility(values==null);
 
                 final ListView results = (ListView) getView().findViewById(R.id.dict_results);
 

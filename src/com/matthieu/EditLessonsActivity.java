@@ -525,6 +525,7 @@ public class EditLessonsActivity extends AndZiActivity {
         alert.show();
     }
 
+    /*
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.clear();
@@ -594,5 +595,6 @@ public class EditLessonsActivity extends AndZiActivity {
         }
         return true;
     }
+    */
 
 }

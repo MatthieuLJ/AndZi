@@ -867,6 +867,7 @@ public class AddVocabularyActivity extends AndZiActivity
         }
     }
 
+    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -885,6 +886,7 @@ public class AddVocabularyActivity extends AndZiActivity
         }
         return true;
     }
+    */
 
     private void set_default_lesson() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);

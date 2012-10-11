@@ -5,17 +5,20 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import com.matthieu.widget.AndZiFragmentActivity;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.viewpagerindicator.PageIndicator;
 
-public class ReferenceActivity extends AndZiFragmentActivity {
+public class ReferenceActivity extends SherlockFragmentActivity {
     String current_details="";
     Fragment fragments[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.Theme_Sherlock);
+        requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.reference);
+        setSupportProgressBarIndeterminateVisibility(true);
 
         fragments = new Fragment[2];
         fragments[0] = new DictionaryFragment();
@@ -59,5 +62,9 @@ public class ReferenceActivity extends AndZiFragmentActivity {
             pager.getAdapter().notifyDataSetChanged();
             pager.setCurrentItem(1, true);
         }
+    }
+
+    public void new_dictionary_search(boolean start) {
+
     }
 }

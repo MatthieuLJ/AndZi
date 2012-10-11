@@ -30,6 +30,7 @@ public class MainMenuActivity extends AndZiActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().hide();
         start_test=false;
     }
 

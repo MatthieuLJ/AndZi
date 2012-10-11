@@ -106,15 +106,18 @@ public class DetailsFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        final ListView list= (ListView) getView().findViewById(R.id.details_list);
-        if (list != null) {
-            synchronized (locker) {
-                WeakReference<populator> old_populate_task = (WeakReference<populator>) list.getTag(R.id.detail_populator);
-                if ((old_populate_task!=null) && (old_populate_task.get()!=null))
-                    old_populate_task.get().cancel(false);
-                VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
-                if (adapter != null) {
-                    adapter.changeCursor(null);
+        View master_view = getView();
+        if (master_view != null) {
+            final ListView list= (ListView) master_view.findViewById(R.id.details_list);
+            if (list != null) {
+                synchronized (locker) {
+                    WeakReference<populator> old_populate_task = (WeakReference<populator>) list.getTag(R.id.detail_populator);
+                    if ((old_populate_task!=null) && (old_populate_task.get()!=null))
+                        old_populate_task.get().cancel(false);
+                    VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
+                    if (adapter != null) {
+                        adapter.changeCursor(null);
+                    }
                 }
             }
         }

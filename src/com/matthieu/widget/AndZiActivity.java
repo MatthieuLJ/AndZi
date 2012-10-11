@@ -1,9 +1,17 @@
 package com.matthieu.widget;
 
-import android.app.Activity;
+import android.os.Bundle;
+import com.actionbarsherlock.app.SherlockActivity;
 import com.matthieu.AndZiApplication;
+import com.matthieu.R;
 
-public class AndZiActivity extends Activity {
+public class AndZiActivity extends SherlockActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setTheme(R.style.Theme_Sherlock);
+    }
+
     @Override
     protected void onPause() {
         super.onPause();

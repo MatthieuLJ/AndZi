@@ -1,9 +1,17 @@
 package com.matthieu.widget;
 
-import android.support.v4.app.FragmentActivity;
+import android.os.Bundle;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.AndZiApplication;
+import com.matthieu.R;
 
-public class AndZiFragmentActivity extends FragmentActivity {
+public class AndZiFragmentActivity extends SherlockFragmentActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.Theme_Sherlock);
+        super.onCreate(savedInstanceState);
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
