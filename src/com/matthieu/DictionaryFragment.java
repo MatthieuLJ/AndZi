@@ -28,24 +28,25 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     Cursor current_cursor =null;
     Handler update_handler=null;
     update_delayer update_thread=null;
-    HanziDB refDB, myDB, currentDB;
+    HanziDB currentDB;
     private static final String TAG="Dictionary";
     private Activity parent_activity;
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
     static final int ENGLISH_TO_CHINESE_MODE=1;
 
+    public DictionaryFragment(HanziDB db) {
+        currentDB = db;
+    }
+
+    public void changeDB(HanziDB db) {
+        currentDB = db;
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         parent_activity = activity;
-        refDB = ((AndZiApplication) parent_activity.getApplication()).getRefDB();
-        myDB = ((AndZiApplication) parent_activity.getApplication()).getMyDB();
-
-        if (refDB!=null)
-            currentDB=refDB;
-        else
-            currentDB=myDB;
 
         if (update_thread == null) {
             update_thread = new update_delayer();

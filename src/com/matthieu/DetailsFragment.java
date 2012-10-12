@@ -33,7 +33,6 @@ public class DetailsFragment extends Fragment {
     private boolean use_ref=false;
 
     private String current_hanzi;
-    private String old_hanzi="";
     private Activity parent_activity;
 
     static Object locker = new Object();
@@ -75,34 +74,6 @@ public class DetailsFragment extends Fragment {
         parent_activity = null;
     }
 
-    /*
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        String hanzi=intent.getStringExtra("hanzi");
-        if ((hanzi==null) || (hanzi.equals("")))
-            finish();
-
-        boolean use_ref = intent.getBooleanExtra("use_ref", true);
-        HanziDB refDB = ((AndZiApplication) getApplication()).getRefDB();
-        if ((use_ref) && (refDB!=null))
-            db = refDB;
-        else
-            db = ((AndZiApplication) getApplication()).getMyDB();
-
-        old_hanzi=current_hanzi;
-        current_hanzi=hanzi;
-
-        FrameLayout frame = (FrameLayout) findViewById(R.id.top_level_detail_view);
-        if (frame==null) {
-            frame = new FrameLayout(this);
-            frame.setId(R.id.top_level_detail_view);
-        }
-        populate_details_view(this, frame, hanzi, db);
-        setContentView(frame);
-    }
-    */
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -135,28 +106,6 @@ public class DetailsFragment extends Fragment {
         }
         populate_details_view(this, frame, current_hanzi, db);
         setContentView(frame);
-    }
-
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK)
-            if (go_back_one())
-                return true;
-
-        return super.onKeyDown(keyCode, event);
-    }
-
-    private boolean go_back_one() {
-        if (old_hanzi.equals(""))
-            return false;
-
-        current_hanzi=old_hanzi;
-        old_hanzi="";
-        FrameLayout frame = new FrameLayout(this);
-        populate_details_view(this, frame, current_hanzi, db);
-        setContentView(frame);
-        return true;
     }
     */
 

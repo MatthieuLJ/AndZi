@@ -6,6 +6,13 @@ ONGOING (5):
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
+* After all the fragments stuff is done
+ * Be able to "pin" details page from the reference activity
+ * Be able to switch between CEDICT and local list
+ * Add or Edit word from Details view
+
+ http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
+
 BUGS (00):
 
 FUTURE (12):

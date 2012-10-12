@@ -3,5 +3,7 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/dictionary_switch_dic"
-          android:title="Use my vocabulary list"/>
+          android:title="Ref"/>
+    <item android:id="@+id/dictionary_switch_direction"
+          android:title="中->Eng"/>
 </menu>
