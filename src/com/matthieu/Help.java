@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
@@ -9,13 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-import com.matthieu.widget.AndZiActivity;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Help extends AndZiActivity {
+public class Help extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

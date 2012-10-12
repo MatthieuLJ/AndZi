@@ -3,26 +3,26 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class EditLessonsActivity extends AndZiActivity {
+public class EditLessonsFragment extends Fragment {
     protected HanziDB myDB=null;
 
     protected ArrayList<Lesson> current_lessons;
@@ -32,37 +32,22 @@ public class EditLessonsActivity extends AndZiActivity {
     private ProgressDialog mProgressDialog;
     private InitLessons init_lessons_thread=null;
 
-    private static final String TAG = "EditLessonsActivity";
+    private static final String TAG = "EditLessonsFragment";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-
-        super.onCreate(savedInstanceState);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
 
         current_lessons = new ArrayList<Lesson>();
         filter_on = myDB.isFilterEnabled();
         process_handler = new Handler();
-
-        mProgressDialog = new ProgressDialog(EditLessonsActivity.this);
-        mProgressDialog.setMessage("Loading");
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        mProgressDialog.show();
-
-        setup_screen();
-
-        init_lessons_thread = new InitLessons();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            init_lessons_thread.execute((Void[])null);
     }
 
-    private void setup_screen() {
-        setContentView(R.layout.edit_lessons);
-        TouchListView list = (TouchListView) findViewById(R.id.lesson_list);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res = inflater.inflate(R.layout.edit_lessons, container, false);
+        TouchListView list = (TouchListView) res.findViewById(R.id.lesson_list);
         list.setDropListener(new TouchListView.DropListener() {
             public void drop(int from, int to) {
                 if (from == 0)
@@ -78,7 +63,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 final ArrayList<String> lesson_order=new ArrayList<String>();
                 for (Lesson l:current_lessons)
                     lesson_order.add(l.label);
-                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                TouchListView lv = (TouchListView) res.findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
                 new Thread(new Runnable() {
                     public void run() {
@@ -88,21 +73,38 @@ public class EditLessonsActivity extends AndZiActivity {
             }
         });
         registerForContextMenu(list);
+
+        mProgressDialog = new ProgressDialog(getActivity());
+        mProgressDialog.setMessage("Loading");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mProgressDialog.show();
+
+
+        init_lessons_thread = new InitLessons();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            init_lessons_thread.execute((Void[])null);
+
+        return res;
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         if (filter_on && (current_lesson_filter.size()==0)) {
             filter_on = false;
             myDB.enableFilter(filter_on);
         }
     }
+/*
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        synchronized (EditLessonsActivity.this) {
+        synchronized (EditLessonsFragment.this) {
             ListAdapter adapter=null;
             TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
             if (init_lessons_thread == null)
@@ -114,7 +116,7 @@ public class EditLessonsActivity extends AndZiActivity {
             if (init_lessons_thread == null)
                 lv.setAdapter(adapter);
             else {
-                mProgressDialog = new ProgressDialog(EditLessonsActivity.this);
+                mProgressDialog = new ProgressDialog(EditLessonsFragment.this);
                 mProgressDialog.setMessage("Loading");
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
@@ -123,6 +125,7 @@ public class EditLessonsActivity extends AndZiActivity {
             }
         }
     }
+*/
 
     private class InitLessons extends AsyncTask<Void, Void, Void> {
         ArrayList<Lesson> tmp_lessons;
@@ -156,8 +159,8 @@ public class EditLessonsActivity extends AndZiActivity {
 
             current_lessons = tmp_lessons;
 
-            synchronized (EditLessonsActivity.this) {
-                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+            synchronized (EditLessonsFragment.this) {
+                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
                 if (lv != null) {
                     lv.setAdapter(new LessonArrayAdapter());
                 }
@@ -201,7 +204,7 @@ public class EditLessonsActivity extends AndZiActivity {
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater();
+                    LayoutInflater inflater = getActivity().getLayoutInflater();
                     row = inflater.inflate(R.layout.edit_lesson_list_new_item, parent, false);
                     row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_new_item);
                 }
@@ -221,7 +224,7 @@ public class EditLessonsActivity extends AndZiActivity {
                         if (new_lesson_label.equals("(none)"))
                             return;
                         if (lesson_exists(new_lesson_label)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + new_lesson_label + "] already exists", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "The lesson [" + new_lesson_label + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         Lesson new_lesson = new Lesson(new_lesson_label);
@@ -231,7 +234,7 @@ public class EditLessonsActivity extends AndZiActivity {
                         final ArrayList<String> lesson_order=new ArrayList<String>();
                         for (Lesson l:current_lessons)
                             lesson_order.add(l.label);
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        TouchListView lv = (TouchListView) EditLessonsFragment.this.getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         new Thread(new Runnable() {
                             public void run() {
@@ -247,7 +250,7 @@ public class EditLessonsActivity extends AndZiActivity {
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater();
+                    LayoutInflater inflater = getActivity().getLayoutInflater();
                     row = inflater.inflate(R.layout.edit_lesson_list_item, parent, false);
                     row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_item);
                 }
@@ -307,12 +310,12 @@ public class EditLessonsActivity extends AndZiActivity {
                             lesson.state &= ~Lesson.FILTERED_ENABLED;
                             current_lesson_filter.remove(lesson.label);
                         }
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        TouchListView lv = (TouchListView) EditLessonsFragment.this.getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         new Thread(new Runnable() {
                             public void run() {
                                 myDB.setLessonsToFilter(current_lesson_filter);
-                                ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
+                                ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
                             }
                         }).start();
                     }
@@ -339,7 +342,7 @@ public class EditLessonsActivity extends AndZiActivity {
         super.onCreateContextMenu(menu, v, menuInfo);
 
         if (((AdapterView.AdapterContextMenuInfo)menuInfo).position != 0) {
-            MenuInflater inflater=getMenuInflater();
+            MenuInflater inflater=getActivity().getMenuInflater();
             inflater.inflate(R.menu.lesson_item_menu, menu);
         }
     }
@@ -367,7 +370,7 @@ public class EditLessonsActivity extends AndZiActivity {
         switch(item.getItemId()) {
             case R.id.delete_lesson:
                 current_lessons.remove(le);
-                TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                 new Thread(new Runnable() {
                     public void run() {
@@ -386,7 +389,7 @@ public class EditLessonsActivity extends AndZiActivity {
                         if (param.equals("(none)"))
                             return;
                         if (lesson_exists(param)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         if (param.equals(le.label))
@@ -400,7 +403,7 @@ public class EditLessonsActivity extends AndZiActivity {
                         }
                         else
                             le.state |= Lesson.RENAMED;
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
 
                         new Thread(new Runnable() {
@@ -419,14 +422,14 @@ public class EditLessonsActivity extends AndZiActivity {
                         if (param.equals("(none)"))
                             return;
                         if (lesson_exists(param)) {
-                            Toast.makeText(EditLessonsActivity.this, "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         Lesson new_lesson=new Lesson(param);
                         new_lesson.state = Lesson.NEW;
                         new_lesson.num_items = le.num_items;
                         current_lessons.add(0, new_lesson);
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
 
                         new Thread(new Runnable() {
@@ -444,7 +447,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 });
                 break;
             case R.id.combine_lesson:
-                AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
                 alert.setTitle("Select lessons to combine with "+le.label);
                 final String[] lessons = new String[current_lessons.size()];
                 final boolean[] lesson_checked = new boolean[current_lessons.size()];
@@ -466,7 +469,7 @@ public class EditLessonsActivity extends AndZiActivity {
                             }
                         }
 
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         dialog.dismiss();
 
@@ -489,7 +492,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 alert.show();
                 break;
             case R.id.content_lesson:
-                Intent i=new Intent(this, LessonList.class);
+                Intent i=new Intent(getActivity(), LessonListFragment.class);
                 i.putExtra("lesson", le.label);
                 startActivity(i);
                 break;
@@ -501,12 +504,12 @@ public class EditLessonsActivity extends AndZiActivity {
     }
 
     private void prompt_user_input(String title, String message, final String_action action) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
 
         alert.setTitle(title);
         alert.setMessage(message);
 
-        final EditText input = new EditText(this);
+        final EditText input = new EditText(getActivity());
         alert.setView(input);
 
         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
@@ -524,10 +527,10 @@ public class EditLessonsActivity extends AndZiActivity {
 
         alert.show();
     }
+/*
 
-    /*
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         MenuInflater inflater = getMenuInflater();
         if (filter_on) {
@@ -536,7 +539,6 @@ public class EditLessonsActivity extends AndZiActivity {
         else {
             inflater.inflate(R.menu.edit_lesson_menu, menu);
         }
-        return true;
     }
 
     @Override
@@ -585,7 +587,7 @@ public class EditLessonsActivity extends AndZiActivity {
                 break;
             
             case R.id.no_lesson_list:
-                Intent i=new Intent(this, LessonList.class);
+                Intent i=new Intent(this, LessonListFragment.class);
                 i.putExtra("lesson", "");
                 startActivity(i);
                 break;
@@ -595,6 +597,6 @@ public class EditLessonsActivity extends AndZiActivity {
         }
         return true;
     }
-    */
+*/
 
 }

@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -13,14 +14,13 @@ import android.support.v4.view.ViewPager;
 import android.util.SparseArray;
 import android.view.*;
 import android.widget.*;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.CharacterCursorAdapter;
 import com.matthieu.widget.VocabularyCursorAdapter;
 
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
 
-public class ReviewList extends AndZiActivity {
+public class ReviewList extends Activity {
     protected HanziDB myDB=null;
     private CursorAdapter adapters[]=null;
     int mode=3; // 3 (Default), both panes, 1=only chars, 2=only words, 0=nothing...

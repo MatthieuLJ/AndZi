@@ -3,18 +3,18 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import com.matthieu.widget.AndZiActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class Test extends AndZiActivity {
+public class Test extends Activity {
     private ArrayList<Class> char_tests = new ArrayList<Class>(Arrays.asList(GuessMissingChar.class, GuessContaining.class,
             GuessPinyin.class, GuessTone.class));
     private ArrayList<Class> word_tests = new ArrayList<Class>(Arrays.asList(GuessChineseWord.class, GuessEnglish.class));

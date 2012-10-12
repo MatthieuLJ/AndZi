@@ -15,13 +15,6 @@
                 android:layout_weight="1"
                 android:text="Add Vocabulary"
                 android:onClick="handle_add_vocabulary" />
-
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Edit Lessons"
-                android:onClick="handle_edit_lessons" />
     </TableRow>
 
     <TableRow

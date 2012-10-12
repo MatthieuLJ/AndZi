@@ -16,13 +16,12 @@ import android.widget.Toast;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
-import com.matthieu.widget.AndZiPreferenceActivity;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 
-public class ExportDB extends AndZiPreferenceActivity {
+public class ExportDB extends PreferenceActivity {
     protected HanziDB myDB=null;
     String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ (1+Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
         

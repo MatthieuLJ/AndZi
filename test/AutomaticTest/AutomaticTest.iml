@@ -58,6 +58,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="ActionBarSherlock-4.2.0-0" />
+    <orderEntry type="module" module-name="ViewPagerIndicator-2.4.1-0" />
   </component>
 </module>
 

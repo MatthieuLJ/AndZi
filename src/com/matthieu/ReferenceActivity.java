@@ -25,7 +25,6 @@ public class ReferenceActivity extends SherlockFragmentActivity {
         requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.reference);
-        setSupportProgressBarIndeterminateVisibility(true);
 
         refDB = ((AndZiApplication) getApplication()).getRefDB();
         myDB = ((AndZiApplication) getApplication()).getMyDB();

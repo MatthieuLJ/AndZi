@@ -1,15 +1,16 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import com.matthieu.widget.VocabularyCursorAdapter;
@@ -18,40 +19,44 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 
-public class LessonList extends Activity {
+public class LessonListFragment extends Fragment {
     protected HanziDB myDB=null;
     private Cursor cur=null;
 
-    private static final String TAG="LessonList";
+    private static final String TAG="LessonListFragment";
     AsyncTask<Void, Void,Void> loader=null;
     private String lesson=null;
     private ProgressDialog mProgressDialog=null;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-
-        lesson=getIntent().getStringExtra("lesson");
-        if (lesson == null) {
-            finish();
-        }
-        setContentView(R.layout.review_list);
+    public LessonListFragment(String lesson) {
+        this.lesson = lesson;
     }
 
     @Override
-    protected void onPause() {
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View res = inflater.inflate(R.layout.review_list, container, false);
+        return res;
+    }
+
+    @Override
+    public void onPause() {
         super.onPause();
-        ((AndZiApplication)getApplication()).activityPaused();
+        ((AndZiApplication) getActivity().getApplication()).activityPaused();
     }
-
+/*
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        synchronized (LessonList.this) {
+        synchronized (LessonListFragment.this) {
             ListAdapter adapter=null;
             if (loader==null) {
-                ListView list = (ListView) findViewById(R.id.review_list);
+                ListView list = (ListView) getView().findViewById(R.id.review_list);
                 adapter = list.getAdapter();
             }
             else {
@@ -60,11 +65,11 @@ public class LessonList extends Activity {
             setContentView(R.layout.review_list);
 
             if (loader==null) {
-                ListView list = (ListView) findViewById(R.id.review_list);
+                ListView list = (ListView) getView().findViewById(R.id.review_list);
                 list.setAdapter(adapter);
             }
             else {
-                mProgressDialog = new ProgressDialog(LessonList.this);
+                mProgressDialog = new ProgressDialog(getActivity());
                 mProgressDialog.setMessage(getResources().getString(R.string.loading));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
@@ -73,24 +78,25 @@ public class LessonList extends Activity {
             }
         }
     }
+    */
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
-        ((AndZiApplication)getApplication()).activityResumed();
+        ((AndZiApplication)getActivity().getApplication()).activityResumed();
 
          loader = new AsyncTask<Void, Void, Void>() {
 
             @Override
             protected void onPreExecute() {
-                mProgressDialog = new ProgressDialog(LessonList.this);
+                mProgressDialog = new ProgressDialog(getActivity());
                 mProgressDialog.setMessage(getResources().getString(R.string.loading));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 mProgressDialog.show();
 
-                ListView list = (ListView) findViewById(R.id.review_list);
+                ListView list = (ListView) getView().findViewById(R.id.review_list);
                 list.setAdapter(null);
             }
 
@@ -103,9 +109,9 @@ public class LessonList extends Activity {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                synchronized (LessonList.this) {
-                    ListView list = (ListView) findViewById(R.id.review_list);
-                    list.setAdapter(new VocabularyCursorAdapter(LessonList.this, cur, null));
+                synchronized (LessonListFragment.this) {
+                    ListView list = (ListView) getView().findViewById(R.id.review_list);
+                    list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, null));
 
                     mProgressDialog.dismiss();
                     loader=null;
@@ -120,7 +126,7 @@ public class LessonList extends Activity {
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         if (cur != null)
             cur.close();

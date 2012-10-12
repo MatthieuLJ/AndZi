@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -14,10 +15,9 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.VocabularyCursorAdapter;
 
-public abstract class TestActivity extends AndZiActivity {
+public abstract class TestActivity extends Activity {
     protected final int STATE_UNKNOWN=0;
     protected final int STATE_ASKED=1;
     protected final int STATE_ANSWERED=2;

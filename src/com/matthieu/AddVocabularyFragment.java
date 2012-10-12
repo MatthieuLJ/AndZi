@@ -10,27 +10,27 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
 //import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.EditTextAutomaticSize;
 import com.matthieu.widget.ExtendingLinearLayout;
 import java.util.ArrayList;
 
-public class AddVocabularyActivity extends AndZiActivity
+public class AddVocabularyFragment extends Fragment
 {
     //private static final String TAG="AddVocabularyActivity";
 
@@ -46,39 +46,46 @@ public class AddVocabularyActivity extends AndZiActivity
     private Handler process_handler=null;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
 
         pinyin_choices = new ArrayList<PinyinButton>();
         translations_from_ref = new ArrayList<VocabularyItem>();
         translations_displayed_from_ref = new ArrayList<VocabularyItem>();
         translations_in_db = new ArrayList<VocabularyItem>();
         process_handler = new Handler();
+    }
 
-        setContentView(R.layout.add_vocabulary_top);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res = inflater.inflate(R.layout.add_vocabulary_top, container, false);
 
-        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese);
+        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) res.findViewById(R.id.add_vocabulary_chinese);
         ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
         chinese_word.addTextChangedListener(text_watcher);
         chinese_word.setMaximumTextSize(32);
         chinese_word.setMinimumTextSize(10);
-        View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
+        View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
 
+/*
         String hanzi = getIntent().getStringExtra("Hanzi");
         if (hanzi!= null) {
             chinese_word.setText(hanzi);
         }
+*/
+        return res;
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
 
         // in case those changed...
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
+        myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getActivity().getApplication()).getRefDB();
     }
 
+/*
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese);
@@ -92,6 +99,7 @@ public class AddVocabularyActivity extends AndZiActivity
         View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
         chinese_word.setText(current_string);
     }
+*/
 
     // Handle when the content of the chinese word text field changes
     private class ChineseTextWatcher implements TextWatcher {
@@ -114,7 +122,7 @@ public class AddVocabularyActivity extends AndZiActivity
             checkChineseChars();
 
             if (state == 1) {
-                current_chinese_word = ((EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese)).getText().toString();
+                current_chinese_word = ((EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese)).getText().toString();
 
                 // Populate the choices for the pinyin buttons
                 setPinyinButtons(charSequence, i, i1, i2);
@@ -154,23 +162,23 @@ public class AddVocabularyActivity extends AndZiActivity
 
             need_complete_update=false;
 
-            LinearLayout main_content = (LinearLayout) findViewById(R.id.main_content);
+            LinearLayout main_content = (LinearLayout) getView().findViewById(R.id.main_content);
             if (new_state != state) {
                 switch(new_state) {
                     case 0:
                         // empty string
                         if(state == 1) {
                             main_content.removeAllViews();
-                            View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
+                            View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_enter_chinese);
+                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_enter_chinese);
                         break;
                     case 1:
                         // all chinese characters
                         need_complete_update = true;
                         main_content.removeAllViews();
-                        View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_context, main_content);
-                        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                        View.inflate(getActivity(), R.layout.add_vocabulary_context, main_content);
+                        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
                         break;
@@ -178,9 +186,9 @@ public class AddVocabularyActivity extends AndZiActivity
                         // some non-chinese characters...
                         if(state == 1) {
                             main_content.removeAllViews();
-                            View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
+                            View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_only_chinese);
+                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_only_chinese);
                         break;
                 }
                 state = new_state;
@@ -188,7 +196,7 @@ public class AddVocabularyActivity extends AndZiActivity
         }
 
         private void setPinyinButtons(CharSequence charSequence, int i, int i1, int i2) {
-            LinearLayout pinyin_button_container = (LinearLayout) findViewById(R.id.pinyin_buttons);
+            LinearLayout pinyin_button_container = (LinearLayout) getView().findViewById(R.id.pinyin_buttons);
             if (pinyin_button_container == null) {
                 //Log.d(TAG, "pinyin_container is null..");
                 return;
@@ -204,7 +212,7 @@ public class AddVocabularyActivity extends AndZiActivity
                 }
                 if (i2 > 0) {
                     for (int j=0; j<i2; j++) {
-                        Button b = new Button(AddVocabularyActivity.this);
+                        Button b = new Button(getActivity());
                         b.setBackgroundColor(0x00000000);
                         b.setTextColor(0xff000000);
                         b.setBackgroundResource(0);
@@ -219,7 +227,7 @@ public class AddVocabularyActivity extends AndZiActivity
             else {
                 pinyin_choices.clear();
                 for (int j=0; j<charSequence.toString().length(); j++) {
-                    Button b = new Button(AddVocabularyActivity.this);
+                    Button b = new Button(getActivity());
                     b.setBackgroundColor(0x00000000);
                     b.setTextColor(0xff000000);
                     b.setBackgroundResource(0);
@@ -339,7 +347,7 @@ public class AddVocabularyActivity extends AndZiActivity
         private void update_button() {
             String to_display=get_current_choice();
             Pinyin pinyin = new Pinyin(to_display);
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(AddVocabularyActivity.this);
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
             boolean show_color = sp.getBoolean("color_pinyin", true);
 
             if (to_display.equals("")) {
@@ -362,7 +370,7 @@ public class AddVocabularyActivity extends AndZiActivity
 
         private class PinyinButtonClickListener implements View.OnClickListener {
             public void onClick(View view) {
-                Dialog dialog = new Dialog(AddVocabularyActivity.this);
+                Dialog dialog = new Dialog(getActivity());
                 dialog.setTitle(getResources().getString(R.string.add_voc_pick_pinyin)+PinyinButton.this.get_hanzi());
                 fill_dialog(dialog);
                 dialog.show();
@@ -491,7 +499,7 @@ public class AddVocabularyActivity extends AndZiActivity
             translations_from_ref=tmp_translations_from_ref;
             translations_displayed_from_ref=tmp_translations_displayed_from_ref;
 
-            ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+            ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
             if (lv != null) {
                 ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
@@ -511,7 +519,7 @@ public class AddVocabularyActivity extends AndZiActivity
                 translations_displayed_from_ref.add(v);
         }
 
-        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -601,7 +609,7 @@ public class AddVocabularyActivity extends AndZiActivity
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater();
+                    LayoutInflater inflater = getLayoutInflater(null);
                     row = inflater.inflate(R.layout.add_vocabulary_list_title, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_title);
                 }
@@ -621,7 +629,7 @@ public class AddVocabularyActivity extends AndZiActivity
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater();
+                    LayoutInflater inflater = getLayoutInflater(null);
                     row = inflater.inflate(R.layout.add_vocabulary_list_new_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_new_item);
                 }
@@ -679,7 +687,7 @@ public class AddVocabularyActivity extends AndZiActivity
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater();
+                    LayoutInflater inflater = getLayoutInflater(null);
                     row = inflater.inflate(desired_layout, parent, false);
                     row.setTag(R.id.add_list_view_inflated, desired_layout);
                 }
@@ -701,6 +709,12 @@ public class AddVocabularyActivity extends AndZiActivity
                     }
                     bt.setTag(R.id.add_view_to_expand, el);
                     bt.setTag(R.id.add_vocabulary_item, voc);
+                    bt.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            expand(view);
+                        }
+                    });
 
                     TextView more = (TextView) row.findViewById(R.id.add_more);
                     String lessons = "";
@@ -718,7 +732,7 @@ public class AddVocabularyActivity extends AndZiActivity
                     more.setTag(R.id.add_vocabulary_item, voc);
                     more.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View view) {
-                            AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
+                            AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
                             dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
                             final ArrayList<String> lessons = myDB.getLessons();
                             final boolean[] selected = new boolean[lessons.size()];
@@ -753,7 +767,7 @@ public class AddVocabularyActivity extends AndZiActivity
                             dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int i) {
                                     dialog.dismiss();
-                                    ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                                    ListView lv = (ListView) AddVocabularyFragment.this.getView().findViewById(R.id.vocabulary_list);
                                     if (lv != null) {
                                         ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                                     }
@@ -819,7 +833,7 @@ public class AddVocabularyActivity extends AndZiActivity
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater();
+                    LayoutInflater inflater = getLayoutInflater(null);
                     row = inflater.inflate(R.layout.add_vocabulary_list_ref_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_ref_item);
                 }
@@ -845,7 +859,7 @@ public class AddVocabularyActivity extends AndZiActivity
                         }
                         translations_in_db.add(voc);
                         translations_displayed_from_ref.remove(voc);
-                        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                        ListView lv = (ListView) AddVocabularyFragment.this.getView().findViewById(R.id.vocabulary_list);
                         if (lv != null) {
                             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         }
@@ -889,7 +903,7 @@ public class AddVocabularyActivity extends AndZiActivity
     */
 
     private void set_default_lesson() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(AddVocabularyActivity.this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
         dialog.setTitle(R.string.add_voc_default_lesson);
         dialog.setCancelable(false);
 
@@ -898,7 +912,7 @@ public class AddVocabularyActivity extends AndZiActivity
         lessons.add(0, getResources().getString(R.string.add_voc_lesson_none).toString());
         int selected_index = default_lesson.equals("")?0:lessons.indexOf(default_lesson);
 
-        final ArrayAdapter<String> aa=new ArrayAdapter<String>(AddVocabularyActivity.this, R.layout.simple_list_item_single_choice, lessons);
+        final ArrayAdapter<String> aa=new ArrayAdapter<String>(getActivity(), R.layout.simple_list_item_single_choice, lessons);
         dialog.setSingleChoiceItems(aa, selected_index,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
@@ -940,14 +954,14 @@ public class AddVocabularyActivity extends AndZiActivity
     }
 
     public void handle_word_click(View v) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
         final TextView view = (TextView) v;
         final VocabularyItem voc = (VocabularyItem) v.getTag(R.id.add_vocabulary_item);
 
         alert.setTitle(getResources().getString(R.string.add_voc_edit_translation)+current_chinese_word);
         alert.setMessage(R.string.add_voc_edit_new_word);
 
-        final EditText input = new EditText(this);
+        final EditText input = new EditText(getActivity());
         input.setText(view.getText());
         alert.setView(input);
 
@@ -967,7 +981,7 @@ public class AddVocabularyActivity extends AndZiActivity
                         voc.translation=value;
                         modified_voc.english.remove(0);
                         modified_voc.english.add(value);
-                        ListView lv = (ListView) findViewById(R.id.vocabulary_list);
+                        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
                         if (lv != null) {
                             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         }
@@ -1015,7 +1029,7 @@ public class AddVocabularyActivity extends AndZiActivity
     }
 
     public void handle_add_another(View v) {
-        EditText chinese_word = (EditText) findViewById(R.id.add_vocabulary_chinese);
+        EditText chinese_word = (EditText) getView().findViewById(R.id.add_vocabulary_chinese);
         chinese_word.setText("");
     }
 }

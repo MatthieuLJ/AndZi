@@ -31,11 +31,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".EditLessonsActivity"
-                  android:windowSoftInputMode="stateHidden|adjustPan"
-                  android:configChanges="keyboardHidden|orientation|screenSize"
-                />
-        <activity android:name=".AddVocabularyActivity"
+        <activity android:name=".VocabularyEditorActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
                   android:configChanges="keyboardHidden|orientation|screenSize"
                 />
@@ -59,7 +55,7 @@
 
         <activity android:name=".ReviewList"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".LessonList"
+        <activity android:name=".LessonListFragment"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name=".ReferenceActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"

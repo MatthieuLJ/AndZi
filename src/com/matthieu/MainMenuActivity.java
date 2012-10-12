@@ -16,12 +16,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.actionbarsherlock.app.SherlockActivity;
 import com.matthieu.settings.Settings;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.DBCheckProgressHandler;
 import org.jetbrains.annotations.Nullable;
 
-public class MainMenuActivity extends AndZiActivity {
+public class MainMenuActivity extends SherlockActivity {
     private final String TAG="MainMenuActivity";
 
     private AsyncTask<Void,Integer,Void> db_loader=null;
@@ -29,6 +29,7 @@ public class MainMenuActivity extends AndZiActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         start_test=false;
@@ -162,12 +163,7 @@ public class MainMenuActivity extends AndZiActivity {
     };
 
     public void handle_add_vocabulary(View v) {
-        Intent intent = new Intent(this, AddVocabularyActivity.class);
-        startActivity(intent);
-    }
-
-    public void handle_edit_lessons(View v) {
-        Intent intent = new Intent(this, EditLessonsActivity.class);
+        Intent intent = new Intent(this, VocabularyEditorActivity.class);
         startActivity(intent);
     }
 

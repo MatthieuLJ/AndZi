@@ -13,18 +13,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
+import android.preference.PreferenceActivity;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
-import com.matthieu.widget.AndZiPreferenceActivity;
 
 import java.io.*;
 import java.net.*;
 import java.util.Calendar;
 
-public class Settings extends AndZiPreferenceActivity {
+public class Settings extends PreferenceActivity {
     protected HanziDB myDB=null;
 
     private static final String dictionaryURL="http://bit.ly/AndZi-Cedict";

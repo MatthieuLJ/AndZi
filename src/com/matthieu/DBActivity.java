@@ -3,16 +3,16 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.*;
 import android.widget.Button;
 import android.widget.TextView;
-import com.matthieu.widget.AndZiActivity;
 import com.matthieu.widget.ProgressGraph;
 
 import java.util.*;
 
-public class DBActivity extends AndZiActivity {
+public class DBActivity extends Activity {
     protected HanziDB myDB=null;
     Timer timer;
 

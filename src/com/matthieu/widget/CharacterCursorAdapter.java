@@ -59,6 +59,14 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View newView = li.inflate(R.layout.review_list_item, viewGroup, false);
 
+        Button bt = (Button) newView.findViewById(R.id.review_expand_button);
+        bt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                expand(view);
+            }
+        });
+
         bindView(newView, context, cursor);
 
         return newView;

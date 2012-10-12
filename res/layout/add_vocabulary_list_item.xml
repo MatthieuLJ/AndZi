@@ -16,7 +16,6 @@
             android:layout_margin="5dp"
             android:layout_gravity="top"
             android:background="@drawable/expand_arrow_right"
-            android:onClick="expand"
             android:tag="0"/>
     <View
             android:id="@+id/add_separator"
