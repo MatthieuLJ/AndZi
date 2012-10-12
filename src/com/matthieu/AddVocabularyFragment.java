@@ -10,7 +10,6 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -45,9 +44,13 @@ public class AddVocabularyFragment extends Fragment
     private String current_chinese_word="";
     private Handler process_handler=null;
 
+    public AddVocabularyFragment(String s) {
+        current_chinese_word = s;
+    }
+    public AddVocabularyFragment() {}
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         pinyin_choices = new ArrayList<PinyinButton>();
         translations_from_ref = new ArrayList<VocabularyItem>();
@@ -67,12 +70,10 @@ public class AddVocabularyFragment extends Fragment
         chinese_word.setMinimumTextSize(10);
         View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
 
-/*
-        String hanzi = getIntent().getStringExtra("Hanzi");
-        if (hanzi!= null) {
-            chinese_word.setText(hanzi);
+        if (current_chinese_word!= null) {
+            chinese_word.setText(current_chinese_word);
         }
-*/
+
         return res;
     }
 
@@ -585,19 +586,21 @@ public class AddVocabularyFragment extends Fragment
 
         @Override
         public int getViewTypeCount() {
-            return 3;
+            return 4;
         }
 
         @Override
         public int getItemViewType(int position) {
-            if (position == 1)
+            if (position == 0)
                 return 0;
-            else if ((my != 0) && (position == my+2))
-                return 0;
-            else if ((position >1) && (position<my+2))
+            else if (position == 1)
                 return 1;
-            else
+            else if ((my != 0) && (position == my+2))
+                return 1;
+            else if ((position >1) && (position<my+2))
                 return 2;
+            else
+                return 3;
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
