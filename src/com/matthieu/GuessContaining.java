@@ -3,28 +3,28 @@
  */
 package com.matthieu;
 
-
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessContaining extends TestActivity {
+public class GuessContaining extends TestFragment {
     protected ArrayList<String> correct_answers=new ArrayList<String>();
 
     private final String TAG="GuessContaining";
 
+    public GuessContaining(TestActivity testActivity) {
+        super(testActivity);
+    }
+
     @Override
-    protected void set_next_study() {
-        super.set_next_study();
+    protected boolean set_hanzi_to_test(String hanzi) {
+        super.set_hanzi_to_test(hanzi);
 
         ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
@@ -33,17 +33,26 @@ public class GuessContaining extends TestActivity {
                 words.remove(i);
         }
         if (words.size() == 0) {
-            nothing_to_test();
-            return;
+            return false;
         }
-        display_test();
+        Log.d(TAG, "GuessContaining OK");
+
+        return true;
     }
 
     @Override
-    protected void display_test() {
-        setContentView(R.layout.guess_containing);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res = inflater.inflate(R.layout.guess_containing, container, false);
+        update_test_view(res);
+        return res;
+    }
 
-        EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+    @Override
+    public void update_test_view(View v) {
+        if (v==null)
+            return;
+
+        EditText word_guess = (EditText) v.findViewById(R.id.guess_containing_word_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -54,11 +63,11 @@ public class GuessContaining extends TestActivity {
         word_guess.setText("");
         word_guess.requestFocus();
 
-        TextView clue= (TextView) findViewById(R.id.guess_containing_chinese);
+        TextView clue= (TextView) v.findViewById(R.id.guess_containing_chinese);
         clue.setText(hanzi);
+        v.invalidate();
     }
 
-    @Override
     protected int check_guess(String guess) {
         int res = INCORRECT;
         correct_answers.clear();
@@ -86,60 +95,57 @@ public class GuessContaining extends TestActivity {
         return res;
     }
 
-    @Override
-    protected void update_scores(int good) {
-        switch(good) {
-            case CORRECT:
-                ArrayList<String> good_chars=new ArrayList<String>();
-                for (String answers:correct_answers) {
-                    for (int i=0; i<answers.length();) {
-                        String c = answers.substring(i, i+Character.charCount(answers.codePointAt(i)));
-                        if ((!good_chars.contains(c)) && (!c.equals(hanzi)))
-                            good_chars.add(c);
-                        i+=Character.charCount(answers.codePointAt(i));
-                    }
-                    myDB.betterBox(answers);
-                }
-                for (String c:good_chars) {
-                    myDB.resetTime(c);
-                }
-                myDB.betterBox(hanzi);
-                break;
-            case INCORRECT:
-                myDB.worseBox(hanzi);
-                break;
-            case OTHER:
-                myDB.resetTime(hanzi);
-                break;
-        }
-    }
-
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+    public boolean handle_ok(View v) {
+        EditText word_guess = (EditText) getView().findViewById(R.id.guess_containing_word_guess);
         if (word_guess==null)
-            return;
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            return false;
+        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(guess) == OTHER) {
-            show_or_next(guess);
-        }
+        int correctness = check_guess(guess);
+        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment(hanzi, guess, hanzi, correctness);
+        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+        return true;
     }
 
-    public void show_solution(String guess, int good) {
-        super.show_solution(guess, good);
-        //Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
-        if ((good == INCORRECT) && (!guess.equals(""))) {
-            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessContaining.this);
-            bad_guess_text.setText("You guessed: "+guess);
-            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            bad_guess_text.setTextColor(0xffdd0000);
-            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+    protected class GuessContainingResultFragment extends TestFragment.SolutionFragment {
+        public GuessContainingResultFragment(String question, String answer, String hanzi, int good) {
+            super(question, answer, hanzi, good);
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return show_details(inflater, container, false);
+        }
+
+        @Override
+        public void update_score() {
+            switch(good) {
+                case CORRECT:
+                    ArrayList<String> good_chars=new ArrayList<String>();
+                    for (String answers:correct_answers) {
+                        for (int i=0; i<answers.length();) {
+                            String c = answers.substring(i, i+Character.charCount(answers.codePointAt(i)));
+                            if ((!good_chars.contains(c)) && (!c.equals(hanzi)))
+                                good_chars.add(c);
+                            i+=Character.charCount(answers.codePointAt(i));
+                        }
+                        myDB.betterBox(answers);
+                    }
+                    for (String c:good_chars) {
+                        myDB.resetTime(c);
+                    }
+                    myDB.betterBox(hanzi);
+                    break;
+                case INCORRECT:
+                    myDB.worseBox(hanzi);
+                    break;
+                case OTHER:
+                    myDB.resetTime(hanzi);
+                    break;
+            }
         }
     }
 }

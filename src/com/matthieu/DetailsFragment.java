@@ -109,7 +109,7 @@ public class DetailsFragment extends Fragment {
     }
     */
 
-    void populate_details_view(final Fragment fragment, ViewGroup section, final String hanzi, final HanziDB db) {
+    static void populate_details_view(final Fragment fragment, ViewGroup section, final String hanzi, final HanziDB db) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(fragment.getActivity());
         boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
@@ -173,7 +173,10 @@ public class DetailsFragment extends Fragment {
             if (hanzi.codePointCount(0, hanzi.length())!= 1)
                 character.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
-                        DetailsFragment.this.change_chinese(character_label);
+                        if (fragment.getActivity().getClass().equals(DetailsFragment.class))
+                            ((DetailsFragment)fragment).change_chinese(character_label);
+                        // TODO : else open a new Intent to the ReferenceActivity for that word / character
+
                     }
                 });
             top_word.addView(character);
@@ -216,7 +219,7 @@ public class DetailsFragment extends Fragment {
         section.setTag(R.id.detail_query, hanzi);
     }
 
-    private class populator extends AsyncTask<Void,Void,Void> {
+    static private class populator extends AsyncTask<Void,Void,Void> {
         Cursor cursor;
         ProgressDialog mProgressDialog;
         Timer show_progress_timer = new Timer();

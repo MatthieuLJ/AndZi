@@ -12,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -183,7 +182,7 @@ public class MainMenuActivity extends SherlockActivity {
     }
     
     public void handle_test(@Nullable View v) {
-        Intent intent = new Intent(this, Test.class);
+        Intent intent = new Intent(this, TestActivity.class);
         startActivity(intent);
     }
 

@@ -38,24 +38,10 @@
 
         <activity android:name=".DBActivity"/>
 
-        <activity android:name=".Test"
+        <activity android:name=".TestActivity"
                 android:launchMode="singleTop"/>
-        <activity android:name=".GuessTone"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".GuessMissingChar"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".GuessChineseWord"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".GuessPinyin"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".GuessEnglish"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".GuessContaining"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
 
         <activity android:name=".ReviewList"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".LessonListFragment"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity android:name=".ReferenceActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"

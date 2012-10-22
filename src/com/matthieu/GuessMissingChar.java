@@ -4,27 +4,28 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import java.util.ArrayList;
 
-public class GuessMissingChar extends TestActivity implements TextWatcher {
+public class GuessMissingChar extends TestFragment implements TextWatcher {
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private ArrayList<String> previous_guess=new ArrayList<String>();
 
     private final String TAG="GuessMissingChar";
 
-    protected void set_next_study() {
-        super.set_next_study();
+    public GuessMissingChar(TestActivity testActivity) {
+        super(testActivity);
+    }
+
+    protected boolean set_hanzi_to_test(String hanzi) {
+        super.set_hanzi_to_test(hanzi);
 
         words = myDB.getFilteredWordsWithPinyin(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
@@ -33,18 +34,27 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
                 words.remove(i);
         }
         if (words.size() == 0) {
-            nothing_to_test();
-            return;
+            return false;
         }
 
-        display_test();
+        Log.d(TAG, "GuessMissingChar OK");
+
+        return true;
     }
 
     @Override
-    protected void display_test() {
-        setContentView(R.layout.guess_missing_char);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res = inflater.inflate(R.layout.guess_missing_char, container, false);
+        update_test_view(res);
+        return res;
+    }
 
-        EditText guess = (EditText) findViewById(R.id.char_finder_chinese);
+    @Override
+    public void update_test_view(View v) {
+        if (v==null)
+            return;
+
+        EditText guess = (EditText) v.findViewById(R.id.char_finder_chinese);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -52,11 +62,12 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
                 return true;
             }
         });
-        guess.addTextChangedListener(this);
+        guess.removeTextChangedListener(this);
         guess.setText("");
+        guess.addTextChangedListener(this);
         guess.requestFocus();
 
-        TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
+        TextView previous = (TextView) v.findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
         previous_guess.clear();
 
@@ -66,14 +77,14 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
 
         Log.d(TAG, "Testing for character "+hanzi+" got "+words.size()+" words");
 
-        TableLayout tl = (TableLayout) findViewById(R.id.char_finder_word_grid);
+        TableLayout tl = (TableLayout) v.findViewById(R.id.char_finder_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
         for (Vocabulary w : words) {
-            TableRow tr = new TableRow(this);
+            TableRow tr = new TableRow(getActivity());
 
-            TextView chinese = new TextView(this);
-            chinese.setTextAppearance(GuessMissingChar.this, android.R.style.TextAppearance_Medium_Inverse);
+            TextView chinese = new TextView(getActivity());
+            chinese.setTextAppearance(getActivity(), android.R.style.TextAppearance_Medium_Inverse);
             chinese.setClickable(false);
             chinese.setText(w.chinese.replaceAll(hanzi, "\\?"));
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -81,8 +92,8 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
             chinese.setLayoutParams(trlp);
             tr.addView(chinese);
 
-            TextView trans = new TextView(this);
-            trans.setTextAppearance(GuessMissingChar.this, android.R.style.TextAppearance_Medium_Inverse);
+            TextView trans = new TextView(getActivity());
+            trans.setTextAppearance(getActivity(), android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
@@ -100,7 +111,8 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
             tr.setLayoutParams(tlp);
             tl.addView(tr);
         }
-        tl.invalidate();
+        //tl.invalidate();
+        v.invalidate();
     }
 
     protected int check_guess(String guess) {
@@ -146,8 +158,8 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
         if (res == OTHER) {
                 if (!previous_guess.contains(guess))
                     previous_guess.add(guess);
-                TextView previous = (TextView) findViewById(R.id.char_finder_previous_guess);
-                EditText edit_guess = (EditText) findViewById(R.id.char_finder_chinese);
+                TextView previous = (TextView) getView().findViewById(R.id.char_finder_previous_guess);
+                EditText edit_guess = (EditText) getView().findViewById(R.id.char_finder_chinese);
                 previous.setText("Previous try:\n");
                 for (int i=0; i<previous_guess.size(); i++) {
                     previous.setText(previous.getText() + previous_guess.get(i));
@@ -161,55 +173,64 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
         return res;
     }
 
-    protected void update_scores(int good) {
-        if (good==CORRECT) {
-            myDB.betterBox(hanzi);
-        }
-        else {
-            myDB.worseBox(hanzi);
-        }
-
-        // reset the time for all characters displayed or restart study
-        for (Vocabulary v:words) {
-            for (int i=0; i<v.chinese.length();) {
-                String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
-                i+=Character.charCount(v.chinese.codePointAt(i));
-                if (other_hanzi.equals(hanzi))
-                    continue;
-                if (good==CORRECT) {
-                    myDB.resetTime(other_hanzi);
-                }
-                else
-                    myDB.worseBox(other_hanzi);
-            }
-        }
-    }
-
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) findViewById(R.id.char_finder_chinese);
+    public boolean handle_ok(View v) {
+        EditText word_guess = (EditText) getView().findViewById(R.id.char_finder_chinese);
         if (word_guess==null)
-            return;
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            return false;
+        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
         String guess = word_guess.getText().toString();
 
-        handle_submit(guess);
+        int correctness = check_guess(guess);
+        switch(correctness) {
+            case OTHER:
+                word_guess.setText("");
+                break;
+            case CORRECT:
+            case INCORRECT:
+                GuessMissinCharResultFragment solution_fragment = new GuessMissinCharResultFragment(hanzi, guess, hanzi, words, correctness);
+                ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+                break;
+        }
+        return true;
     }
 
-    @Override
-    protected void show_solution(String guess, int good) {
-        super.show_solution(guess, good);
-        //Details.populate_details_view(GuessMissingChar.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
-        if ((good == INCORRECT) && (!guess.equals(""))) {
-            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessMissingChar.this);
-            bad_guess_text.setText("You guessed: "+guess);
-            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            bad_guess_text.setTextColor(0xffdd0000);
-            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+    protected class GuessMissinCharResultFragment extends SolutionFragment {
+        ArrayList<Vocabulary> words;
+        public GuessMissinCharResultFragment(String question, String answer, String hanzi, ArrayList<Vocabulary> words, int good) {
+            super(question, answer, hanzi, good);
+            this.words = words;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return show_details(inflater, container, false);
+        }
+
+        @Override
+        public void update_score() {
+            if (good==CORRECT) {
+                myDB.betterBox(hanzi);
+            }
+            else {
+                myDB.worseBox(hanzi);
+            }
+
+            // reset the time for all characters displayed or restart study
+            for (Vocabulary v:words) {
+                for (int i=0; i<v.chinese.length();) {
+                    String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
+                    i+=Character.charCount(v.chinese.codePointAt(i));
+                    if (other_hanzi.equals(hanzi))
+                        continue;
+                    if (good==CORRECT) {
+                        myDB.resetTime(other_hanzi);
+                    }
+                    else
+                        myDB.worseBox(other_hanzi);
+                }
+            }
         }
     }
 
@@ -218,9 +239,9 @@ public class GuessMissingChar extends TestActivity implements TextWatcher {
 
     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         if (charSequence.toString().codePointCount(0, charSequence.toString().length()) > 1) {
-            findViewById(R.id.ok).setEnabled(false);
+            getView().findViewById(R.id.ok).setEnabled(false);
         } else {
-            findViewById(R.id.ok).setEnabled(true);
+            getView().findViewById(R.id.ok).setEnabled(true);
         }
 
     }

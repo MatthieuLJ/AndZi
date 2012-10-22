@@ -4,30 +4,32 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessPinyin extends TestActivity  implements TextWatcher {
+public class GuessPinyin extends TestFragment implements TextWatcher {
     private String pinyin;
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private boolean show_words=false;
 
     private static final String TAG="GuessPinyin";
 
+    public GuessPinyin(TestActivity testActivity) {
+        super(testActivity);
+    }
+
     @Override
-    protected void set_next_study() {
-        super.set_next_study();
+    protected boolean set_hanzi_to_test(String hanzi) {
+        super.set_hanzi_to_test(hanzi);
 
         show_words=false;
 
@@ -66,18 +68,27 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
                 found = true;
         }
         if (!found) {
-            nothing_to_test();
-            return;
+            return false;
         }
 
-        display_test();
+        Log.d(TAG, "GuessPinyin OK");
+
+        return true;
     }
 
     @Override
-    protected void display_test() {
-        setContentView(R.layout.guess_pinyin);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res =  inflater.inflate(R.layout.guess_pinyin, container, false);
+        update_test_view(res);
+        return res;
+    }
 
-        EditText guess = (EditText) findViewById(R.id.guess_pinyin_guess);
+    @Override
+    public void update_test_view(View v) {
+        if (v == null)
+            return;
+
+        EditText guess = (EditText) v.findViewById(R.id.guess_pinyin_guess);
         guess.setText("");
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -91,17 +102,17 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
 
         Log.d(TAG, "Testing for character " + hanzi + " got " + words.size() + " words");
 
-        TextView chinese_hint = (TextView) findViewById(R.id.guess_pinyin_chinese);
+        TextView chinese_hint = (TextView) v.findViewById(R.id.guess_pinyin_chinese);
         chinese_hint.setText(hanzi);
 
-        final TableLayout tl = (TableLayout) findViewById(R.id.guess_pinyin_word_grid);
+        final TableLayout tl = (TableLayout) v.findViewById(R.id.guess_pinyin_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
         for (Vocabulary w : words) {
-            TableRow tr = new TableRow(this);
+            TableRow tr = new TableRow(getActivity());
 
-            TextView chinese = new TextView(this);
-            chinese.setTextAppearance(GuessPinyin.this, android.R.style.TextAppearance_Medium_Inverse);
+            TextView chinese = new TextView(getActivity());
+            chinese.setTextAppearance(getActivity(), android.R.style.TextAppearance_Medium_Inverse);
             chinese.setClickable(false);
             chinese.setText(w.chinese);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -109,8 +120,8 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
             chinese.setLayoutParams(trlp);
             tr.addView(chinese);
 
-            TextView trans = new TextView(this);
-            trans.setTextAppearance(GuessPinyin.this, android.R.style.TextAppearance_Medium_Inverse);
+            TextView trans = new TextView(getActivity());
+            trans.setTextAppearance(getActivity(), android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
@@ -126,7 +137,7 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
 
             tl.addView(tr);
         }
-        Button show_words_button = (Button) findViewById(R.id.guess_pinyin_show_words);
+        Button show_words_button = (Button) v.findViewById(R.id.guess_pinyin_show_words);
         show_words_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 tl.setVisibility(View.VISIBLE);
@@ -142,10 +153,10 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
             tl.setVisibility(View.GONE);
             show_words_button.setClickable(true);
         }
-        tl.invalidate();
+        //tl.invalidate();
+        v.invalidate();
     }
 
-    @Override
     protected int check_guess(String guess) {
         Pinyin guess_pinyin = new Pinyin(guess);
         Pinyin solution = new Pinyin(pinyin);
@@ -161,54 +172,46 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
         return INCORRECT;
     }
 
-    @Override
-    protected void update_scores(int good) {
-        switch(good) {
-            case INCORRECT:
-                myDB.worseBox(hanzi);
-                break;
-            case CORRECT:
-                myDB.betterBox(hanzi);
-                break;
-            case OTHER:
-                myDB.resetTime(hanzi);
-                break;
-        }
-    }
 
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) findViewById(R.id.guess_pinyin_guess);
+    public boolean handle_ok(View v) {
+        EditText word_guess = (EditText) getView().findViewById(R.id.guess_pinyin_guess);
         if (word_guess==null)
-            return;
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            return false;
+        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(guess) == OTHER) {
-            if ((show_result == 2) || (show_result ==1)) {
-                show_solution(guess, INCORRECT);
-            }
-            else {
-                update_scores(OTHER);
-                Toast.makeText(this, "Wrong tone", Toast.LENGTH_SHORT).show();
-                another_test_or_quit();
-            }
-        }
+        int correctness = check_guess(guess);
+        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment(hanzi, guess, hanzi, correctness);
+        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+
+        return true;
     }
 
-    protected void show_solution(String guess, int good) {
-        super.show_solution(guess, good);
-        //Details.populate_details_view(GuessPinyin.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
-        if ((good == INCORRECT) && (!guess.equals(""))) {
-            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessPinyin.this);
-            bad_guess_text.setText("You guessed: "+guess);
-            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            bad_guess_text.setTextColor(0xffdd0000);
-            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+    protected class GuessPinyinResultFragment extends SolutionFragment {
+        public GuessPinyinResultFragment(String question, String answer, String hanzi, int good) {
+            super(question, answer, hanzi, good);
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return show_details(inflater, container, false);
+        }
+
+        @Override
+        public void update_score() {
+            switch(good) {
+                case INCORRECT:
+                    myDB.worseBox(hanzi);
+                    break;
+                case CORRECT:
+                    myDB.betterBox(hanzi);
+                    break;
+                case OTHER:
+                    myDB.resetTime(hanzi);
+                    break;
+            }
         }
     }
 
@@ -217,9 +220,9 @@ public class GuessPinyin extends TestActivity  implements TextWatcher {
 
     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         if ((charSequence.toString().codePointCount(0, charSequence.toString().length()) > 0) && (!Pinyin.verify_pinyin(charSequence.toString()))) {
-            findViewById(R.id.ok).setEnabled(false);
+            getView().findViewById(R.id.ok).setEnabled(false);
         } else {
-            findViewById(R.id.ok).setEnabled(true);
+            getView().findViewById(R.id.ok).setEnabled(true);
         }
     }
 

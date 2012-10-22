@@ -1,196 +1,193 @@
 /******************************
- * Parent class for all tests
+ * Entry class to pick tests randomly
  */
 package com.matthieu;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Configuration;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.view.KeyEvent;
+import android.support.v4.app.*;
+import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.Toast;
-import com.matthieu.widget.VocabularyCursorAdapter;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.viewpagerindicator.PageIndicator;
 
-public abstract class TestActivity extends Activity {
-    protected final int STATE_UNKNOWN=0;
-    protected final int STATE_ASKED=1;
-    protected final int STATE_ANSWERED=2;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
-    protected int test_state = STATE_UNKNOWN;
-    protected int show_result=1;
-    protected String last_guess="";
-    protected int last_good=0;
-    protected int last_result;
-    protected String hanzi;
+public class TestActivity extends SherlockFragmentActivity {
+    private ArrayList<TestFragment> char_tests;
+    private ArrayList<TestFragment> word_tests;
 
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
+    private Fragment fragments[];
 
-    private static final String TAG="TestActivity";
+    private HanziDB myDB;
+    private boolean continue_with_more_chars=false;
+    private String current_hanzi;
 
-    final static protected int CORRECT=1;
-    final static protected int INCORRECT=2;
-    final static protected int OTHER=3;
-    final static protected int NOTHING_TO_TEST=4;
+    private static final String TAG="Test_Master";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
-
         myDB = ((AndZiApplication) getApplication()).getMyDB();
-        refDB = ((AndZiApplication) getApplication()).getRefDB();
 
-        hanzi=getIntent().getStringExtra("hanzi");
-        if ((hanzi==null) || (hanzi.equals(""))) {
-            nothing_to_test();
-        }
-    }
+        char_tests = new ArrayList<TestFragment>(Arrays.asList(
+                new GuessMissingChar(this), new GuessContaining(this), new GuessPinyin(this), new GuessTone(this)));
+        word_tests = new ArrayList<TestFragment>(Arrays.asList(
+                new GuessChineseWord(this), new GuessEnglish(this)));
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+        fragments = new Fragment[2];
 
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        setContentView(R.layout.test);
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if (pager != null) {
+            pager.setAdapter(new test_pager(getSupportFragmentManager()));
 
-        if (sp.getString("show_result", "always").equals("always")) {
-            show_result = 1;
-        }
-        else if (sp.getString("show_result", "always").equals("sometimes")) {
-            show_result = 2;
+            PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
+            mIndicator.setViewPager(pager);
         }
         else {
-            show_result = 3;
+            // When we are on a larger screen without a pager
         }
-
-        if (test_state == STATE_UNKNOWN) {
-            set_next_study();
-        }
+        start_test();
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        switch (test_state) {
-            case STATE_UNKNOWN:
-                another_test_or_quit();
-                break;
-            case STATE_ASKED:
-                display_test();
-                break;
-            case STATE_ANSWERED:
-                show_solution(last_guess, last_good);
-                break;
-        }
-    }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            if (test_state == STATE_ANSWERED) {
-                update_scores(last_result);
-            }
-        }
-        return super.onKeyDown(keyCode, event);
-    }
+    private void set_next_char_to_study() {
+        ArrayList<String> hanzis=myDB.getAllFilteredToStudy();
+        if (continue_with_more_chars)
+            hanzis.addAll(myDB.getMostAdvancedExpiring(5, false));
 
-    protected void set_next_study() {
-        test_state = STATE_ASKED;
-    }
-    protected void nothing_to_test() {
-        setResult(NOTHING_TO_TEST);
-        finish();
-    }
-    abstract protected void display_test();
-    abstract protected int check_guess(String guess);
-    abstract protected void update_scores(int good);
+        if (hanzis.size()==0) {
+            if (!continue_with_more_chars) {
+                AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(TestActivity.this);
+                nothing_to_study.setCancelable(false);
+                if (myDB.isFilterEnabled()) {
+                    nothing_to_study.setMessage(getResources().getString(R.string.test_mastering_disable_filter));
+                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            myDB.enableFilter(false);
+                            start_test();
+                        }
+                    });
+                } else if (myDB.getNumChars() > 0) {
+                    nothing_to_study.setMessage(getResources().getString(R.string.test_mastering));
+                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            continue_with_more_chars=true;
+                            start_test();
+                        }
+                    });
+                }
 
-    public synchronized void onActivityResult(final int requestCode, int resultCode, final Intent data) {
-        if (requestCode != 0)
-            return;
-
-        if (resultCode == CORRECT) {
-            update_scores(CORRECT);
-        } else {
-            update_scores(INCORRECT);
-        }
-    }
-
-    protected int handle_submit(String guess) {
-        last_result = check_guess(guess);
-
-        if (last_result == OTHER)
-            return last_result;
-
-        return show_or_next(guess);
-    }
-
-    protected int show_or_next(String guess) {
-        Toast toast;
-
-        test_state = STATE_ANSWERED;
-
-        if (((show_result == 2) || (show_result == 1)) && (last_result == INCORRECT)) {
-            show_solution(guess, last_result);
-        }
-        else {
-            if (show_result==1) {
-                show_solution(guess, last_result);
-            }
-            else {
-                update_scores(last_result);
-
-                if (last_result == INCORRECT) {
-                    toast = Toast.makeText(this, "Wrong answer...", Toast.LENGTH_SHORT);
+                if (myDB.getNumChars() == 0) {
+                    nothing_to_study.setMessage(getResources().getString(R.string.review_list_nothing_to_study));
+                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    });
                 }
                 else {
-                    toast = Toast.makeText(this, "Well done !", Toast.LENGTH_SHORT);
+                    nothing_to_study.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int i) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    });
                 }
-                toast.show();
-                another_test_or_quit();
+                nothing_to_study.create();
+                nothing_to_study.show();
+            } else {
+                finish();
+            }
+            current_hanzi=null;
+        }
+        else {
+            current_hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
+            Log.d(TAG, "Will study" + current_hanzi);
+        }
+    }
+
+    private void start_test() {
+        set_next_char_to_study();
+        if (current_hanzi == null)
+            return;
+        ArrayList<TestFragment> tests = new ArrayList<TestFragment>();
+        if (current_hanzi.length()==1) {
+            tests.addAll(char_tests);
+            if (myDB.getWordsWithPinyin(current_hanzi).size()>0)
+                tests.addAll(word_tests);
+        } else {
+            tests.addAll(word_tests);
+        }
+        Collections.shuffle(tests);
+        int current_index;
+        for (current_index=0; current_index< tests.size(); current_index++) {
+            if (tests.get(current_index).set_hanzi_to_test(current_hanzi)) {
+                Fragment old_fragment = fragments[0];
+
+                fragments[0] = tests.get(current_index);
+
+                ((TestFragment) fragments[0]).update_test_view(fragments[0].getView());
+
+                ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+                if (pager != null) {
+                    pager.getAdapter().notifyDataSetChanged();
+                }
+                return;
             }
         }
-        return last_result;
-    }
-
-    protected void show_solution(String guess, int good) {
-           setContentView(R.layout.test_result);
-           last_guess=guess;
-           last_good=good;
-    }
-
-    public void another_test_or_quit() {
-        setResult(last_result);
         finish();
     }
 
-    public void handle_next(View v) {
-        close_solution();
-        update_scores(last_result);
-        another_test_or_quit();
+    public void new_solution_fragment(Fragment solution, int correctness) {
+        if (fragments[1] != null) {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.remove(fragments[1]);
+            ft.commit();
+        }
+        fragments[1] = solution;
+        start_test();
     }
 
-    public void handle_good(View v) {
-        close_solution();
-        update_scores(CORRECT);
-        another_test_or_quit();
+    public boolean handle_ok(View v) {
+        return ((TestFragment)fragments[0]).handle_ok(v);
     }
 
-    protected void close_solution() {
-        // destroy the details list view (and clean the cursor)
-        LinearLayout correct_solution = (LinearLayout)  findViewById(R.id.test_results);
-        ListView list= (ListView) correct_solution.findViewById(R.id.details_list);
-        if (list != null) {
-            VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
-            if (adapter != null) {
-                adapter.changeCursor(null);
-            }
+    private class test_pager extends FragmentStatePagerAdapter {
+
+        public test_pager(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int i) {
+            return fragments[i];
+        }
+
+        @Override
+        public int getCount() {
+            return fragments[1] == null ? 1 : 2;
+        }
+
+        @Override
+        public int getItemPosition(Object object) {
+            Fragment fragment = (Fragment) object;
+            if (fragment == fragments[0])
+                return POSITION_UNCHANGED;
+            else if (fragment == fragments[1])
+                return POSITION_UNCHANGED;
+            else
+                return POSITION_NONE;
         }
     }
 }

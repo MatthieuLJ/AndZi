@@ -5,23 +5,30 @@ package com.matthieu;
 
 import android.gesture.*;
 import android.graphics.Point;
+import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessTone extends TestActivity implements GestureOverlayView.OnGesturePerformedListener {
+public class GuessTone extends TestFragment implements GestureOverlayView.OnGesturePerformedListener {
     private Pinyin pinyin;
     private ArrayList<Integer> tones=new ArrayList<Integer>();
 
     private final String TAG="GuessTone";
 
-    protected void set_next_study() {
-        super.set_next_study();
+    public GuessTone(TestActivity testActivity) {
+        super(testActivity);
+    }
+
+    @Override
+    protected boolean set_hanzi_to_test(String hanzi) {
+        super.set_hanzi_to_test(hanzi);
         ArrayList<String> pinyins;
 
         pinyins = myDB.getPinyinForChar(hanzi);
@@ -34,20 +41,29 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         }
 
         if (hanzi == null) {
-            nothing_to_test();
-            return;
+            return false;
         }
-        display_test();
+        Log.d(TAG, "GuessTone OK");
+
+        return true;
     }
 
     @Override
-    protected void display_test() {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        final View res =  inflater.inflate(R.layout.guess_tone, container, false);
+        update_test_view(res);
+        return res;
+    }
+
+    @Override
+    public void update_test_view(View v) {
+        if (v == null)
+            return;
+
         ArrayList<String> pinyins;
         String radical;
 
-        setContentView(R.layout.guess_tone);
-
-        GestureOverlayView overlay = (GestureOverlayView) findViewById(R.id.guess_tone_gestureview);
+        GestureOverlayView overlay = (GestureOverlayView) v.findViewById(R.id.guess_tone_gestureview);
         overlay.addOnGesturePerformedListener(this);
 
         pinyins = myDB.getPinyinForChar(hanzi);
@@ -61,23 +77,24 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             }
         }
 
-        TextView tv_hanzi = (TextView) findViewById(R.id.guess_tone_chinese);
-        TextView tv_pinyin = (TextView) findViewById(R.id.guess_tone_pinyin);
+        TextView tv_hanzi = (TextView) v.findViewById(R.id.guess_tone_chinese);
+        TextView tv_pinyin = (TextView) v.findViewById(R.id.guess_tone_pinyin);
 
         tv_hanzi.setText(hanzi);
         tv_pinyin.setText(radical);
 
         CheckBox cb;
-        cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
+        cb = (CheckBox) v.findViewById(R.id.guess_tone_first_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.guess_tone_second_tone);
+        cb = (CheckBox) v.findViewById(R.id.guess_tone_second_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.guess_tone_third_tone);
+        cb = (CheckBox) v.findViewById(R.id.guess_tone_third_tone);
         cb.setChecked(false);
-        cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
+        cb = (CheckBox) v.findViewById(R.id.guess_tone_fourth_tone);
         cb.setChecked(false);
 
         Log.d(TAG, "Expects tones : "+tones.toString());
+        v.invalidate();
     }
 
     protected int check_guess(String guess) {
@@ -97,14 +114,6 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
             return res;
 
         return CORRECT;
-    }
-
-    @Override
-    protected void update_scores(int good) {
-        if (good == CORRECT)
-            myDB.betterBox(hanzi);
-        else
-            myDB.worseBox(hanzi);
     }
 
     public void onGesturePerformed(GestureOverlayView gestureOverlayView, Gesture gesture) {
@@ -204,65 +213,85 @@ public class GuessTone extends TestActivity implements GestureOverlayView.OnGest
         CheckBox cb=null;
         switch (tone) {
             case 1:
-                cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
+                cb = (CheckBox) getView().findViewById(R.id.guess_tone_first_tone);
                 break;
             case 2:
-                cb = (CheckBox) findViewById(R.id.guess_tone_second_tone);
+                cb = (CheckBox) getView().findViewById(R.id.guess_tone_second_tone);
                 break;
             case 3:
-                cb = (CheckBox) findViewById(R.id.guess_tone_third_tone);
+                cb = (CheckBox) getView().findViewById(R.id.guess_tone_third_tone);
                 break;
             case 4:
-                cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
+                cb = (CheckBox) getView().findViewById(R.id.guess_tone_fourth_tone);
                 break;
         }
         if (cb != null)
             cb.setChecked(true);
     }
 
-    public void handle_ok(View v) {
+    public boolean handle_ok(View v) {
         String tones_checked="";
         CheckBox cb;
 
-        cb = (CheckBox) findViewById(R.id.guess_tone_first_tone);
+        cb = (CheckBox) getView().findViewById(R.id.guess_tone_first_tone);
         if (cb.isChecked()) tones_checked+="1";
-        cb = (CheckBox) findViewById(R.id.guess_tone_second_tone);
+        cb = (CheckBox) getView().findViewById(R.id.guess_tone_second_tone);
         if (cb.isChecked()) tones_checked+="2";
-        cb = (CheckBox) findViewById(R.id.guess_tone_third_tone);
+        cb = (CheckBox) getView().findViewById(R.id.guess_tone_third_tone);
         if (cb.isChecked()) tones_checked+="3";
-        cb = (CheckBox) findViewById(R.id.guess_tone_fourth_tone);
+        cb = (CheckBox) getView().findViewById(R.id.guess_tone_fourth_tone);
         if (cb.isChecked()) tones_checked+="4";
 
-        handle_submit(tones_checked);
+        int correctness = check_guess(tones_checked);
+        GuessToneResultFragment solution_fragment = new GuessToneResultFragment(hanzi, tones_checked, hanzi, correctness);
+        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+
+        return true;
     }
 
-    @Override
-    protected void show_solution(String guess, int good) {
-        super.show_solution(guess, good);
-        //Details.populate_details_view(GuessTone.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
-        if (good == INCORRECT) {
-            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessTone.this);
-            if (guess.length() == 0) {
-                bad_guess_text.setText("You did not guess anything");
-            }
-            else if (guess.length() == 1) {
-                bad_guess_text.setText("You guessed tone: "+guess);
-            }
-            else {
-                String label = "You guessed tones: ";
-                for(int i=0; i<guess.length(); i++) {
-                    label += guess.substring(i, i+1);
-                    if (i<guess.length()-1)
-                        label+=", ";
+    protected class GuessToneResultFragment extends SolutionFragment {
+        public GuessToneResultFragment(String question, String answer, String hanzi, int good) {
+            super(question, answer, hanzi, good);    //To change body of overridden methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+
+            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, myDB);
+            if ((good == INCORRECT) && (!answer.equals(""))) {
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                TextView bad_guess_text = new TextView(getActivity());
+                if (answer.length() == 0) {
+                    bad_guess_text.setText("You did not guess anything");
                 }
-                bad_guess_text.setText(label);
+                else if (answer.length() == 1) {
+                    bad_guess_text.setText("You guessed tone: "+answer);
+                }
+                else {
+                    String label = "You guessed tones: ";
+                    for(int i=0; i<answer.length(); i++) {
+                        label += answer.substring(i, i+1);
+                        if (i<answer.length()-1)
+                            label+=", ";
+                    }
+                    bad_guess_text.setText(label);
+                }
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
-            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            bad_guess_text.setTextColor(0xffdd0000);
-            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+            return res;
+        }
+
+        @Override
+        public void update_score() {
+            if (good == CORRECT)
+                myDB.betterBox(hanzi);
+            else
+                myDB.worseBox(hanzi);
         }
     }
 }
