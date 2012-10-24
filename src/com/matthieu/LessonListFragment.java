@@ -44,11 +44,6 @@ public class LessonListFragment extends Fragment {
         return res;
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        ((AndZiApplication) getActivity().getApplication()).activityPaused();
-    }
 /*
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -83,7 +78,6 @@ public class LessonListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        ((AndZiApplication)getActivity().getApplication()).activityResumed();
 
          loader = new AsyncTask<Void, Void, Void>() {
 

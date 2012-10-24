@@ -5,6 +5,7 @@
  */
 package com.matthieu;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -18,9 +19,7 @@ import com.matthieu.widget.FileMountPoint;
 import com.matthieu.widget.ObjectSerializer;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
@@ -369,29 +368,26 @@ public class AndZiApplication extends Application {
            cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
-    int visibility=0;
-    public void activityPaused() {
-        Timer timer = new Timer();
-        TimerTask pausing_task = new TimerTask() {
-            @Override
-            public void run() {
-                synchronized (AndZiApplication.this) {
-                    visibility--;
-                }
+    ActivityManager mActivityManager;
+    public boolean isApplicationForeground() {
+        ActivityManager.RunningAppProcessInfo result=null, info=null;
+
+        if(mActivityManager==null)
+            mActivityManager = (ActivityManager)this.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> l = mActivityManager.getRunningAppProcesses();
+        Iterator<ActivityManager.RunningAppProcessInfo> i = l.iterator();
+        while(i.hasNext()){
+            info = i.next();
+            if ((info.processName.equals(this.getPackageName())) &&
+                    (info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)){
+//                Log.d(TAG, "We're in foreground!");
+                return true;
             }
-        };
-        timer.schedule(pausing_task, 30*1000); // give 30 seconds before another Activity may take over
+        }
+//        Log.d(TAG, "We're in the back!");
+        return false;
     }
 
-    public void activityResumed() {
-        ProgressService.clear_notification(this);
-        synchronized (AndZiApplication.this) {
-            visibility++;
-        }
-    }
-    public boolean isApplicationForeground() {
-        return (visibility>0);
-    }
     private boolean show_splash=true;
     public void showSplash(boolean set) {
         show_splash=set;
