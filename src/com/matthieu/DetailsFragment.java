@@ -94,27 +94,13 @@ public class DetailsFragment extends Fragment {
         }
     }
 
-    /*
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        FrameLayout frame = (FrameLayout) getView().findViewById(R.id.top_level_detail_view);
-        if (frame == null) {
-            frame = new FrameLayout(this);
-            frame.setId(R.id.top_level_detail_view);
-        }
-        populate_details_view(this, frame, current_hanzi, db);
-        setContentView(frame);
-    }
-    */
-
     static void populate_details_view(final Fragment fragment, ViewGroup section, final String hanzi, final HanziDB db) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(fragment.getActivity());
         boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
         Log.d(TAG, "populate_details_view: populate view for "+hanzi);
 
+        // if the view already had a detail list...
         ListView old_list= (ListView) section.findViewById(R.id.details_list);
         VocabularyCursorAdapter old_adapter=null;
         WeakReference<populator> old_populate_task = null;
@@ -132,34 +118,7 @@ public class DetailsFragment extends Fragment {
         }
 
         section.removeAllViews();
-        View new_view = View.inflate(fragment.getActivity(), R.layout.details, section);
-
-        TextView info = (TextView) new_view.findViewById(R.id.details_info);
-        if (hanzi.codePointCount(0, hanzi.length()) == 1) {
-            if (old_pinyins != null)
-                info.setText(old_pinyins);
-            else {
-                ArrayList<String> pinyins = db.getPinyinForChar(hanzi);
-                String info_pinyins="(";
-                for (int i=0; i<pinyins.size(); i++) {
-                    String pin=pinyins.get(i);
-
-                    if (show_pinyin_color)
-                        info_pinyins+=PinyinParser.convert_to_html_version(pin);
-                    else
-                        info_pinyins+=PinyinParser.convert_to_pretty_version(pin);
-                    if (i < pinyins.size()-1)
-                        info_pinyins+=", ";
-                }
-                info_pinyins+=")";
-
-                info.setText(Html.fromHtml(info_pinyins));
-            }
-            info.setVisibility(View.VISIBLE);
-        }
-        else {
-            info.setVisibility(View.GONE);
-        }
+        final View new_view = View.inflate(fragment.getActivity(), R.layout.details, section);
 
         // first write the word at the top
         LinearLayout top_word = (LinearLayout) new_view.findViewById(R.id.details_title);
@@ -183,6 +142,35 @@ public class DetailsFragment extends Fragment {
             i+=Character.charCount(hanzi.codePointAt(i));
         }
 
+        // write the pinyin(s) if applicable
+        final TextView info = (TextView) new_view.findViewById(R.id.details_info);
+        if (old_pinyins != null) {
+            info.setText(old_pinyins);
+            info.setVisibility(View.VISIBLE);
+        } else if (hanzi.codePointCount(0, hanzi.length()) == 1) {
+            ArrayList<String> pinyins = db.getPinyinForChar(hanzi);
+            String info_pinyins="(";
+            for (int i=0; i<pinyins.size(); i++) {
+                String pin=pinyins.get(i);
+
+                if (show_pinyin_color)
+                    info_pinyins+=PinyinParser.convert_to_html_version(pin);
+                else
+                    info_pinyins+=PinyinParser.convert_to_pretty_version(pin);
+                if (i < pinyins.size()-1)
+                    info_pinyins+=", ";
+            }
+            info_pinyins+=")";
+
+            info.setText(Html.fromHtml(info_pinyins));
+
+            info.setVisibility(View.VISIBLE);
+        }
+        else { // TODO: handle the case where the word is in the DB and has only one pronounciation
+            info.setVisibility(View.GONE);
+        }
+
+        // populate the list
         final ListView list= (ListView) new_view.findViewById(R.id.details_list);
         if (old_list != null) {
             synchronized (locker) {
@@ -221,7 +209,6 @@ public class DetailsFragment extends Fragment {
 
     static private class populator extends AsyncTask<Void,Void,Void> {
         Cursor cursor;
-        ProgressDialog mProgressDialog;
         Timer show_progress_timer = new Timer();
         Fragment fragment;
         ArrayList<HanziDB.StringElement> elements;
@@ -245,45 +232,7 @@ public class DetailsFragment extends Fragment {
         public void changeList(ListView l) {
             list = new WeakReference<ListView>(l);
         }
-        @Override
-        protected void onPreExecute() {
-            mProgressDialog = new ProgressDialog(fragment.getActivity());
-            mProgressDialog.setMessage(fragment.getActivity().getResources().getString(R.string.loading));
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setCanceledOnTouchOutside(true);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                public void onCancel(DialogInterface dialogInterface) {
-                    populator.this.cancel(false);
-                    dialogInterface.dismiss();
-                    if (fragment.getClass().equals(DetailsFragment.class)) {
-                        /*
-                        if(!((DetailsFragment)fragment).go_back_one())
-                            fragment.getActivity().finish();
-                            */
-                    }
-                }
-            });
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            TimerTask show_progress = new TimerTask() {
-                @Override
-                public void run() {
-                    fragment.getActivity().runOnUiThread(new Runnable() {
-                        public void run() {
-                            synchronized (mProgressDialog) {
-                                if (list.get()!=null) {
-                                    VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.get().getAdapter();
-                                    if(adapter==null)
-                                        mProgressDialog.show();
-                                }
-                            }
-                        }
-                    });
-                }
-            };
-            show_progress_timer.schedule(show_progress,500);
 
-        }
         @Override
         protected Void doInBackground(Void... voids) {
             cursor = db.getWordsWithSequence(elements, true, true);
@@ -295,29 +244,41 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onCancelled(Void aVoid) {
             show_progress_timer.cancel();
-            mProgressDialog.dismiss();
             if (cursor!=null)
                 cursor.close();
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            synchronized (mProgressDialog) {
-                show_progress_timer.cancel();
-                mProgressDialog.dismiss();
-
-                synchronized (locker) {
-                    if (list.get()!=null) {
-                        VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.get().getAdapter();
-                        if (adapter == null)
-                            list.get().setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, null));
-                        else
-                            adapter.changeCursor(cursor);
-                    }
-                    else {
-                        cursor.close();
-                    }
+            synchronized (locker) {
+                if (list.get()!=null) {
+                    VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.get().getAdapter();
+                    if (adapter == null)
+                        list.get().setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, null));
+                    else
+                        adapter.changeCursor(cursor);
                 }
+                else {
+                    cursor.close();
+                }
+            }
+        }
+    }
+
+    static public void kill_detail_view(ViewGroup section) {
+        ListView old_list= (ListView) section.findViewById(R.id.details_list);
+        if (old_list == null)
+            return;
+        VocabularyCursorAdapter old_adapter=null;
+        WeakReference<populator> old_populate_task = null;
+        synchronized (locker) {
+            old_populate_task = (WeakReference<populator>) old_list.getTag(R.id.detail_populator);
+            if ((old_populate_task!=null) && (old_populate_task.get()!=null))
+                old_populate_task.get().cancel(false);
+
+            old_adapter = (VocabularyCursorAdapter) old_list.getAdapter();
+            if (old_adapter != null) {
+                old_adapter.changeCursor(null);
             }
         }
     }

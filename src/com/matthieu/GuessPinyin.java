@@ -200,6 +200,12 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         }
 
         @Override
+        public void onDestroyView() {
+            hide_details((ViewGroup) getView());
+            super.onDestroyView();
+        }
+
+        @Override
         public void update_score() {
             switch(good) {
                 case INCORRECT:

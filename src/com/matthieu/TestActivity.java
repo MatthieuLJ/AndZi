@@ -6,6 +6,7 @@ package com.matthieu;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
@@ -63,7 +64,6 @@ public class TestActivity extends SherlockFragmentActivity {
             pager.setCurrentItem(1, false);
         }
     }
-
 
     private void set_next_char_to_study() {
         ArrayList<String> hanzis=myDB.getAllFilteredToStudy();

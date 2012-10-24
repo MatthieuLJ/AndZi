@@ -209,6 +209,12 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
         }
 
         @Override
+        public void onDestroyView() {
+            hide_details((ViewGroup) getView());
+            super.onDestroyView();
+        }
+
+        @Override
         public void update_score() {
             if (good==CORRECT) {
                 myDB.betterBox(hanzi);

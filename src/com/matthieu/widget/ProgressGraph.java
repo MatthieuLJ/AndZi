@@ -198,6 +198,10 @@ public class ProgressGraph extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 final int delta_x=(int) (x_down_event - event.getX());
+                if ((delta_x > 0) && (current_offset_x == -right_size))
+                    return false;
+                if ((delta_x < 0) && (current_offset_x == max_offset_x))
+                    return false;
                 x_down_event = event.getX();
                 current_offset_x -= delta_x;
                 if (current_offset_x < -right_size)

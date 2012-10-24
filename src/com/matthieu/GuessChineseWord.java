@@ -230,6 +230,12 @@ public class GuessChineseWord extends TestFragment {
         }
 
         @Override
+        public void onDestroyView() {
+            hide_details((ViewGroup) getView());
+            super.onDestroyView();
+        }
+
+        @Override
         public void update_score() {
             int min_box = -1;
 

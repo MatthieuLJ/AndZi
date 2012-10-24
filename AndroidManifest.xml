@@ -37,7 +37,8 @@
                 />
 
         <activity android:name=".TestActivity"
-                android:launchMode="singleTop"/>
+                android:launchMode="singleTop"
+                android:configChanges="keyboardHidden|orientation|screenSize"/>
 
         <activity android:name=".ReviewList"
                   android:configChanges="keyboardHidden|orientation|screenSize"/>

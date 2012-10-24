@@ -287,6 +287,12 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         }
 
         @Override
+        public void onDestroyView() {
+            DetailsFragment.kill_detail_view((ViewGroup) getView().findViewById(R.id.test_results));
+            super.onDestroyView();
+        }
+
+        @Override
         public void update_score() {
             if (good == CORRECT)
                 myDB.betterBox(hanzi);

@@ -78,6 +78,7 @@ public abstract class TestFragment extends Fragment {
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 FrameLayout bad_guess_details = new FrameLayout(getActivity());
+                bad_guess_details.setId(R.id.test_bad_guess);
                 DetailsFragment.populate_details_view(this, bad_guess_details, answer, myDB);
                 bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
@@ -93,6 +94,15 @@ public abstract class TestFragment extends Fragment {
             }
 
             return res;
+        }
+
+        protected void hide_details(ViewGroup container) {
+            ViewGroup test_results = (ViewGroup) container.findViewById(R.id.test_results);
+            if (test_results != null)
+                DetailsFragment.kill_detail_view(test_results);
+            ViewGroup test_bad_guess = (ViewGroup) container.findViewById(R.id.test_bad_guess);
+            if (test_bad_guess != null)
+                DetailsFragment.kill_detail_view(test_bad_guess);
         }
 
         public void handle_good(View v) {
