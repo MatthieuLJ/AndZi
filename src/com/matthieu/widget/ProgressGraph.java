@@ -180,6 +180,14 @@ public class ProgressGraph extends View {
 
     private boolean finger_down=false;
 
+    public boolean canScrollHorizontally(int delta_x) {
+        if ((delta_x > 0) && (current_offset_x == -right_size))
+            return false;
+        if ((delta_x < 0) && (current_offset_x == max_offset_x))
+            return false;
+        return true;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         final int action=event.getAction();

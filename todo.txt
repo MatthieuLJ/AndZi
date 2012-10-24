@@ -10,6 +10,9 @@ ONGOING (5):
  * Be able to "pin" details page from the reference activity
  * Be able to switch between CEDICT and local list
  * Add or Edit word from Details view
+ * Show an overlay of the test result (good, bad, so-so)
+ * Show better test details
+ * Close cursors from detail views
 * In HanziDB, change insert to insert with conflict handle for higher APIs
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/

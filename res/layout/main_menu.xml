@@ -64,13 +64,6 @@
                 android:text="Settings"
                 android:onClick="handle_prefs" />
 
-        <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:text="Stats"
-                android:onClick="handle_stats" />
-
     </TableRow>
 
 </TableLayout>

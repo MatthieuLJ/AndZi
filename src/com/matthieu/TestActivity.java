@@ -4,13 +4,16 @@
 package com.matthieu;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.matthieu.widget.ProgressGraph;
 import com.viewpagerindicator.PageIndicator;
 
 import java.util.ArrayList;
@@ -40,7 +43,9 @@ public class TestActivity extends SherlockFragmentActivity {
         word_tests = new ArrayList<TestFragment>(Arrays.asList(
                 new GuessChineseWord(this), new GuessEnglish(this)));
 
-        fragments = new Fragment[2];
+        fragments = new Fragment[3];
+
+        fragments[0] = new StatsFragment();
 
         setContentView(R.layout.test);
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
@@ -54,6 +59,9 @@ public class TestActivity extends SherlockFragmentActivity {
             // When we are on a larger screen without a pager
         }
         start_test();
+        if (pager != null) {
+            pager.setCurrentItem(1, false);
+        }
     }
 
 
@@ -132,11 +140,11 @@ public class TestActivity extends SherlockFragmentActivity {
         int current_index;
         for (current_index=0; current_index< tests.size(); current_index++) {
             if (tests.get(current_index).set_hanzi_to_test(current_hanzi)) {
-                Fragment old_fragment = fragments[0];
+                Fragment old_fragment = fragments[1];
 
-                fragments[0] = tests.get(current_index);
+                fragments[1] = tests.get(current_index);
 
-                ((TestFragment) fragments[0]).update_test_view(fragments[0].getView());
+                ((TestFragment) fragments[1]).update_test_view(fragments[1].getView());
 
                 ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
                 if (pager != null) {
@@ -149,18 +157,19 @@ public class TestActivity extends SherlockFragmentActivity {
     }
 
     public void new_solution_fragment(Fragment solution, int correctness) {
-        if (fragments[1] != null) {
+        if (fragments[2] != null) {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
-            ft.remove(fragments[1]);
+            ft.remove(fragments[2]);
             ft.commit();
         }
-        fragments[1] = solution;
+        fragments[2] = solution;
+        ((StatsFragment) fragments[0]).update_graph();
         start_test();
     }
 
     public boolean handle_ok(View v) {
-        return ((TestFragment)fragments[0]).handle_ok(v);
+        return ((TestFragment)fragments[1]).handle_ok(v);
     }
 
     private class test_pager extends FragmentStatePagerAdapter {
@@ -176,7 +185,7 @@ public class TestActivity extends SherlockFragmentActivity {
 
         @Override
         public int getCount() {
-            return fragments[1] == null ? 1 : 2;
+            return fragments[2] == null ? 2 : 3;
         }
 
         @Override
@@ -185,6 +194,8 @@ public class TestActivity extends SherlockFragmentActivity {
             if (fragment == fragments[0])
                 return POSITION_UNCHANGED;
             else if (fragment == fragments[1])
+                return POSITION_UNCHANGED;
+            else if (fragment == fragments[2])
                 return POSITION_UNCHANGED;
             else
                 return POSITION_NONE;

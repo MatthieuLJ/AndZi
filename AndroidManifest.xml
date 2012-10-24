@@ -36,8 +36,6 @@
                   android:configChanges="keyboardHidden|orientation|screenSize"
                 />
 
-        <activity android:name=".DBActivity"/>
-
         <activity android:name=".TestActivity"
                 android:launchMode="singleTop"/>
 

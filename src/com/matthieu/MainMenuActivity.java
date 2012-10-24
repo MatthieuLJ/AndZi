@@ -166,11 +166,6 @@ public class MainMenuActivity extends SherlockActivity {
         startActivity(intent);
     }
 
-    public void handle_stats(View v) {
-        Intent intent = new Intent(this, DBActivity.class);
-        startActivity(intent);
-    }
-
     public void handle_prefs(View v) {
         Intent intent = new Intent(this, Settings.class);
         startActivity(intent);
