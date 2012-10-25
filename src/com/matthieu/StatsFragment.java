@@ -82,6 +82,12 @@ public class StatsFragment extends Fragment {
         return res;
     }
 
+    @Override
+    public void onDestroyView() {
+        timer.cancel();
+        super.onDestroyView();
+    }
+
     public void update_graph() {
         final ProgressGraph graph = (ProgressGraph) getView().findViewById(R.id.graph);
         graph.update_graph();

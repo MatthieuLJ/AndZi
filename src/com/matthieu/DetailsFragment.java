@@ -33,26 +33,24 @@ public class DetailsFragment extends Fragment {
     private boolean use_ref=false;
 
     private String current_hanzi;
-    private Activity parent_activity;
 
     static Object locker = new Object();
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        parent_activity = activity;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        FrameLayout frame = new FrameLayout(parent_activity);
+        FrameLayout frame = new FrameLayout(getActivity());
         frame.setId(R.id.top_level_detail_view);
         HanziDB db=null;
         if (use_ref) {
-            db = ((AndZiApplication)parent_activity.getApplication()).getRefDB();
+            db = ((AndZiApplication)getActivity().getApplication()).getRefDB();
         }
         if ((db == null) || (!use_ref)) {
-            db = ((AndZiApplication)parent_activity.getApplication()).getMyDB();
+            db = ((AndZiApplication)getActivity().getApplication()).getMyDB();
         }
 
         if (!current_hanzi.equals(""))
@@ -66,32 +64,13 @@ public class DetailsFragment extends Fragment {
 
     public void change_chinese(String hanzi) {
         current_hanzi = hanzi;
-        //TOOD : if parent_activity is not null, update it...
+        //TOOD : if getActivity() is not null, update it...
     }
 
     @Override
-    public void onDetach() {
-        parent_activity = null;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        View master_view = getView();
-        if (master_view != null) {
-            final ListView list= (ListView) master_view.findViewById(R.id.details_list);
-            if (list != null) {
-                synchronized (locker) {
-                    WeakReference<populator> old_populate_task = (WeakReference<populator>) list.getTag(R.id.detail_populator);
-                    if ((old_populate_task!=null) && (old_populate_task.get()!=null))
-                        old_populate_task.get().cancel(false);
-                    VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
-                    if (adapter != null) {
-                        adapter.changeCursor(null);
-                    }
-                }
-            }
-        }
+    public void onDestroyView() {
+        super.onDestroyView();
+        kill_detail_view((ViewGroup) getView());
     }
 
     static void populate_details_view(final Fragment fragment, ViewGroup section, final String hanzi, final HanziDB db) {
@@ -197,7 +176,7 @@ public class DetailsFragment extends Fragment {
             }
         }
 
-        populator populate = new populator(fragment, hanzi, db, list);
+        populator populate = new populator(fragment, hanzi, db, section);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             populate.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
         else
@@ -209,18 +188,17 @@ public class DetailsFragment extends Fragment {
 
     static private class populator extends AsyncTask<Void,Void,Void> {
         Cursor cursor;
-        Timer show_progress_timer = new Timer();
         Fragment fragment;
         ArrayList<HanziDB.StringElement> elements;
         HanziDB db;
-        WeakReference<ListView> list;
+        WeakReference<ViewGroup> container;
         public String hanzi;
 
-        public populator(Fragment f, String h, HanziDB d, ListView l) {
+        public populator(Fragment f, String h, HanziDB d, ViewGroup v) {
             fragment = f;
             hanzi = h;
             db = d;
-            list = new WeakReference<ListView>(l);
+            container = new WeakReference<ViewGroup>(v);
             elements = new ArrayList<HanziDB.StringElement>();
             for (int i=0; i<hanzi.length(); ) {
                 elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
@@ -229,8 +207,17 @@ public class DetailsFragment extends Fragment {
             }
         }
 
-        public void changeList(ListView l) {
-            list = new WeakReference<ListView>(l);
+        public void changeList(ViewGroup v) {
+            container = new WeakReference<ViewGroup>(v);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            ListView list = (ListView) container.get().findViewById(R.id.details_list);
+            list.setVisibility(View.GONE);
+            ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
+            loading_wheel.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -243,7 +230,6 @@ public class DetailsFragment extends Fragment {
 
         @Override
         protected void onCancelled(Void aVoid) {
-            show_progress_timer.cancel();
             if (cursor!=null)
                 cursor.close();
         }
@@ -251,12 +237,16 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             synchronized (locker) {
-                if (list.get()!=null) {
-                    VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.get().getAdapter();
+                if (container.get()!=null) {
+                    ListView list = (ListView) container.get().findViewById(R.id.details_list);
+                    VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
                     if (adapter == null)
-                        list.get().setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, null));
+                        list.setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, null));
                     else
                         adapter.changeCursor(cursor);
+                    list.setVisibility(View.VISIBLE);
+                    ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
+                    loading_wheel.setVisibility(View.GONE);
                 }
                 else {
                     cursor.close();
@@ -266,17 +256,17 @@ public class DetailsFragment extends Fragment {
     }
 
     static public void kill_detail_view(ViewGroup section) {
+        if (section == null)
+            return;
         ListView old_list= (ListView) section.findViewById(R.id.details_list);
         if (old_list == null)
             return;
-        VocabularyCursorAdapter old_adapter=null;
-        WeakReference<populator> old_populate_task = null;
         synchronized (locker) {
-            old_populate_task = (WeakReference<populator>) old_list.getTag(R.id.detail_populator);
+            WeakReference<populator> old_populate_task = (WeakReference<populator>) old_list.getTag(R.id.detail_populator);
             if ((old_populate_task!=null) && (old_populate_task.get()!=null))
                 old_populate_task.get().cancel(false);
 
-            old_adapter = (VocabularyCursorAdapter) old_list.getAdapter();
+            VocabularyCursorAdapter old_adapter = (VocabularyCursorAdapter) old_list.getAdapter();
             if (old_adapter != null) {
                 old_adapter.changeCursor(null);
             }
