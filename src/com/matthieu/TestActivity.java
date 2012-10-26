@@ -4,17 +4,14 @@
 package com.matthieu;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Debug;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.matthieu.widget.ProgressGraph;
 import com.viewpagerindicator.PageIndicator;
 
 import java.util.ArrayList;
@@ -35,6 +32,7 @@ public class TestActivity extends SherlockFragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //Debug.startMethodTracing("testing");
         setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
@@ -156,7 +154,11 @@ public class TestActivity extends SherlockFragmentActivity {
         finish();
     }
 
+//    int count=0;
     public void new_solution_fragment(Fragment solution, int correctness) {
+//        count++;
+//        if (count == 4)
+//            Debug.stopMethodTracing();
         if (fragments[2] != null) {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
@@ -164,8 +166,11 @@ public class TestActivity extends SherlockFragmentActivity {
             ft.commit();
         }
         fragments[2] = solution;
-        ((StatsFragment) fragments[0]).update_graph();
         start_test();
+    }
+
+    public void update_stats() {
+        ((StatsFragment) fragments[0]).update_stats();
     }
 
     public boolean handle_ok(View v) {

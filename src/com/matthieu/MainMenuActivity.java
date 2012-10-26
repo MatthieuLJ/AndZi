@@ -148,7 +148,8 @@ public class MainMenuActivity extends SherlockActivity {
         protected void onProgressUpdate(Integer... i) {
             synchronized (MainMenuActivity.this) {
                 ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
-                progress.setProgress(i[0]);
+                if (progress != null)
+                    progress.setProgress(i[0]);
             }
         }
 

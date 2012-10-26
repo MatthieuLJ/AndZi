@@ -5,6 +5,7 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.TypedValue;
@@ -16,6 +17,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.HashMap;
 
 public abstract class TestFragment extends Fragment {
     protected String hanzi;
@@ -53,14 +56,22 @@ public abstract class TestFragment extends Fragment {
             this.hanzi = hanzi;
         }
 
-        protected SolutionFragment() {
-        }
-
         @Override
-        public void onDetach() {
-            Log.d(TAG, "Updating scores for "+hanzi);
-            update_score();
-            super.onDetach();
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            Thread updater = new Thread() {
+                @Override
+                public void run() {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            update_score();
+                            ((TestActivity)getActivity()).update_stats();
+                        }
+                    });
+                }
+            };
+            updater.start();
         }
 
         abstract public void update_score();
@@ -107,7 +118,40 @@ public abstract class TestFragment extends Fragment {
 
         public void handle_good(View v) {
             v.setEnabled(false);
-            good = CORRECT;
+            Thread updater = new Thread() {
+                @Override
+                public void run() {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            restore_score();
+                            good = CORRECT;
+                            update_score();
+                            ((TestActivity)getActivity()).update_stats();
+                        }
+                    });
+                }
+            };
+            updater.start();
+        }
+
+        protected class saved_score {
+            int box;
+            long time;
+            public saved_score(int b, long t) {
+                this.box = b;
+                this.time = t;
+            }
+        }
+        HashMap<String, saved_score> old_scores;
+
+        protected void restore_score() {
+            if (old_scores == null)
+                return;
+            for (String c : old_scores.keySet()) {
+                myDB.setBoxForChar(c, old_scores.get(c).box);
+                myDB.setExpirationTimeForChar(c, old_scores.get(c).time);
+            }
         }
 
     }

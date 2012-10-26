@@ -2950,7 +2950,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    protected void setExpirationTimeForChar(String hanzi, long time) {
+    public void setExpirationTimeForChar(String hanzi, long time) {
         ContentValues cv = new ContentValues();
         cv.put("exp_time", time);
         Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
@@ -2966,7 +2966,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    protected void setBoxForChar(String hanzi, int box) {
+    public void setBoxForChar(String hanzi, int box) {
         ContentValues cv = new ContentValues();
         cv.put("box", box);
         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(box));
@@ -3077,7 +3077,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FROM cword " +
                 "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                 "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
+                "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC LIMIT 20",
                 new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
     }
@@ -3107,7 +3107,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                    "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
+                    "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC LIMIT 20",
                     new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
         }

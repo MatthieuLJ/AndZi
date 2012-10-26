@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GuessEnglish extends TestFragment {
     private Vocabulary solution=null;
@@ -189,11 +190,14 @@ public class GuessEnglish extends TestFragment {
                 }
             }
             else {
+                old_scores = new HashMap<String, saved_score>();
                 for (int i=0; i<hanzi.length();) {
                     String character = hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)));
+                    old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
                     myDB.worseBox(character);
                     i+=Character.charCount(hanzi.codePointAt(i));
                 }
+                old_scores.put(hanzi, new saved_score(myDB.getBoxForChar(hanzi), myDB.getExpirationTimeForChar(hanzi)));
                 myDB.worseBox(hanzi);
             }
         }

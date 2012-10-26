@@ -29,23 +29,6 @@ public class StatsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.db, container, false);
 
-        TextView tv;
-        int num_chars = myDB.getNumChars();
-        tv = (TextView) res.findViewById(R.id.stats_chars);
-        tv.setText(""+num_chars);
-
-        int num_words = myDB.getNumWords();
-        tv = (TextView) res.findViewById(R.id.stats_words);
-        tv.setText(""+num_words);
-
-        int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
-        tv = (TextView) res.findViewById(R.id.stats_to_study);
-        tv.setText(""+expired);
-
-        int expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
-        tv = (TextView) res.findViewById(R.id.stats_to_study_words);
-        tv.setText(""+expired_words);
-
         final ProgressGraph graph = (ProgressGraph) res.findViewById(R.id.graph);
         graph.set_data(((AndZiApplication) getActivity().getApplication()).getProgress());
 
@@ -64,16 +47,16 @@ public class StatsFragment extends Fragment {
             }
         });
 
+        update_stats(res);
         update_buttons(res);
 
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                update_graph();
                 getActivity().runOnUiThread(new Runnable() {
                     public void run() {
-                        graph.invalidate();
+                        update_stats();
                     }
                 });
             }
@@ -88,9 +71,30 @@ public class StatsFragment extends Fragment {
         super.onDestroyView();
     }
 
-    public void update_graph() {
-        final ProgressGraph graph = (ProgressGraph) getView().findViewById(R.id.graph);
+    public void update_stats() {
+        update_stats(getView());
+    }
+
+    public void update_stats(View v) {
+        final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
         graph.update_graph();
+
+        TextView tv;
+        int num_chars = myDB.getNumChars();
+        tv = (TextView) v.findViewById(R.id.stats_chars);
+        tv.setText(""+num_chars);
+
+        int num_words = myDB.getNumWords();
+        tv = (TextView) v.findViewById(R.id.stats_words);
+        tv.setText(""+num_words);
+
+        int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
+        tv = (TextView) v.findViewById(R.id.stats_to_study);
+        tv.setText(""+expired);
+
+        int expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
+        tv = (TextView) v.findViewById(R.id.stats_to_study_words);
+        tv.setText(""+expired_words);
     }
 
     private void update_buttons(View v) {

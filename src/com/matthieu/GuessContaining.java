@@ -105,14 +105,16 @@ public class GuessContaining extends TestFragment {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment(hanzi, guess, hanzi, correctness);
+        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment(hanzi, guess, hanzi, correctness, correct_answers);
         ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
         return true;
     }
 
     protected class GuessContainingResultFragment extends TestFragment.SolutionFragment {
-        public GuessContainingResultFragment(String question, String answer, String hanzi, int good) {
+        ArrayList<String> correct_answers;
+        public GuessContainingResultFragment(String question, String answer, String hanzi, int good, ArrayList<String> correct_answers) {
             super(question, answer, hanzi, good);
+            this.correct_answers = correct_answers;
         }
 
         @Override
