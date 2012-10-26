@@ -6,7 +6,6 @@ package com.matthieu;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Debug;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -25,6 +24,8 @@ public class TestActivity extends SherlockFragmentActivity {
     private Fragment fragments[];
 
     private HanziDB myDB;
+    ArrayList<String> hanzis_to_test;
+    boolean table_filled;
     private boolean continue_with_more_chars=false;
     private String current_hanzi;
 
@@ -32,7 +33,6 @@ public class TestActivity extends SherlockFragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //Debug.startMethodTracing("testing");
         setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();
@@ -57,18 +57,45 @@ public class TestActivity extends SherlockFragmentActivity {
         else {
             // When we are on a larger screen without a pager
         }
+        fill_hanzis_to_test();
         start_test();
         if (pager != null) {
             pager.setCurrentItem(1, false);
         }
     }
 
-    private void set_next_char_to_study() {
-        ArrayList<String> hanzis=myDB.getAllFilteredToStudy();
-        if (continue_with_more_chars)
-            hanzis.addAll(myDB.getMostAdvancedExpiring(5, false));
+    final static int size_limit = 40;
+    final static int size_threshold = 20;
 
-        if (hanzis.size()==0) {
+    private void fill_hanzis_to_test() {
+        synchronized (TestActivity.this) {
+            hanzis_to_test = myDB.getAllFilteredToStudy(size_limit);
+            if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
+                hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
+            table_filled=true;
+        }
+    }
+
+    private void trim_hanzis_to_test(String hanzi) {
+        synchronized (TestActivity.this) {
+            for (int offset=0; offset<hanzi.length();) {
+                String c = hanzi.substring(offset, offset + Character.charCount(hanzi.codePointAt(offset)));
+                for (int i=0; i<hanzis_to_test.size(); i++) {
+                    String h = hanzis_to_test.get(i);
+                    if (h.contains(c)) {
+                        hanzis_to_test.remove(i);
+                        i--;
+                    }
+                }
+                offset += Character.charCount(hanzi.codePointAt(offset));
+            }
+        }
+        if (hanzis_to_test.size() < size_threshold)
+            fill_hanzis_to_test();
+    }
+
+    private void set_next_char_to_study() {
+        if ((hanzis_to_test.size()==0) && (table_filled)) {
             if (!continue_with_more_chars) {
                 AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(TestActivity.this);
                 nothing_to_study.setCancelable(false);
@@ -116,8 +143,12 @@ public class TestActivity extends SherlockFragmentActivity {
             }
             current_hanzi=null;
         }
+        else if (hanzis_to_test.size()==0) {
+            fill_hanzis_to_test();
+            set_next_char_to_study();
+        }
         else {
-            current_hanzi = hanzis.remove((int)(hanzis.size()*Math.pow(Math.random(),2)));
+            current_hanzi = hanzis_to_test.remove((int)(hanzis_to_test.size()*Math.pow(Math.random(),2)));
             Log.d(TAG, "Will study" + current_hanzi);
         }
     }
@@ -129,7 +160,7 @@ public class TestActivity extends SherlockFragmentActivity {
         ArrayList<TestFragment> tests = new ArrayList<TestFragment>();
         if (current_hanzi.length()==1) {
             tests.addAll(char_tests);
-            if (myDB.getWordsWithPinyin(current_hanzi).size()>0)
+            if (myDB.getTranslations(current_hanzi).size()>0)
                 tests.addAll(word_tests);
         } else {
             tests.addAll(word_tests);
@@ -138,8 +169,6 @@ public class TestActivity extends SherlockFragmentActivity {
         int current_index;
         for (current_index=0; current_index< tests.size(); current_index++) {
             if (tests.get(current_index).set_hanzi_to_test(current_hanzi)) {
-                Fragment old_fragment = fragments[1];
-
                 fragments[1] = tests.get(current_index);
 
                 ((TestFragment) fragments[1]).update_test_view(fragments[1].getView());
@@ -148,17 +177,21 @@ public class TestActivity extends SherlockFragmentActivity {
                 if (pager != null) {
                     pager.getAdapter().notifyDataSetChanged();
                 }
+                table_filled = false;
+                Thread filler = new Thread() {
+                    @Override
+                    public void run() {
+                        trim_hanzis_to_test(current_hanzi);
+                    }
+                };
+                filler.start();
                 return;
             }
         }
         finish();
     }
 
-//    int count=0;
     public void new_solution_fragment(Fragment solution, int correctness) {
-//        count++;
-//        if (count == 4)
-//            Debug.stopMethodTracing();
         if (fragments[2] != null) {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();

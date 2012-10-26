@@ -64,9 +64,7 @@ public class ProgressGraph extends View {
 
     private class update_delayer extends Thread {
         ProgressData recent_data;
-        public update_delayer() {
-            recent_data = ((AndZiApplication) context.getApplicationContext()).getCurrentProgress();
-        }
+
         @Override
         public void run() {
             Looper.prepare();
@@ -87,13 +85,18 @@ public class ProgressGraph extends View {
         private void update_range_data(range query) {
             if ((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) {
                 synchronized (ProgressGraph.this) {
-                    ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
-                    if (tmp_data.size() > 2) {
-                        current_data = tmp_data;
-                        current_data.add(recent_data);
-                        current_range = query;
+                    if (recent_data == null)
+                        recent_data = ((AndZiApplication) context.getApplicationContext()).getCurrentProgress();
+
+                    if ((current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom)) {
+                        ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
+                        if (tmp_data.size() > 2) {
+                            current_data = tmp_data;
+                            current_data.add(recent_data);
+                            current_range = query;
+                            ProgressGraph.this.postInvalidate();
+                        }
                     }
-                    ProgressGraph.this.postInvalidate();
                 }
             }
         }
@@ -404,8 +407,8 @@ public class ProgressGraph extends View {
                 // draw the bottom labels
                 int last_offset = getMeasuredWidth()+Math.min(0, current_offset_x);
                 int first_offset = left_size;
+                int average_half_width;
                 String date_string;
-
 
                 // Draw the leftmost one
                 p.setTextAlign(Paint.Align.LEFT);
@@ -433,16 +436,23 @@ public class ProgressGraph extends View {
                 p.getTextBounds(date_string, 0, date_string.length(), r);
                 last_offset -= r.width();
 
+                average_half_width = ((first_offset - left_size) + (getMeasuredWidth()+Math.min(0, current_offset_x) - last_offset))/2;
+
                 if (!finger_down) {
                     p.setTextAlign(Paint.Align.CENTER);
                     for (int i=last_date_index; i>=first_date_index; i--) {
+                        if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)+average_half_width >= last_offset)
+                            continue;
+                        if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)-average_half_width <= first_offset)
+                            break;
+
                         date_string= " - "+DateFormat.getDateInstance(DateFormat.MEDIUM).format(data_to_use.get(i).date)+" - ";
                         p.getTextBounds(date_string, 0, date_string.length(), r);
 
                         if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)+r.width()/2 >= last_offset)
                             continue;
                         if ((getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min)-r.width()/2 <= first_offset)
-                            continue;
+                            break;
 
                         canvas.drawLine(
                                 (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min),
