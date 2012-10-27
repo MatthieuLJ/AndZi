@@ -62,10 +62,11 @@ public abstract class TestFragment extends Fragment {
             Thread updater = new Thread() {
                 @Override
                 public void run() {
+                    Log.d(TAG, "Updating scores !");
+                    update_score();
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            update_score();
                             ((TestActivity)getActivity()).update_stats();
                         }
                     });
@@ -121,12 +122,12 @@ public abstract class TestFragment extends Fragment {
             Thread updater = new Thread() {
                 @Override
                 public void run() {
+                    restore_score();
+                    good = CORRECT;
+                    update_score();
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            restore_score();
-                            good = CORRECT;
-                            update_score();
                             ((TestActivity)getActivity()).update_stats();
                         }
                     });

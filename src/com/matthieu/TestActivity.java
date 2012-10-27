@@ -4,12 +4,16 @@
 package com.matthieu;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.viewpagerindicator.PageIndicator;
 
@@ -53,6 +57,8 @@ public class TestActivity extends SherlockFragmentActivity {
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
+
+            mIndicator.setOnPageChangeListener(new keyboard_handle());
         }
         else {
             // When we are on a larger screen without a pager
@@ -64,8 +70,8 @@ public class TestActivity extends SherlockFragmentActivity {
         }
     }
 
-    final static int size_limit = 40;
-    final static int size_threshold = 20;
+    final static int size_limit = 10;
+    final static int size_threshold = 5;
 
     private void fill_hanzis_to_test() {
         synchronized (TestActivity.this) {
@@ -154,41 +160,81 @@ public class TestActivity extends SherlockFragmentActivity {
     }
 
     private void start_test() {
-        set_next_char_to_study();
-        if (current_hanzi == null)
-            return;
-        ArrayList<TestFragment> tests = new ArrayList<TestFragment>();
-        if (current_hanzi.length()==1) {
-            tests.addAll(char_tests);
-            if (myDB.getTranslations(current_hanzi).size()>0)
-                tests.addAll(word_tests);
-        } else {
-            tests.addAll(word_tests);
-        }
-        Collections.shuffle(tests);
-        int current_index;
-        for (current_index=0; current_index< tests.size(); current_index++) {
-            if (tests.get(current_index).set_hanzi_to_test(current_hanzi)) {
-                fragments[1] = tests.get(current_index);
-
-                ((TestFragment) fragments[1]).update_test_view(fragments[1].getView());
-
-                ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
-                if (pager != null) {
-                    pager.getAdapter().notifyDataSetChanged();
-                }
-                table_filled = false;
-                Thread filler = new Thread() {
-                    @Override
-                    public void run() {
-                        trim_hanzis_to_test(current_hanzi);
-                    }
-                };
-                filler.start();
+        while(true) {
+            set_next_char_to_study();
+            if (current_hanzi == null)
                 return;
+            ArrayList<TestFragment> tests = new ArrayList<TestFragment>();
+            if (current_hanzi.length()==1) {
+                tests.addAll(char_tests);
+                if (myDB.getTranslations(current_hanzi).size()>0)
+                    tests.addAll(word_tests);
+            } else {
+                tests.addAll(word_tests);
+            }
+            Collections.shuffle(tests);
+            int current_index;
+            for (current_index=0; current_index< tests.size(); current_index++) {
+                if (tests.get(current_index).set_hanzi_to_test(current_hanzi)) {
+                    if ((fragments[1] != null) && (fragments[1] != tests.get(current_index))) {
+                        FragmentManager fm = getSupportFragmentManager();
+                        fm.beginTransaction().remove(fragments[1]).commit();
+                    }
+
+                    fragments[1] = tests.get(current_index);
+
+                    ((TestFragment) fragments[1]).update_test_view(fragments[1].getView());
+
+                    ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+                    if (pager != null) {
+                        pager.getAdapter().notifyDataSetChanged();
+                    }
+                    table_filled = false;
+                    Thread filler = new Thread() {
+                        @Override
+                        public void run() {
+                            trim_hanzis_to_test(current_hanzi);
+                        }
+                    };
+                    filler.start();
+                    return;
+                }
             }
         }
-        finish();
+    }
+
+    private class keyboard_handle implements ViewPager.OnPageChangeListener {
+        @Override
+        public void onPageScrolled(int i, float v, int i1) {
+
+        }
+
+        @Override
+        public void onPageSelected(int i) {
+            if (fragments[1] == null)
+                return;
+            View v = fragments[1].getView();
+            if (v == null)
+                return;
+            View entry = v.findViewById(R.id.test_guess);
+            if (i==1) {
+                if (entry!=null) {
+                    entry.requestFocus();
+                }
+            }
+            else {
+                //TestActivity.this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+                if (entry!=null) {
+                    InputMethodManager imm = (InputMethodManager)TestActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(entry.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int i) {
+
+        }
     }
 
     public void new_solution_fragment(Fragment solution, int correctness) {
@@ -211,7 +257,6 @@ public class TestActivity extends SherlockFragmentActivity {
     }
 
     private class test_pager extends FragmentStatePagerAdapter {
-
         public test_pager(FragmentManager fm) {
             super(fm);
         }

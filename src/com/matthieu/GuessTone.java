@@ -8,10 +8,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 
 import java.util.ArrayList;
@@ -50,9 +47,13 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View res =  inflater.inflate(R.layout.guess_tone, container, false);
-        update_test_view(res);
-        return res;
+        return inflater.inflate(R.layout.guess_tone, container, false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        update_test_view(getView());
     }
 
     @Override

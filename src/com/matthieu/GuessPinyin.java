@@ -3,15 +3,12 @@
  */
 package com.matthieu;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
@@ -78,9 +75,22 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View res =  inflater.inflate(R.layout.guess_pinyin, container, false);
-        update_test_view(res);
-        return res;
+        return inflater.inflate(R.layout.guess_pinyin, container, false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        update_test_view(getView());
+    }
+
+    @Override
+    public void onDestroyView() {
+        EditText guess = (EditText) getView().findViewById(R.id.test_guess);
+
+        guess.setOnEditorActionListener(null);
+        guess.removeTextChangedListener(this);
+        super.onDestroyView();
     }
 
     @Override
@@ -88,8 +98,8 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         if (v == null)
             return;
 
-        EditText guess = (EditText) v.findViewById(R.id.guess_pinyin_guess);
-        guess.setText("");
+        EditText guess = (EditText) v.findViewById(R.id.test_guess);
+
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -97,6 +107,8 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
                 return true;
             }
         });
+        guess.removeTextChangedListener(this);
+        guess.setText("");
         guess.addTextChangedListener(this);
         guess.requestFocus();
 
@@ -174,11 +186,9 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
 
     public boolean handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.guess_pinyin_guess);
+        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
             return false;
-        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
         String guess = word_guess.getText().toString();
 

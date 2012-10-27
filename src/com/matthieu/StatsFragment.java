@@ -4,6 +4,7 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.*;
@@ -75,26 +76,47 @@ public class StatsFragment extends Fragment {
         update_stats(getView());
     }
 
-    public void update_stats(View v) {
-        final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
-        graph.update_graph();
+    public void update_stats(final View v) {
+        if (v == null)
+            return;
 
-        TextView tv;
-        int num_chars = myDB.getNumChars();
-        tv = (TextView) v.findViewById(R.id.stats_chars);
-        tv.setText(""+num_chars);
+        AsyncTask<Void,Void,Void> stats_updater = new AsyncTask<Void,Void,Void>() {
+            int num_chars;
+            int num_words;
+            int expired;
+            int expired_words;
 
-        int num_words = myDB.getNumWords();
-        tv = (TextView) v.findViewById(R.id.stats_words);
-        tv.setText(""+num_words);
+            @Override
+            protected Void doInBackground(Void... voids) {
+                num_chars = myDB.getNumChars();
+                num_words = myDB.getNumWords();
+                expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
+                expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
+                return null;
+            }
 
-        int expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
-        tv = (TextView) v.findViewById(R.id.stats_to_study);
-        tv.setText(""+expired);
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
+                graph.update_graph();
 
-        int expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
-        tv = (TextView) v.findViewById(R.id.stats_to_study_words);
-        tv.setText(""+expired_words);
+                TextView tv;
+
+                tv = (TextView) v.findViewById(R.id.stats_chars);
+                tv.setText(""+num_chars);
+
+                tv = (TextView) v.findViewById(R.id.stats_words);
+                tv.setText(""+num_words);
+
+                tv = (TextView) v.findViewById(R.id.stats_to_study);
+                tv.setText(""+expired);
+
+                tv = (TextView) v.findViewById(R.id.stats_to_study_words);
+                tv.setText(""+expired_words);
+            }
+        };
+
+        stats_updater.execute((Void[]) null);
     }
 
     private void update_buttons(View v) {

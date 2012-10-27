@@ -49,7 +49,7 @@
             android:orientation="horizontal"
             >
         <EditText
-                android:id="@+id/char_finder_chinese"
+                android:id="@+id/test_guess"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

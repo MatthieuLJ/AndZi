@@ -3,12 +3,10 @@
  */
 package com.matthieu;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,9 +59,13 @@ public class GuessChineseWord extends TestFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View res = inflater.inflate(R.layout.guess_chinese_word, container, false);
-        update_test_view(res);
-        return res;
+        return inflater.inflate(R.layout.guess_chinese_word, container, false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        update_test_view(getView());
     }
 
     @Override
@@ -73,7 +75,7 @@ public class GuessChineseWord extends TestFragment {
 
         ArrayList<String> bare_translations = new ArrayList<String>();
 
-        EditText word_guess = (EditText) v.findViewById(R.id.guess_chinese_word_guess);
+        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -131,7 +133,7 @@ public class GuessChineseWord extends TestFragment {
         TextView previous = (TextView) v.findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
 
-        EditText guess = (EditText) v.findViewById(R.id.guess_chinese_word_guess);
+        EditText guess = (EditText) v.findViewById(R.id.test_guess);
         StringBuffer hint = new StringBuffer();
         for (int i=0; i<solution.chinese.codePointCount(0, solution.chinese.length()); i++) {
             hint.append("_ ");
@@ -187,12 +189,10 @@ public class GuessChineseWord extends TestFragment {
     }
 
     public boolean handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.guess_chinese_word_guess);
+        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
             return false;
-        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
-        
+
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
