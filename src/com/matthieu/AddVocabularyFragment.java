@@ -115,6 +115,8 @@ public class AddVocabularyFragment extends Fragment
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            if (getView() == null)
+                return;
 
             // change text size to fit in the box
             tview.adaptTextSize();
@@ -182,6 +184,13 @@ public class AddVocabularyFragment extends Fragment
                         ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
+                        Button ok = (Button) getView().findViewById(R.id.add_vocabulary_submit);
+                        ok.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                handle_add_another(view);
+                            }
+                        });
                         break;
                     case 2:
                         // some non-chinese characters...

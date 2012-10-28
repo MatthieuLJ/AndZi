@@ -30,7 +30,6 @@
             android:id="@+id/add_vocabulary_submit"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:text="@string/ok"
-            android:onClick="handle_add_another"/>
+            android:text="@string/ok"/>
 
 </LinearLayout>
