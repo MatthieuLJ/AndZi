@@ -6,14 +6,19 @@ package com.matthieu;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.viewpagerindicator.PageIndicator;
 
@@ -102,7 +107,7 @@ public class TestActivity extends SherlockFragmentActivity {
 
     private void set_next_char_to_study() {
         if ((hanzis_to_test.size()==0) && (table_filled)) {
-            if (!continue_with_more_chars) {
+            /*if (!continue_with_more_chars) {
                 AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(TestActivity.this);
                 nothing_to_study.setCancelable(false);
                 if (myDB.isFilterEnabled()) {
@@ -146,7 +151,7 @@ public class TestActivity extends SherlockFragmentActivity {
                 nothing_to_study.show();
             } else {
                 finish();
-            }
+            }*/
             current_hanzi=null;
         }
         else if (hanzis_to_test.size()==0) {
@@ -160,10 +165,24 @@ public class TestActivity extends SherlockFragmentActivity {
     }
 
     private void start_test() {
-        while(true) {
+        Fragment new_fragment1=null;
+        Fragment old_fragment1 = fragments[1];
+        boolean new_fragment1_is_test=false;
+        while(new_fragment1 == null) {
             set_next_char_to_study();
-            if (current_hanzi == null)
-                return;
+            if (current_hanzi == null) {
+                Cursor filtered = myDB.getCursorFilteredToStudy();
+                Cursor non_filtered = myDB.getCursorToStudy();
+                boolean can_disable_filter=((myDB.isFilterEnabled()) && (filtered.getCount() > non_filtered.getCount()));
+                boolean empty_db=(myDB.getNumChars()==0);
+
+                new_fragment1 = new done_testing(can_disable_filter, empty_db);
+                new_fragment1_is_test = false;
+
+                filtered.close();
+                non_filtered.close();
+                break;
+            }
             ArrayList<TestFragment> tests = new ArrayList<TestFragment>();
             if (current_hanzi.length()==1) {
                 tests.addAll(char_tests);
@@ -176,30 +195,88 @@ public class TestActivity extends SherlockFragmentActivity {
             int current_index;
             for (current_index=0; current_index< tests.size(); current_index++) {
                 if (tests.get(current_index).set_hanzi_to_test(current_hanzi)) {
-                    if ((fragments[1] != null) && (fragments[1] != tests.get(current_index))) {
-                        FragmentManager fm = getSupportFragmentManager();
-                        fm.beginTransaction().remove(fragments[1]).commit();
-                    }
-
-                    fragments[1] = tests.get(current_index);
-
-                    ((TestFragment) fragments[1]).update_test_view(fragments[1].getView());
-
-                    ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
-                    if (pager != null) {
-                        pager.getAdapter().notifyDataSetChanged();
-                    }
-                    table_filled = false;
-                    Thread filler = new Thread() {
-                        @Override
-                        public void run() {
-                            trim_hanzis_to_test(current_hanzi);
-                        }
-                    };
-                    filler.start();
-                    return;
+                    new_fragment1 = tests.get(current_index);
+                    new_fragment1_is_test = true;
+                    break;
                 }
             }
+        }
+
+        if ((old_fragment1 != null) && (old_fragment1 != new_fragment1)) {
+            FragmentManager fm = getSupportFragmentManager();
+            fm.beginTransaction().remove(old_fragment1).commit();
+        }
+
+        fragments[1] = new_fragment1;
+
+        if (new_fragment1_is_test)
+            ((TestFragment) fragments[1]).update_test_view(fragments[1].getView());
+
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if (pager != null) {
+            pager.getAdapter().notifyDataSetChanged();
+        }
+
+        if (new_fragment1_is_test) {
+            table_filled = false;
+            Thread filler = new Thread() {
+                @Override
+                public void run() {
+                    trim_hanzis_to_test(current_hanzi);
+                }
+            };
+            filler.start();
+        }
+    }
+
+    private class done_testing extends Fragment {
+        boolean empty_db;
+        boolean filter_option;
+        public done_testing(boolean filter_option, boolean empty_db) {
+            this.empty_db = empty_db;
+            this.filter_option = filter_option;
+
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            final View res = inflater.inflate(R.layout.test_done, container, false);
+            TextView message = (TextView) res.findViewById(R.id.test_done_text);
+            if (empty_db) {
+                message.setText("Your vocabulary list is empty");
+            }
+            else if (filter_option) {
+                message.setText("You can disable the learning filter");
+            }
+            else {
+                message.setText("You can continue anyway");
+            }
+
+            Button OK_button = (Button) res.findViewById(R.id.ok);
+            OK_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (filter_option) {
+                        myDB.enableFilter(false);
+                    } else {
+                        TestActivity.this.continue_with_more_chars = true;
+                    }
+                    TestActivity.this.table_filled = false;
+                    TestActivity.this.start_test();
+                }
+            });
+
+            Button Cancel_button = (Button) res.findViewById(R.id.cancel);
+            if (empty_db)
+                Cancel_button.setVisibility(View.GONE);
+            Cancel_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    TestActivity.this.finish();
+                }
+            });
+
+            return res;
         }
     }
 

@@ -8,16 +8,19 @@ ONGOING (5):
 
 * After all the fragments stuff is done
  * Be able to "pin" details page from the reference activity
- * Be able to switch between CEDICT and local list
+ * Be able to switch between CEDICT and local list in details / dictionary
  * Add or Edit word from Details view
- * Show an overlay of the test result (good, bad, so-so)
+ * Show an overlay of the test result (good, bad, so-so) on the test page
  * Show better test details
  * Close cursors from detail views
+ * Can enable lesson filter
+ * Handle screen rotation
 * In HanziDB, change insert to insert with conflict handle for higher APIs
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (00):
+BUGS (1):
+* Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 
 FUTURE (12):
 * Can reset score per lesson
