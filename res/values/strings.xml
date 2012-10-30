@@ -129,6 +129,7 @@
     <string name="notification_title">More Chinese to study</string>
     <string name="notification_content">You have %s tests waiting</string>
 
+    <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
     <string name="details_pin">Pin</string>
     <string name="details_unpin">Unpin</string>
 </resources>

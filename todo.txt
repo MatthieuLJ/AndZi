@@ -1,5 +1,4 @@
-ONGOING (14):
-* Show dialog when too many details fragments are pinned
+ONGOING (13):
 * Be able to switch between CEDICT and local list in details / dictionary
 * Add or Edit word from Details view
 * Show an overlay of the test result (good, bad, so-so) on the test page
@@ -35,7 +34,8 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (141):
+DONE (142):
+* Show dialog when too many details fragments are pinned
 * Be able to "pin" details page from the reference activity (have a maximum number of 3)
 * Close cursors from detail views
 * Fragments and ViewPager everywhere!

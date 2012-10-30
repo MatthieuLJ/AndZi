@@ -1,5 +1,7 @@
 package com.matthieu;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -71,7 +73,16 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                 if (!((DetailsFragment)fragments[index]).isPinned())
                     break;
             if (index == 0) {
-                // failed, let's just put up a note...
+                AlertDialog.Builder too_many_pinned = new AlertDialog.Builder(ReferenceActivity.this);
+                too_many_pinned.setCancelable(false);
+                too_many_pinned.setMessage(getResources().getString(R.string.reference_too_many_pinned));
+                too_many_pinned.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                });
+                too_many_pinned.create();
+                too_many_pinned.show();
                 return;
             }
 
