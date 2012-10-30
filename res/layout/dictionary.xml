@@ -7,14 +7,25 @@
         android:orientation="vertical"
         style="@style/AndZiTheme"
         >
-    <TextView
-            android:id="@+id/dict_mode"
+
+    <LinearLayout
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="#000000"
-            android:gravity="center_horizontal"
-            />
+            android:gravity="right"
+            android:orientation="horizontal">
+        <Button
+                android:id="@+id/dict_source"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/details_pin"
+                />
+        <Button
+                android:id="@+id/dict_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                />
+
+    </LinearLayout>
     <EditText
             android:id="@+id/dict_query"
             android:layout_height="wrap_content"

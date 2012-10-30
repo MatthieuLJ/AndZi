@@ -63,18 +63,18 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         final ListView results = (ListView) res.findViewById(R.id.dict_results);
         results.setAdapter(new VocabularyCursorAdapter(parent_activity, null, this));
 
-        TextView dict_mode = (TextView) res.findViewById(R.id.dict_mode);
-        dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
+        Button dict_mode = (Button) res.findViewById(R.id.dict_mode);
+        dict_mode.setText(R.string.dictionary_chinese_to_eng);
         dict_mode.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 switch (mode) {
                     case CHINESE_TO_ENGLISH_MODE:
                         mode = ENGLISH_TO_CHINESE_MODE;
-                        ((TextView) view).setText(Html.fromHtml("Chinese ← <b>English</b>"));
+                        ((TextView) view).setText(R.string.dictionary_eng_to_chinese);
                         break;
                     case ENGLISH_TO_CHINESE_MODE:
                         mode = CHINESE_TO_ENGLISH_MODE;
-                        ((TextView) view).setText(Html.fromHtml("<b>Chinese</b> → English"));
+                        ((TextView) view).setText(R.string.dictionary_chinese_to_eng);
                         break;
                 }
                 EditText edit_query= (EditText) res.findViewById(R.id.dict_query);
@@ -85,6 +85,26 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         EditText query = (EditText) res.findViewById(R.id.dict_query);
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
+
+        Button change_dict = (Button) res.findViewById(R.id.dict_source);
+        if (((AndZiApplication)getActivity().getApplication()).getRefDB() != null) {
+            use_ref = true;
+            change_dict.setText(R.string.details_dictionary);
+            change_dict.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    use_ref = !use_ref;
+                    ((Button)view).setText(use_ref?R.string.details_dictionary:R.string.details_voc_list);
+                    EditText query = (EditText) res.findViewById(R.id.dict_query);
+                    if (query!=null) {
+                        start_new_query(mode, query.getText().toString());
+                    }
+                }
+            });
+        }
+        else {
+            change_dict.setEnabled(false);
+        }
 
         return res;
     }
@@ -159,6 +179,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     private class update_delayer extends AsyncTask<Void,Cursor, Void> {
         String msg_query;
         int msg_mode;
+        int msg_ref;
 
         @Override
         protected Void doInBackground(Void... voids) {
@@ -169,6 +190,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 public void handleMessage(Message msg) {
                     msg_query = (String) msg.obj;
                     msg_mode = msg.arg1;
+                    msg_ref = msg.arg2;
 
                     update_list();
                 }
@@ -183,7 +205,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if (query == null)
                 return;
 
-            if ((msg_mode != mode) || (!msg_query.equals(query.getText().toString())))
+            if ((msg_ref != (use_ref?1:0)) || (msg_mode != mode) || (!msg_query.equals(query.getText().toString())))
                 return;
 
             Log.d(TAG, "Starting a new query for "+msg_query);
@@ -237,13 +259,15 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             }
 
             // Just to make sure the query actually happens in this thread (and not the UI thread)
-            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null) && (!current_cursor.isClosed())) {
+            if ((msg_ref == (use_ref?1:0)) && (msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null) && (!current_cursor.isClosed())) {
                 current_cursor.getCount();
                 current_cursor.moveToFirst();
             }
 
-            if ((msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
+            if ((msg_ref == (use_ref?1:0)) && (msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
                 publishProgress(current_cursor);
+            } else if (current_cursor != null) {
+                current_cursor.close();
             }
 
         }
@@ -268,6 +292,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         Message toSend = new Message();
         toSend.obj = query;
         toSend.arg1 = mode;
+        toSend.arg2 = use_ref ? 1 : 0;
         if (update_handler!=null)
             update_handler.sendMessage(toSend);
     }

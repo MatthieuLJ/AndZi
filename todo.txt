@@ -2,7 +2,7 @@ ONGOING (13):
 * Be able to switch between CEDICT and local list in details / dictionary
 * Add or Edit word from Details view
 * Show an overlay of the test result (good, bad, so-so) on the test page
-* Show better test details: containing show list of guesses + good/bad #
+* Show better test details: containing show list of guesses + good/bad # restrict to one pinyin when guess pinyin #
 * Can enable lesson filter
 * Handle screen rotation
 * In HanziDB, change insert to insert with conflict handle for higher APIs
@@ -10,13 +10,16 @@ ONGOING (13):
 * Add more automatic (robotium) tests
 * Test performance with huge database
 * Make it pretty(ier)
+  - icons for buttons (dictionary / details fragment / tests / main menu / stats zoom / lesson filter)
+  - splash page + main menu layout
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (2):
+BUGS (3):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
+* Handle properly when one pinyin is just a "no tone" version of another one
 * When checking english, break at '-' too
 
 FUTURE (12):

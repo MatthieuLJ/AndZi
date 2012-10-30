@@ -130,6 +130,10 @@
     <string name="notification_content">You have %s tests waiting</string>
 
     <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
+    <string name="dictionary_eng_to_chinese">Eng\u2192中</string>
+    <string name="dictionary_chinese_to_eng">Eng\u2190中</string>
     <string name="details_pin">Pin</string>
     <string name="details_unpin">Unpin</string>
+    <string name="details_dictionary">Dict</string>
+    <string name="details_voc_list">List</string>
 </resources>
