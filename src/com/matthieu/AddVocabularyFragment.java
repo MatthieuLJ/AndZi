@@ -70,9 +70,6 @@ public class AddVocabularyFragment extends Fragment
         chinese_word.setMinimumTextSize(10);
         View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
 
-        if (current_chinese_word!= null) {
-            chinese_word.setText(current_chinese_word);
-        }
 
         return res;
     }
@@ -84,6 +81,11 @@ public class AddVocabularyFragment extends Fragment
         // in case those changed...
         myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
         refDB = ((AndZiApplication) getActivity().getApplication()).getRefDB();
+
+        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
+        if (current_chinese_word!= null) {
+            chinese_word.setText(current_chinese_word);
+        }
     }
 
 /*

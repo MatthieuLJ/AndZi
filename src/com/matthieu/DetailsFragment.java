@@ -6,6 +6,7 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -78,15 +79,33 @@ public class DetailsFragment extends Fragment {
                     ((Button) view).setText(R.string.details_pin);
             }
         });
+
+        Button source = (Button) res.findViewById(R.id.details_dict);
+        source.setText(use_ref?R.string.details_dictionary:R.string.details_voc_list);
+        source.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((ReferenceActivity) getActivity()).new_details_request(current_hanzi, !use_ref);
+            }
+        });
+
+        Button add_edit = (Button) res.findViewById(R.id.details_add_edit);
+        HanziDB myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
+        if (myDB.getTranslations(current_hanzi).size()!=0) {
+            add_edit.setText(R.string.details_edit);
+        } else {
+            add_edit.setText(R.string.details_add);
+        }
+        add_edit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i=new Intent(getActivity(), VocabularyEditorActivity.class);
+                i.putExtra("Hanzi", current_hanzi);
+                startActivity(i);
+            }
+        });
+
         return res;
-    }
-
-    public void switch_to_reference(boolean use_ref) {
-        this.use_ref = use_ref;
-    }
-
-    public void change_chinese(String hanzi) {
-        current_hanzi = hanzi;
     }
 
     @Override

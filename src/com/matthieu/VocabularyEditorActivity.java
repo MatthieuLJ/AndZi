@@ -23,12 +23,19 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         refDB = ((AndZiApplication) getApplication()).getRefDB();
         myDB = ((AndZiApplication) getApplication()).getMyDB();
 
+        String hanzi = getIntent().getStringExtra("Hanzi");
+
         fragments = new Fragment[3];
-        fragments[0] = new AddVocabularyFragment();
+        if (hanzi != null)
+            fragments[0] = new AddVocabularyFragment(hanzi);
+        else
+            fragments[0] = new AddVocabularyFragment();
         fragments[1] = new EditLessonsFragment();
+        fragments[2] = null;
 
         ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {
+            pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
@@ -38,8 +45,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
             // When we are on a larger screen without a pager
         }
     }
-
-    // new LessonListFragment();
 
     private class editor_pager extends FragmentPagerAdapter {
         public editor_pager(FragmentManager fm) {

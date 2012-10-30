@@ -136,4 +136,6 @@
     <string name="details_unpin">Unpin</string>
     <string name="details_dictionary">Dict</string>
     <string name="details_voc_list">List</string>
+    <string name="details_add">Add</string>
+    <string name="details_edit">Edit</string>
 </resources>

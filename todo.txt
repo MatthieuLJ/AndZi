@@ -1,8 +1,7 @@
-ONGOING (13):
-* Be able to switch between CEDICT and local list in details / dictionary
-* Add or Edit word from Details view
+ONGOING (12):
 * Show an overlay of the test result (good, bad, so-so) on the test page
 * Show better test details: containing show list of guesses + good/bad # restrict to one pinyin when guess pinyin #
+* Can show lesson content
 * Can enable lesson filter
 * Handle screen rotation
 * In HanziDB, change insert to insert with conflict handle for higher APIs
@@ -17,9 +16,10 @@ ONGOING (13):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
+BUGS (4):
+* Do not show modal window with loading wheel when loading lesson list
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
-* Handle properly when one pinyin is just a "no tone" version of another one
+* Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
 
 FUTURE (12):
@@ -37,7 +37,9 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (142):
+DONE (144):
+* Add or Edit word from Details view
+* Be able to switch between CEDICT and local list in details / dictionary
 * Show dialog when too many details fragments are pinned
 * Be able to "pin" details page from the reference activity (have a maximum number of 3)
 * Close cursors from detail views
