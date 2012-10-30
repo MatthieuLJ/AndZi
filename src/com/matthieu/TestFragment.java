@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import com.matthieu.widget.handle_details_request;
 
 import java.util.HashMap;
 
@@ -80,7 +81,7 @@ public abstract class TestFragment extends Fragment {
         protected View show_details(LayoutInflater inflater, ViewGroup container, boolean show_accept) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, myDB);
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity) TestFragment.this.getActivity());
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());
@@ -91,7 +92,7 @@ public abstract class TestFragment extends Fragment {
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 FrameLayout bad_guess_details = new FrameLayout(getActivity());
                 bad_guess_details.setId(R.id.test_bad_guess);
-                DetailsFragment.populate_details_view(this, bad_guess_details, answer, myDB);
+                DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) TestFragment.this.getActivity());
                 bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
                 if (show_accept) {

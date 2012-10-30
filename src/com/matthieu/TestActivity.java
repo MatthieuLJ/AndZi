@@ -20,13 +20,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class TestActivity extends SherlockFragmentActivity {
+public class TestActivity extends SherlockFragmentActivity  implements handle_details_request {
     private ArrayList<TestFragment> char_tests;
     private ArrayList<TestFragment> word_tests;
 
@@ -107,51 +108,6 @@ public class TestActivity extends SherlockFragmentActivity {
 
     private void set_next_char_to_study() {
         if ((hanzis_to_test.size()==0) && (table_filled)) {
-            /*if (!continue_with_more_chars) {
-                AlertDialog.Builder nothing_to_study = new AlertDialog.Builder(TestActivity.this);
-                nothing_to_study.setCancelable(false);
-                if (myDB.isFilterEnabled()) {
-                    nothing_to_study.setMessage(getResources().getString(R.string.test_mastering_disable_filter));
-                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            dialog.dismiss();
-                            myDB.enableFilter(false);
-                            start_test();
-                        }
-                    });
-                } else if (myDB.getNumChars() > 0) {
-                    nothing_to_study.setMessage(getResources().getString(R.string.test_mastering));
-                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            dialog.dismiss();
-                            continue_with_more_chars=true;
-                            start_test();
-                        }
-                    });
-                }
-
-                if (myDB.getNumChars() == 0) {
-                    nothing_to_study.setMessage(getResources().getString(R.string.review_list_nothing_to_study));
-                    nothing_to_study.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            dialog.dismiss();
-                            finish();
-                        }
-                    });
-                }
-                else {
-                    nothing_to_study.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int i) {
-                            dialog.dismiss();
-                            finish();
-                        }
-                    });
-                }
-                nothing_to_study.create();
-                nothing_to_study.show();
-            } else {
-                finish();
-            }*/
             current_hanzi=null;
         }
         else if (hanzis_to_test.size()==0) {
@@ -227,6 +183,11 @@ public class TestActivity extends SherlockFragmentActivity {
             };
             filler.start();
         }
+    }
+
+    @Override
+    public void new_details_request(String hanzi, boolean use_ref) {
+        // TODO
     }
 
     private class done_testing extends Fragment {
@@ -351,14 +312,11 @@ public class TestActivity extends SherlockFragmentActivity {
         @Override
         public int getItemPosition(Object object) {
             Fragment fragment = (Fragment) object;
-            if (fragment == fragments[0])
-                return POSITION_UNCHANGED;
-            else if (fragment == fragments[1])
-                return POSITION_UNCHANGED;
-            else if (fragment == fragments[2])
-                return POSITION_UNCHANGED;
-            else
-                return POSITION_NONE;
+            for (int i=0; i<3; i++)
+                if (fragment.equals(fragments[i]))
+                    return  POSITION_UNCHANGED;
+
+            return POSITION_NONE;
         }
     }
 }

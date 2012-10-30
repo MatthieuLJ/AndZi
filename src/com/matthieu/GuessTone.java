@@ -259,7 +259,7 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, myDB);
+            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity)GuessTone.this.getActivity());
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());

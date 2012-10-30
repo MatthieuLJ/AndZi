@@ -6,11 +6,7 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -23,39 +19,56 @@ import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.VocabularyCursorAdapter;
+import com.matthieu.widget.handle_details_request;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class DetailsFragment extends Fragment {
     private static final String TAG="Details";
     private boolean use_ref=false;
 
     private String current_hanzi;
+    private boolean pinned=false;
 
     static Object locker = new Object();
+
+    public DetailsFragment(String hanzi, boolean use_ref) {
+        current_hanzi = hanzi;
+        this.use_ref = use_ref;
+    }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
     }
 
+    public String get_hanzi() {
+        return current_hanzi;
+    }
+
+    public boolean get_use_ref() {
+        return use_ref;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public boolean is_same_query(DetailsFragment other) {
+        return other.get_hanzi().equals(get_hanzi()) && (other.get_use_ref() == get_use_ref());
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        FrameLayout frame = new FrameLayout(getActivity());
-        frame.setId(R.id.top_level_detail_view);
+        final View res = inflater.inflate(R.layout.details_fragment, container, false);
+        FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
         HanziDB db=null;
-        if (use_ref) {
-            db = ((AndZiApplication)getActivity().getApplication()).getRefDB();
-        }
-        if ((db == null) || (!use_ref)) {
-            db = ((AndZiApplication)getActivity().getApplication()).getMyDB();
-        }
+
 
         if (!current_hanzi.equals(""))
-            populate_details_view(this, frame, current_hanzi, db);
-        return frame;
+            populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
+        return res;
     }
 
     public void switch_to_reference(boolean use_ref) {
@@ -64,18 +77,26 @@ public class DetailsFragment extends Fragment {
 
     public void change_chinese(String hanzi) {
         current_hanzi = hanzi;
-        //TOOD : if getActivity() is not null, update it...
     }
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         kill_detail_view((ViewGroup) getView());
+        super.onDestroyView();
     }
 
-    static void populate_details_view(final Fragment fragment, ViewGroup section, final String hanzi, final HanziDB db) {
+    static void populate_details_view(final Fragment fragment, ViewGroup section,
+                                      final String hanzi, final boolean use_ref, final handle_details_request new_request) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(fragment.getActivity());
         boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
+
+        HanziDB db=null;
+        if (use_ref) {
+            db = ((AndZiApplication)fragment.getActivity().getApplication()).getRefDB();
+        }
+        if ((db == null) || (!use_ref)) {
+            db = ((AndZiApplication)fragment.getActivity().getApplication()).getMyDB();
+        }
 
         Log.d(TAG, "populate_details_view: populate view for "+hanzi);
 
@@ -111,10 +132,7 @@ public class DetailsFragment extends Fragment {
             if (hanzi.codePointCount(0, hanzi.length())!= 1)
                 character.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
-                        if (fragment.getActivity().getClass().equals(DetailsFragment.class))
-                            ((DetailsFragment)fragment).change_chinese(character_label);
-                        // TODO : else open a new Intent to the ReferenceActivity for that word / character
-
+                        new_request.new_details_request(character_label, use_ref);
                     }
                 });
             top_word.addView(character);

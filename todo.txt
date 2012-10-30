@@ -7,11 +7,11 @@ ONGOING (5):
 * Check different screen sizes
 
 * After all the fragments stuff is done
- * Be able to "pin" details page from the reference activity
+ * Be able to "pin" details page from the reference activity (have a maximum number of 3)
  * Be able to switch between CEDICT and local list in details / dictionary
  * Add or Edit word from Details view
  * Show an overlay of the test result (good, bad, so-so) on the test page
- * Show better test details
+ * Show better test details (containing show list of guesses + good/bad) -
  * Close cursors from detail views
  * Can enable lesson filter
  * Handle screen rotation
@@ -19,8 +19,9 @@ ONGOING (5):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
+BUGS (2):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
+* When checking english, break at '-' too
 
 FUTURE (12):
 * Can reset score per lesson

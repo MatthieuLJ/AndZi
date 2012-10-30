@@ -28,20 +28,12 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     Cursor current_cursor =null;
     Handler update_handler=null;
     update_delayer update_thread=null;
-    HanziDB currentDB;
+    boolean use_ref=true;
     private static final String TAG="Dictionary";
     private Activity parent_activity;
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
     static final int ENGLISH_TO_CHINESE_MODE=1;
-
-    public DictionaryFragment(HanziDB db) {
-        currentDB = db;
-    }
-
-    public void changeDB(HanziDB db) {
-        currentDB = db;
-    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -56,6 +48,11 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 update_thread.execute((Void[])null);
         }
     }
+
+    public void switch_to_reference(boolean use_ref) {
+        this.use_ref = use_ref;
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -108,7 +105,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
     @Override
     public void click(String item_clicked) {
-        ((ReferenceActivity)parent_activity).update_details(item_clicked);
+        ((ReferenceActivity)parent_activity).new_details_request(item_clicked, use_ref);
     }
 
     /*
@@ -190,6 +187,14 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 return;
 
             Log.d(TAG, "Starting a new query for "+msg_query);
+
+            HanziDB currentDB=null;
+            if (use_ref) {
+                currentDB = ((AndZiApplication)getActivity().getApplication()).getRefDB();
+            }
+            if ((currentDB == null) || (!use_ref)) {
+                currentDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
+            }
 
             publishProgress((Cursor[])null);
 
