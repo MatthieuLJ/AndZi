@@ -1,21 +1,18 @@
-ONGOING (5):
+ONGOING (14):
+* Show dialog when too many details fragments are pinned
+* Be able to switch between CEDICT and local list in details / dictionary
+* Add or Edit word from Details view
+* Show an overlay of the test result (good, bad, so-so) on the test page
+* Show better test details: containing show list of guesses + good/bad #
+* Can enable lesson filter
+* Handle screen rotation
+* In HanziDB, change insert to insert with conflict handle for higher APIs
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
 * Make it pretty(ier)
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
-
-* After all the fragments stuff is done
- * Be able to "pin" details page from the reference activity (have a maximum number of 3)
- * Be able to switch between CEDICT and local list in details / dictionary
- * Add or Edit word from Details view
- * Show an overlay of the test result (good, bad, so-so) on the test page
- * Show better test details (containing show list of guesses + good/bad) -
- * Close cursors from detail views
- * Can enable lesson filter
- * Handle screen rotation
-* In HanziDB, change insert to insert with conflict handle for higher APIs
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
@@ -38,7 +35,10 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (138):
+DONE (141):
+* Be able to "pin" details page from the reference activity (have a maximum number of 3)
+* Close cursors from detail views
+* Fragments and ViewPager everywhere!
 * App crashes in a lot of cases when screen is rotated
 * Show review lists for both chars and words
 * Show the number of characters to guess for a Chinese word

@@ -63,11 +63,21 @@ public class DetailsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.details_fragment, container, false);
         FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
-        HanziDB db=null;
-
 
         if (!current_hanzi.equals(""))
             populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
+
+        Button pin_button = (Button) res.findViewById(R.id.details_pin);
+        pin_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DetailsFragment.this.pinned = !DetailsFragment.this.pinned;
+                if (DetailsFragment.this.pinned)
+                    ((Button) view).setText(R.string.details_unpin);
+                else
+                    ((Button) view).setText(R.string.details_pin);
+            }
+        });
         return res;
     }
 

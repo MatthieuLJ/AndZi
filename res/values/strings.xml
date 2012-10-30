@@ -128,4 +128,7 @@
     <string name="notification_ticker">More to study</string>
     <string name="notification_title">More Chinese to study</string>
     <string name="notification_content">You have %s tests waiting</string>
+
+    <string name="details_pin">Pin</string>
+    <string name="details_unpin">Unpin</string>
 </resources>
