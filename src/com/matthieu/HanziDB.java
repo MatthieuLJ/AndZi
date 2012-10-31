@@ -957,7 +957,9 @@ public class HanziDB extends SQLiteOpenHelper {
             CHINESE,
             PINYIN_WITH_TONE,
             PINYIN_WITHOUT_TONE,
-            INCOMPLETE_PINYIN
+            INCOMPLETE_PINYIN,
+            CHINESE_WITH_PINYIN,
+            CHINESE_WITH_PINYIN_NO_TONE
         };
 
         protected String content;
@@ -965,6 +967,12 @@ public class HanziDB extends SQLiteOpenHelper {
         public StringElement(type_t t, String c) {
             type=t;
             content=c;
+        }
+        public String chinese_part() {
+            return content.substring(0, Character.charCount(content.codePointAt(0)));
+        }
+        public String pinyin_part() {
+            return content.substring(Character.charCount(content.codePointAt(0)));
         }
         public String toString() { return content; }
     }
@@ -1019,6 +1027,24 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content+"%");
                     break;
+                case CHINESE_WITH_PINYIN:
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part());
+                    break;
+                case CHINESE_WITH_PINYIN_NO_TONE:
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part()+"_");
+                    break;
             }
         }
         else {
@@ -1031,11 +1057,22 @@ public class HanziDB extends SQLiteOpenHelper {
                     if (elements.get(i).type != StringElement.type_t.CHINESE)
                         break;
                 }
-            }
-            else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
+            } else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
                 for (i=0; i<elements.size(); i++) {
                     concat+=elements.get(i).content;
                     if (elements.get(i).type != StringElement.type_t.PINYIN_WITH_TONE)
+                        break;
+                }
+            } else if (type == StringElement.type_t.CHINESE_WITH_PINYIN) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE_WITH_PINYIN)
+                        break;
+                }
+            } else if (type == StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE)
                         break;
                 }
             }
@@ -1052,6 +1089,37 @@ public class HanziDB extends SQLiteOpenHelper {
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
                 query_args.add(Integer.toString(elements.size()));
                 query_args.add(concat+"%");
+            } else if ((i==elements.size()) && (type == StringElement.type_t.CHINESE_WITH_PINYIN)) {
+                StringBuilder chinese = new StringBuilder();
+                StringBuilder pinyin = new StringBuilder();
+                for (StringElement e : elements) {
+                    chinese.append(e.chinese_part());
+                    pinyin.append(e.pinyin_part());
+                }
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ? AND cword.pinyin LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                chinese.append("%");
+                pinyin.append("%");
+                query_args.add(chinese.toString());
+                query_args.add(pinyin.toString());
+            } else if ((i==elements.size()) && (type == StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE)) {
+                StringBuilder chinese = new StringBuilder();
+                StringBuilder pinyin = new StringBuilder();
+                for (StringElement e : elements) {
+                    chinese.append(e.chinese_part());
+                    pinyin.append(e.pinyin_part());
+                    pinyin.append("_");
+                }
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ? AND cword.pinyin LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                chinese.append("%");
+                pinyin.append("%");
+                query_args.add(chinese.toString());
+                query_args.add(pinyin.toString());
             } else {
                 // mixed up
                 query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort FROM (SELECT * FROM cword) AS cword JOIN eword ON cword.cword_id=eword.cword_id ");
@@ -1074,6 +1142,16 @@ public class HanziDB extends SQLiteOpenHelper {
                         case INCOMPLETE_PINYIN:
                             query.append("pinyin LIKE ?");
                             query_args.add(elements.get(i).content+"%");
+                            break;
+                        case CHINESE_WITH_PINYIN:
+                            query.append("hanzi=? AND pinyin=?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part());
+                            break;
+                        case CHINESE_WITH_PINYIN_NO_TONE:
+                            query.append("hanzi=? AND pinyin LIKE ?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part()+"_");
                             break;
                     }
                     query.append(" AND cword_segment.pos=?");
@@ -1156,6 +1234,27 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content+"%");
                     query_args.add(elements.get(0).content+"%");
+                    break;
+                case CHINESE_WITH_PINYIN:
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part()+"%");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part());
+                    break;
+                case CHINESE_WITH_PINYIN_NO_TONE:
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part()+"%");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part()+"_");
+                    break;
             }
         }
         else {
@@ -1168,8 +1267,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     if (elements.get(i).type != StringElement.type_t.CHINESE)
                         break;
                 }
-            }
-            else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
+            } else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
                 for (i=0; i<elements.size(); i++) {
                     concat+=elements.get(i).content;
                     if (elements.get(i).type != StringElement.type_t.PINYIN_WITH_TONE)
@@ -1219,6 +1317,16 @@ public class HanziDB extends SQLiteOpenHelper {
                         case INCOMPLETE_PINYIN:
                             query.append("pinyin LIKE ?");
                             query_args.add(elements.get(i).content+"%");
+                            break;
+                        case CHINESE_WITH_PINYIN:
+                            query.append("hanzi=? AND pinyin=?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part());
+                            break;
+                        case CHINESE_WITH_PINYIN_NO_TONE:
+                            query.append("hanzi=? AND pinyin LIKE ?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part()+"_");
                             break;
                     }
                     query.append(") AS elem").append(i);
@@ -2688,7 +2796,7 @@ public class HanziDB extends SQLiteOpenHelper {
             cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
                     "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
                     "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (exp_time<?) OR (box IS NULL)",
+                    "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
@@ -2713,7 +2821,7 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             cur = db.rawQuery("SELECT COUNT(cword.chinese) AS count FROM cword " +
                     "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (exp_time<?) OR (box IS NULL)",
+                    "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
@@ -2733,12 +2841,12 @@ public class HanziDB extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery("SELECT chinese FROM (" +
                 "SELECT cword.chinese AS chinese FROM cword " +
                 "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (exp_time<?) OR (box IS NULL) " +
+                "WHERE (exp_time<?) OR (box IS NULL) OR (box=0) " +
                 "UNION " +
                 "SELECT chars.hanzi AS chinese FROM " +
                 "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
                 "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                "WHERE (exp_time<?) OR (box IS NULL)" +
+                "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)" +
                 ") GROUP BY chinese",
                 new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
 
@@ -3049,7 +3157,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
+                    "WHERE (leitner.box IS NULL) OR (leitner.box=0) OR (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             return getCursorCharsToStudy();
@@ -3067,7 +3175,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC LIMIT ?",
+                    "WHERE (leitner.box IS NULL) OR (leitner.box=0) OR (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC LIMIT ?",
                     new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
         else
             return getCursorCharsToStudy();
@@ -3110,9 +3218,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "GROUP_CONCAT(eword.translation,', ') AS english " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "JOIN eword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword ON cword.cword_id=eword.cword_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                     "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
@@ -3130,9 +3236,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "GROUP_CONCAT(eword.translation,', ') AS english " +
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "JOIN eword ON eword.cword_id=cword.cword_id " +
+                    "JOIN cword ON cword.cword_id=eword.cword_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                     "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
@@ -3192,7 +3296,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) " +
+                    "WHERE (leitner.box IS NULL) OR (box=0) OR (leitner.exp_time<?) " +
                     "UNION " +
                     "SELECT 1+2*cword.cword_id AS _id, " +
                     "cword.chinese AS chinese, " +
@@ -3201,7 +3305,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                     "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
@@ -3234,7 +3337,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
                     "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                     "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
