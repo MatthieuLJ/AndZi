@@ -161,7 +161,8 @@ public class DetailsFragment extends Fragment {
             if (hanzi.codePointCount(0, hanzi.length())!= 1)
                 character.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
-                        new_request.new_details_request(character_label, use_ref);
+                        if (new_request != null)
+                            new_request.new_details_request(character_label, use_ref);
                     }
                 });
             top_word.addView(character);
@@ -248,7 +249,7 @@ public class DetailsFragment extends Fragment {
             container = new WeakReference<ViewGroup>(v);
             elements = new ArrayList<HanziDB.StringElement>();
             for (int i=0; i<hanzi.length(); ) {
-                elements.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE,
+                elements.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE,
                         hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))));
                 i+=Character.charCount(hanzi.codePointAt(i));
             }

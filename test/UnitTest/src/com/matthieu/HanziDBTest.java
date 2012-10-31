@@ -254,11 +254,11 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("Saw", "看过", "kan4guo2");
         target_db.addVocabulary("He", "他", "ta1");
         target_db.addVocabulary("Him", "他", "ta1");
-        HanziDB.StringElement ni_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "你");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement kan_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "看");
-        HanziDB.StringElement guo_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "过");
-        HanziDB.StringElement ta_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "他");
+        HanziDB.StringElement ni_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "你");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement kan_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "看");
+        HanziDB.StringElement guo_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "过");
+        HanziDB.StringElement ta_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "他");
         ArrayList<Vocabulary> res = captureDataFromCursor(target_db.getDecomposedParts(
                 new ArrayList<HanziDB.StringElement>(Arrays.asList(ni_char, bu_char, kan_char, guo_char, ta_char)), 4, false, false));
 
@@ -280,11 +280,11 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("Saw", "看过", "kan4guo2");
         target_db.addVocabulary("He", "他", "ta1");
         target_db.addVocabulary("Him", "他", "ta1");
-        HanziDB.StringElement ni_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "你");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement kan_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "看");
-        HanziDB.StringElement guo_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "过");
-        HanziDB.StringElement ta_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "他");
+        HanziDB.StringElement ni_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "你");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement kan_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "看");
+        HanziDB.StringElement guo_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "过");
+        HanziDB.StringElement ta_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "他");
         target_db.addLesson("lesson filter");
         target_db.assignWordLesson("lesson filter", "You", "你", "ni3");
         target_db.assignWordLesson("lesson filter", "Did not see", "不看过", "bu4kan4guo2");
@@ -797,14 +797,14 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("already", "便已", "bian4yi1");
         ArrayList<Vocabulary> res;
         long max_time=0;
-        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "b");
 
         // ** test only one element
         long current_time = System.currentTimeMillis();
@@ -907,14 +907,14 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("already", "便已", "bian4yi1");
         ArrayList<Vocabulary> res;
         long max_time=0;
-        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "b");
 
         // ** test only one element
         long current_time = System.currentTimeMillis();
@@ -1026,14 +1026,14 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.enableFilter(true);
         ArrayList<Vocabulary> res;
         long max_time=0;
-        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "b");
 
         // ** test only one element
         long current_time = System.currentTimeMillis();
@@ -1136,14 +1136,14 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.enableFilter(true);
         ArrayList<Vocabulary> res;
         long max_time=0;
-        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "b");
 
         // ** test only one element
         long current_time = System.currentTimeMillis();
@@ -1237,14 +1237,14 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("already", "便已", "bian4yi1");
         ArrayList<Vocabulary> res;
         long max_time=0;
-        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "ni3");
-        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "bu4");
-        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "不");
-        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.CHINESE, "好");
-        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, "hao3");
-        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, "shi");
-        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "chi");
-        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, "b");
+        HanziDB.StringElement ni_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "ni3");
+        HanziDB.StringElement bu_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "bu4");
+        HanziDB.StringElement bu_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "不");
+        HanziDB.StringElement hao_char = new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, "好");
+        HanziDB.StringElement hao_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, "hao3");
+        HanziDB.StringElement shi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, "shi");
+        HanziDB.StringElement chi_no_tone_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "chi");
+        HanziDB.StringElement b_incomplete_pinyin = new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, "b");
 
         // ** test only one element
         long current_time = System.currentTimeMillis();

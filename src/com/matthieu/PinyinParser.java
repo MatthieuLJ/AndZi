@@ -228,7 +228,7 @@ public class PinyinParser {
                 return parse_string_to_elements(pinyin_string.substring(0, pinyin_string.length() - 1));
             }
             temp = parse_string_to_elements(pinyin_string.substring(0, split_index));
-            if ((temp == null) || (temp.get(temp.size()-1).type==HanziDB.StringElement.INCOMPLETE_PINYIN))
+            if ((temp == null) || (temp.get(temp.size()-1).type==HanziDB.StringElement.type_t.INCOMPLETE_PINYIN))
             {
                 return null;
             }
@@ -296,10 +296,10 @@ public class PinyinParser {
                 }
 
                 if (try_pinyin.tone_is_given()) {
-                    result.add(0, new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITH_TONE, try_pinyin.get_lame()));
+                    result.add(0, new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, try_pinyin.get_lame()));
                 }
                 else {
-                    result.add(0, new HanziDB.StringElement(HanziDB.StringElement.PINYIN_WITHOUT_TONE, try_pinyin.get_radical()));
+                    result.add(0, new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, try_pinyin.get_radical()));
                 }
                 return result;
             }
@@ -308,7 +308,7 @@ public class PinyinParser {
             Pinyin incomplete_pinyin=new Pinyin(pinyin_string,true);
             if (!incomplete_pinyin.get_lame().equals("")) {
                 result = new ArrayList<HanziDB.StringElement>();
-                result.add(new HanziDB.StringElement(HanziDB.StringElement.INCOMPLETE_PINYIN, incomplete_pinyin.get_lame()));
+                result.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, incomplete_pinyin.get_lame()));
                 return result;
             }
         }
@@ -325,7 +325,7 @@ public class PinyinParser {
                     || ((entry >= 0x2e00) && (entry <= 0x31ff)) // additional punctuation
                     || ((entry >= 0x3400) && (entry <= 0x4dbf)) // extension A
                     ) {
-                res.add(new HanziDB.StringElement(HanziDB.StringElement.CHINESE, input.substring(i, i+Character.charCount(entry))));
+                res.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, input.substring(i, i+Character.charCount(entry))));
                 i+=Character.charCount(entry);
             }
             else {

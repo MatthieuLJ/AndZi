@@ -229,14 +229,14 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     boolean all_chinese=true;
                     if (elems != null)
                         for (HanziDB.StringElement e : elems) {
-                            if (e.type != HanziDB.StringElement.CHINESE)
+                            if (e.type != HanziDB.StringElement.type_t.CHINESE)
                                 all_chinese=false;
                         }
 
                     if (elems == null)
                         current_cursor = new MessageCursor("Cannot understand this query");
                     else if (elems.size()==1) {
-                        if (elems.get(0).type == HanziDB.StringElement.INCOMPLETE_PINYIN)
+                        if (elems.get(0).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
                             current_cursor = null;
                         else
                             current_cursor = currentDB.getWordsStartingWithSequence(elems, true, true);

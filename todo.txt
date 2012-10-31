@@ -1,5 +1,4 @@
 ONGOING (12):
-* Show an overlay of the test result (good, bad, so-so) on the test page
 * Show better test details: containing show list of guesses + good/bad # restrict to one pinyin when guess pinyin #
 * Can show lesson content
 * Can enable lesson filter
@@ -8,6 +7,7 @@ ONGOING (12):
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
+* Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / tests / main menu / stats zoom / lesson filter)
   - splash page + main menu layout
@@ -37,7 +37,8 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (144):
+DONE (145):
+* Show an overlay of the test result (good, bad, so-so) on the test page
 * Add or Edit word from Details view
 * Be able to switch between CEDICT and local list in details / dictionary
 * Show dialog when too many details fragments are pinned
