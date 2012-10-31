@@ -23,9 +23,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 
 public class TestActivity extends SherlockFragmentActivity  implements handle_details_request {
     private ArrayList<TestFragment> char_tests;
@@ -69,6 +67,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         else {
             // When we are on a larger screen without a pager
         }
+        TextView result_overlay = (TextView) findViewById(R.id.test_result);
+        result_overlay.setVisibility(View.GONE);
         fill_hanzis_to_test();
         start_test();
         if (pager != null) {
@@ -276,6 +276,17 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     }
 
     public void new_solution_fragment(Fragment solution, int correctness) {
+        if (fragments[1] != null) {
+            View v = fragments[1].getView();
+            if (v != null) {
+                View entry = v.findViewById(R.id.test_guess);
+                if (entry != null) {
+                    InputMethodManager imm = (InputMethodManager)TestActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(entry.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        }
+
         if (fragments[2] != null) {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
@@ -283,6 +294,31 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             ft.commit();
         }
         fragments[2] = solution;
+        final TextView result_overlay = (TextView) findViewById(R.id.test_result);
+        switch(correctness) {
+            case TestFragment.INCORRECT:
+                result_overlay.setText("We'll have to study that again");
+                break;
+            case TestFragment.CORRECT:
+                result_overlay.setText("Well Done!");
+                break;
+            case TestFragment.OTHER:
+                result_overlay.setText("Almost");
+                break;
+        }
+        result_overlay.setVisibility(View.VISIBLE);
+        TimerTask hide_timer = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        result_overlay.setVisibility(View.GONE);
+                    }
+                });
+            }
+        };
+        new Timer().schedule(hide_timer, 4000);
         start_test();
     }
 

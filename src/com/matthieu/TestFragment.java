@@ -29,9 +29,9 @@ public abstract class TestFragment extends Fragment {
 
     private static final String TAG="TestFragment";
 
-    final static protected int CORRECT=1;
-    final static protected int INCORRECT=2;
-    final static protected int OTHER=3;
+    final static public int CORRECT=1;
+    final static public int INCORRECT=2;
+    final static public int OTHER=3;
 
     public TestFragment(Activity activity) {
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
