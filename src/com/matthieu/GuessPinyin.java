@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.widget.*;
@@ -61,8 +62,10 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
         boolean found=false;
         for (Vocabulary word : words) {
-            if (!word.chinese.replace(hanzi, "").equals(""))
+            if (!word.chinese.replace(hanzi, "").equals("")) {
                 found = true;
+                break;
+            }
         }
         if (!found) {
             return false;
@@ -193,20 +196,40 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment(hanzi, guess, hanzi, correctness);
+        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment(hanzi, guess, hanzi, pinyin, correctness);
         ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
 
         return true;
     }
 
     protected class GuessPinyinResultFragment extends SolutionFragment {
-        public GuessPinyinResultFragment(String question, String answer, String hanzi, int good) {
+        String pinyin;
+        public GuessPinyinResultFragment(String question, String answer, String hanzi, String pinyin, int good) {
             super(question, answer, hanzi, good);
+            this.pinyin=pinyin;
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return show_details(inflater, container, false);
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+            if ((good == INCORRECT) && (!answer.equals(""))) {
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                TextView bad_guess_text = new TextView(getActivity());
+                bad_guess_text.setText("You guessed: "+answer);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                FrameLayout bad_guess_details = new FrameLayout(getActivity());
+                bad_guess_details.setId(R.id.test_bad_guess);
+                DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+            }
+
+            return res;
         }
 
         @Override

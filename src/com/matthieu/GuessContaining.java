@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 
 public class GuessContaining extends TestFragment {
     protected ArrayList<String> correct_answers=new ArrayList<String>();
+    protected ArrayList<String> bad_answers=new ArrayList<String>();
+    protected ArrayList<String> new_answers=new ArrayList<String>();
 
     private final String TAG="GuessContaining";
 
@@ -73,6 +76,7 @@ public class GuessContaining extends TestFragment {
     protected int check_guess(String guess) {
         int res = INCORRECT;
         correct_answers.clear();
+        bad_answers.clear();
         String[] guesses=guess.split("[,， ]");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
@@ -85,7 +89,10 @@ public class GuessContaining extends TestFragment {
                 continue;
             if (myDB.getTranslations(guesses[i]).size()==0) {
                 if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0) && (res!=CORRECT)) {
+                    new_answers.add(guesses[i]);
                     res=OTHER;
+                } else {
+                    bad_answers.add(guesses[i]);
                 }
             }
             else {
@@ -105,21 +112,125 @@ public class GuessContaining extends TestFragment {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment(hanzi, guess, hanzi, correctness, correct_answers);
+        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment(hanzi, guess, hanzi, correctness, correct_answers, bad_answers, new_answers);
         ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
         return true;
     }
 
     protected class GuessContainingResultFragment extends TestFragment.SolutionFragment {
-        ArrayList<String> correct_answers;
-        public GuessContainingResultFragment(String question, String answer, String hanzi, int good, ArrayList<String> correct_answers) {
+        ArrayList<String> correct_answers, bad_answers, new_answers;
+        public GuessContainingResultFragment(String question, String answer, String hanzi, int good,
+                                             ArrayList<String> correct_answers, ArrayList<String> bad_answers, ArrayList<String> new_answers) {
             super(question, answer, hanzi, good);
             this.correct_answers = correct_answers;
+            this.bad_answers = bad_answers;
+            this.new_answers = new_answers;
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return show_details(inflater, container, false);
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity) GuessContainingResultFragment.this.getActivity());
+            if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                TableLayout tl = new TableLayout(getActivity());
+                //tl.setStretchAllColumns(true);
+                int table=0, offset_in_table=0, offset_in_column=0, table_size=bad_answers.size();
+                TableRow tr=null;
+                while(true) {
+                    while ((offset_in_table >= table_size) && (table < 3)){
+                        table++;
+                        offset_in_table=0;
+                        switch(table) {
+                            case 1:
+                                table_size = new_answers.size();
+                                break;
+                            case 2:
+                                table_size = correct_answers.size();
+                                break;
+                        }
+                    }
+
+                    if (table == 3)
+                        break;
+
+                    String answer=null;
+                    String label=null;
+                    switch(table) {
+                        case 0:
+                            answer = bad_answers.get(offset_in_table);
+                            label = "Wrong";
+                            break;
+                        case 1:
+                            answer = new_answers.get(offset_in_table);
+                            label = "New";
+                            break;
+                        case 2:
+                            answer = correct_answers.get(offset_in_table);
+                            label = "Correct";
+                            break;
+                    }
+                    offset_in_table++;
+
+                    if (offset_in_column == 0) {
+                        tr = new TableRow(getActivity());
+                        tr.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    }
+                    LinearLayout cell = new LinearLayout(getActivity());
+                    cell.setOrientation(LinearLayout.HORIZONTAL);
+                    TextView label_box = new TextView(getActivity());
+                    label_box.setText(label);
+                    label_box.setTextColor(Color.BLACK);
+                    label_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+                    cell.addView(label_box);
+                    TextView answer_box = new TextView(getActivity());
+                    answer_box.setText(answer);
+                    answer_box.setTextColor(Color.BLACK);
+                    answer_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2));
+                    final String final_answer = answer;
+                    answer_box.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            /* TODO
+                            Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                            i.putExtra("Hanzi", final_answer);
+                            startActivity(i);
+                            */
+                        }
+                    });
+                    cell.addView(answer_box);
+                    cell.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+                    tr.addView(cell);
+
+                    offset_in_column++;
+                    if (offset_in_column == 2) {
+
+                        tl.addView(tr);
+                        offset_in_column = 0;
+                    }
+                }
+                if (offset_in_column != 0)
+                    tl.addView(tr);
+
+                tl.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+                bad_guess.addView(tl);
+                /*
+                TextView bad_guess_text = new TextView(getActivity());
+                bad_guess_text.setText("You guessed: "+answer);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                FrameLayout bad_guess_details = new FrameLayout(getActivity());
+                bad_guess_details.setId(R.id.test_bad_guess);
+                DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) TestFragment.this.getActivity());
+                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                */
+                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+            }
+
+            return res;
         }
 
         @Override

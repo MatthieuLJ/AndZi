@@ -1,5 +1,4 @@
-ONGOING (12):
-* Show better test details: containing show list of guesses + good/bad # restrict to one pinyin when guess pinyin #
+ONGOING (11):
 * Can show lesson content
 * Can enable lesson filter
 * Handle screen rotation
@@ -9,7 +8,7 @@ ONGOING (12):
 * Test performance with huge database
 * Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Make it pretty(ier)
-  - icons for buttons (dictionary / details fragment / tests / main menu / stats zoom / lesson filter)
+  - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
   - splash page + main menu layout
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
@@ -37,7 +36,8 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (145):
+DONE (146):
+* Show better test details: containing show list of guesses + good/bad # restrict to one pinyin when guess pinyin #
 * Show an overlay of the test result (good, bad, so-so) on the test page
 * Add or Edit word from Details view
 * Be able to switch between CEDICT and local list in details / dictionary

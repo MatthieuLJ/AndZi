@@ -30,13 +30,19 @@ public class DetailsFragment extends Fragment {
     private boolean use_ref=false;
 
     private String current_hanzi;
+    private String current_pinyin="";
     private boolean pinned=false;
 
     static Object locker = new Object();
 
-    public DetailsFragment(String hanzi, boolean use_ref) {
+    public DetailsFragment(String hanzi, String pinyin, boolean use_ref) {
         current_hanzi = hanzi;
+        current_pinyin = pinyin;
         this.use_ref = use_ref;
+    }
+
+    public DetailsFragment(String hanzi, boolean use_ref) {
+        this(hanzi, "", use_ref);
     }
 
     @Override
@@ -48,6 +54,10 @@ public class DetailsFragment extends Fragment {
         return current_hanzi;
     }
 
+    public String get_pinyin() {
+        return current_pinyin;
+    }
+
     public boolean get_use_ref() {
         return use_ref;
     }
@@ -57,7 +67,8 @@ public class DetailsFragment extends Fragment {
     }
 
     public boolean is_same_query(DetailsFragment other) {
-        return other.get_hanzi().equals(get_hanzi()) && (other.get_use_ref() == get_use_ref());
+        return other.get_pinyin().equals(get_pinyin()) && other.get_hanzi().equals(get_hanzi())
+                && (other.get_use_ref() == get_use_ref());
     }
 
     @Override
@@ -115,15 +126,21 @@ public class DetailsFragment extends Fragment {
     }
 
     static void populate_details_view(final Fragment fragment, ViewGroup section,
-                                      final String hanzi, final boolean use_ref, final handle_details_request new_request) {
+                                      final String hanzi, final boolean ref_query, final handle_details_request new_request) {
+        populate_details_view(fragment, section, hanzi, "", ref_query, new_request);
+    }
+
+    static void populate_details_view(final Fragment fragment, ViewGroup section,
+                                      final String hanzi, final String pinyin,
+                                      final boolean ref_query, final handle_details_request new_request) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(fragment.getActivity());
         boolean show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
         HanziDB db=null;
-        if (use_ref) {
+        if (ref_query) {
             db = ((AndZiApplication)fragment.getActivity().getApplication()).getRefDB();
         }
-        if ((db == null) || (!use_ref)) {
+        if ((db == null) || (!ref_query)) {
             db = ((AndZiApplication)fragment.getActivity().getApplication()).getMyDB();
         }
 
@@ -162,7 +179,7 @@ public class DetailsFragment extends Fragment {
                 character.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
                         if (new_request != null)
-                            new_request.new_details_request(character_label, use_ref);
+                            new_request.new_details_request(character_label, ref_query);
                     }
                 });
             top_word.addView(character);
@@ -170,13 +187,20 @@ public class DetailsFragment extends Fragment {
         }
 
         // write the pinyin(s) if applicable
+        String info_pinyins="";
         final TextView info = (TextView) new_view.findViewById(R.id.details_info);
         if (old_pinyins != null) {
-            info.setText(old_pinyins);
-            info.setVisibility(View.VISIBLE);
+            info_pinyins = old_pinyins.toString();
+        } else if (!pinyin.equals("")) {
+            info_pinyins="(";
+            if (show_pinyin_color)
+                info_pinyins+=PinyinParser.convert_to_html_version(pinyin);
+            else
+                info_pinyins+=PinyinParser.convert_to_pretty_version(pinyin);
+            info_pinyins+=")";
         } else if (hanzi.codePointCount(0, hanzi.length()) == 1) {
             ArrayList<String> pinyins = db.getPinyinForChar(hanzi);
-            String info_pinyins="(";
+            info_pinyins="(";
             for (int i=0; i<pinyins.size(); i++) {
                 String pin=pinyins.get(i);
 
@@ -188,13 +212,24 @@ public class DetailsFragment extends Fragment {
                     info_pinyins+=", ";
             }
             info_pinyins+=")";
-
-            info.setText(Html.fromHtml(info_pinyins));
-
-            info.setVisibility(View.VISIBLE);
         }
         else { // TODO: handle the case where the word is in the DB and has only one pronounciation
+            ArrayList<Vocabulary> voc = db.getTranslations(hanzi);
+            if (voc.size() == 1) {
+                info_pinyins="(";
+                if (show_pinyin_color)
+                    info_pinyins+=PinyinParser.convert_to_html_version(voc.get(0).pinyin);
+                else
+                    info_pinyins+=PinyinParser.convert_to_pretty_version(voc.get(0).pinyin);
+                info_pinyins+=")";
+            }
+        }
+
+        if (info_pinyins.equals("")) {
             info.setVisibility(View.GONE);
+        } else {
+            info.setText(Html.fromHtml(info_pinyins));
+            info.setVisibility(View.VISIBLE);
         }
 
         // populate the list
@@ -224,7 +259,7 @@ public class DetailsFragment extends Fragment {
             }
         }
 
-        populator populate = new populator(fragment, hanzi, db, section);
+        populator populate = new populator(fragment, hanzi, pinyin, db, section);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             populate.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
         else
@@ -241,17 +276,38 @@ public class DetailsFragment extends Fragment {
         HanziDB db;
         WeakReference<ViewGroup> container;
         public String hanzi;
+        public String pinyin="";
 
         public populator(Fragment f, String h, HanziDB d, ViewGroup v) {
+            this(f, h, "", d, v);
+        }
+
+        public populator(Fragment f, String h, String p, HanziDB d, ViewGroup v) {
             fragment = f;
             hanzi = h;
+            pinyin = p;
             db = d;
             container = new WeakReference<ViewGroup>(v);
             elements = new ArrayList<HanziDB.StringElement>();
+
+            ArrayList<Pinyin> pinyin_table = PinyinParser.parse_string_to_pinyin(pinyin);
+            if ((!pinyin.equals("")) &&
+                    ((pinyin_table==null) || ((pinyin_table.size() != hanzi.codePointCount(0, hanzi.length()))))) {
+                Log.e(TAG, "Cannot match string "+h+" with pinyins "+p);
+                pinyin = "";
+            }
+
+            int offset=0;
             for (int i=0; i<hanzi.length(); ) {
-                elements.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE,
-                        hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))));
+                if (pinyin.equals(""))
+                    elements.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE,
+                            hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))));
+                else
+                    elements.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE_WITH_PINYIN,
+                            hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)))+pinyin_table.get(offset).get_lame()));
+
                 i+=Character.charCount(hanzi.codePointAt(i));
+                offset++;
             }
         }
 
@@ -273,7 +329,7 @@ public class DetailsFragment extends Fragment {
             cursor = db.getWordsWithSequence(elements, true, true);
             if (!isCancelled())
                 cursor.getCount();  // force the "calculation"
-            return (Void) null;
+            return null;
         }
 
         @Override
