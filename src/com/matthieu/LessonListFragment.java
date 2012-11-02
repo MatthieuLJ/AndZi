@@ -44,41 +44,9 @@ public class LessonListFragment extends Fragment {
         return res;
     }
 
-/*
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        synchronized (LessonListFragment.this) {
-            ListAdapter adapter=null;
-            if (loader==null) {
-                ListView list = (ListView) getView().findViewById(R.id.review_list);
-                adapter = list.getAdapter();
-            }
-            else {
-                mProgressDialog.dismiss();
-            }
-            setContentView(R.layout.review_list);
-
-            if (loader==null) {
-                ListView list = (ListView) getView().findViewById(R.id.review_list);
-                list.setAdapter(adapter);
-            }
-            else {
-                mProgressDialog = new ProgressDialog(getActivity());
-                mProgressDialog.setMessage(getResources().getString(R.string.loading));
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.show();
-            }
-        }
-    }
-    */
-
     @Override
     public void onResume() {
         super.onResume();
-
          loader = new AsyncTask<Void, Void, Void>() {
 
             @Override

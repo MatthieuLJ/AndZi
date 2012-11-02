@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/add_vocabulary_lesson_single_clone"
+          android:title="Clone"
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_lesson_single_inspect"
+          android:title="Inspect"
+          android:showAsAction="always"/>
+    <item android:id="@+id/add_vocabulary_lesson_single_rename"
+          android:title="Rename"
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_lesson_single_delete"
+          android:title="Delete"
+          android:showAsAction="always"/>
+</menu>

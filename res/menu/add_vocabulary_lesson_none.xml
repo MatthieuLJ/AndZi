@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/add_vocabulary_lesson_none_add"
+          android:title="Add"
+          android:showAsAction="always"/>
+    <item android:id="@+id/add_vocabulary_lesson_none_filter"
+          android:title="Filter"
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_lesson_none_list"
+          android:title="List"
+          android:showAsAction="ifRoom|withText"/>
+</menu>

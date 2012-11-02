@@ -4,12 +4,15 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.viewpagerindicator.PageIndicator;
 
-
-public class VocabularyEditorActivity extends SherlockFragmentActivity {
+public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
     Fragment fragments[];
 
     HanziDB refDB, myDB;
@@ -40,10 +43,57 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
+
+            mIndicator.setOnPageChangeListener(this);
         }
         else {
             // When we are on a larger screen without a pager
         }
+    }
+
+    public void open_lesson_list(String label) {
+        if (fragments[2]!=null)
+            close_lesson_list();
+        fragments[2] = new LessonListFragment(label);
+        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        if (pager != null) {
+            pager.getAdapter().notifyDataSetChanged();
+        }
+    }
+
+    public void close_lesson_list() {
+        if (fragments[2] == null)
+            return;
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.remove(fragments[2]);
+        ft.commit();
+        fragments[2]=null;
+    }
+
+    @Override
+    public void onPageScrolled(int i, float v, int i1) {
+    }
+
+    @Override
+    public void onPageSelected(int i) {
+        /*
+        switch(i) {
+            case 0:
+                ((AddVocabularyFragment)fragments[0]).get_active();
+                break;
+            case 1:
+                ((EditLessonsFragment)fragments[1]).get_active();
+                break;
+            case 2:
+                ((LessonListFragment)fragments[2]).get_active();
+                break;
+        }
+        */
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int i) {
     }
 
     private class editor_pager extends FragmentPagerAdapter {
@@ -60,5 +110,98 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         public int getCount() {
             return fragments[2]==null?2:3;
         }
+
+        @Override
+        public int getItemPosition(Object object) {
+            Fragment fragment = (Fragment) object;
+            for (int i=0; i<3; i++)
+                if (fragment.equals(fragments[i]))
+                    return POSITION_UNCHANGED;
+
+            return POSITION_NONE;
+        }
+    }
+
+    public enum menu_types {
+        INITIAL,
+        VOCABULARY_NEW_SELECTED,
+        VOCABULARY_CURRENT_SELECTED,
+        VOCABULARY_CURRENT_MULTIPLE_SELECTED,
+        VOCABULARY_READY,
+        LESSON_NONE_SELECTED,
+        LESSON_ONE_SELECTED,
+        LESSON_MULTI_SELECTED,
+        LESSON_FILTER
+    }
+    private menu_types current_type=menu_types.INITIAL;
+
+    public void set_menu(menu_types new_type) {
+        current_type = new_type;
+        invalidateOptionsMenu();
+    }
+
+    public menu_types get_menu() {
+        return current_type;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getSupportMenuInflater();
+        inflater.inflate(R.menu.add_vocabulary_init, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        int menu_resource;
+        switch(current_type) {
+            case VOCABULARY_NEW_SELECTED:
+                menu_resource = R.menu.add_vocabulary_menu_add;
+                break;
+            case VOCABULARY_CURRENT_SELECTED:
+                menu_resource = R.menu.add_vocabulary_menu_edit;
+                break;
+            case VOCABULARY_CURRENT_MULTIPLE_SELECTED:
+                menu_resource = R.menu.add_vocabulary_menu_edit_multiple;
+                break;
+            case VOCABULARY_READY:
+                menu_resource = R.menu.add_vocabulary_menu_ready;
+                break;
+            case LESSON_NONE_SELECTED:
+                menu_resource = R.menu.add_vocabulary_lesson_none;
+                break;
+            case LESSON_ONE_SELECTED:
+                menu_resource = R.menu.add_vocabulary_lesson_single;
+                break;
+            case LESSON_MULTI_SELECTED:
+                menu_resource = R.menu.add_vocabulary_lesson_multiple;
+                break;
+            case LESSON_FILTER:
+                menu_resource = R.menu.add_vocabulary_lesson_filter;
+                break;
+            case INITIAL:
+            default:
+                menu_resource = R.menu.add_vocabulary_init;
+        }
+        menu.clear();
+        MenuInflater inflater = getSupportMenuInflater();
+        inflater.inflate(menu_resource, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.add_vocabulary_add_add:
+                ((AddVocabularyFragment)fragments[0]).add_selection();
+                return true;
+            case R.id.add_vocabulary_edit_delete:
+                ((AddVocabularyFragment)fragments[0]).del_selection();
+                return true;
+            case R.id.add_vocabulary_done:
+                ((AddVocabularyFragment)fragments[0]).done();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

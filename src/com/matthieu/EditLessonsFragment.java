@@ -537,7 +537,7 @@ public class EditLessonsFragment extends Fragment {
             inflater.inflate(R.menu.edit_lesson_menu_filter, menu);
         }
         else {
-            inflater.inflate(R.menu.edit_lesson_menu, menu);
+            inflater.inflate(R.menu.add_vocabulary_lesson_single, menu);
         }
     }
 

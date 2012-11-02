@@ -350,7 +350,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             Fragment fragment = (Fragment) object;
             for (int i=0; i<3; i++)
                 if (fragment.equals(fragments[i]))
-                    return  POSITION_UNCHANGED;
+                    return POSITION_UNCHANGED;
 
             return POSITION_NONE;
         }

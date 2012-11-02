@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/add_vocabulary_edit_lesson"
+          android:title="Lesson"
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_edit_edit"
+          android:title="Edit"
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_edit_delete"
+          android:title="Delete"
+          android:showAsAction="always"/>
+    <item android:id="@+id/add_vocabulary_done"
+          android:title="Done"
+          android:showAsAction="always"/>
+</menu>

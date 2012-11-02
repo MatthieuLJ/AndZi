@@ -15,11 +15,12 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (5):
 * Do not show modal window with loading wheel when loading lesson list
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
+* Can go from details in test solutions into reference page
 
 FUTURE (12):
 * Can reset score per lesson

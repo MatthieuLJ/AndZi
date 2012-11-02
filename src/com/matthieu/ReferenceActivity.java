@@ -58,7 +58,6 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                 }
                 return;
             }
-
         }
 
         // Insert the new fragment
@@ -92,7 +91,6 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             ft.commit();
 
             max = index;
-
         }
 
         FragmentManager fm = getSupportFragmentManager();
