@@ -5,9 +5,7 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -29,7 +27,6 @@ public class EditLessonsFragment extends Fragment {
     protected ArrayList<String> current_lesson_filter;
     protected boolean filter_on;
     private Handler process_handler=null;
-    private ProgressDialog mProgressDialog;
     private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
@@ -52,16 +49,16 @@ public class EditLessonsFragment extends Fragment {
             public void drop(int from, int to) {
                 if (from == 0)
                     return;
-                if (init_lessons_thread!=null)
+                if (init_lessons_thread != null)
                     return;
-                if (to==0)
-                    to=1;
-                Lesson le = current_lessons.get(from-1);
+                if (to == 0)
+                    to = 1;
+                Lesson le = current_lessons.get(from - 1);
                 Log.d(TAG, "Moving from " + from + " to " + to);
                 current_lessons.remove(from - 1);
                 current_lessons.add(to - 1, le);
-                final ArrayList<String> lesson_order=new ArrayList<String>();
-                for (Lesson l:current_lessons)
+                final ArrayList<String> lesson_order = new ArrayList<String>();
+                for (Lesson l : current_lessons)
                     lesson_order.add(l.label);
                 TouchListView lv = (TouchListView) res.findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
@@ -72,15 +69,10 @@ public class EditLessonsFragment extends Fragment {
                 }).start();
             }
         });
-        registerForContextMenu(list);
+        //registerForContextMenu(list);
 
-        mProgressDialog = new ProgressDialog(getActivity());
-        mProgressDialog.setMessage("Loading");
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        mProgressDialog.show();
-
+        ProgressBar pb = (ProgressBar) res.findViewById(R.id.lessons_loading);
+        pb.setVisibility(View.VISIBLE);
 
         init_lessons_thread = new InitLessons();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
@@ -99,33 +91,6 @@ public class EditLessonsFragment extends Fragment {
             myDB.enableFilter(filter_on);
         }
     }
-/*
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        synchronized (EditLessonsFragment.this) {
-            ListAdapter adapter=null;
-            TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-            if (init_lessons_thread == null)
-                adapter = lv.getAdapter();
-            else
-                mProgressDialog.dismiss();
-            setup_screen();
-            lv = (TouchListView) findViewById(R.id.lesson_list);
-            if (init_lessons_thread == null)
-                lv.setAdapter(adapter);
-            else {
-                mProgressDialog = new ProgressDialog(EditLessonsFragment.this);
-                mProgressDialog.setMessage("Loading");
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.show();
-            }
-        }
-    }
-*/
 
     private class InitLessons extends AsyncTask<Void, Void, Void> {
         ArrayList<Lesson> tmp_lessons;
@@ -165,8 +130,9 @@ public class EditLessonsFragment extends Fragment {
                     lv.setAdapter(new LessonArrayAdapter());
                 }
 
-                mProgressDialog.dismiss();
-                mProgressDialog=null;
+                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+                pb.setVisibility(View.GONE);
+
                 init_lessons_thread=null;
             }
         }
@@ -255,9 +221,6 @@ public class EditLessonsFragment extends Fragment {
                     row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_item);
                 }
 
-                CheckBox cb = (CheckBox) row.findViewById(R.id.lesson_filter_on);
-                cb.setOnCheckedChangeListener(null);
-                
                 Lesson le = current_lessons.get(position-1);
 
                 String more_info = "";
@@ -290,37 +253,30 @@ public class EditLessonsFragment extends Fragment {
                 }
                 label.setTag(R.id.lesson_item, le);
 
+                VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
+                if (current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) {
+                    if (current_lesson_filter.contains(le.label)) {
+                        row.setBackgroundColor(0xFF777777);
+                    } else {
+                        row.setBackgroundColor(0x00000000);
+                    }
+                } else {
+                    if (current_lesson_selection.contains(le)) {
+                        row.setBackgroundColor(0xFF777777);
+                    } else {
+                        row.setBackgroundColor(0x00000000);
+                    }
+                }
 
-                cb.setChecked((le.state & Lesson.FILTERED_ENABLED) != 0);
-                if (filter_on) {
-                    cb.setVisibility(View.VISIBLE);
-                }
-                else {
-                    cb.setVisibility(View.GONE);
-                }
-                cb.setTag(R.id.lesson_item, le);
-                cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                        Lesson lesson = (Lesson) compoundButton.getTag(R.id.lesson_item);
-                        if (b) {
-                            lesson.state |= Lesson.FILTERED_ENABLED;
-                            current_lesson_filter.add(lesson.label);
-                        }
-                        else {
-                            lesson.state &= ~Lesson.FILTERED_ENABLED;
-                            current_lesson_filter.remove(lesson.label);
-                        }
-                        TouchListView lv = (TouchListView) EditLessonsFragment.this.getView().findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                        new Thread(new Runnable() {
-                            public void run() {
-                                myDB.setLessonsToFilter(current_lesson_filter);
-                                ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
-                            }
-                        }).start();
+                row.setTag(R.id.lesson_item, le);
+                row.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        handle_lesson_click(view);
                     }
                 });
             }
+
             return row;
         }
 
@@ -328,22 +284,28 @@ public class EditLessonsFragment extends Fragment {
             return current_lessons.size()+1;
         }
 
-        public Object getItem(int i) {
-            return null;
+        @Override
+        public int getViewTypeCount() {
+            return 2;
         }
 
-        public long getItemId(int i) {
-            return 0;
+        @Override
+        public int getItemViewType(int position) {
+            if (position == 0)
+                return 0;
+            else
+                return 1;
         }
-    }
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
+        public Object getItem(int position) {
+            if (position == 0)
+                return "";
+            else
+                return current_lessons.get(position-1);
+        }
 
-        if (((AdapterView.AdapterContextMenuInfo)menuInfo).position != 0) {
-            MenuInflater inflater=getActivity().getMenuInflater();
-            inflater.inflate(R.menu.lesson_item_menu, menu);
+        public long getItemId(int position) {
+            return getItem(position).hashCode();
         }
     }
 
@@ -355,248 +317,288 @@ public class EditLessonsFragment extends Fragment {
         return false;
     }
 
-    private interface String_action{
-        void run(String param);
-    }
+    private ArrayList<Lesson> current_lesson_selection=new ArrayList<Lesson>();
 
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        if (init_lessons_thread!=null)
-            return false;
+    protected void change_menu() {
+        VocabularyEditorActivity.menu_types type;
 
-        ContextMenu.ContextMenuInfo menuInfo=item.getMenuInfo();
-        final Lesson le = current_lessons.get(((AdapterView.AdapterContextMenuInfo)menuInfo).position-1);
+        if (((VocabularyEditorActivity)getActivity()).get_menu() == VocabularyEditorActivity.menu_types.LESSON_FILTER)
+            return;
 
-        switch(item.getItemId()) {
-            case R.id.delete_lesson:
-                current_lessons.remove(le);
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                new Thread(new Runnable() {
-                    public void run() {
-                        myDB.delLesson(le.label);
-                    }
-                }).start();
+        switch (current_lesson_selection.size()) {
+            case 0:
+                type = VocabularyEditorActivity.menu_types.LESSON_NONE_SELECTED;
                 break;
-            case R.id.rename_lesson:
-                if (le.old_label.equals(""))
-                    le.old_label=le.label;
-
-                prompt_user_input("Rename lesson "+le.label, "Enter new name:", new String_action() {
-                    public void run(final String param) {
-                        if (param.equals(""))
-                            return;
-                        if (param.equals("(none)"))
-                            return;
-                        if (lesson_exists(param)) {
-                            Toast.makeText(getActivity(), "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        if (param.equals(le.label))
-                            return;
-
-                        final String old_name = le.label;
-                        le.label=param;
-                        if (le.old_label.equals(param)) {
-                            le.old_label="";
-                            le.state &= ~Lesson.RENAMED;
-                        }
-                        else
-                            le.state |= Lesson.RENAMED;
-                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-
-                        new Thread(new Runnable() {
-                            public void run() {
-                                myDB.renameLesson(old_name, param);
-                            }
-                        }).start();
-                    }
-                });
-                break;
-            case R.id.duplicate_lesson:
-                prompt_user_input("Duplicate lesson "+le.label, "Enter new name:", new String_action() {
-                    public void run(final String param) {
-                        if (param.equals(""))
-                            return;
-                        if (param.equals("(none)"))
-                            return;
-                        if (lesson_exists(param)) {
-                            Toast.makeText(getActivity(), "The lesson [" + param + "] already exists", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        Lesson new_lesson=new Lesson(param);
-                        new_lesson.state = Lesson.NEW;
-                        new_lesson.num_items = le.num_items;
-                        current_lessons.add(0, new_lesson);
-                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-
-                        new Thread(new Runnable() {
-                            public void run() {
-                                myDB.addLesson(param);
-                                for (Vocabulary voc:myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))))
-                                    myDB.assignWordLesson(param, voc);
-                                ArrayList<String> lesson_order=new ArrayList<String>();
-                                for (Lesson l:current_lessons)
-                                    lesson_order.add(l.label);
-                                myDB.sortLessons(lesson_order);
-                            }
-                        }).start();
-                    }
-                });
-                break;
-            case R.id.combine_lesson:
-                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
-                alert.setTitle("Select lessons to combine with "+le.label);
-                final String[] lessons = new String[current_lessons.size()];
-                final boolean[] lesson_checked = new boolean[current_lessons.size()];
-                for (int i=0; i<current_lessons.size(); i++) {
-                    lessons[i] = current_lessons.get(i).label;
-                    lesson_checked[i] = false;
-                }
-                alert.setMultiChoiceItems(lessons, lesson_checked, new DialogInterface.OnMultiChoiceClickListener() {
-                    public void onClick(DialogInterface dialog, int i, boolean b) {
-                        lesson_checked[i]=b;
-                    }
-                });
-                alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, int n) {
-                        final ArrayList<String> lessons_selected = new ArrayList<String>();
-                        for (int i=0; i<current_lessons.size(); i++) {
-                            if (lesson_checked[i]) {
-                                lessons_selected.add(lessons[i]);
-                            }
-                        }
-
-                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                        dialog.dismiss();
-
-                        new Thread(new Runnable() {
-                            public void run() {
-                                ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(lessons_selected);
-                                for (Vocabulary v:voc) {
-                                    myDB.assignWordLesson(le.label, v);
-                                    le.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))).size();
-                                }
-                            }
-                        }).start();
-                    }
-                });
-                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int n) {
-                        dialog.dismiss();
-                    }
-                });
-                alert.show();
-                break;
-            case R.id.content_lesson:
-                Intent i=new Intent(getActivity(), LessonListFragment.class);
-                i.putExtra("lesson", le.label);
-                startActivity(i);
+            case 1:
+                type = VocabularyEditorActivity.menu_types.LESSON_ONE_SELECTED;
                 break;
             default:
-                return super.onContextItemSelected(item);
+                type = VocabularyEditorActivity.menu_types.LESSON_MULTI_SELECTED;
+                break;
         }
-
-        return true;
+        ((VocabularyEditorActivity)getActivity()).set_menu(type);
     }
 
-    private void prompt_user_input(String title, String message, final String_action action) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+    public void handle_lesson_click(View v) {
+        final Lesson le = (Lesson) v.getTag(R.id.lesson_item);
+        if (le == null)
+            return;
 
-        alert.setTitle(title);
-        alert.setMessage(message);
+        VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
+        if (current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) {
+            if (!current_lesson_filter.contains(le.label)) {
+                le.state |= Lesson.FILTERED_ENABLED;
+                current_lesson_filter.add(le.label);
+                v.setBackgroundColor(0xFF777777);
+            }
+            else {
+                le.state &= ~Lesson.FILTERED_ENABLED;
+                current_lesson_filter.remove(le.label);
+                v.setBackgroundColor(0x00000000);
+            }
+
+            /*TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+            ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();*/
+        } else if (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON) {
+
+        } else {
+            if (current_lesson_selection.contains(le)) {
+                current_lesson_selection.remove(le);
+                v.setBackgroundColor(0x00000000);
+            } else {
+                current_lesson_selection.add(le);
+                v.setBackgroundColor(0xFF777777);
+            }
+        }
+
+        v.invalidate();
+        change_menu();
+    }
+
+    public void clone_selection() {
+        if (current_lesson_selection.size() != 1) {
+            change_menu();
+            return;
+        }
+        final Lesson le = current_lesson_selection.get(0);
+        String new_name = le.label + " - copy";
+        StringBuilder other_new_name = new StringBuilder(new_name);
+        int index = 1;
+        while (lesson_exists(other_new_name.toString())) {
+            other_new_name = new StringBuilder(new_name).append(" (").append(index).append(")");
+            index++;
+        }
+        new_name = other_new_name.toString();
+
+        Lesson new_lesson=new Lesson(new_name);
+        new_lesson.state = Lesson.NEW;
+        new_lesson.num_items = le.num_items;
+        current_lessons.add(0, new_lesson);
+
+        final String final_new_name = new_name;
+        new Thread(new Runnable() {
+            public void run() {
+                myDB.addLesson(final_new_name);
+                for (Vocabulary voc:myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))))
+                    myDB.assignWordLesson(final_new_name, voc);
+                ArrayList<String> lesson_order=new ArrayList<String>();
+                for (Lesson l:current_lessons)
+                    lesson_order.add(l.label);
+                myDB.sortLessons(lesson_order);
+            }
+        }).start();
+        current_lesson_selection.clear();
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        change_menu();
+    }
+
+    public void del_selection() {
+        if (current_lesson_selection.size() == 0) {
+            change_menu();
+            return;
+        }
+        final ArrayList<Lesson> to_delete = new ArrayList<Lesson>(current_lesson_selection);
+        current_lessons.remove(current_lesson_selection);
+        new Thread(new Runnable() {
+            public void run() {
+                for (Lesson le : to_delete)
+                    myDB.delLesson(le.label);
+            }
+        }).start();
+        current_lesson_selection.clear();
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        change_menu();
+    }
+
+    public void rename_selection() {
+        if (current_lesson_selection.size() != 1) {
+            change_menu();
+            return;
+        }
+        final Lesson le = current_lesson_selection.get(0);
+
+        if (le.old_label.equals(""))
+            le.old_label=le.label;
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+        alert.setTitle("Rename lesson: "+le.label);
+        alert.setMessage("Enter new name: ");
 
         final EditText input = new EditText(getActivity());
+        input.setSingleLine(false);
+        input.setMaxLines(3);
+        input.setText(le.label);
         alert.setView(input);
 
-        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+        alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                String value = input.getText().toString();
-                action.run(value);
-            }
-        });
+                final String new_label = input.getText().toString();
+                if (new_label.equals(""))
+                    return;
+                if (new_label.equals("(none)"))
+                    return;
+                if (new_label.equals(le.label))
+                    return;
+                if (lesson_exists(new_label)) {
+                    Toast.makeText(getActivity(), "The lesson [" + new_label + "] already exists", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
+                final String old_name = le.label;
+                le.label = new_label;
+                if (le.old_label.equals(new_label)) {
+                    le.old_label = "";
+                    le.state &= ~Lesson.RENAMED;
+                } else
+                    le.state |= Lesson.RENAMED;
+
+
+                new Thread(new Runnable() {
+                    public void run() {
+                        myDB.renameLesson(old_name, new_label);
+                    }
+                }).start();
+
+                current_lesson_selection.clear();
+                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
+                change_menu();
+
                 dialog.dismiss();
             }
         });
 
+        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.dismiss();
+            }
+        });
         alert.show();
     }
-/*
 
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        menu.clear();
-        MenuInflater inflater = getMenuInflater();
-        if (filter_on) {
-            inflater.inflate(R.menu.edit_lesson_menu_filter, menu);
+    public void merge_selection() {
+        if (current_lesson_selection.size() < 1) {
+            change_menu();
+            return;
         }
-        else {
-            inflater.inflate(R.menu.add_vocabulary_lesson_single, menu);
-        }
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-        switch(item.getItemId()) {
-            case R.id.lesson_enable_filter:
-                process_handler.post(new Runnable() {
+        String new_name = "Combined lesson ";
+        StringBuilder other_new_name = new StringBuilder(new_name);
+        int index = 1;
+        while (lesson_exists(other_new_name.toString())) {
+            other_new_name = new StringBuilder(new_name).append(" (").append(index).append(")");
+            index++;
+        }
+        new_name = other_new_name.toString();
+
+        final Lesson new_lesson=new Lesson(new_name);
+        new_lesson.state = Lesson.NEW;
+        new_lesson.label = new_name;
+        current_lessons.add(0, new_lesson);
+
+        final ArrayList<Lesson> to_combine = new ArrayList<Lesson>(current_lesson_selection);
+
+        new Thread(new Runnable() {
+            public void run() {
+                for (Lesson le : to_combine) {
+                    ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
+                    for (Vocabulary v:voc) {
+                        myDB.assignWordLesson(new_lesson.label, v);
+                    }
+                }
+                new_lesson.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new_lesson.label))).size();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
                     public void run() {
-                        filter_on = true;
-                        myDB.enableFilter(filter_on);
-                        ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
+                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
                 });
-                break;
-            
-            case R.id.lesson_disable_filter:
-                process_handler.post(new Runnable() {
-                    public void run() {
-                        filter_on = false;
-                        myDB.enableFilter(filter_on);
-                        ((AndZiApplication) getApplication()).save_database_filter(filter_on, current_lesson_filter);
-                        TouchListView lv = (TouchListView) findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                    }
-                });
-                break;
+            }
+        }).start();
 
-            case R.id.lesson_filter_all:
-                current_lesson_filter.clear();
-                for (Lesson l : current_lessons) {
-                    l.state |= Lesson.FILTERED_ENABLED;
-                    current_lesson_filter.add(l.label);
-                }
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                break;
-                
-            case R.id.lesson_filter_none:
-                current_lesson_filter.clear();
-                for (Lesson l : current_lessons) {
-                    l.state &= ~Lesson.FILTERED_ENABLED;
-                }
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                break;
-            
-            case R.id.no_lesson_list:
-                Intent i=new Intent(this, LessonListFragment.class);
-                i.putExtra("lesson", "");
-                startActivity(i);
-                break;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-        return true;
+        current_lesson_selection.clear();
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        change_menu();
     }
-*/
 
+    public void list_selection() {
+        if (current_lesson_selection.size() > 1) {
+            change_menu();
+            return;
+        }
+        String to_list="";
+        if (current_lesson_selection.size() > 0)
+            to_list = current_lesson_selection.get(0).label;
+
+        ((VocabularyEditorActivity)getActivity()).open_lesson_list(to_list);
+    }
+
+    public void set_filter_start() {
+        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.LESSON_FILTER);
+
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+    }
+
+    public void set_filter_done() {
+        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.LESSON_NONE_SELECTED);
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        change_menu();
+        new Thread(new Runnable() {
+            public void run() {
+                myDB.setLessonsToFilter(current_lesson_filter);
+                ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
+            }
+        }).start();
+    }
+
+    public void set_filter_all() {
+        current_lesson_filter.clear();
+        for (Lesson le : current_lessons) {
+            current_lesson_filter.add(le.label);
+            le.state |= Lesson.FILTERED_ENABLED;
+        }
+    }
+
+    public void set_filter_none() {
+        current_lesson_filter.clear();
+        for (Lesson le : current_lessons) {
+            le.state &= ~Lesson.FILTERED_ENABLED;
+        }
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+    }
+
+    public void set_filter_enable() {
+        filter_on = !filter_on;
+        myDB.enableFilter(filter_on);
+        ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+    }
 }

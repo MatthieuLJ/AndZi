@@ -15,10 +15,12 @@ import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ViewConfiguration;
 import com.matthieu.widget.FileMountPoint;
 import com.matthieu.widget.ObjectSerializer;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class AndZiApplication extends Application {

@@ -11,4 +11,7 @@
     <item android:id="@+id/add_vocabulary_lesson_filter_none"
           android:title="None"
           android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_lesson_filter_done"
+          android:title="Done"
+          android:showAsAction="always"/>
 </menu>

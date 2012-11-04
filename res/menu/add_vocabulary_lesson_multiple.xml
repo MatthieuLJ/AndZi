@@ -4,8 +4,8 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/add_vocabulary_lesson_multiple_merge"
           android:title="Merge"
-          android:showAsAction="always"/>
-    <item android:id="@+id/add_vocabulary_lesson_multiple_delete"
+          android:showAsAction="ifRoom"/>
+    <item android:id="@+id/add_vocabulary_lesson_delete"
           android:title="Delete"
           android:showAsAction="always"/>
 </menu>

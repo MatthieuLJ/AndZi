@@ -5,13 +5,13 @@
     <item android:id="@+id/add_vocabulary_lesson_single_clone"
           android:title="Clone"
           android:showAsAction="ifRoom|withText"/>
-    <item android:id="@+id/add_vocabulary_lesson_single_inspect"
+    <item android:id="@+id/add_vocabulary_lesson_list"
           android:title="Inspect"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_lesson_single_rename"
           android:title="Rename"
           android:showAsAction="ifRoom|withText"/>
-    <item android:id="@+id/add_vocabulary_lesson_single_delete"
+    <item android:id="@+id/add_vocabulary_lesson_delete"
           android:title="Delete"
           android:showAsAction="always"/>
 </menu>

@@ -377,7 +377,7 @@ public class AddVocabularyFragment extends Fragment
                 }
 
                 TextView title = (TextView) row.findViewById(R.id.add_title);
-                //title.setGravity();
+                title.setGravity(Gravity.RIGHT);
                 if ((position==1) && (my != 0))
                     title.setText(R.string.add_voc_local_db);
                 else
@@ -644,7 +644,7 @@ public class AddVocabularyFragment extends Fragment
 
     private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
 
-    private void change_menu() {
+    protected void change_menu() {
         VocabularyEditorActivity.menu_types type;
         if (current_chinese_word.equals(""))
             type = VocabularyEditorActivity.menu_types.INITIAL;
@@ -683,9 +683,6 @@ public class AddVocabularyFragment extends Fragment
         }
         v.invalidate();
         change_menu();
-/*
-
-        */
     }
 
     public void add_selection() {

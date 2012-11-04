@@ -15,5 +15,11 @@
             tlv:grabber="@+id/edit_lesson_grab"
             />
 
+    <ProgressBar
+            android:id="@+id/lessons_loading"
+            style="@style/GenericProgressIndicator"
+            android:layout_gravity="center"
+            />
+
 </FrameLayout>
         

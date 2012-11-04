@@ -8,7 +8,7 @@
     <item android:id="@+id/add_vocabulary_lesson_none_filter"
           android:title="Filter"
           android:showAsAction="ifRoom|withText"/>
-    <item android:id="@+id/add_vocabulary_lesson_none_list"
+    <item android:id="@+id/add_vocabulary_lesson_list"
           android:title="List"
           android:showAsAction="ifRoom|withText"/>
 </menu>

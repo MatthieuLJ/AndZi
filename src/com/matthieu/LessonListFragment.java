@@ -1,8 +1,6 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -11,8 +9,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import com.matthieu.widget.VocabularyCursorAdapter;
 
 import java.util.ArrayList;
@@ -26,7 +24,6 @@ public class LessonListFragment extends Fragment {
     private static final String TAG="LessonListFragment";
     AsyncTask<Void, Void,Void> loader=null;
     private String lesson=null;
-    private ProgressDialog mProgressDialog=null;
 
     public LessonListFragment(String lesson) {
         this.lesson = lesson;
@@ -51,12 +48,8 @@ public class LessonListFragment extends Fragment {
 
             @Override
             protected void onPreExecute() {
-                mProgressDialog = new ProgressDialog(getActivity());
-                mProgressDialog.setMessage(getResources().getString(R.string.loading));
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.show();
+                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+                pb.setVisibility(View.VISIBLE);
 
                 ListView list = (ListView) getView().findViewById(R.id.review_list);
                 list.setAdapter(null);
@@ -75,7 +68,8 @@ public class LessonListFragment extends Fragment {
                     ListView list = (ListView) getView().findViewById(R.id.review_list);
                     list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, null));
 
-                    mProgressDialog.dismiss();
+                    ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+                    pb.setVisibility(View.GONE);
                     loader=null;
                 }
             }
@@ -94,4 +88,7 @@ public class LessonListFragment extends Fragment {
             cur.close();
     }
 
+    public void change_menu() {
+        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.INITIAL);
+    }
 }

@@ -145,7 +145,7 @@ public class TouchListView extends ListView {
                         int touchSlop = mTouchSlop;
                         mUpperBound = Math.min(y - touchSlop, mHeight / 3);
                         mLowerBound = Math.max(y + touchSlop, mHeight * 2 /3);
-                        return false;
+                        return true;
                     }
                     mDragView = null;
                     break;
