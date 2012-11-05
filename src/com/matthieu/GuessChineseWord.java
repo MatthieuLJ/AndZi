@@ -20,10 +20,6 @@ public class GuessChineseWord extends TestFragment {
 
     private final String TAG="GuessChineseWord";
 
-    public GuessChineseWord(TestActivity testActivity) {
-        super(testActivity);
-    }
-
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);

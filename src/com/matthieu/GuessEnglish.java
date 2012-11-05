@@ -17,10 +17,6 @@ public class GuessEnglish extends TestFragment {
 
     private final String TAG="GuessEnglish";
 
-    public GuessEnglish(TestActivity testActivity) {
-        super(testActivity);
-    }
-
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);

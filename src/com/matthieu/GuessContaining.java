@@ -19,10 +19,6 @@ public class GuessContaining extends TestFragment {
 
     private final String TAG="GuessContaining";
 
-    public GuessContaining(TestActivity testActivity) {
-        super(testActivity);
-    }
-
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);

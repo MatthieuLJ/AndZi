@@ -1,6 +1,5 @@
-ONGOING (9):
+ONGOING (8):
 * Handle screen rotation
-* In HanziDB, change insert to insert with conflict handle for higher APIs
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -212,26 +211,183 @@ DONE (150):
 
 
 Lint output:
-src/com/matthieu/Help.java:67: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]
+res/layout-land/guess_tone.xml:189: Error: Corresponding method handler 'public void handle_ok(android.view.View)' not found [OnClick]
+                android:onClick="handle_ok"/>
+                ^
+src/com/matthieu/DetailsFragment.java:228: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+        if (info_pinyins.equals("")) {
+                     ^
+src/com/matthieu/DetailsFragment.java:228: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+        if (info_pinyins.equals("")) {
+                                                 ^
+src/com/matthieu/DictionaryFragment.java:46: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+                update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                              ^
+src/com/matthieu/DictionaryFragment.java:46: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+                update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                                                          ^
+src/com/matthieu/EditLessonsFragment.java:87: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+    public void onPause() {
+    ^
+src/com/matthieu/EditLessonsFragment.java:87: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+    public void onPause() {
+    ^
+src/com/matthieu/HanziDB.java:1359: Error: Call requires API level 8 (current min is 4): android.database.sqlite.SQLiteDatabase#insertWithOnConflict [NewApi]
+        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
+               ^
+src/com/matthieu/HanziDB.java:1841: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+                            setBoxForChar(c, other_db.getBoxForChar(c));
+                ^
+src/com/matthieu/HanziDB.java:1841: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+                            setBoxForChar(c, other_db.getBoxForChar(c));
+                                            ^
+src/com/matthieu/HanziDB.java:2021: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+                            int b = getBoxForChar(c);
+                ^
+src/com/matthieu/HanziDB.java:2021: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+                            int b = getBoxForChar(c);
+                                            ^
+src/com/matthieu/HanziDB.java:2049: Error: Call requires API level 8 (current min is 4): android.database.sqlite.SQLiteDatabase#insertWithOnConflict [NewApi]
+                    }
+               ^
+src/com/matthieu/HanziDB.java:2157: Error: Call requires API level 8 (current min is 4): android.database.sqlite.SQLiteDatabase#insertWithOnConflict [NewApi]
+        cv.put("name", name);
+               ^
+src/com/matthieu/widget/InsideScrollPager.java:16: Error: Call requires API level 14 (current min is 4): android.view.View#canScrollHorizontally [NewApi]
+            return ((ProgressGraph) v).canScrollHorizontally(-dx);
+                                       ^
+src/com/matthieu/LessonListFragment.java: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+src/com/matthieu/LessonListFragment.java: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+src/com/matthieu/MainMenuActivity.java:119: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                          ^
+src/com/matthieu/MainMenuActivity.java:119: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                                                      ^
+src/com/matthieu/ReviewList.java:232: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+                        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                               ^
+src/com/matthieu/ReviewList.java:232: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+                        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                                                           ^
+src/com/matthieu/settings/Settings.java:70: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+                            reset_db_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                                            ^
+src/com/matthieu/settings/Settings.java:70: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+                            reset_db_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                                                                        ^
+src/com/matthieu/AddVocabularyFragment.java:47: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    }
+    ^
+src/com/matthieu/DetailsFragment.java:37: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+
+^
+src/com/matthieu/DetailsFragment.java:44: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.DetailsFragment) [ValidFragment]
+    public DetailsFragment(String hanzi, boolean use_ref) {
+    ^
+src/com/matthieu/GuessChineseWord.java:24: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    protected boolean set_hanzi_to_test(String hanzi) {
+    ^
+src/com/matthieu/GuessChineseWord.java:29: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessChineseWord) [ValidFragment]
+            return false;
+            ^
+src/com/matthieu/GuessChineseWord.java:230: Warning: This fragment inner class should be static (com.matthieu.GuessChineseWord.GuessChineseWordResultFragment) [ValidFragment]
+        public void onDestroyView() {
+        ^
+src/com/matthieu/GuessContaining.java:20: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    private final String TAG="GuessContaining";
+    ^
+src/com/matthieu/GuessContaining.java:25: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessContaining) [ValidFragment]
+
+^
+src/com/matthieu/GuessContaining.java:122: Warning: This fragment inner class should be static (com.matthieu.GuessContaining.GuessContainingResultFragment) [ValidFragment]
+            this.bad_answers = bad_answers;
+                                                                                                                                      ^
+src/com/matthieu/GuessEnglish.java:21: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    protected boolean set_hanzi_to_test(String hanzi) {
+    ^
+src/com/matthieu/GuessEnglish.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessEnglish) [ValidFragment]
+            return false;
+            ^
+src/com/matthieu/GuessEnglish.java:155: Warning: This fragment class should be public (com.matthieu.GuessEnglish.GuessEnglishResultFragment) [ValidFragment]
+        public void onDestroyView() {
+        ^
+src/com/matthieu/GuessMissingChar.java:22: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+        super.set_hanzi_to_test(hanzi);
+        ^
+src/com/matthieu/GuessMissingChar.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessMissingChar) [ValidFragment]
+            Vocabulary w = words.get(i);
+            ^
+src/com/matthieu/GuessMissingChar.java:216: Warning: This fragment inner class should be static (com.matthieu.GuessMissingChar.GuessMissinCharResultFragment) [ValidFragment]
+        public void onDestroyView() {
+        ^
+src/com/matthieu/GuessPinyin.java:24: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    @Override
+    ^
+src/com/matthieu/GuessPinyin.java:29: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessPinyin) [ValidFragment]
+
+^
+src/com/matthieu/GuessPinyin.java:209: Warning: This fragment inner class should be static (com.matthieu.GuessPinyin.GuessPinyinResultFragment) [ValidFragment]
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+                                                                                                                                              ^
+src/com/matthieu/GuessTone.java:23: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    protected boolean set_hanzi_to_test(String hanzi) {
+    ^
+src/com/matthieu/GuessTone.java:28: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessTone) [ValidFragment]
+        if (pinyins.size() != 1)
+        ^
+src/com/matthieu/GuessTone.java:260: Warning: This fragment inner class should be static (com.matthieu.GuessTone.GuessToneResultFragment) [ValidFragment]
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                                                  ^
+src/com/matthieu/LessonListFragment.java:31: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+
+^
+src/com/matthieu/LessonListFragment.java:37: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.LessonListFragment) [ValidFragment]
+
+^
+src/com/matthieu/TestActivity.java:204: Warning: This fragment class should be public (com.matthieu.TestActivity.done_testing) [ValidFragment]
+            this.filter_option = filter_option;
+               ^
+src/com/matthieu/Help.java:79: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]
                 wv.getSettings().setJavaScriptEnabled(true);
                  ^
-AndroidManifest.xml:78: Warning: Exported receiver does not require permission [ExportedReceiver]
-        <receiver android:name=".BootBroadcastReceiver">
-        ^
-AndroidManifest.xml:66: Warning: Exported activity does not require permission [ExportedActivity]
+AndroidManifest.xml:51: Warning: Exported activity does not require permission [ExportedActivity]
         <activity android:name=".settings.ExportDB">
         ^
-AndroidManifest.xml:69: Warning: Exported activity does not require permission [ExportedActivity]
+AndroidManifest.xml:54: Warning: Exported activity does not require permission [ExportedActivity]
         <activity android:name=".settings.EmailDB">
         ^
-src/com/matthieu/widget/ProgressGraph.java:306: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                    data0 = new ProgressData();
-                             ^
+src/com/matthieu/widget/ProgressGraph.java:370: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                data_at_origin = new ProgressData();
+                                  ^
+src/com/matthieu/widget/ProgressGraph.java:387: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+                data_at_edge = new ProgressData();
+                                ^
 src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     post(new Runnable() {
                           ^
+src/com/matthieu/DictionaryFragment.java:191: Warning: This Handler class should be static or leaks might occur (com.matthieu.DictionaryFragment.update_delayer.1) [HandlerLeak]
+                    msg_query = (String) msg.obj;
+                                 ^
+src/com/matthieu/widget/ProgressGraph.java:76: Warning: This Handler class should be static or leaks might occur (com.matthieu.widget.ProgressGraph.update_delayer.1) [HandlerLeak]
+                    final range query = (range) msg.obj;
+                                 ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
-res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
+res/values/strings.xml:13: Warning: The resource R.string.next appears to be unused [UnusedResources]
+    <string name="next">Next</string>
+    ^
+res/values/strings.xml:107: Warning: The resource R.string.test_mastering appears to be unused [UnusedResources]
+    <string name="test_mastering">You master everything, do you want to continue ?</string>
+    ^
+res/values/strings.xml:108: Warning: The resource R.string.test_mastering_disable_filter appears to be unused [UnusedResources]
+    <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
+    ^
+res/values/strings.xml:117: Warning: The resource R.string.add_voc_default_lesson appears to be unused [UnusedResources]
+    <string name="add_voc_default_lesson">Choose the default lesson</string>
+    ^
+res/values/strings.xml:118: Warning: The resource R.string.add_voc_lesson_none appears to be unused [UnusedResources]
+    <string name="add_voc_lesson_none">(none)</string>
+    ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -250,20 +406,23 @@ res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_t
 res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does not specify an inputType or a hint [TextFields]
     <EditText
     ^
-res/layout/add_vocabulary_pinyin_dialog.xml:21: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
 res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
     <EditText
     ^
 res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
+res/menu/add_vocabulary_menu_add.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-res/layout/add_vocabulary_list_item.xml:54: Warning: [I18N] Hardcoded string "more info\nhere...", should use @string resource [HardcodedText]
+res/layout/add_vocabulary_list_item.xml:52: Warning: [I18N] Hardcoded string "more info\nhere...", should use @string resource [HardcodedText]
                 android:text="more info\nhere..."
+                ^
+res/layout/add_vocabulary_pinyin_dialog.xml:28: Warning: [I18N] Hardcoded string "Enter Pinyin", should use @string resource [HardcodedText]
+                android:hint="Enter Pinyin"
                 ^
 res/layout/add_vocabulary_top.xml:14: Warning: [I18N] Hardcoded string "Enter a Chinese Word", should use @string resource [HardcodedText]
             android:hint="Enter a Chinese Word"
@@ -274,25 +433,19 @@ res/layout/add_vocabulary_wrong_entry.xml:14: Warning: [I18N] Hardcoded string "
 res/layout/main_menu.xml:16: Warning: [I18N] Hardcoded string "Add Vocabulary", should use @string resource [HardcodedText]
                 android:text="Add Vocabulary"
                 ^
-res/layout/main_menu.xml:23: Warning: [I18N] Hardcoded string "Edit Lessons", should use @string resource [HardcodedText]
-                android:text="Edit Lessons"
-                ^
-res/layout/main_menu.xml:36: Warning: [I18N] Hardcoded string "Test me!", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:29: Warning: [I18N] Hardcoded string "Test me!", should use @string resource [HardcodedText]
                 android:text="Test me!"
                 ^
-res/layout/main_menu.xml:42: Warning: [I18N] Hardcoded string "Help", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:35: Warning: [I18N] Hardcoded string "Help", should use @string resource [HardcodedText]
                 android:text="Help"
                 ^
-res/layout/main_menu.xml:54: Warning: [I18N] Hardcoded string "Review list", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:47: Warning: [I18N] Hardcoded string "Review list", should use @string resource [HardcodedText]
                 android:text="Review list"
                 ^
-res/layout/main_menu.xml:60: Warning: [I18N] Hardcoded string "Dictionary", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", should use @string resource [HardcodedText]
                 android:text="Dictionary"
                 ^
-res/layout/main_menu.xml:71: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
                 ^
-res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should use @string resource [HardcodedText]
-                android:text="Stats"
-                ^
-0 errors, 37 warnings
+23 errors, 66 warnings

@@ -46,9 +46,15 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         char_tests = new ArrayList<TestFragment>(Arrays.asList(
-                new GuessMissingChar(this), new GuessContaining(this), new GuessPinyin(this), new GuessTone(this)));
+                new GuessMissingChar(), new GuessContaining(), new GuessPinyin(), new GuessTone()));
         word_tests = new ArrayList<TestFragment>(Arrays.asList(
-                new GuessChineseWord(this), new GuessEnglish(this)));
+                new GuessChineseWord(), new GuessEnglish()));
+        for (TestFragment t : char_tests) {
+            t.set_activity(this);
+        }
+        for (TestFragment t : word_tests) {
+            t.set_activity(this);
+        }
 
         fragments = new Fragment[3];
 

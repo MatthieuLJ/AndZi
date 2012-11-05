@@ -278,10 +278,6 @@ public class DetailsFragment extends Fragment {
         public String hanzi;
         public String pinyin="";
 
-        public populator(Fragment f, String h, HanziDB d, ViewGroup v) {
-            this(f, h, "", d, v);
-        }
-
         public populator(Fragment f, String h, String p, HanziDB d, ViewGroup v) {
             fragment = f;
             hanzi = h;
@@ -321,7 +317,8 @@ public class DetailsFragment extends Fragment {
             ListView list = (ListView) container.get().findViewById(R.id.details_list);
             list.setVisibility(View.GONE);
             ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
-            loading_wheel.setVisibility(View.VISIBLE);
+            if (loading_wheel != null)
+                loading_wheel.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -350,7 +347,8 @@ public class DetailsFragment extends Fragment {
                         adapter.changeCursor(cursor);
                     list.setVisibility(View.VISIBLE);
                     ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
-                    loading_wheel.setVisibility(View.GONE);
+                    if (loading_wheel != null)
+                        loading_wheel.setVisibility(View.GONE);
                 }
                 else {
                     cursor.close();

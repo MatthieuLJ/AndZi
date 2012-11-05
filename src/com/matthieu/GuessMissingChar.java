@@ -18,10 +18,6 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
 
     private final String TAG="GuessMissingChar";
 
-    public GuessMissingChar(TestActivity testActivity) {
-        super(testActivity);
-    }
-
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);
 

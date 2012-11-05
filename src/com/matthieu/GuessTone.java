@@ -19,10 +19,6 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
 
     private final String TAG="GuessTone";
 
-    public GuessTone(TestActivity testActivity) {
-        super(testActivity);
-    }
-
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);

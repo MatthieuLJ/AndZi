@@ -33,7 +33,7 @@ public abstract class TestFragment extends Fragment {
     final static public int INCORRECT=2;
     final static public int OTHER=3;
 
-    public TestFragment(Activity activity) {
+    public void set_activity(Activity activity) {
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
         refDB = ((AndZiApplication) activity.getApplication()).getRefDB();
     }

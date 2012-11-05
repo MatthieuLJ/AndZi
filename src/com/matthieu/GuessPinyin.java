@@ -21,10 +21,6 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
     private static final String TAG="GuessPinyin";
 
-    public GuessPinyin(TestActivity testActivity) {
-        super(testActivity);
-    }
-
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);
@@ -186,7 +182,6 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
         return INCORRECT;
     }
-
 
     public boolean handle_ok(View v) {
         EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
