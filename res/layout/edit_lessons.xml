@@ -13,6 +13,7 @@
             android:layout_height="fill_parent"
             android:drawSelectorOnTop="false"
             tlv:grabber="@+id/edit_lesson_grab"
+            android:cacheColorHint="#00000000"
             />
 
     <ProgressBar
