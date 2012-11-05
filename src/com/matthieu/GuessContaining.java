@@ -113,7 +113,7 @@ public class GuessContaining extends TestFragment {
         return true;
     }
 
-    protected class GuessContainingResultFragment extends TestFragment.SolutionFragment {
+    protected static class GuessContainingResultFragment extends TestFragment.SolutionFragment {
         ArrayList<String> correct_answers, bad_answers, new_answers;
         public GuessContainingResultFragment(String question, String answer, String hanzi, int good,
                                              ArrayList<String> correct_answers, ArrayList<String> bad_answers, ArrayList<String> new_answers) {
@@ -171,7 +171,7 @@ public class GuessContaining extends TestFragment {
 
                     if (offset_in_column == 0) {
                         tr = new TableRow(getActivity());
-                        tr.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        tr.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     }
                     LinearLayout cell = new LinearLayout(getActivity());
                     cell.setOrientation(LinearLayout.HORIZONTAL);
@@ -209,7 +209,7 @@ public class GuessContaining extends TestFragment {
                 if (offset_in_column != 0)
                     tl.addView(tr);
 
-                tl.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+                tl.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 bad_guess.addView(tl);
                 /*
                 TextView bad_guess_text = new TextView(getActivity());
@@ -217,11 +217,11 @@ public class GuessContaining extends TestFragment {
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 FrameLayout bad_guess_details = new FrameLayout(getActivity());
                 bad_guess_details.setId(R.id.test_bad_guess);
                 DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) TestFragment.this.getActivity());
-                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 */
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }

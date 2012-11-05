@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -1461,6 +1462,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return cword_id;
     }
 
+    @SuppressLint({"NewApi"})
     protected void addVocabulary(String english, int cword_id) {
         ContentValues cv = new ContentValues();
         cv.put("cword_id", cword_id);
@@ -1752,6 +1754,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Merge Database
     ////////////////////////////////////////
+    @SuppressLint({"NewApi"})
     public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
@@ -1958,6 +1961,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Export Database
     ////////////////////////////////////////
+    @SuppressLint({"NewApi"})
     public AsyncTask create_export_task(final String path, final boolean with_scores, final boolean filtered_lessons, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
@@ -2152,6 +2156,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Manage Lessons
     ////////////////////////////////////////
+    @SuppressLint({"NewApi"})
     public void addLesson(String name) {
         ContentValues cv = new ContentValues();
         cv.put("name", name);
@@ -2235,6 +2240,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Manage Words in lessons
     ////////////////////////////////////////
+    @SuppressLint({"NewApi"})
     public void assignWordLesson(String lesson, String english, String chinese, String pinyin) {
         int eng_id=-1;
         int lesson_id;

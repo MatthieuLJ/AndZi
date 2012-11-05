@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -199,6 +200,7 @@ public class ReviewList extends Activity {
         }
 
         @Override
+        @SuppressLint({"NewApi"})
         public Object instantiateItem(ViewGroup container, int position) {
             View new_view=null;
             int list_to_display=-1;

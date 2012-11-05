@@ -5,6 +5,7 @@
 
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -130,6 +131,7 @@ public class DetailsFragment extends Fragment {
         populate_details_view(fragment, section, hanzi, "", ref_query, new_request);
     }
 
+    @SuppressLint({"NewApi"})
     static void populate_details_view(final Fragment fragment, ViewGroup section,
                                       final String hanzi, final String pinyin,
                                       final boolean ref_query, final handle_details_request new_request) {

@@ -3,37 +3,37 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/adaptive_layout"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         style="@style/AndZiTheme">
     <View
             android:id="@+id/spacer"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1" />
     <TextView
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
             android:textColor="#000000"
             android:text="@string/guess_chinese" />
     <View
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1" />
     <com.matthieu.widget.ShrinkingScrollView
             android:scrollbars="vertical"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:measureAllChildren="true"
             android:layout_weight="8"
             android:fillViewport="false"
             >
         <TextView
                 android:id="@+id/guess_chinese_word_voc"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="24sp"
                 android:textColor="#000000"
@@ -42,11 +42,11 @@
     </com.matthieu.widget.ShrinkingScrollView>
     <View
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1" />
     <Button
             android:id="@+id/guess_chinese_word_more_voc_button"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#dddddd"
             android:gravity="center_horizontal"
@@ -57,14 +57,14 @@
             android:id="@+id/guess_chinese_word_more_voc_scroll"
             android:scrollbars="vertical"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:measureAllChildren="true"
             android:layout_weight="3"
             android:fillViewport="false"
             >
         <TextView
                 android:id="@+id/guess_chinese_word_more_voc"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:textColor="#000000" />
@@ -72,17 +72,17 @@
     <View
             android:id="@+id/guess_chinese_word_more_spacer"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1"
             />
     <LinearLayout
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
         <EditText
                 android:id="@+id/test_guess"
-                android:layout_width="fill_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:inputType="text"
@@ -91,7 +91,7 @@
                 android:imeOptions="actionDone"
                 />
         <Button
-                android:layout_width="fill_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:text="@string/ok"
@@ -99,7 +99,7 @@
     </LinearLayout>
     <TextView
             android:id="@+id/guess_chinese_word_previous_guess"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="#000000"

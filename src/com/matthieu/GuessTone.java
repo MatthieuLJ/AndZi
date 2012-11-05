@@ -246,7 +246,7 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         return true;
     }
 
-    protected class GuessToneResultFragment extends SolutionFragment {
+    protected static class GuessToneResultFragment extends SolutionFragment {
         public GuessToneResultFragment(String question, String answer, String hanzi, int good) {
             super(question, answer, hanzi, good);    //To change body of overridden methods use File | Settings | File Templates.
         }
@@ -255,7 +255,7 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity)GuessTone.this.getActivity());
+            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity) getActivity());
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());
@@ -277,7 +277,7 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
             return res;

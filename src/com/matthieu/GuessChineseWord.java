@@ -209,16 +209,18 @@ public class GuessChineseWord extends TestFragment {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessChineseWordResultFragment solution_fragment = new GuessChineseWordResultFragment(hanzi, guess, hanzi, correctness);
+                GuessChineseWordResultFragment solution_fragment = new GuessChineseWordResultFragment(hanzi, guess, hanzi, correctness, previous_guess);
                 ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
         return true;
     }
 
-    protected class GuessChineseWordResultFragment extends TestFragment.SolutionFragment {
-        public GuessChineseWordResultFragment(String question, String answer, String hanzi, int good) {
+    protected static class GuessChineseWordResultFragment extends TestFragment.SolutionFragment {
+        ArrayList<String> previous_guess;
+        public GuessChineseWordResultFragment(String question, String answer, String hanzi, int good, ArrayList<String> previous) {
             super(question, answer, hanzi, good);
+            previous_guess = previous;
         }
 
         @Override

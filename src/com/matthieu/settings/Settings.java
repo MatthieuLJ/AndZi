@@ -3,6 +3,7 @@
  */
 package com.matthieu.settings;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -30,6 +31,7 @@ public class Settings extends PreferenceActivity {
     private static final String dictionaryURL="http://bit.ly/AndZi-Cedict";
 
     @Override
+    @SuppressLint({"NewApi"})
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         myDB = ((AndZiApplication) getApplication()).getMyDB();

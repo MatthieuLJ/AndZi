@@ -197,7 +197,7 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         return true;
     }
 
-    protected class GuessPinyinResultFragment extends SolutionFragment {
+    protected static class GuessPinyinResultFragment extends SolutionFragment {
         String pinyin;
         public GuessPinyinResultFragment(String question, String answer, String hanzi, String pinyin, int good) {
             super(question, answer, hanzi, good);
@@ -216,11 +216,11 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 FrameLayout bad_guess_details = new FrameLayout(getActivity());
                 bad_guess_details.setId(R.id.test_bad_guess);
                 DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
-                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
 

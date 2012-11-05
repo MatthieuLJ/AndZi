@@ -108,12 +108,12 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
                     en += ", ";
             }
             trans.setText(en);
-            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
             trlp.setMargins(5,5,5,5);
             trans.setLayoutParams(trlp);
             tr.addView(trans);
 
-            TableLayout.LayoutParams tlp = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
+            TableLayout.LayoutParams tlp = new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
             tr.setLayoutParams(tlp);
             tl.addView(tr);
         }
@@ -200,7 +200,7 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
         return true;
     }
 
-    protected class GuessMissinCharResultFragment extends SolutionFragment {
+    protected static class GuessMissinCharResultFragment extends SolutionFragment {
         ArrayList<Vocabulary> words;
         public GuessMissinCharResultFragment(String question, String answer, String hanzi, ArrayList<Vocabulary> words, int good) {
             super(question, answer, hanzi, good);

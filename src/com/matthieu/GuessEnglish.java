@@ -140,7 +140,7 @@ public class GuessEnglish extends TestFragment {
         return true;
     }
 
-    private class GuessEnglishResultFragment extends SolutionFragment {
+    private static class GuessEnglishResultFragment extends SolutionFragment {
 
         public GuessEnglishResultFragment(String question, String answer, String hanzi, int good) {
             super(question, answer, hanzi, good);

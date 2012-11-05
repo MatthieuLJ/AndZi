@@ -2,8 +2,8 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="horizontal"
         style="@style/AndZiTheme">
     <LinearLayout
@@ -13,7 +13,7 @@
             android:orientation="vertical">
         <HorizontalScrollView
                 android:layout_height="wrap_content"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:fillViewport="true">
             <LinearLayout
                     android:id="@+id/details_title"
@@ -26,7 +26,7 @@
         <TextView
                 android:id="@+id/details_info"
                 android:layout_height="wrap_content"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:gravity="center_horizontal"
                 android:textSize="24sp"
                 android:textColor="#000000"
@@ -35,7 +35,7 @@
     <ListView
             android:id="@+id/details_list"
             android:layout_width="0dp"
-            android:layout_height="fill_parent"
+            android:layout_height="match_parent"
             android:layout_weight=".7"
             />
 </LinearLayout>

@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -42,6 +43,7 @@ public class LessonListFragment extends Fragment {
     }
 
     @Override
+    @SuppressLint({"NewApi"})
     public void onResume() {
         super.onResume();
          loader = new AsyncTask<Void, Void, Void>() {

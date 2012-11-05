@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -42,6 +43,7 @@ public class EditLessonsFragment extends Fragment {
     }
 
     @Override
+    @SuppressLint({"NewApi"})
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.edit_lessons, container, false);
         TouchListView list = (TouchListView) res.findViewById(R.id.lesson_list);

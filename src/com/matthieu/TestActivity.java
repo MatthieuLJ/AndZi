@@ -196,7 +196,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         // TODO
     }
 
-    private class done_testing extends Fragment {
+    public class done_testing extends Fragment {
         boolean empty_db;
         boolean filter_option;
         public done_testing(boolean filter_option, boolean empty_db) {

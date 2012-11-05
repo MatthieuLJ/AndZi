@@ -4,6 +4,7 @@
 
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.database.Cursor;
 import android.os.*;
@@ -36,6 +37,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     static final int ENGLISH_TO_CHINESE_MODE=1;
 
     @Override
+    @SuppressLint({"NewApi"})
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         parent_activity = activity;

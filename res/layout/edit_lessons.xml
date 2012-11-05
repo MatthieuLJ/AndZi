@@ -3,14 +3,14 @@
 <FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tlv="http://schemas.android.com/apk/res/com.matthieu"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         style="@style/AndZiTheme">
 
     <com.matthieu.widget.TouchListView
             android:id="@+id/lesson_list"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:drawSelectorOnTop="false"
             tlv:grabber="@+id/edit_lesson_grab"
             android:cacheColorHint="#00000000"

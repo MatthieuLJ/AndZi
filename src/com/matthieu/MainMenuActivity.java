@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -101,6 +102,7 @@ public class MainMenuActivity extends SherlockActivity {
 
 
     @Override
+    @SuppressLint({"NewApi"})
     protected void onResume() {
         super.onResume();
 

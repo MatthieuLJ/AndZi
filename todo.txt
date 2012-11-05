@@ -214,140 +214,63 @@ Lint output:
 res/layout-land/guess_tone.xml:189: Error: Corresponding method handler 'public void handle_ok(android.view.View)' not found [OnClick]
                 android:onClick="handle_ok"/>
                 ^
-src/com/matthieu/DetailsFragment.java:228: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-        if (info_pinyins.equals("")) {
-                     ^
-src/com/matthieu/DetailsFragment.java:228: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-        if (info_pinyins.equals("")) {
-                                                 ^
-src/com/matthieu/DictionaryFragment.java:46: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-                update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                              ^
-src/com/matthieu/DictionaryFragment.java:46: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-                update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                                                          ^
-src/com/matthieu/EditLessonsFragment.java:87: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-    public void onPause() {
-    ^
-src/com/matthieu/EditLessonsFragment.java:87: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-    public void onPause() {
-    ^
-src/com/matthieu/HanziDB.java:1359: Error: Call requires API level 8 (current min is 4): android.database.sqlite.SQLiteDatabase#insertWithOnConflict [NewApi]
-        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
-               ^
-src/com/matthieu/HanziDB.java:1841: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-                            setBoxForChar(c, other_db.getBoxForChar(c));
+res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
+                android:layout_width="match_parent"
                 ^
-src/com/matthieu/HanziDB.java:1841: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-                            setBoxForChar(c, other_db.getBoxForChar(c));
-                                            ^
-src/com/matthieu/HanziDB.java:2021: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-                            int b = getBoxForChar(c);
-                ^
-src/com/matthieu/HanziDB.java:2021: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-                            int b = getBoxForChar(c);
-                                            ^
-src/com/matthieu/HanziDB.java:2049: Error: Call requires API level 8 (current min is 4): android.database.sqlite.SQLiteDatabase#insertWithOnConflict [NewApi]
-                    }
-               ^
-src/com/matthieu/HanziDB.java:2157: Error: Call requires API level 8 (current min is 4): android.database.sqlite.SQLiteDatabase#insertWithOnConflict [NewApi]
-        cv.put("name", name);
-               ^
-src/com/matthieu/widget/InsideScrollPager.java:16: Error: Call requires API level 14 (current min is 4): android.view.View#canScrollHorizontally [NewApi]
-            return ((ProgressGraph) v).canScrollHorizontally(-dx);
-                                       ^
-src/com/matthieu/LessonListFragment.java: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-src/com/matthieu/LessonListFragment.java: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-src/com/matthieu/MainMenuActivity.java:119: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                          ^
-src/com/matthieu/MainMenuActivity.java:119: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                                                      ^
-src/com/matthieu/ReviewList.java:232: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-                        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                               ^
-src/com/matthieu/ReviewList.java:232: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-                        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                                                           ^
-src/com/matthieu/settings/Settings.java:70: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
-                            reset_db_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                                            ^
-src/com/matthieu/settings/Settings.java:70: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
-                            reset_db_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                                                                        ^
-src/com/matthieu/AddVocabularyFragment.java:47: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    }
-    ^
-src/com/matthieu/DetailsFragment.java:37: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-
-^
-src/com/matthieu/DetailsFragment.java:44: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.DetailsFragment) [ValidFragment]
-    public DetailsFragment(String hanzi, boolean use_ref) {
-    ^
-src/com/matthieu/GuessChineseWord.java:24: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    protected boolean set_hanzi_to_test(String hanzi) {
-    ^
-src/com/matthieu/GuessChineseWord.java:29: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessChineseWord) [ValidFragment]
-            return false;
-            ^
-src/com/matthieu/GuessChineseWord.java:230: Warning: This fragment inner class should be static (com.matthieu.GuessChineseWord.GuessChineseWordResultFragment) [ValidFragment]
-        public void onDestroyView() {
+src/com/matthieu/AddVocabularyFragment.java:45: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+        super();
         ^
-src/com/matthieu/GuessContaining.java:20: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    private final String TAG="GuessContaining";
+src/com/matthieu/DetailsFragment.java:39: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    public DetailsFragment(String hanzi, String pinyin, boolean use_ref) {
     ^
-src/com/matthieu/GuessContaining.java:25: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessContaining) [ValidFragment]
-
-^
-src/com/matthieu/GuessContaining.java:122: Warning: This fragment inner class should be static (com.matthieu.GuessContaining.GuessContainingResultFragment) [ValidFragment]
-            this.bad_answers = bad_answers;
+src/com/matthieu/DetailsFragment.java:46: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+        this(hanzi, "", use_ref);
+        ^
+src/com/matthieu/DetailsFragment.java:51: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.DetailsFragment) [ValidFragment]
+        super.onAttach(activity);
+        ^
+src/com/matthieu/GuessChineseWord.java:222: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+            super(question, answer, hanzi, good);
+               ^
+src/com/matthieu/GuessChineseWord.java:228: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessChineseWord.GuessChineseWordResultFragment) [ValidFragment]
+            return show_details(inflater,container, true);
+            ^
+src/com/matthieu/GuessContaining.java:120: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+            super(question, answer, hanzi, good);
                                                                                                                                       ^
-src/com/matthieu/GuessEnglish.java:21: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    protected boolean set_hanzi_to_test(String hanzi) {
-    ^
-src/com/matthieu/GuessEnglish.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessEnglish) [ValidFragment]
-            return false;
+src/com/matthieu/GuessContaining.java:128: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessContaining.GuessContainingResultFragment) [ValidFragment]
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+                                                                                                                                      ^
+src/com/matthieu/GuessEnglish.java:151: Warning: This fragment class should be public (com.matthieu.GuessEnglish.GuessEnglishResultFragment) [ValidFragment]
+            return show_details(inflater, container, true);
             ^
-src/com/matthieu/GuessEnglish.java:155: Warning: This fragment class should be public (com.matthieu.GuessEnglish.GuessEnglishResultFragment) [ValidFragment]
-        public void onDestroyView() {
-        ^
-src/com/matthieu/GuessMissingChar.java:22: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-        super.set_hanzi_to_test(hanzi);
-        ^
-src/com/matthieu/GuessMissingChar.java:26: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessMissingChar) [ValidFragment]
-            Vocabulary w = words.get(i);
+src/com/matthieu/GuessMissingChar.java:206: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+            super(question, answer, hanzi, good);
+               ^
+src/com/matthieu/GuessMissingChar.java:212: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessMissingChar.GuessMissinCharResultFragment) [ValidFragment]
+            return show_details(inflater, container, false);
             ^
-src/com/matthieu/GuessMissingChar.java:216: Warning: This fragment inner class should be static (com.matthieu.GuessMissingChar.GuessMissinCharResultFragment) [ValidFragment]
-        public void onDestroyView() {
-        ^
-src/com/matthieu/GuessPinyin.java:24: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    @Override
-    ^
-src/com/matthieu/GuessPinyin.java:29: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessPinyin) [ValidFragment]
-
-^
-src/com/matthieu/GuessPinyin.java:209: Warning: This fragment inner class should be static (com.matthieu.GuessPinyin.GuessPinyinResultFragment) [ValidFragment]
+src/com/matthieu/GuessPinyin.java:203: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+            super(question, answer, hanzi, good);
+                                                                                                                                              ^
+src/com/matthieu/GuessPinyin.java:209: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessPinyin.GuessPinyinResultFragment) [ValidFragment]
             final View res = inflater.inflate(R.layout.test_result, container, false);
                                                                                                                                               ^
-src/com/matthieu/GuessTone.java:23: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    protected boolean set_hanzi_to_test(String hanzi) {
-    ^
-src/com/matthieu/GuessTone.java:28: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessTone) [ValidFragment]
-        if (pinyins.size() != 1)
-        ^
-src/com/matthieu/GuessTone.java:260: Warning: This fragment inner class should be static (com.matthieu.GuessTone.GuessToneResultFragment) [ValidFragment]
-                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+src/com/matthieu/GuessTone.java:251: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+            super(question, answer, hanzi, good);    //To change body of overridden methods use File | Settings | File Templates.
                                                   ^
-src/com/matthieu/LessonListFragment.java:31: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-
-^
-src/com/matthieu/LessonListFragment.java:37: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.LessonListFragment) [ValidFragment]
-
-^
-src/com/matthieu/TestActivity.java:204: Warning: This fragment class should be public (com.matthieu.TestActivity.done_testing) [ValidFragment]
-            this.filter_option = filter_option;
-               ^
+src/com/matthieu/GuessTone.java:256: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessTone.GuessToneResultFragment) [ValidFragment]
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+                                                  ^
+src/com/matthieu/LessonListFragment.java:29: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
+    public LessonListFragment(String lesson) {
+    ^
+src/com/matthieu/LessonListFragment.java:35: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.LessonListFragment) [ValidFragment]
+        super.onAttach(activity);
+        ^
+src/com/matthieu/TestActivity.java:210: Warning: This fragment inner class should be static (com.matthieu.TestActivity.done_testing) [ValidFragment]
+            final View res = inflater.inflate(R.layout.test_done, container, false);
+            ^
 src/com/matthieu/Help.java:79: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]
                 wv.getSettings().setJavaScriptEnabled(true);
                  ^
@@ -366,7 +289,7 @@ src/com/matthieu/widget/ProgressGraph.java:387: Warning: Avoid object allocation
 src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
                     post(new Runnable() {
                           ^
-src/com/matthieu/DictionaryFragment.java:191: Warning: This Handler class should be static or leaks might occur (com.matthieu.DictionaryFragment.update_delayer.1) [HandlerLeak]
+src/com/matthieu/DictionaryFragment.java:193: Warning: This Handler class should be static or leaks might occur (com.matthieu.DictionaryFragment.update_delayer.1) [HandlerLeak]
                     msg_query = (String) msg.obj;
                                  ^
 src/com/matthieu/widget/ProgressGraph.java:76: Warning: This Handler class should be static or leaks might occur (com.matthieu.widget.ProgressGraph.update_delayer.1) [HandlerLeak]
@@ -448,4 +371,5 @@ res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", shou
 res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
                 ^
-23 errors, 66 warnings
+1 errors, 61 warnings
+
