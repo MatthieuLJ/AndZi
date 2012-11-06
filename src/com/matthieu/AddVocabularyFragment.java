@@ -41,14 +41,6 @@ public class AddVocabularyFragment extends Fragment
     private String current_chinese_word="";
     private Handler process_handler=null;
 
-    public AddVocabularyFragment(String s) {
-        super();
-        current_chinese_word = s;
-    }
-    public AddVocabularyFragment() {
-        super();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +53,10 @@ public class AddVocabularyFragment extends Fragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Bundle bundle=getArguments();
+        if (bundle != null) {
+            current_chinese_word = bundle.getString("hanzi");
+        }
         final View res = inflater.inflate(R.layout.add_vocabulary_top, container, false);
 
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) res.findViewById(R.id.add_vocabulary_chinese);

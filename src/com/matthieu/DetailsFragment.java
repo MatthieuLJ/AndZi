@@ -36,21 +36,6 @@ public class DetailsFragment extends Fragment {
 
     static Object locker = new Object();
 
-    public DetailsFragment(String hanzi, String pinyin, boolean use_ref) {
-        current_hanzi = hanzi;
-        current_pinyin = pinyin;
-        this.use_ref = use_ref;
-    }
-
-    public DetailsFragment(String hanzi, boolean use_ref) {
-        this(hanzi, "", use_ref);
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
     public String get_hanzi() {
         return current_hanzi;
     }
@@ -74,6 +59,12 @@ public class DetailsFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            current_hanzi = bundle.getString("hanzi");
+            current_pinyin = bundle.getString("pinyin");
+            use_ref = bundle.getBoolean("use_ref");
+        }
         final View res = inflater.inflate(R.layout.details_fragment, container, false);
         FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
 

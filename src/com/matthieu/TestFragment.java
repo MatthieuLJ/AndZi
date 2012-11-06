@@ -43,23 +43,26 @@ public abstract class TestFragment extends Fragment {
         return true;
     }
 
-    abstract public boolean handle_ok(View v);
+    abstract public void handle_ok(View v);
     abstract public void update_test_view(View v);
 
-    protected abstract static class SolutionFragment extends Fragment {
+    public abstract static class SolutionFragment extends Fragment {
         int good;
-        String question, answer, hanzi;
+        String question, answer;
 
-        public SolutionFragment(String question, String answer, String hanzi, int good) {
-            this.good = good;
-            this.answer = answer;
-            this.question = question;
-            this.hanzi = hanzi;
+        protected void get_arguments() {
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                good = bundle.getInt("good");
+                answer = bundle.getString("answer");
+                question = bundle.getString("question");
+            }
         }
 
         @Override
         public void onAttach(Activity activity) {
             super.onAttach(activity);
+            get_arguments();
             Thread updater = new Thread() {
                 @Override
                 public void run() {
@@ -81,7 +84,7 @@ public abstract class TestFragment extends Fragment {
         protected View show_details(LayoutInflater inflater, ViewGroup container, boolean show_accept) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity) getActivity());
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());

@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
@@ -184,10 +185,10 @@ public class GuessChineseWord extends TestFragment {
         showing_more_voc=true;
     }
 
-    public boolean handle_ok(View v) {
+    public void handle_ok(View v) {
         EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
-            return false;
+            return;
 
         String guess = word_guess.getText().toString();
 
@@ -209,18 +210,28 @@ public class GuessChineseWord extends TestFragment {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessChineseWordResultFragment solution_fragment = new GuessChineseWordResultFragment(hanzi, guess, hanzi, correctness, previous_guess);
+                GuessChineseWordResultFragment solution_fragment = new GuessChineseWordResultFragment();
+                Bundle bundle = new Bundle();
+                bundle.putInt("good", correctness);
+                bundle.putString("answer", guess);
+                bundle.putString("question", hanzi);
+                bundle.putStringArrayList("previous_guess", previous_guess);
+                solution_fragment.setArguments(bundle);
                 ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
-        return true;
     }
 
-    protected static class GuessChineseWordResultFragment extends TestFragment.SolutionFragment {
+    public static class GuessChineseWordResultFragment extends TestFragment.SolutionFragment {
         ArrayList<String> previous_guess;
-        public GuessChineseWordResultFragment(String question, String answer, String hanzi, int good, ArrayList<String> previous) {
-            super(question, answer, hanzi, good);
-            previous_guess = previous;
+
+        @Override
+        protected void get_arguments() {
+            super.get_arguments();
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                previous_guess = bundle.getStringArrayList("previous_guess");
+            }
         }
 
         @Override
@@ -243,18 +254,18 @@ public class GuessChineseWord extends TestFragment {
             }
 
             if (good == CORRECT) {
-                myDB.betterBox(hanzi);
-                int word_box = myDB.getBoxForChar(hanzi);
-                for (int i=0; i<hanzi.length();) {
-                    int new_box = myDB.getBoxForChar(hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i))));
+                myDB.betterBox(question);
+                int word_box = myDB.getBoxForChar(question);
+                for (int i=0; i<question.length();) {
+                    int new_box = myDB.getBoxForChar(question.substring(i, i+Character.charCount(question.codePointAt(i))));
                     if ((min_box == -1) || (new_box < min_box)) {
                         min_box = new_box;
                     }
 
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
-                for (int i=0; i<hanzi.length();) {
-                    String character = hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)));
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
                     int box = myDB.getBoxForChar(character);
                     if ((box == min_box) && (min_box < word_box)) {
                         myDB.betterBox(character);
@@ -263,25 +274,25 @@ public class GuessChineseWord extends TestFragment {
                         myDB.resetTime(character);
                     }
 
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
             }
             else if (good == INCORRECT) {
                 old_scores = new HashMap<String, saved_score>();
-                for (int i=0; i<hanzi.length();) {
-                    String character = hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)));
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
                     old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
                     myDB.worseBox(character);
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
-                old_scores.put(hanzi, new saved_score(myDB.getBoxForChar(hanzi), myDB.getExpirationTimeForChar(hanzi)));
-                myDB.worseBox(hanzi);
+                old_scores.put(question, new saved_score(myDB.getBoxForChar(question), myDB.getExpirationTimeForChar(question)));
+                myDB.worseBox(question);
             }
             else if (good == OTHER) {
-                for (int i=0; i<hanzi.length();) {
-                    String character = hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)));
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
                     myDB.resetTime(character);
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
             }
         }

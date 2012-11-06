@@ -100,34 +100,45 @@ public class GuessContaining extends TestFragment {
         return res;
     }
 
-    public boolean handle_ok(View v) {
+    public void handle_ok(View v) {
         EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
-            return false;
+            return;
 
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment(hanzi, guess, hanzi, correctness, correct_answers, bad_answers, new_answers);
+        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt("good", correctness);
+        bundle.putString("answer", guess);
+        bundle.putString("question", hanzi);
+        bundle.putStringArrayList("correct", correct_answers);
+        bundle.putStringArrayList("bad", bad_answers);
+        bundle.putStringArrayList("new", new_answers);
+        solution_fragment.setArguments(bundle);
         ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
-        return true;
     }
 
-    protected static class GuessContainingResultFragment extends TestFragment.SolutionFragment {
+    public static class GuessContainingResultFragment extends TestFragment.SolutionFragment {
         ArrayList<String> correct_answers, bad_answers, new_answers;
-        public GuessContainingResultFragment(String question, String answer, String hanzi, int good,
-                                             ArrayList<String> correct_answers, ArrayList<String> bad_answers, ArrayList<String> new_answers) {
-            super(question, answer, hanzi, good);
-            this.correct_answers = correct_answers;
-            this.bad_answers = bad_answers;
-            this.new_answers = new_answers;
+
+        @Override
+        protected void get_arguments() {
+            super.get_arguments();
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                correct_answers = bundle.getStringArrayList("correct");
+                bad_answers = bundle.getStringArrayList("bad");
+                new_answers = bundle.getStringArrayList("new");
+            }
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity) GuessContainingResultFragment.this.getActivity());
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) GuessContainingResultFragment.this.getActivity());
             if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TableLayout tl = new TableLayout(getActivity());
@@ -243,7 +254,7 @@ public class GuessContaining extends TestFragment {
                     for (String answers:correct_answers) {
                         for (int i=0; i<answers.length();) {
                             String c = answers.substring(i, i+Character.charCount(answers.codePointAt(i)));
-                            if ((!good_chars.contains(c)) && (!c.equals(hanzi)))
+                            if ((!good_chars.contains(c)) && (!c.equals(question)))
                                 good_chars.add(c);
                             i+=Character.charCount(answers.codePointAt(i));
                         }
@@ -252,13 +263,13 @@ public class GuessContaining extends TestFragment {
                     for (String c:good_chars) {
                         myDB.resetTime(c);
                     }
-                    myDB.betterBox(hanzi);
+                    myDB.betterBox(question);
                     break;
                 case INCORRECT:
-                    myDB.worseBox(hanzi);
+                    myDB.worseBox(question);
                     break;
                 case OTHER:
-                    myDB.resetTime(hanzi);
+                    myDB.resetTime(question);
                     break;
             }
         }

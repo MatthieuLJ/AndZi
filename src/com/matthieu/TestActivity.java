@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -138,7 +139,11 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 boolean can_disable_filter=((myDB.isFilterEnabled()) && (filtered.getCount() > non_filtered.getCount()));
                 boolean empty_db=(myDB.getNumChars()==0);
 
-                new_fragment1 = new done_testing(can_disable_filter, empty_db);
+                new_fragment1 = new done_testing();
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("empty_db", empty_db);
+                bundle.putBoolean("filter_option", can_disable_filter);
+                new_fragment1.setArguments(bundle);
                 new_fragment1_is_test = false;
 
                 filtered.close();
@@ -196,17 +201,23 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         // TODO
     }
 
-    public class done_testing extends Fragment {
+    public static class done_testing extends Fragment {
         boolean empty_db;
         boolean filter_option;
-        public done_testing(boolean filter_option, boolean empty_db) {
-            this.empty_db = empty_db;
-            this.filter_option = filter_option;
+        HanziDB myDB;
 
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            Bundle bundle = getArguments();
+            empty_db = bundle.getBoolean("empty_db");
+            filter_option = bundle.getBoolean("filter_option");
+
             final View res = inflater.inflate(R.layout.test_done, container, false);
             TextView message = (TextView) res.findViewById(R.id.test_done_text);
             if (empty_db) {
@@ -226,10 +237,10 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                     if (filter_option) {
                         myDB.enableFilter(false);
                     } else {
-                        TestActivity.this.continue_with_more_chars = true;
+                        ((TestActivity)getActivity()).continue_with_more_chars = true;
                     }
-                    TestActivity.this.table_filled = false;
-                    TestActivity.this.start_test();
+                    ((TestActivity)getActivity()).table_filled = false;
+                    ((TestActivity)getActivity()).start_test();
                 }
             });
 
@@ -239,7 +250,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             Cancel_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    TestActivity.this.finish();
+                    ((TestActivity)getActivity()).finish();
                 }
             });
 
@@ -332,8 +343,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         ((StatsFragment) fragments[0]).update_stats();
     }
 
-    public boolean handle_ok(View v) {
-        return ((TestFragment)fragments[1]).handle_ok(v);
+    public void handle_ok(View v) {
+        ((TestFragment)fragments[1]).handle_ok(v);
     }
 
     private class test_pager extends FragmentStatePagerAdapter {

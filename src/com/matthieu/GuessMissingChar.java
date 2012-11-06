@@ -108,7 +108,7 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
                     en += ", ";
             }
             trans.setText(en);
-            trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+            trlp = new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
             trlp.setMargins(5,5,5,5);
             trans.setLayoutParams(trlp);
             tr.addView(trans);
@@ -179,10 +179,10 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
         return res;
     }
 
-    public boolean handle_ok(View v) {
+    public void handle_ok(View v) {
         EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
-            return false;
+            return;
 
         String guess = word_guess.getText().toString();
 
@@ -193,18 +193,28 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessMissinCharResultFragment solution_fragment = new GuessMissinCharResultFragment(hanzi, guess, hanzi, words, correctness);
+                GuessMissinCharResultFragment solution_fragment = new GuessMissinCharResultFragment();
+                Bundle bundle = new Bundle();
+                bundle.putInt("good", correctness);
+                bundle.putString("answer", guess);
+                bundle.putString("question", hanzi);
+                bundle.putParcelableArrayList("words", words);
+                solution_fragment.setArguments(bundle);
                 ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
-        return true;
     }
 
-    protected static class GuessMissinCharResultFragment extends SolutionFragment {
+    public static class GuessMissinCharResultFragment extends SolutionFragment {
         ArrayList<Vocabulary> words;
-        public GuessMissinCharResultFragment(String question, String answer, String hanzi, ArrayList<Vocabulary> words, int good) {
-            super(question, answer, hanzi, good);
-            this.words = words;
+
+        @Override
+        protected void get_arguments() {
+            super.get_arguments();
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                words = bundle.getParcelableArrayList("words");
+            }
         }
 
         @Override
@@ -221,10 +231,10 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
         @Override
         public void update_score() {
             if (good==CORRECT) {
-                myDB.betterBox(hanzi);
+                myDB.betterBox(question);
             }
             else {
-                myDB.worseBox(hanzi);
+                myDB.worseBox(question);
             }
 
             // reset the time for all characters displayed or restart study
@@ -232,7 +242,7 @@ public class GuessMissingChar extends TestFragment implements TextWatcher {
                 for (int i=0; i<v.chinese.length();) {
                     String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
                     i+=Character.charCount(v.chinese.codePointAt(i));
-                    if (other_hanzi.equals(hanzi))
+                    if (other_hanzi.equals(question))
                         continue;
                     if (good==CORRECT) {
                         myDB.resetTime(other_hanzi);

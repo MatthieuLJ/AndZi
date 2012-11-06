@@ -183,32 +183,41 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         return INCORRECT;
     }
 
-    public boolean handle_ok(View v) {
+    public void handle_ok(View v) {
         EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
-            return false;
+            return;
 
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment(hanzi, guess, hanzi, pinyin, correctness);
+        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt("good", correctness);
+        bundle.putString("answer", guess);
+        bundle.putString("question", hanzi);
+        bundle.putString("pinyin", pinyin);
+        solution_fragment.setArguments(bundle);
         ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
-
-        return true;
     }
 
-    protected static class GuessPinyinResultFragment extends SolutionFragment {
+    public static class GuessPinyinResultFragment extends SolutionFragment {
         String pinyin;
-        public GuessPinyinResultFragment(String question, String answer, String hanzi, String pinyin, int good) {
-            super(question, answer, hanzi, good);
-            this.pinyin=pinyin;
+
+        @Override
+        protected void get_arguments() {
+            super.get_arguments();
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                pinyin = bundle.getString("pinyin");
+            }
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());
@@ -237,13 +246,13 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         public void update_score() {
             switch(good) {
                 case INCORRECT:
-                    myDB.worseBox(hanzi);
+                    myDB.worseBox(question);
                     break;
                 case CORRECT:
-                    myDB.betterBox(hanzi);
+                    myDB.betterBox(question);
                     break;
                 case OTHER:
-                    myDB.resetTime(hanzi);
+                    myDB.resetTime(question);
                     break;
             }
         }

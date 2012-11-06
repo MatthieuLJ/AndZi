@@ -29,10 +29,14 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         String hanzi = getIntent().getStringExtra("Hanzi");
 
         fragments = new Fragment[3];
-        if (hanzi != null)
-            fragments[0] = new AddVocabularyFragment(hanzi);
-        else
-            fragments[0] = new AddVocabularyFragment();
+
+        fragments[0] = new AddVocabularyFragment();
+        Bundle bundle = null;
+        if (hanzi != null) {
+            bundle = new Bundle();
+            bundle.putString("hanzi", hanzi);
+            fragments[0].setArguments(bundle);
+        }
         fragments[1] = new EditLessonsFragment();
         fragments[2] = null;
 

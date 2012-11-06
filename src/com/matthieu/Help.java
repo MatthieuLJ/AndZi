@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -66,6 +67,7 @@ public class Help extends Activity {
         }
 
         @Override
+        @SuppressLint({"SetJavaScriptEnabled"})
         public Object instantiateItem(ViewGroup container, int position) {
             View new_view=null;
             if (view_storage.get(position) != null) {

@@ -211,69 +211,15 @@ DONE (150):
 
 
 Lint output:
-res/layout-land/guess_tone.xml:189: Error: Corresponding method handler 'public void handle_ok(android.view.View)' not found [OnClick]
-                android:onClick="handle_ok"/>
-                ^
 res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="match_parent"
                 ^
-src/com/matthieu/AddVocabularyFragment.java:45: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-        super();
-        ^
-src/com/matthieu/DetailsFragment.java:39: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    public DetailsFragment(String hanzi, String pinyin, boolean use_ref) {
-    ^
-src/com/matthieu/DetailsFragment.java:46: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-        this(hanzi, "", use_ref);
-        ^
-src/com/matthieu/DetailsFragment.java:51: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.DetailsFragment) [ValidFragment]
-        super.onAttach(activity);
-        ^
-src/com/matthieu/GuessChineseWord.java:222: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-            super(question, answer, hanzi, good);
-               ^
-src/com/matthieu/GuessChineseWord.java:228: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessChineseWord.GuessChineseWordResultFragment) [ValidFragment]
-            return show_details(inflater,container, true);
-            ^
-src/com/matthieu/GuessContaining.java:120: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-            super(question, answer, hanzi, good);
-                                                                                                                                      ^
-src/com/matthieu/GuessContaining.java:128: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessContaining.GuessContainingResultFragment) [ValidFragment]
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-                                                                                                                                      ^
-src/com/matthieu/GuessEnglish.java:151: Warning: This fragment class should be public (com.matthieu.GuessEnglish.GuessEnglishResultFragment) [ValidFragment]
-            return show_details(inflater, container, true);
-            ^
-src/com/matthieu/GuessMissingChar.java:206: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-            super(question, answer, hanzi, good);
-               ^
-src/com/matthieu/GuessMissingChar.java:212: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessMissingChar.GuessMissinCharResultFragment) [ValidFragment]
-            return show_details(inflater, container, false);
-            ^
-src/com/matthieu/GuessPinyin.java:203: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-            super(question, answer, hanzi, good);
-                                                                                                                                              ^
-src/com/matthieu/GuessPinyin.java:209: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessPinyin.GuessPinyinResultFragment) [ValidFragment]
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-                                                                                                                                              ^
-src/com/matthieu/GuessTone.java:251: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-            super(question, answer, hanzi, good);    //To change body of overridden methods use File | Settings | File Templates.
-                                                  ^
-src/com/matthieu/GuessTone.java:256: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.GuessTone.GuessToneResultFragment) [ValidFragment]
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-                                                  ^
 src/com/matthieu/LessonListFragment.java:29: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
     public LessonListFragment(String lesson) {
     ^
 src/com/matthieu/LessonListFragment.java:35: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.LessonListFragment) [ValidFragment]
         super.onAttach(activity);
         ^
-src/com/matthieu/TestActivity.java:210: Warning: This fragment inner class should be static (com.matthieu.TestActivity.done_testing) [ValidFragment]
-            final View res = inflater.inflate(R.layout.test_done, container, false);
-            ^
-src/com/matthieu/Help.java:79: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]
-                wv.getSettings().setJavaScriptEnabled(true);
-                 ^
 AndroidManifest.xml:51: Warning: Exported activity does not require permission [ExportedActivity]
         <activity android:name=".settings.ExportDB">
         ^
@@ -371,5 +317,4 @@ res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", shou
 res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
                 ^
-1 errors, 61 warnings
-
+0 errors, 44 warnings

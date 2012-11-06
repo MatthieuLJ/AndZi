@@ -226,7 +226,7 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
             cb.setChecked(true);
     }
 
-    public boolean handle_ok(View v) {
+    public void handle_ok(View v) {
         String tones_checked="";
         CheckBox cb;
 
@@ -240,22 +240,21 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         if (cb.isChecked()) tones_checked+="4";
 
         int correctness = check_guess(tones_checked);
-        GuessToneResultFragment solution_fragment = new GuessToneResultFragment(hanzi, tones_checked, hanzi, correctness);
+        GuessToneResultFragment solution_fragment = new GuessToneResultFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt("good", correctness);
+        bundle.putString("answer", tones_checked);
+        bundle.putString("question", hanzi);
+        solution_fragment.setArguments(bundle);
         ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
-
-        return true;
     }
 
-    protected static class GuessToneResultFragment extends SolutionFragment {
-        public GuessToneResultFragment(String question, String answer, String hanzi, int good) {
-            super(question, answer, hanzi, good);    //To change body of overridden methods use File | Settings | File Templates.
-        }
-
+    public static class GuessToneResultFragment extends SolutionFragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), hanzi, false, (TestActivity) getActivity());
+            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());
@@ -292,9 +291,9 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         @Override
         public void update_score() {
             if (good == CORRECT)
-                myDB.betterBox(hanzi);
+                myDB.betterBox(question);
             else
-                myDB.worseBox(hanzi);
+                myDB.worseBox(question);
         }
     }
 }

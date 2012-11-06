@@ -105,7 +105,12 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         }
 
         // insert the new one
-        fragments[1] = new DetailsFragment(new_hanzi, use_ref);
+        fragments[1] = new DetailsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("hanzi", new_hanzi);
+        bundle.putString("pinyin", "");
+        bundle.putBoolean("use_ref", use_ref);
+        fragments[1].setArguments(bundle);
 
         ft.add(R.id.reference_pager, fragments[1]);
         ft.commit();

@@ -119,10 +119,10 @@ public class GuessEnglish extends TestFragment {
         return INCORRECT;
     }
 
-    public boolean handle_ok(View v) {
+    public void handle_ok(View v) {
         EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
-            return false;
+            return;
 
         String guess = word_guess.getText().toString();
 
@@ -133,19 +133,18 @@ public class GuessEnglish extends TestFragment {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessEnglishResultFragment solution_fragment = new GuessEnglishResultFragment(hanzi, guess, hanzi, correctness);
+                GuessEnglishResultFragment solution_fragment = new GuessEnglishResultFragment();
+                Bundle bundle = new Bundle();
+                bundle.putInt("good", correctness);
+                bundle.putString("answer", guess);
+                bundle.putString("question", hanzi);
+                solution_fragment.setArguments(bundle);
                 ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
-        return true;
     }
 
-    private static class GuessEnglishResultFragment extends SolutionFragment {
-
-        public GuessEnglishResultFragment(String question, String answer, String hanzi, int good) {
-            super(question, answer, hanzi, good);
-        }
-
+    public static class GuessEnglishResultFragment extends SolutionFragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             return show_details(inflater, container, true);
@@ -162,18 +161,18 @@ public class GuessEnglish extends TestFragment {
             int min_box = 5;
 
             if (good == CORRECT) {
-                myDB.betterBox(hanzi);
-                int word_box = myDB.getBoxForChar(hanzi);
-                for (int i=0; i<hanzi.length();) {
-                    int new_box = myDB.getBoxForChar(hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i))));
+                myDB.betterBox(question);
+                int word_box = myDB.getBoxForChar(question);
+                for (int i=0; i<question.length();) {
+                    int new_box = myDB.getBoxForChar(question.substring(i, i+Character.charCount(question.codePointAt(i))));
                     if (new_box < min_box) {
                         min_box = new_box;
                     }
 
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
-                for (int i=0; i<hanzi.length();) {
-                    String character = hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)));
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
                     int box = myDB.getBoxForChar(character);
                     if ((box == min_box) && (min_box < word_box)) {
                         myDB.betterBox(character);
@@ -182,19 +181,19 @@ public class GuessEnglish extends TestFragment {
                         myDB.resetTime(character);
                     }
 
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
             }
             else {
                 old_scores = new HashMap<String, saved_score>();
-                for (int i=0; i<hanzi.length();) {
-                    String character = hanzi.substring(i, i+Character.charCount(hanzi.codePointAt(i)));
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
                     old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
                     myDB.worseBox(character);
-                    i+=Character.charCount(hanzi.codePointAt(i));
+                    i+=Character.charCount(question.codePointAt(i));
                 }
-                old_scores.put(hanzi, new saved_score(myDB.getBoxForChar(hanzi), myDB.getExpirationTimeForChar(hanzi)));
-                myDB.worseBox(hanzi);
+                old_scores.put(question, new saved_score(myDB.getBoxForChar(question), myDB.getExpirationTimeForChar(question)));
+                myDB.worseBox(question);
             }
         }
     }
