@@ -64,17 +64,6 @@ public class ReviewList extends Activity {
         }
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        ViewPager pager = (ViewPager) findViewById(R.id.reviews);
-        PagerAdapter adapter = pager.getAdapter();
-
-        setContentView(R.layout.review_list_pages);
-        pager = (ViewPager) findViewById(R.id.reviews);
-        pager.setAdapter(adapter);
-    }
-
     private class review_loader extends AsyncTask<Void, Void, Void> {
         int expired_filtered;
         ProgressDialog mProgressDialog;

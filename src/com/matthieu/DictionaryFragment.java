@@ -10,25 +10,22 @@ import android.database.Cursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
-import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.*;
-import android.view.Window;
 import android.widget.*;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.*;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
 public class DictionaryFragment extends Fragment implements VocabularyCursorClickHandle {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Cursor current_cursor =null;
-    Handler update_handler=null;
-    update_delayer update_thread=null;
+    static update_delayer update_thread=null;
     boolean use_ref=true;
     private static final String TAG="Dictionary";
     private Activity parent_activity;
@@ -41,20 +38,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         parent_activity = activity;
-
-        if (update_thread == null) {
-            update_thread = new update_delayer();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                update_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-            else
-                update_thread.execute((Void[])null);
-        }
     }
-
-    public void switch_to_reference(boolean use_ref) {
-        this.use_ref = use_ref;
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -114,10 +98,9 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     @Override
     public void onDetach() {
         super.onDetach();
-        if (update_handler != null) {
-            update_handler.getLooper().quit();
+        if (update_thread != null) {
+            update_thread.cancel();
             update_thread = null;
-            update_handler = null;
         }
         synchronized (DictionaryFragment.this) {
             if (current_cursor != null)
@@ -130,100 +113,45 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         ((ReferenceActivity)parent_activity).new_details_request(item_clicked, use_ref);
     }
 
-    /*
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        synchronized (DictionaryFragment.this) {
-            EditText edit_query= (EditText) findViewById(R.id.dict_query);
-            String current_search = edit_query.getText().toString();
-            ListView results = (ListView) findViewById(R.id.dict_results);
-            VocabularyCursorAdapter current_adapter = (VocabularyCursorAdapter) results.getAdapter();
-
-            setContentView(R.layout.dictionary);
-
-            TextView dict_mode = (TextView) findViewById(R.id.dict_mode);
-            dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
-            dict_mode.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View view) {
-                    switch (mode) {
-                        case CHINESE_TO_ENGLISH_MODE:
-                            mode = ENGLISH_TO_CHINESE_MODE;
-                            ((TextView) view).setText(Html.fromHtml("Chinese ← <b>English</b>"));
-                            break;
-                        case ENGLISH_TO_CHINESE_MODE:
-                            mode = CHINESE_TO_ENGLISH_MODE;
-                            ((TextView) view).setText(Html.fromHtml("<b>Chinese</b> → English"));
-                            break;
-                    }
-                    EditText edit_query= (EditText) findViewById(R.id.dict_query);
-                    start_new_query(mode, edit_query.getText().toString());
-                }
-            });
-            switch (mode) {
-                case CHINESE_TO_ENGLISH_MODE:
-                    dict_mode.setText(Html.fromHtml("<b>Chinese</b> → English"));
-                    break;
-                case ENGLISH_TO_CHINESE_MODE:
-                    dict_mode.setText(Html.fromHtml("Chinese ← <b>English</b>"));
-                    break;
-            }
-
-            EditText query = (EditText) findViewById(R.id.dict_query);
-            query.setText(current_search);
-            query.addTextChangedListener(new Dictionary_query_parse());
-
-            results = (ListView) findViewById(R.id.dict_results);
-            results.setAdapter(current_adapter);
-        }
-    }
-    */
-
-    private class update_delayer extends AsyncTask<Void,Cursor, Void> {
+    private static class update_delayer extends Thread {
         String msg_query;
         int msg_mode;
-        int msg_ref;
+        boolean msg_ref;
+        Cursor result_cursor;
+        DictionaryFragment parent;
+        boolean is_cancelled = false;
+
+        public update_delayer(String query, int mode, boolean ref, DictionaryFragment dict) {
+            msg_query = query;
+            msg_mode = mode;
+            msg_ref = ref;
+            parent = dict;
+        }
 
         @Override
-        protected Void doInBackground(Void... voids) {
-            Looper.prepare();
+        public void run() {
+            update_list();
+        }
 
-            update_handler = new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    msg_query = (String) msg.obj;
-                    msg_mode = msg.arg1;
-                    msg_ref = msg.arg2;
-
-                    update_list();
-                }
-            };
-
-            Looper.loop();
-            return null;
+        public void cancel() {
+            is_cancelled=true;
         }
 
         private void update_list() {
-            EditText query = (EditText) getView().findViewById(R.id.dict_query);
-            if (query == null)
-                return;
-
-            if ((msg_ref != (use_ref?1:0)) || (msg_mode != mode) || (!msg_query.equals(query.getText().toString())))
-                return;
-
             Log.d(TAG, "Starting a new query for "+msg_query);
 
             HanziDB currentDB=null;
-            if (use_ref) {
-                currentDB = ((AndZiApplication)getActivity().getApplication()).getRefDB();
+            if (msg_ref) {
+                currentDB = ((AndZiApplication)parent.getActivity().getApplication()).getRefDB();
             }
-            if ((currentDB == null) || (!use_ref)) {
-                currentDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
+            if ((currentDB == null) || (!msg_ref)) {
+                currentDB = ((AndZiApplication)parent.getActivity().getApplication()).getMyDB();
             }
 
-            publishProgress((Cursor[])null);
+            publish_cursor(null);
 
             if (msg_query.length()==0) {
-                current_cursor=null;
+                result_cursor =null;
             }
             else {
                 if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
@@ -236,67 +164,77 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         }
 
                     if (elems == null)
-                        current_cursor = new MessageCursor("Cannot understand this query");
+                        result_cursor = new MessageCursor("Cannot understand this query");
                     else if (elems.size()==1) {
                         if (elems.get(0).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
-                            current_cursor = null;
+                            result_cursor = null;
                         else
-                            current_cursor = currentDB.getWordsStartingWithSequence(elems, true, true);
+                            result_cursor = currentDB.getWordsStartingWithSequence(elems, true, true);
                     }
                     else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
-                        current_cursor = currentDB.getDecomposedParts(elems, 4, true, true);
+                        result_cursor = currentDB.getDecomposedParts(elems, 4, true, true);
                     else
-                        current_cursor = currentDB.getWordsWithSequence(elems, true, true);
+                        result_cursor = currentDB.getWordsWithSequence(elems, true, true);
                 }
                 else if (msg_mode == ENGLISH_TO_CHINESE_MODE) {
                     if (msg_query.length()<2)
-                        current_cursor=null;
+                        result_cursor=null;
                     else if (msg_query.length()<3)
-                        current_cursor = currentDB.getFilteredStartingCTranslations(msg_query);
+                        result_cursor = currentDB.getFilteredStartingCTranslations(msg_query);
                     else
-                        current_cursor = currentDB.getFilteredCTranslations(msg_query);
+                        result_cursor = currentDB.getFilteredCTranslations(msg_query);
                 }
                 else
-                    current_cursor =null;
+                    result_cursor =null;
             }
+
+            if (is_cancelled)
+                return;
 
             // Just to make sure the query actually happens in this thread (and not the UI thread)
-            if ((msg_ref == (use_ref?1:0)) && (msg_mode == mode) && (msg_query.equals(query.getText().toString())) && (current_cursor != null) && (!current_cursor.isClosed())) {
-                current_cursor.getCount();
-                current_cursor.moveToFirst();
+            if ((result_cursor != null) && (!result_cursor.isClosed())) {
+                result_cursor.getCount();
+                result_cursor.moveToFirst();
             }
 
-            if ((msg_ref == (use_ref?1:0)) && (msg_mode == mode) && (msg_query.equals(query.getText().toString()))) {
-                publishProgress(current_cursor);
-            } else if (current_cursor != null) {
-                current_cursor.close();
+            if (!is_cancelled) {
+                publish_cursor(result_cursor);
+            } else if (result_cursor != null) {
+                result_cursor.close();
             }
-
         }
 
-        @Override
-        protected void onProgressUpdate(Cursor... values) {
-            synchronized (DictionaryFragment.this) {
-                ((SherlockFragmentActivity)parent_activity).setSupportProgressBarIndeterminateVisibility(values==null);
+        private void publish_cursor(@Nullable final Cursor cur) {
+            parent.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (parent) {
+                        EditText query = (EditText) parent.getView().findViewById(R.id.dict_query);
+                        if (query == null)
+                            return;
 
-                final ListView results = (ListView) getView().findViewById(R.id.dict_results);
+                        ((SherlockFragmentActivity)parent.getActivity()).setSupportProgressBarIndeterminateVisibility(cur==null && !query.getText().toString().equals(""));
 
-                if ((results == null) && (values!=null)) {
-                    values[0].close();
-                    return;
+                        final ListView results = (ListView) parent.getView().findViewById(R.id.dict_results);
+
+                        if ((results == null) && (cur!=null)) {
+                            cur.close();
+                            return;
+                        }
+                        ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
+                    }
                 }
-                ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(values==null?null:values[0]);
-            }
+            });
         }
     }
 
     private void start_new_query(int mode, String query) {
-        Message toSend = new Message();
-        toSend.obj = query;
-        toSend.arg1 = mode;
-        toSend.arg2 = use_ref ? 1 : 0;
-        if (update_handler!=null)
-            update_handler.sendMessage(toSend);
+        if (update_thread != null) {
+            update_thread.cancel();
+        }
+
+        update_thread = new update_delayer(query, mode, use_ref, this);
+        update_thread.start();
     }
 
     private class Dictionary_query_parse implements TextWatcher {
@@ -310,47 +248,4 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         public void afterTextChanged(Editable editable) {
         }
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if (((AndZiApplication)parent_activity.getApplication()).getRefDBPresent()) {
-            MenuInflater inflater = parent_activity.getMenuInflater();
-            inflater.inflate(R.menu.dictionary_menu, menu);
-
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem add_word = menu.findItem(R.id.dictionary_switch_dic);
-        if (currentDB == myDB) {
-            add_word.setTitle("Use the dictionary");
-        }
-        else {
-            add_word.setTitle("Use my vocabulary list");
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.dictionary_switch_dic:
-                EditText query = (EditText) getView().findViewById(R.id.dict_query);
-                if (query == null)
-                    return false;
-                currentDB= (currentDB == refDB) ? myDB : refDB;
-                start_new_query(mode, query.getText().toString());
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-        return true;
-    }
-    */
 }

@@ -221,13 +221,13 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             final View res = inflater.inflate(R.layout.test_done, container, false);
             TextView message = (TextView) res.findViewById(R.id.test_done_text);
             if (empty_db) {
-                message.setText("Your vocabulary list is empty");
+                message.setText(R.string.test_empty_db);
             }
             else if (filter_option) {
-                message.setText("You can disable the learning filter");
+                message.setText(R.string.test_mastering_disable_filter);
             }
             else {
-                message.setText("You can continue anyway");
+                message.setText(R.string.test_mastering);
             }
 
             Button OK_button = (Button) res.findViewById(R.id.ok);

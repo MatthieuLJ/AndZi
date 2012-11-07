@@ -6,7 +6,6 @@
 package com.matthieu;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -367,42 +366,4 @@ public class DetailsFragment extends Fragment {
             }
         }
     }
-
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.details_menu, menu);
-
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem add_word = menu.findItem(R.id.details_add_word);
-        HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
-        if (myDB.getTranslations(current_hanzi).size()>0) {
-            add_word.setTitle("Edit word in vocabulary list");
-        }
-        else {
-            add_word.setTitle("Add word to vocabulary list");
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.details_add_word:
-                Intent i=new Intent(this, AddVocabularyActivity.class);
-                i.putExtra("Hanzi", current_hanzi);
-                startActivity(i);
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-        return true;
-    }
-    */
 }

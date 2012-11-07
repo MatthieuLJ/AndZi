@@ -24,6 +24,7 @@ public class StatsFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
+        setRetainInstance(true);
     }
 
     @Override

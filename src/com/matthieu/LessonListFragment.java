@@ -26,14 +26,12 @@ public class LessonListFragment extends Fragment {
     AsyncTask<Void, Void,Void> loader=null;
     private String lesson=null;
 
-    public LessonListFragment(String lesson) {
-        this.lesson = lesson;
-    }
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
+        Bundle bundle = getArguments();
+        lesson = bundle.getString("lesson");
     }
 
     @Override

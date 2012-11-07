@@ -58,7 +58,10 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     public void open_lesson_list(String label) {
         if (fragments[2]!=null)
             close_lesson_list();
-        fragments[2] = new LessonListFragment(label);
+        fragments[2] = new LessonListFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("lesson", label);
+        fragments[2].setArguments(bundle);
         ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             pager.getAdapter().notifyDataSetChanged();

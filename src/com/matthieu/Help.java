@@ -25,16 +25,6 @@ public class Help extends Activity {
         pager.setAdapter(new HelpPageAdapter());
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        ViewPager pager = (ViewPager) findViewById(R.id.help);
-        PagerAdapter adapter = pager.getAdapter();
-        setContentView(R.layout.help);
-        pager = (ViewPager) findViewById(R.id.help);
-        pager.setAdapter(adapter);
-    }
-
     private class HelpPageAdapter extends PagerAdapter {
         SparseArray<SoftReference<View>> view_storage = new SparseArray<SoftReference<View>>();
         ArrayList<String> pages = new ArrayList<String>(Arrays.asList(

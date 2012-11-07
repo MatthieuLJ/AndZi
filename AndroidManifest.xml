@@ -24,8 +24,7 @@
             android:name="AndZiApplication"
             android:hardwareAccelerated="false">
         <activity
-                android:name=".MainMenuActivity"
-                android:configChanges="keyboardHidden|orientation|screenSize">
+                android:name=".MainMenuActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -33,18 +32,14 @@
         </activity>
         <activity android:name=".VocabularyEditorActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
-                  android:configChanges="keyboardHidden|orientation|screenSize"
                 />
 
         <activity android:name=".TestActivity"
-                android:launchMode="singleTop"
-                android:configChanges="keyboardHidden|orientation|screenSize"/>
+                android:launchMode="singleTop"/>
 
-        <activity android:name=".ReviewList"
-                  android:configChanges="keyboardHidden|orientation|screenSize"/>
+        <activity android:name=".ReviewList"/>
         <activity android:name=".ReferenceActivity"
-                  android:windowSoftInputMode="stateHidden|adjustPan"
-                  android:configChanges="keyboardHidden|orientation|screenSize" />
+                  android:windowSoftInputMode="stateHidden|adjustPan"/>
 
         <activity android:name=".Help" />
         <activity android:name=".settings.Settings" />

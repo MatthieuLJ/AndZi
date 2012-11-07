@@ -214,49 +214,7 @@ Lint output:
 res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="match_parent"
                 ^
-src/com/matthieu/LessonListFragment.java:29: Warning: Avoid non-default constructors in fragments: use a default constructor plus Fragment#setArguments(Bundle) instead [ValidFragment]
-    public LessonListFragment(String lesson) {
-    ^
-src/com/matthieu/LessonListFragment.java:35: Warning: This fragment should provide a default constructor (a public constructor with no arguments) (com.matthieu.LessonListFragment) [ValidFragment]
-        super.onAttach(activity);
-        ^
-AndroidManifest.xml:51: Warning: Exported activity does not require permission [ExportedActivity]
-        <activity android:name=".settings.ExportDB">
-        ^
-AndroidManifest.xml:54: Warning: Exported activity does not require permission [ExportedActivity]
-        <activity android:name=".settings.EmailDB">
-        ^
-src/com/matthieu/widget/ProgressGraph.java:370: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                data_at_origin = new ProgressData();
-                                  ^
-src/com/matthieu/widget/ProgressGraph.java:387: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                data_at_edge = new ProgressData();
-                                ^
-src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                    post(new Runnable() {
-                          ^
-src/com/matthieu/DictionaryFragment.java:193: Warning: This Handler class should be static or leaks might occur (com.matthieu.DictionaryFragment.update_delayer.1) [HandlerLeak]
-                    msg_query = (String) msg.obj;
-                                 ^
-src/com/matthieu/widget/ProgressGraph.java:76: Warning: This Handler class should be static or leaks might occur (com.matthieu.widget.ProgressGraph.update_delayer.1) [HandlerLeak]
-                    final range query = (range) msg.obj;
-                                 ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
-res/values/strings.xml:13: Warning: The resource R.string.next appears to be unused [UnusedResources]
-    <string name="next">Next</string>
-    ^
-res/values/strings.xml:107: Warning: The resource R.string.test_mastering appears to be unused [UnusedResources]
-    <string name="test_mastering">You master everything, do you want to continue ?</string>
-    ^
-res/values/strings.xml:108: Warning: The resource R.string.test_mastering_disable_filter appears to be unused [UnusedResources]
-    <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
-    ^
-res/values/strings.xml:117: Warning: The resource R.string.add_voc_default_lesson appears to be unused [UnusedResources]
-    <string name="add_voc_default_lesson">Choose the default lesson</string>
-    ^
-res/values/strings.xml:118: Warning: The resource R.string.add_voc_lesson_none appears to be unused [UnusedResources]
-    <string name="add_voc_lesson_none">(none)</string>
-    ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -317,4 +275,4 @@ res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", shou
 res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
                 ^
-0 errors, 44 warnings
+0 errors, 30 warnings

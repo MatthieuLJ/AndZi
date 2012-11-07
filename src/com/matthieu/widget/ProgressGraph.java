@@ -28,30 +28,27 @@ public class ProgressGraph extends View {
     ArrayList<ProgressData> current_data=null;
     ProgressDB db;
     range current_range= new range();
-    Context context;
 
     private static final String TAG="ProgressGraph";
     private Paint p = new Paint();
     Rect r=new Rect();
     private Rect left_axis_r=new Rect();
     private Rect bottom_axis_r=new Rect();
+    ProgressData recent_data;
 
     public ProgressGraph(Context context) {
         super(context);
-        this.context = context;
-        new update_delayer().start();
+        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
     }
 
     public ProgressGraph(Context context, AttributeSet attrs) {
         super(context, attrs);
-        this.context = context;
-        new update_delayer().start();
+        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
     }
 
     public ProgressGraph(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        this.context = context;
-        new update_delayer().start();
+        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
     }
 
     static private class range {
@@ -60,59 +57,45 @@ public class ProgressGraph extends View {
         int zoom=0;
     }
 
-    Handler update_handler;
-
     private class update_delayer extends Thread {
-        ProgressData recent_data;
+        range query;
 
+        public update_delayer(range query) {
+            this.query = query;
+        }
         @Override
         public void run() {
-            Looper.prepare();
-            setPriority(MIN_PRIORITY);
+            if ((query.date_min != range_date_min) | (query.date_max != range_date_max) || (query.zoom != current_zoom))
+                return;
 
-            update_handler = new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    final range query = (range) msg.obj;
+            synchronized (ProgressGraph.this) {
+                if (((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) &&
+                    ((current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
+                    ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
+                    if (tmp_data.size() > 2) {
+                        current_data = tmp_data;
+                        current_data.add(recent_data);
+                        current_range = query;
 
-                    update_range_data(query);
-                }
-            };
-
-            Looper.loop();
-        }
-
-        private void update_range_data(range query) {
-            if ((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) {
-                synchronized (ProgressGraph.this) {
-                    if (recent_data == null)
-                        recent_data = ((AndZiApplication) context.getApplicationContext()).getCurrentProgress();
-
-                    if ((current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom)) {
-                        ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
-                        if (tmp_data.size() > 2) {
-                            current_data = tmp_data;
-                            current_data.add(recent_data);
-                            current_range = query;
-                            ProgressGraph.this.postInvalidate();
-                        }
                     }
                 }
             }
+
+            postInvalidate();
         }
     }
 
     private long min_date, max_date;
     private int max_scale;
     private int scale_magnitude; // scale_magnitude is the largest number such that 10^(sm+1) < max_score
-    // max_scale       is the next "round" number above max_score. eg if max_score = 251, max_scale=260
+                                 // max_scale       is the next "round" number above max_score. eg if max_score = 251, max_scale=260
 
     public void set_data(ProgressDB db) {
         // assumes the data is sorted chronologically
         this.db = db;
         this.data0=db.get_data(0);
 
-        ProgressDB.ProgressData new_data = ((AndZiApplication) context.getApplicationContext()).getCurrentProgress();
+        ProgressDB.ProgressData new_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
         this.data0.add(new_data);
         int current_char_count = new_data.num_chars_in_box[0] + new_data.num_chars_in_box[1] + new_data.num_chars_in_box[2] + new_data.num_chars_in_box[3] + new_data.num_chars_in_box[4];
 
@@ -236,10 +219,8 @@ public class ProgressGraph extends View {
         new_query.date_min = range_date_min;
         new_query.date_max = range_date_max;
         new_query.zoom = current_zoom;
-        Message toSend = new Message();
-        toSend.obj = new_query;
-        if (update_handler!=null)
-            update_handler.sendMessageAtFrontOfQueue(toSend);
+
+        new update_delayer(new_query).start();
     }
 
     private double log_scale(double y, double max) {
@@ -281,6 +262,9 @@ public class ProgressGraph extends View {
         return (int) android.util.FloatMath.floor((float)(log((max_date-min_date)/one_day)/log(2)));
         // the logic is: one_day x 2^(max_zoom) <= max_date - min_date
     }
+
+    ProgressData store_progress_at_origin = new ProgressData();
+    ProgressData store_progress_at_edge = new ProgressData();
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -367,7 +351,7 @@ public class ProgressGraph extends View {
                 data_at_origin = data_to_use.get(0);
             }
             else {
-                data_at_origin = new ProgressData();
+                data_at_origin = store_progress_at_origin;
                 data_at_origin.date = range_date_min;
                 for (int i=0; i<5; i++) {
                     data_at_origin.num_chars_in_box[i] = (int) (data_to_use.get(first_date_index-1).num_chars_in_box[i] +
@@ -384,7 +368,7 @@ public class ProgressGraph extends View {
                 data_at_edge = data_to_use.get(data_to_use.size()-1);
             }
             else {
-                data_at_edge = new ProgressData();
+                data_at_edge = store_progress_at_edge;
                 data_at_edge.date = range_date_max;
                 for (int i=0; i<5; i++) {
                     //Log.d(TAG, "last_date_index: "+last_date_index+", size of data_to_use: "+data_to_use.size());

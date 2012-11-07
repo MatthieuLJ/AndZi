@@ -3,29 +3,23 @@
  */
 package com.matthieu;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.settings.Settings;
-import com.matthieu.widget.DBCheckProgressHandler;
 import org.jetbrains.annotations.Nullable;
 
-public class MainMenuActivity extends SherlockActivity {
+public class MainMenuActivity extends SherlockFragmentActivity {
     private final String TAG="MainMenuActivity";
-
-    private AsyncTask<Void,Integer,Void> db_loader=null;
+    boolean showing_splash = false;
     boolean start_test;
+    Fragment splash_fragment=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,27 +35,11 @@ public class MainMenuActivity extends SherlockActivity {
         start_test=intent.getBooleanExtra("start_test", false);
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        synchronized (MainMenuActivity.this) {
-            if (db_loader!=null) {
-                ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
-                int current_progress = progress.getProgress();
-                setContentView(R.layout.main_menu_splash);
-                progress = (ProgressBar) findViewById(R.id.splash_progress);
-                progress.setProgress(current_progress);
-            }
-            else {
-                setContentView(R.layout.main_menu);
-            }
+    public void start_it() {
+        if (splash_fragment != null) {
+            getSupportFragmentManager().beginTransaction().remove(splash_fragment).commit();
+            splash_fragment = null;
         }
-    }
-
-    private void start_it() {
-        boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
-        ((AndZiApplication) getApplication()).showSplash(false);
-
         if (start_test) {
             handle_test(null);
             start_test=false;
@@ -100,69 +78,22 @@ public class MainMenuActivity extends SherlockActivity {
         setContentView(R.layout.main_menu);
     }
 
-
     @Override
-    @SuppressLint({"NewApi"})
     protected void onResume() {
         super.onResume();
 
-        boolean showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
+        showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
+        ((AndZiApplication) getApplication()).showSplash(false);
+
         if (showing_splash || (((AndZiApplication) getApplication()).getMyDB() == null)) {
-            setContentView(R.layout.main_menu_splash);
-            TextView tversion = (TextView) findViewById(R.id.splash_version);
-            tversion.setText(((AndZiApplication) getApplication()).get_version());
-
-            final ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
-            progress.setIndeterminate(false);
-            progress.setMax(100);
-
-            db_loader = new splash_loader();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-            else
-                db_loader.execute((Void[])null);
+            splash_fragment = new SplashFragment();
+            getSupportFragmentManager().beginTransaction().add(android.R.id.content, splash_fragment).commit();
         }
         else {
             ((AndZiApplication)getApplication()).initialize_ref_db();
             start_it();
         }
     }
-
-    private class splash_loader extends AsyncTask<Void,Integer,Void> {
-        @Override
-        protected Void doInBackground(Void... voids) {
-            ((AndZiApplication) getApplication()).initialize_ref_db();
-
-            publishProgress(5);
-            HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
-
-            publishProgress(10);
-            myDB.checkDatabase(true, new DBCheckProgressHandler() {
-                @Override
-                public void progress(int i) {
-                    publishProgress(10+(i*90)/100);
-                }
-            });
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... i) {
-            synchronized (MainMenuActivity.this) {
-                ProgressBar progress = (ProgressBar) findViewById(R.id.splash_progress);
-                if (progress != null)
-                    progress.setProgress(i[0]);
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            synchronized (MainMenuActivity.this) {
-                db_loader=null;
-                start_it();
-            }
-        }
-    };
 
     public void handle_add_vocabulary(View v) {
         Intent intent = new Intent(this, VocabularyEditorActivity.class);

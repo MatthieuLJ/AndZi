@@ -84,22 +84,6 @@ public class AddVocabularyFragment extends Fragment
         }
     }
 
-/*
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese);
-        String current_string = chinese_word.getText().toString();
-        setContentView(R.layout.add_vocabulary_top);
-        chinese_word = (EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese);
-        ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
-        chinese_word.addTextChangedListener(text_watcher);
-        chinese_word.setMaximumTextSize(32);
-        chinese_word.setMinimumTextSize(10);
-        View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, (ViewGroup) findViewById(R.id.main_content));
-        chinese_word.setText(current_string);
-    }
-*/
-
     // Handle when the content of the chinese word text field changes
     private class ChineseTextWatcher implements TextWatcher {
 
