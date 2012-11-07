@@ -4,8 +4,6 @@
 
 package com.matthieu;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.database.Cursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
@@ -31,6 +29,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
     static final int ENGLISH_TO_CHINESE_MODE=1;
+
+    String last_query="";
+    int last_mode=0;
+    boolean last_use_ref=true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -94,15 +96,17 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void onDestroy() {
+        super.onDestroy();
         if (update_thread != null) {
             update_thread.cancel();
             update_thread = null;
         }
         synchronized (DictionaryFragment.this) {
-            if (current_cursor != null)
+            if (current_cursor != null) {
                 current_cursor.close();
+                current_cursor = null;
+            }
         }
     }
 
@@ -126,17 +130,28 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             parent = dict;
         }
 
-        @Override
-        public void run() {
-            update_list();
-        }
-
         public void cancel() {
             is_cancelled=true;
         }
 
-        private void update_list() {
+        @Override
+        public void run() {
             Log.d(TAG, "Starting a new query for "+msg_query);
+
+            if ((msg_query.equals(parent.last_query)) && (msg_mode == parent.last_mode) && (msg_ref == parent.last_use_ref) &&
+                    (parent.current_cursor != null)) {
+                Log.d(TAG, "Already had the results");
+                // just to make sure it's loaded....
+                parent.current_cursor.getCount();
+                parent.current_cursor.moveToFirst();
+                publish_cursor(parent.current_cursor);
+                return;
+            }
+
+            parent.last_query = msg_query;
+            parent.last_mode = msg_mode;
+            parent.last_use_ref = msg_ref;
+            publish_cursor(null);
 
             HanziDB currentDB=null;
             if (msg_ref) {
@@ -145,8 +160,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if ((currentDB == null) || (!msg_ref)) {
                 currentDB = ((AndZiApplication)parent.getActivity().getApplication()).getMyDB();
             }
-
-            publish_cursor(null);
 
             if (msg_query.length()==0) {
                 result_cursor =null;
@@ -220,6 +233,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                             return;
                         }
                         ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
+                        parent.current_cursor = cur;
                     }
                 }
             });
