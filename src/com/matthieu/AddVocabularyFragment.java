@@ -11,6 +11,7 @@
 package com.matthieu;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 //import android.util.Log;
 import android.view.*;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import com.matthieu.widget.EditTextAutomaticSize;
 import com.matthieu.widget.ExtendingLinearLayout;
@@ -284,9 +286,18 @@ public class AddVocabularyFragment extends Fragment
 
     private class VocabularyArrayAdapter extends BaseAdapter {
         private int my=0, ref=0;
+        boolean new_collapsed = true;
+        ExtendingLinearLayout first_row = null;
 
-        public VocabularyArrayAdapter() {
-            super();
+        public void expand_new_field(boolean expand) {
+            if (first_row != null && expand && new_collapsed) {
+                new_collapsed = !expand;
+                first_row.expand();
+                EditText field = (EditText) first_row.findViewById(R.id.add_new_translation);
+                field.requestFocus();
+            } else if (first_row == null && expand && new_collapsed) {
+                new_collapsed = !expand;
+            }
         }
 
         public int getCount() {
@@ -378,6 +389,12 @@ public class AddVocabularyFragment extends Fragment
                     row = inflater.inflate(R.layout.add_vocabulary_list_new_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_new_item);
                 }
+                ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.add_voc_new_container);
+                if (new_collapsed)
+                    elv.collapse_immediate();
+                else
+                    elv.expand_immediate();
+                first_row = elv;
 
                 Button add_new_word = (Button) row.findViewById(R.id.add_new_translation_ok);
                 EditText word_field = (EditText) row.findViewById(R.id.add_new_translation);
@@ -400,6 +417,10 @@ public class AddVocabularyFragment extends Fragment
                             word_lesson.add(default_lesson);
                         }
                         translations_in_db.add(new VocabularyItem(translation, word_lesson, VocabularyItem.NEW));
+                        new_collapsed = true;
+                        InputMethodManager imm = (InputMethodManager)AddVocabularyFragment.this.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(word_field.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+
                         hide_duplicates_in_ref();
 
                         new Thread(new Runnable() {
@@ -664,6 +685,14 @@ public class AddVocabularyFragment extends Fragment
         }
         v.invalidate();
         change_menu();
+    }
+
+    public void add_new() {
+        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        if (lv == null)
+            return;
+        lv.smoothScrollToPosition(0);
+        ((VocabularyArrayAdapter)lv.getAdapter()).expand_new_field(true);
     }
 
     public void add_selection() {

@@ -1,5 +1,6 @@
 ONGOING (8):
 * Can assign lesson to vocabulary
+* Move buttons in dictionary / details in actionbar
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -12,7 +13,13 @@ ONGOING (8):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (6):
+BUGS (7):
+* In VocabularyEditorActivity:
+ - if add word and default lesson is set -> update lesson list
+ - if del word and it has lessons assigned -> update lesson list
+ - if change lesson assignment -> update lesson list
+ - if make any change to the lesson displayed but still exists, update (rename, add / del word, merge, clone)
+ - if lesson is deleted and displayed, close the display
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too

@@ -3,7 +3,7 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/add_vocabulary_lesson_none_add"
-          android:title="Add"
+          android:title="New"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_lesson_none_filter"
           android:title="Filter"

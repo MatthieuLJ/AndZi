@@ -233,6 +233,9 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.add_vocabulary_ready_add:
+                ((AddVocabularyFragment)fragments[0]).add_new();
+                break;
             case R.id.add_vocabulary_add_add:
                 ((AddVocabularyFragment)fragments[0]).add_selection();
                 return true;
@@ -262,6 +265,9 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 ((EditLessonsFragment)fragments[1]).set_filter_enable();
                 break;
 
+            case R.id.add_vocabulary_lesson_none_add:
+                ((EditLessonsFragment)fragments[1]).add_new();
+                break;
             case R.id.add_vocabulary_lesson_single_clone:
                 ((EditLessonsFragment)fragments[1]).clone_selection();
                 break;

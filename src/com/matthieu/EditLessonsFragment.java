@@ -6,6 +6,7 @@ package com.matthieu;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Paint;
 import android.os.AsyncTask;
@@ -15,7 +16,9 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.*;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.matthieu.widget.ExtendingLinearLayout;
 import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
@@ -27,7 +30,6 @@ public class EditLessonsFragment extends Fragment {
     protected ArrayList<Lesson> current_lessons;
     protected ArrayList<String> current_lesson_filter;
     protected boolean filter_on;
-    private Handler process_handler=null;
     private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
@@ -45,7 +47,6 @@ public class EditLessonsFragment extends Fragment {
 
         current_lessons = new ArrayList<Lesson>();
         filter_on = myDB.isFilterEnabled();
-        process_handler = new Handler();
     }
 
     @Override
@@ -166,8 +167,21 @@ public class EditLessonsFragment extends Fragment {
     }
 
     private class LessonArrayAdapter extends BaseAdapter {
+        boolean new_collapsed = true;
+        ExtendingLinearLayout first_row = null;
         public LessonArrayAdapter() {
             super();
+        }
+
+        public void expand_new_field(boolean expand) {
+            if (first_row != null && expand && new_collapsed) {
+                new_collapsed = !expand;
+                first_row.expand();
+                EditText field = (EditText) first_row.findViewById(R.id.edit_new_lesson);
+                field.requestFocus();
+            } else if (first_row == null && expand && new_collapsed) {
+                new_collapsed = !expand;
+            }
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -182,6 +196,12 @@ public class EditLessonsFragment extends Fragment {
                     row = inflater.inflate(R.layout.edit_lesson_list_new_item, parent, false);
                     row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_new_item);
                 }
+                ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.edit_lesson_new_container);
+                if (new_collapsed)
+                    elv.collapse_immediate();
+                else
+                    elv.expand_immediate();
+                first_row = elv;
 
                 Button new_lesson_ok = (Button) row.findViewById(R.id.edit_new_lesson_ok);
                 EditText new_lesson_field = (EditText) row.findViewById(R.id.edit_new_lesson);
@@ -208,6 +228,9 @@ public class EditLessonsFragment extends Fragment {
                         final ArrayList<String> lesson_order=new ArrayList<String>();
                         for (Lesson l:current_lessons)
                             lesson_order.add(l.label);
+                        new_collapsed = true;
+                        InputMethodManager imm = (InputMethodManager)EditLessonsFragment.this.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(new_lesson_field.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                         TouchListView lv = (TouchListView) EditLessonsFragment.this.getView().findViewById(R.id.lesson_list);
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                         new Thread(new Runnable() {
@@ -383,6 +406,14 @@ public class EditLessonsFragment extends Fragment {
         change_menu();
     }
 
+    public void add_new() {
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        if (lv == null)
+            return;
+        lv.smoothScrollToPosition(0);
+        ((LessonArrayAdapter)lv.getAdapter()).expand_new_field(true);
+    }
+
     public void clone_selection() {
         if (current_lesson_selection.size() != 1) {
             change_menu();
@@ -427,7 +458,7 @@ public class EditLessonsFragment extends Fragment {
             return;
         }
         final ArrayList<Lesson> to_delete = new ArrayList<Lesson>(current_lesson_selection);
-        current_lessons.remove(current_lesson_selection);
+        current_lessons.removeAll(current_lesson_selection);
         new Thread(new Runnable() {
             public void run() {
                 for (Lesson le : to_delete)
