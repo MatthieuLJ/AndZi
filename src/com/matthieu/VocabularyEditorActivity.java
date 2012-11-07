@@ -10,7 +10,10 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.matthieu.widget.LockableViewPager;
 import com.viewpagerindicator.PageIndicator;
+
+import java.util.HashMap;
 
 public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
     Fragment fragments[];
@@ -30,7 +33,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
         fragments = new Fragment[3];
 
-        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
 
         if (savedInstanceState != null) {
             fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
@@ -73,7 +76,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         if (fragments[2] != null) {
             getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
         }
-        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
@@ -86,7 +89,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         Bundle bundle = new Bundle();
         bundle.putString("lesson", label);
         fragments[2].setArguments(bundle);
-        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             pager.getAdapter().notifyDataSetChanged();
             pager.setCurrentItem(2, true);
@@ -94,7 +97,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     }
 
     public void close_lesson_list() {
-        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if ((pager != null) && (pager.getCurrentItem()==2)) {
             pager.setCurrentItem(1, true);
 
@@ -205,9 +208,9 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             case VOCABULARY_READY:
                 menu_resource = R.menu.add_vocabulary_menu_ready;
                 break;
-            //case VOCABULARY_ASSIGN_LESSON:
-                //menu_resource = R.menu. ;
-                //break;
+            case VOCABULARY_ASSIGN_LESSON:
+                menu_resource = R.menu.add_vocabulary_assign_lesson;
+                break;
             case LESSON_NONE_SELECTED:
                 menu_resource = R.menu.add_vocabulary_lesson_none;
                 break;
@@ -244,6 +247,12 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 return true;
             case R.id.add_vocabulary_edit_edit:
                 ((AddVocabularyFragment)fragments[0]).edit_selection();
+                return true;
+            case R.id.add_vocabulary_edit_lesson:
+                edit_lesson_assignment();
+                return true;
+            case R.id.add_vocabulary_lesson_assign_done:
+                done_lesson_assignment();
                 return true;
             case R.id.add_vocabulary_done:
                 ((AddVocabularyFragment)fragments[0]).done();
@@ -285,5 +294,31 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void edit_lesson_assignment() {
+        HashMap<String, LessonAssignment> assignment = ((AddVocabularyFragment)fragments[0]).get_current_lesson_assignment();
+        ((EditLessonsFragment)fragments[1]).start_assigning_lesson(assignment);
+        set_menu(menu_types.VOCABULARY_ASSIGN_LESSON);
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        if (pager != null) {
+            pager.setCurrentItem(1, true);
+            pager.setPagingEnabled(false);
+        }
+    }
+
+    private void done_lesson_assignment() {
+        HashMap<String, LessonAssignment> assignment = ((EditLessonsFragment)fragments[1]).get_assignment();
+        ((AddVocabularyFragment)fragments[0]).set_new_lesson_assignment(assignment);
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        if (pager != null) {
+            pager.setCurrentItem(0, true);
+            pager.setPagingEnabled(true);
+        }
+    }
+
+    public static class LessonAssignment {
+        boolean partiable;
+        int state;
     }
 }

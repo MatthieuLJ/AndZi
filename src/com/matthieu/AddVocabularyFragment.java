@@ -28,6 +28,7 @@ import com.matthieu.widget.ExtendingLinearLayout;
 import com.matthieu.widget.PinyinButtons;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class AddVocabularyFragment extends Fragment
 {
@@ -458,93 +459,59 @@ public class AddVocabularyFragment extends Fragment
                     row = inflater.inflate(desired_layout, parent, false);
                     row.setTag(R.id.add_list_view_inflated, desired_layout);
                 }
+                /*
+            if (has_lessons) {
 
-                if (has_lessons) {
-                    ExtendingLinearLayout el = (ExtendingLinearLayout) row.findViewById(R.id.add_vocabulary_info);
-                    Button bt = (Button) row.findViewById(R.id.add_expand_button);
-                    if (el!=null) {
-                        if(voc.expanded) {
-                            el.expand_immediate();
-                            bt.setBackgroundResource(R.drawable.expand_arrow_down);
-                            bt.setTag(R.id.add_expanded, "1");
+                more.setText(lessons);
+                more.setTag(R.id.vocabulary_item, voc);
+                more.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+                        dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
+                        final ArrayList<String> lessons = myDB.getLessons();
+                        final boolean[] selected = new boolean[lessons.size()];
+                        final CharSequence[] labels = new CharSequence[lessons.size()];
+                        for (int i=0; i<lessons.size(); i++) {
+                            labels[i] = lessons.get(i);
+                            selected[i] = voc.lessons.contains(lessons.get(i));
                         }
-                        else {
-                            el.collapse_immediate();
-                            bt.setBackgroundResource(R.drawable.expand_arrow_right);
-                            bt.setTag(R.id.add_expanded, "0");
-                        }
-                    }
-                    bt.setTag(R.id.add_view_to_expand, el);
-                    bt.setTag(R.id.vocabulary_item, voc);
-                    bt.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            expand(view);
-                        }
-                    });
+                        dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
+                            public void onClick(DialogInterface dialog, final int i, final boolean b) {
+                                //Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
+                                if (b) {
+                                    voc.lessons.add(lessons.get(i));
+                                }
+                                else {
+                                    voc.lessons.remove(lessons.get(i));
+                                }
 
-                    TextView more = (TextView) row.findViewById(R.id.add_more);
-                    String lessons = "";
-                    if (voc.lessons.size() != 0) {
-                        for (String s : voc.lessons) {
-                            lessons=lessons.concat(s);
-                            lessons=lessons.concat("\n");
-                        }
-                        lessons=lessons.concat(getResources().getString(R.string.add_voc_edit_lessons).toString());
-                    }
-                    else {
-                        lessons = getResources().getString(R.string.add_voc_assign_lesson).toString();
-                    }
-                    more.setText(lessons);
-                    more.setTag(R.id.vocabulary_item, voc);
-                    more.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View view) {
-                            AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
-                            dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
-                            final ArrayList<String> lessons = myDB.getLessons();
-                            final boolean[] selected = new boolean[lessons.size()];
-                            final CharSequence[] labels = new CharSequence[lessons.size()];
-                            for (int i=0; i<lessons.size(); i++) {
-                                labels[i] = lessons.get(i);
-                                selected[i] = voc.lessons.contains(lessons.get(i));
-                            }
-                            dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
-                                public void onClick(DialogInterface dialog, final int i, final boolean b) {
-                                    //Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
-                                    if (b) {
-                                        voc.lessons.add(lessons.get(i));
-                                    }
-                                    else {
-                                        voc.lessons.remove(lessons.get(i));
-                                    }
-
-                                    new Thread(new Runnable() {
-                                        public void run() {
-                                            if (b) {
-                                                myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
-                                            }
-                                            else {
-                                                myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
-                                            }
+                                new Thread(new Runnable() {
+                                    public void run() {
+                                        if (b) {
+                                            myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
                                         }
-                                    }).start();
-
-                                }
-                            });
-                            dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int i) {
-                                    dialog.dismiss();
-                                    ListView lv = (ListView) AddVocabularyFragment.this.getView().findViewById(R.id.vocabulary_list);
-                                    if (lv != null) {
-                                        ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                                        else {
+                                            myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
+                                        }
                                     }
-                                }
-                            });
-                            dialog.show();
-                        }
-                    });
-                }
+                                }).start();
 
+                            }
+                        });
+                        dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int i) {
+                                dialog.dismiss();
+                                ListView lv = (ListView) AddVocabularyFragment.this.getView().findViewById(R.id.vocabulary_list);
+                                if (lv != null) {
+                                    ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                                }
+                            }
+                        });
+                        dialog.show();
+                    }
+                });
+                }
+*/
                 TextView word = (TextView) row.findViewById(R.id.add_word);
                 word.setText(voc.translation);
                 switch(voc.state) {
@@ -621,27 +588,6 @@ public class AddVocabularyFragment extends Fragment
 
     private void set_default_lesson(String lesson) {
         default_lesson=lesson;
-    }
-
-    public void expand(View v) {
-        String tag = (String) v.getTag(R.id.add_expanded);
-        VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
-        if (tag.equals("0")) {
-            v.setBackgroundResource(R.drawable.expand_arrow_down);
-            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.add_view_to_expand);
-            if (el!=null)
-                el.expand();
-            v.setTag(R.id.add_expanded, "1");
-            voc.expanded =true;
-        }
-        else {
-            v.setBackgroundResource(R.drawable.expand_arrow_right);
-            ExtendingLinearLayout el = (ExtendingLinearLayout) v.getTag(R.id.add_view_to_expand);
-            if (el!=null)
-                el.collapse();
-            v.setTag(R.id.add_expanded, "0");
-            voc.expanded =false;
-        }
     }
 
     private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
@@ -828,4 +774,73 @@ public class AddVocabularyFragment extends Fragment
 
         alert.show();
     }
+
+    public HashMap<String, VocabularyEditorActivity.LessonAssignment> get_current_lesson_assignment() {
+        if (current_word_selection.size()==0) {
+            change_menu();
+            return null;
+        }
+        HashMap<String, VocabularyEditorActivity.LessonAssignment> res = new HashMap<String, VocabularyEditorActivity.LessonAssignment>();
+        for (int i=0; i<current_word_selection.size(); i++ ) {
+            VocabularyItem v = current_word_selection.get(i);
+            if (i==0) {
+                for (String l:v.lessons) {
+                    VocabularyEditorActivity.LessonAssignment new_assign = new VocabularyEditorActivity.LessonAssignment();
+                    new_assign.state=1;
+                    new_assign.partiable=false;
+                    res.put(l, new_assign);
+                }
+            } else {
+                for (String l:v.lessons) {
+                    if (!res.containsKey(l)) {
+                        VocabularyEditorActivity.LessonAssignment new_assign = new VocabularyEditorActivity.LessonAssignment();
+                        new_assign.state=2;
+                        new_assign.partiable=true;
+                        res.put(l, new_assign);
+                    }
+                }
+                for (String l:res.keySet()) {
+                    if (!v.lessons.contains(l)) {
+                        VocabularyEditorActivity.LessonAssignment assign = res.get(l);
+                        assign.state=2;
+                        assign.partiable=true;
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    public void set_new_lesson_assignment(HashMap<String, VocabularyEditorActivity.LessonAssignment> assignment) {
+        if (current_word_selection.size()==0) {
+            change_menu();
+            return;
+        }
+        for (final String l : assignment.keySet()) {
+            VocabularyEditorActivity.LessonAssignment this_lesson = assignment.get(l);
+            if (this_lesson.state == 2)
+                continue;
+            for (final VocabularyItem v : current_word_selection) {
+                switch (this_lesson.state) {
+                    case 0:
+                        v.lessons.remove(l);
+                        new Thread(new Runnable() {
+                            public void run() {
+                                myDB.removeWordLesson(l, v.translation, current_chinese_word, get_current_pinyin());
+                            }
+                        }).start();
+                        break;
+                    case 1:
+                        v.lessons.add(l);
+                        new Thread(new Runnable() {
+                            public void run() {
+                                myDB.assignWordLesson(l, v.translation, current_chinese_word, get_current_pinyin());
+                            }
+                        }).start();
+                        break;
+                }
+            }
+        }
+    }
+
 }

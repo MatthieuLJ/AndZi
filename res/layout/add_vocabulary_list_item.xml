@@ -2,57 +2,19 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:expandable="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:baselineAligned="false"
         android:orientation="horizontal"
         android:id="@+id/add_line_item"
         style="@style/AndZiTheme">
-    <Button
-            android:id="@+id/add_expand_button"
-            android:layout_width="24sp"
-            android:layout_height="24sp"
-            android:layout_margin="5dp"
-            android:layout_gravity="top"
-            android:background="@drawable/expand_arrow_right"
-            android:tag="0"/>
-    <View
-            android:id="@+id/add_separator"
-            android:layout_height="match_parent"
-            android:layout_width="@dimen/separation_line_thickness"
-            android:layout_marginRight="@dimen/separation_line_margin"
-            android:background="@color/separation_line_color" />
-    <com.matthieu.widget.ExtendingLinearLayout
-            android:id="@+id/add_vocabulary_info"
-            android:layout_width="0dp"
+
+    <TextView
+            android:id="@+id/add_word"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginTop="5dp"
-            android:orientation="vertical">
-        <TextView
-                android:id="@+id/add_word"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#000000"
-                android:textSize="20sp"
-                />
-        <View
-                android:layout_height="1dp"
-                android:layout_width="match_parent"
-                android:layout_margin="@dimen/separation_line_thickness"
-                android:background="@color/separation_line_color"
-                android:visibility="gone"
-                expandable:hidable="true" />
-        <TextView
-                android:id="@+id/add_more"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#555555"
-                android:text="more info\nhere..."
-                android:textSize="12sp"
-                android:visibility="gone"
-                android:clickable="true"
-                expandable:hidable="true"/>
-    </com.matthieu.widget.ExtendingLinearLayout>
+            android:textColor="#000000"
+            android:textSize="20sp"
+            />
+
 </LinearLayout>

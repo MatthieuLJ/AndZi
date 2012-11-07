@@ -6,13 +6,13 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"
         >
-    <android.support.v4.view.ViewPager
+    <com.matthieu.widget.LockableViewPager
             android:id="@+id/voc_editor_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             style="@style/AndZiTheme">
-    </android.support.v4.view.ViewPager>
+    </com.matthieu.widget.LockableViewPager>
 
     <com.viewpagerindicator.UnderlinePageIndicator
             android:id="@+id/pager_indicator"

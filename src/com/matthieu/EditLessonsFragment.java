@@ -12,7 +12,6 @@ import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.*;
@@ -23,6 +22,7 @@ import com.matthieu.widget.TouchListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class EditLessonsFragment extends Fragment {
     protected HanziDB myDB=null;
@@ -254,11 +254,13 @@ public class EditLessonsFragment extends Fragment {
 
                 Lesson le = current_lessons.get(position-1);
 
+                VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
+
                 String more_info = "";
                 if ((le.state & Lesson.RENAMED) != 0) {
                     more_info = "was : " + le.old_label;
                 }
-                if (le.num_items != 0) {
+                if ((le.num_items != 0) && (current_type != VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON)) {
                     if (!more_info.equals(""))
                         more_info = more_info + ", ";
                     more_info = more_info + "has " + le.num_items + " chinese word";
@@ -284,12 +286,29 @@ public class EditLessonsFragment extends Fragment {
                 }
                 label.setTag(R.id.lesson_item, le);
 
-                VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
+
                 if (current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) {
                     if (current_lesson_filter.contains(le.label)) {
                         row.setBackgroundColor(0xFF777777);
                     } else {
                         row.setBackgroundColor(0x00000000);
+                    }
+                } else if (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON) {
+                    if (!current_lesson_assignment.containsKey(le.label)) {
+                        row.setBackgroundColor(0x00000000);
+                    } else {
+                        VocabularyEditorActivity.LessonAssignment this_lesson = current_lesson_assignment.get(le.label);
+                        switch (this_lesson.state) {
+                            case 0:
+                                row.setBackgroundColor(0x00000000);
+                                break;
+                            case 1:
+                                row.setBackgroundColor(0xFF777777);
+                                break;
+                            case 2:
+                                row.setBackgroundColor(0xFFAAAAAA);
+                                break;
+                        }
                     }
                 } else {
                     if (current_lesson_selection.contains(le)) {
@@ -350,10 +369,18 @@ public class EditLessonsFragment extends Fragment {
 
     private ArrayList<Lesson> current_lesson_selection=new ArrayList<Lesson>();
 
+    public String get_single_selection() {
+        if (current_lesson_selection.size() != 1)
+            return null;
+        else
+            return current_lesson_selection.get(0).label;
+    }
+
     protected void change_menu() {
         VocabularyEditorActivity.menu_types type;
 
-        if (((VocabularyEditorActivity)getActivity()).get_menu() == VocabularyEditorActivity.menu_types.LESSON_FILTER)
+        if ((((VocabularyEditorActivity)getActivity()).get_menu() == VocabularyEditorActivity.menu_types.LESSON_FILTER) ||
+                (((VocabularyEditorActivity)getActivity()).get_menu() == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
             return;
 
         switch (current_lesson_selection.size()) {
@@ -391,7 +418,34 @@ public class EditLessonsFragment extends Fragment {
             /*TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
             ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();*/
         } else if (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON) {
-
+            if (!current_lesson_assignment.containsKey(le.label)) {
+                VocabularyEditorActivity.LessonAssignment assign = new VocabularyEditorActivity.LessonAssignment();
+                assign.partiable = false;
+                assign.state = 1;
+                current_lesson_assignment.put(le.label, assign);
+                v.setBackgroundColor(0xFF777777);
+            } else {
+                VocabularyEditorActivity.LessonAssignment this_lesson = current_lesson_assignment.get(le.label);
+                switch (this_lesson.state) {
+                    case 0:
+                        if (this_lesson.partiable) {
+                            this_lesson.state = 2;
+                            v.setBackgroundColor(0xFFAAAAAA);
+                        } else {
+                            this_lesson.state = 1;
+                            v.setBackgroundColor(0xFF777777);
+                        }
+                        break;
+                    case 1:
+                        this_lesson.state = 0;
+                        v.setBackgroundColor(0x00000000);
+                        break;
+                    case 2:
+                        this_lesson.state = 1;
+                        v.setBackgroundColor(0xFF777777);
+                        break;
+                }
+            }
         } else {
             if (current_lesson_selection.contains(le)) {
                 current_lesson_selection.remove(le);
@@ -450,6 +504,18 @@ public class EditLessonsFragment extends Fragment {
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         change_menu();
+    }
+
+    HashMap<String, VocabularyEditorActivity.LessonAssignment> current_lesson_assignment = null;
+
+    public void start_assigning_lesson(HashMap<String, VocabularyEditorActivity.LessonAssignment> current_assignment) {
+        current_lesson_assignment = current_assignment;
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+    }
+
+    public HashMap<String, VocabularyEditorActivity.LessonAssignment> get_assignment() {
+        return current_lesson_assignment;
     }
 
     public void del_selection() {
