@@ -66,24 +66,21 @@ public class ReviewList extends Activity {
 
     private class review_loader extends AsyncTask<Void, Void, Void> {
         int expired_filtered;
-        ProgressDialog mProgressDialog;
         ListView list;
+        View parent;
         Cursor cur;
         int list_id; // 0 for words to review, 1 for characters
 
-        public review_loader(ListView l, int id) {
-            list = l;
+        public review_loader(View v, int id) {
+            parent = v;
+            list = (ListView) v.findViewById(R.id.review_list);
             list_id = id;
         }
 
         @Override
         protected void onPreExecute() {
-            mProgressDialog = new ProgressDialog(ReviewList.this);
-            mProgressDialog.setMessage(getResources().getString(R.string.loading));
-            mProgressDialog.setIndeterminate(true);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.show();
+            ProgressBar pb = (ProgressBar) parent.findViewById(R.id.lesson_content_loading);
+            pb.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -105,8 +102,8 @@ public class ReviewList extends Activity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            if (mProgressDialog.isShowing())
-                mProgressDialog.dismiss();
+            ProgressBar pb = (ProgressBar) parent.findViewById(R.id.lesson_content_loading);
+            pb.setVisibility(View.GONE);
 
             if (cur == null)
                 return;
@@ -218,7 +215,7 @@ public class ReviewList extends Activity {
                 if (adapters[list_to_display] != null) {
                     list.setAdapter(adapters[list_to_display]);
                 } else {
-                    review_loader loader = new review_loader(list, list_to_display);
+                    review_loader loader = new review_loader(new_view, list_to_display);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                         loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
                     else
