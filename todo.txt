@@ -1,5 +1,5 @@
 ONGOING (8):
-* Handle screen rotation
+* Can assign lesson to vocabulary
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -20,7 +20,8 @@ BUGS (6):
 * Check database after merge (especially if it was cancelled in the middle)
 * Only offer to check details in list when it exists
 
-FUTURE (12):
+FUTURE (13):
+* When looking for Chinese translation (from English), separate the words if any
 * Can reset score per lesson
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
@@ -35,7 +36,8 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (150):
+DONE (151):
+* Handle screen rotation
 * List items become black when scrolling
 * Can show lesson content
 * Can enable lesson filter

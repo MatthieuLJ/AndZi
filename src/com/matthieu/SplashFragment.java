@@ -16,6 +16,12 @@ public class SplashFragment extends Fragment {
     private AsyncTask<Void,Integer,Void> db_loader=null;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
+    @Override
     @SuppressLint({"NewApi"})
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
@@ -27,7 +33,6 @@ public class SplashFragment extends Fragment {
         progress.setIndeterminate(false);
         progress.setMax(100);
 
-        setRetainInstance(true);
         db_loader = new SplashLoader();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);

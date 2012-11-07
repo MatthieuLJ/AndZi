@@ -28,26 +28,24 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     static update_delayer update_thread=null;
     boolean use_ref=true;
     private static final String TAG="Dictionary";
-    private Activity parent_activity;
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
     static final int ENGLISH_TO_CHINESE_MODE=1;
 
     @Override
-    @SuppressLint({"NewApi"})
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        parent_activity = activity;
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.dictionary, container, false);
-        ((SherlockFragmentActivity)parent_activity).setSupportProgressBarIndeterminateVisibility(false);
+        ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
         mode=CHINESE_TO_ENGLISH_MODE;
 
         final ListView results = (ListView) res.findViewById(R.id.dict_results);
-        results.setAdapter(new VocabularyCursorAdapter(parent_activity, null, this));
+        results.setAdapter(new VocabularyCursorAdapter(getActivity(), null, this));
 
         Button dict_mode = (Button) res.findViewById(R.id.dict_mode);
         dict_mode.setText(R.string.dictionary_chinese_to_eng);
@@ -110,7 +108,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
     @Override
     public void click(String item_clicked) {
-        ((ReferenceActivity)parent_activity).new_details_request(item_clicked, use_ref);
+        ((ReferenceActivity)getActivity()).new_details_request(item_clicked, use_ref);
     }
 
     private static class update_delayer extends Thread {

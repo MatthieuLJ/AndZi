@@ -57,12 +57,22 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             t.set_activity(this);
         }
 
-        fragments = new Fragment[3];
-
-        fragments[0] = new StatsFragment();
-
         setContentView(R.layout.test);
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+
+        fragments = new Fragment[3];
+
+        if (savedInstanceState != null) {
+            fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
+            fragments[1] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment1");
+            fragments[2] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment2");
+            if (pager != null) {
+                pager.setCurrentItem(savedInstanceState.getInt("position"));
+            }
+        } else {
+            fragments[0] = new StatsFragment();
+        }
+
         if (pager != null) {
             pager.setAdapter(new test_pager(getSupportFragmentManager()));
 
@@ -80,6 +90,22 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         start_test();
         if (pager != null) {
             pager.setCurrentItem(1, false);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        if (fragments[1] != null) {
+            getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
+        }
+        if (fragments[2] != null) {
+            getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
+        }
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if (pager != null) {
+            outState.putInt("position", pager.getCurrentItem());
         }
     }
 

@@ -21,10 +21,15 @@ public class StatsFragment extends Fragment {
     private final String TAG="Stats";
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
+    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
-        setRetainInstance(true);
     }
 
     @Override

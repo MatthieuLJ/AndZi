@@ -6,6 +6,7 @@
 package com.matthieu;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -34,6 +35,12 @@ public class DetailsFragment extends Fragment {
     private boolean pinned=false;
 
     static Object locker = new Object();
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
 
     public String get_hanzi() {
         return current_hanzi;

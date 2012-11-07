@@ -26,12 +26,20 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.reference);
 
-        fragments = new Fragment[max_details_fragments+1];
-        fragments[0] = new DictionaryFragment();
-        for (int i=0; i<max_details_fragments; i++)
-            fragments[i+1] = null;
-
         ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+
+        fragments = new Fragment[max_details_fragments+1];
+
+        if (savedInstanceState != null) {
+            for (int i=0; i<=max_details_fragments; i++) {
+                fragments[i] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment"+i);
+            }
+        } else {
+            fragments[0] = new DictionaryFragment();
+            for (int i=0; i<max_details_fragments; i++)
+                fragments[i+1] = null;
+        }
+
         if (pager != null) {
             pager.setOffscreenPageLimit(max_details_fragments+1);
             pager.setAdapter(new reference_pager(getSupportFragmentManager()));
@@ -41,6 +49,21 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         }
         else {
             // When we are on a larger screen without a pager
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        for (int i=1; i<=max_details_fragments; i++) {
+            if (fragments[i] != null) {
+                getSupportFragmentManager().putFragment(outState, "fragment"+i, fragments[i]);
+            }
+        }
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if (pager != null) {
+            outState.putInt("position", pager.getCurrentItem());
         }
     }
 

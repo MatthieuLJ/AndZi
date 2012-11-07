@@ -30,17 +30,27 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
         fragments = new Fragment[3];
 
-        fragments[0] = new AddVocabularyFragment();
-        Bundle bundle = null;
-        if (hanzi != null) {
-            bundle = new Bundle();
-            bundle.putString("hanzi", hanzi);
-            fragments[0].setArguments(bundle);
-        }
-        fragments[1] = new EditLessonsFragment();
-        fragments[2] = null;
-
         ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+
+        if (savedInstanceState != null) {
+            fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
+            fragments[1] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment1");
+            fragments[2] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment2");
+            if (pager != null) {
+                pager.setCurrentItem(savedInstanceState.getInt("position"));
+            }
+        } else {
+            fragments[0] = new AddVocabularyFragment();
+            if (hanzi != null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("hanzi", hanzi);
+                fragments[0].setArguments(bundle);
+            }
+            fragments[1] = new EditLessonsFragment();
+            fragments[2] = null;
+        }
+
+
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
@@ -51,7 +61,21 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             mIndicator.setOnPageChangeListener(this);
         }
         else {
-            // When we are on a larger screen without a pager
+            // TODO When we are on a larger screen without a pager
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
+        if (fragments[2] != null) {
+            getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
+        }
+        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        if (pager != null) {
+            outState.putInt("position", pager.getCurrentItem());
         }
     }
 

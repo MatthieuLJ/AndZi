@@ -27,8 +27,15 @@ public class LessonListFragment extends Fragment {
     private String lesson=null;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
+
+    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
         Bundle bundle = getArguments();
         lesson = bundle.getString("lesson");
