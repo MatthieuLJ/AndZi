@@ -1,7 +1,8 @@
-ONGOING (10):
+ONGOING (11):
 * Set default lesson
 * Move buttons in dictionary / details in actionbar
 * Make the icon in action bar go back to the main menu
+* Remove "show correct answer" setting
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -20,7 +21,7 @@ BUGS (7):
  - if del word and it has lessons assigned -> update lesson list
  - if change lesson assignment -> update lesson list
  - if make any change to the lesson displayed but still exists, update (rename, add / del word, merge, clone)
- - if lesson is deleted and displayed, close the display
+ - if lesson displayed is deleted close the list
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
