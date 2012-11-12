@@ -109,8 +109,15 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         }
     }
 
-    final static int size_limit = 10;
+    final static int size_limit = 30;
     final static int size_threshold = 5;
+
+    private void print_current_list() {
+        Log.d(TAG, "current list: ");
+        for (String h : hanzis_to_test) {
+            Log.d(TAG, h);
+        }
+    }
 
     private void fill_hanzis_to_test() {
         synchronized (TestActivity.this) {
@@ -118,6 +125,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
                 hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
             table_filled=true;
+            Log.d(TAG, "filled table");
+            print_current_list();
         }
     }
 
@@ -134,9 +143,13 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 }
                 offset += Character.charCount(hanzi.codePointAt(offset));
             }
+            Log.d(TAG, "trimmed table with "+hanzi);
+            print_current_list();
         }
-        if (hanzis_to_test.size() < size_threshold)
+        if ((hanzis_to_test.size() < size_threshold) && (!table_filled)) {
             fill_hanzis_to_test();
+            trim_hanzis_to_test(hanzi);
+        }
     }
 
     private void set_next_char_to_study() {
