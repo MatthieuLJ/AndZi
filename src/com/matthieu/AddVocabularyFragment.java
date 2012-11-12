@@ -459,59 +459,7 @@ public class AddVocabularyFragment extends Fragment
                     row = inflater.inflate(desired_layout, parent, false);
                     row.setTag(R.id.add_list_view_inflated, desired_layout);
                 }
-                /*
-            if (has_lessons) {
 
-                more.setText(lessons);
-                more.setTag(R.id.vocabulary_item, voc);
-                more.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View view) {
-                        AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
-                        dialog.setTitle("Choose the lessons for word \""+voc.translation+"\"");
-                        final ArrayList<String> lessons = myDB.getLessons();
-                        final boolean[] selected = new boolean[lessons.size()];
-                        final CharSequence[] labels = new CharSequence[lessons.size()];
-                        for (int i=0; i<lessons.size(); i++) {
-                            labels[i] = lessons.get(i);
-                            selected[i] = voc.lessons.contains(lessons.get(i));
-                        }
-                        dialog.setMultiChoiceItems(labels, selected, new DialogInterface.OnMultiChoiceClickListener() {
-                            public void onClick(DialogInterface dialog, final int i, final boolean b) {
-                                //Log.d(TAG, "Changing assignement for lesson "+lessons.get(i));
-                                if (b) {
-                                    voc.lessons.add(lessons.get(i));
-                                }
-                                else {
-                                    voc.lessons.remove(lessons.get(i));
-                                }
-
-                                new Thread(new Runnable() {
-                                    public void run() {
-                                        if (b) {
-                                            myDB.assignWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
-                                        }
-                                        else {
-                                            myDB.removeWordLesson(lessons.get(i), voc.translation, current_chinese_word, get_current_pinyin());
-                                        }
-                                    }
-                                }).start();
-
-                            }
-                        });
-                        dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int i) {
-                                dialog.dismiss();
-                                ListView lv = (ListView) AddVocabularyFragment.this.getView().findViewById(R.id.vocabulary_list);
-                                if (lv != null) {
-                                    ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-                                }
-                            }
-                        });
-                        dialog.show();
-                    }
-                });
-                }
-*/
                 TextView word = (TextView) row.findViewById(R.id.add_word);
                 word.setText(voc.translation);
                 switch(voc.state) {
@@ -586,7 +534,7 @@ public class AddVocabularyFragment extends Fragment
         }
     }
 
-    private void set_default_lesson(String lesson) {
+    public void set_default_lesson(String lesson) {
         default_lesson=lesson;
     }
 
@@ -842,5 +790,4 @@ public class AddVocabularyFragment extends Fragment
             }
         }
     }
-
 }

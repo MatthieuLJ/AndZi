@@ -370,9 +370,10 @@ public class EditLessonsFragment extends Fragment {
     private ArrayList<Lesson> current_lesson_selection=new ArrayList<Lesson>();
 
     public String get_single_selection() {
-        if (current_lesson_selection.size() != 1)
+        if (current_lesson_selection.size() != 1) {
+            change_menu();
             return null;
-        else
+        } else
             return current_lesson_selection.get(0).label;
     }
 

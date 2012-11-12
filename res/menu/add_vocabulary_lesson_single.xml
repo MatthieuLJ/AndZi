@@ -13,5 +13,8 @@
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_lesson_delete"
           android:title="Delete"
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_lesson_default"
+          android:title="Default"
           android:showAsAction="always"/>
 </menu>

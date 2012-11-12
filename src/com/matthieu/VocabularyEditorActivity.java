@@ -292,8 +292,23 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             case R.id.add_vocabulary_lesson_list:
                 ((EditLessonsFragment)fragments[1]).list_selection();
                 break;
+            case R.id.add_vocabulary_lesson_default:
+                set_default_list();
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void set_default_list() {
+        String lesson = ((EditLessonsFragment)fragments[1]).get_single_selection();
+        if (lesson != null) {
+            ((AddVocabularyFragment)fragments[0]).set_default_lesson(lesson);
+        }
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        if (pager != null) {
+            pager.setCurrentItem(0, true);
+
+        }
     }
 
     private void edit_lesson_assignment() {
