@@ -26,7 +26,6 @@ import java.net.*;
 import java.util.Calendar;
 
 public class Settings extends PreferenceActivity {
-    protected HanziDB myDB=null;
 
     private static final String dictionaryURL="http://bit.ly/AndZi-Cedict";
 
@@ -34,7 +33,6 @@ public class Settings extends PreferenceActivity {
     @SuppressLint({"NewApi"})
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
         if (true)
             addPreferencesFromResource(R.xml.settings_main);
         else
@@ -64,7 +62,7 @@ public class Settings extends PreferenceActivity {
 
                             @Override
                             protected Void doInBackground(Void... voids) {
-                                myDB.resetAllScores();
+                                ((AndZiApplication) getApplication()).getMyDB().resetAllScores();
                                 return null;
                             }
                         };
@@ -92,7 +90,7 @@ public class Settings extends PreferenceActivity {
                 alert.setMessage(R.string.settings_confirm_clear_db);
                 alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
-                        myDB.clearDB();
+                        ((AndZiApplication) getApplication()).getMyDB().clearDB();
                         dialog.dismiss();
                     }
                 });
@@ -244,7 +242,7 @@ public class Settings extends PreferenceActivity {
 
             if (requestCode == 0) {
                 if (((AndZiApplication)getApplication()).check_merging_space(filePath))
-                    myDB.create_merge_task(filePath, true, this, null);
+                    ((AndZiApplication) getApplication()).getMyDB().create_merge_task(filePath, true, this, null);
                 else {
                     Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();
                 }

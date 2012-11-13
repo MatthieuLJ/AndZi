@@ -235,9 +235,9 @@ public class HanziDB extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
-        super.close();
         db.releaseReference();
         db.close();
+        super.close();
     }
 
     public boolean checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
@@ -285,7 +285,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check every cword has at least one translation
             c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
@@ -301,7 +302,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from cword_segment to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
@@ -318,7 +320,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from cword_segment to char_pinyin_id
             c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
@@ -335,7 +338,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check all char_pinyins are used
             c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
@@ -351,7 +355,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from eword to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
@@ -368,7 +373,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check for unique char/pinyin pairs in char_pinyin
             c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
@@ -402,7 +408,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check for unique chinese/pinyin in cword
             c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
@@ -438,7 +445,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check cword length is correct
             c= db.rawQuery("SELECT cword_id FROM cword WHERE length(chinese) != length", null);
@@ -448,7 +456,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check for unique cword/translation in eword
             c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
@@ -483,7 +492,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             //
             // Lessons
@@ -504,7 +514,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from lesson_word to eword
             c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
@@ -521,7 +532,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             //
             // Leitner
@@ -542,7 +554,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check all characters in leitner table are in DB
             c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE length(hanzi)>1 AND hanzi NOT IN (SELECT chinese FROM cword)", null);
@@ -559,7 +572,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE num_wrong > num_tested", null);
             if (c.moveToFirst()) {
@@ -575,7 +589,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
         }
         catch (SQLiteException exp) {
             Log.d(TAG, "Ran into a problem while opening database");
@@ -1760,6 +1775,7 @@ public class HanziDB extends SQLiteOpenHelper {
             ProgressDialog mProgressDialog;
             boolean backup_ready=false;
             final String new_db_name = "tmp_db", backup_db_name="backup_db";
+            HanziDB other_db=null;
 
             @Override
             protected Void doInBackground(Void... voids) {
@@ -1792,7 +1808,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                     backup_ready=true;
 
-                    HanziDB other_db = new HanziDB(app, new_db_name);
+                    other_db = new HanziDB(app, new_db_name);
 
                     // merge it
                     ArrayList<String> original_lessons = getLessons();
@@ -1921,30 +1937,31 @@ public class HanziDB extends SQLiteOpenHelper {
                     finishing.run();
             }
 
+            @Override
+            protected void onCancelled() {
+                super.onCancelled();
+
+                if (with_dialog)
+                    mProgressDialog.dismiss();
+            }
+
             private void clean_up_on_cancel(final boolean error) {
                 // Erase the temporary database
-                new File(HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
+                app.getDatabasePath(new_db_name).delete();
 
                 // restore the backup if it is ready
-                if (backup_ready) {
-                    String db_path = db.getPath();
-                    new File(db_path).delete();
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).renameTo(new File(db_path));
-                }
-                else {
-                    // delete the possible backup
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
-                }
+                if (backup_ready)
+                    app.replaceDataBase(app.getDatabasePath(backup_db_name).getPath());
 
-                if (with_dialog || error)
+                app.getDatabasePath(backup_db_name).delete();
+
+                if (other_db != null)
+                    other_db.close();
+
+                if (error)
                     context.runOnUiThread(new Runnable() {
                         public void run() {
-                            if (with_dialog)
-                                mProgressDialog.dismiss();
-
-                            if (error) {
-                                Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
-                            }
+                            Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
                         }
                     });
             }

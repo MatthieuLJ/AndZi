@@ -22,13 +22,11 @@ import java.io.IOException;
 import java.util.Calendar;
 
 public class ExportDB extends PreferenceActivity {
-    protected HanziDB myDB=null;
     String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ (1+Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
         addPreferencesFromResource(R.xml.settings_export_db);
         EditTextPreference path = (EditTextPreference) findPreference("export_path");
         path.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -58,7 +56,7 @@ public class ExportDB extends PreferenceActivity {
                     return;
                 }
                 if (((AndZiApplication) getApplication()).check_exporting_space(destination))
-                    myDB.create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
+                    ((AndZiApplication) getApplication()).getMyDB().create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
                         public void run() {
                             Toast.makeText(ExportDB.this, getString(R.string.settings_export_success, destination), Toast.LENGTH_SHORT).show();
                         }

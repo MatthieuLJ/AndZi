@@ -18,11 +18,9 @@ import java.io.File;
 import java.io.IOException;
 
 public class EmailDB extends PreferenceActivity {
-    protected HanziDB myDB=null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        myDB = ((AndZiApplication) getApplication()).getMyDB();
         addPreferencesFromResource(R.xml.settings_email_db);
 
         Preference email = findPreference("do_email");
@@ -39,7 +37,7 @@ public class EmailDB extends PreferenceActivity {
                     return true;
                 }
 
-                myDB.create_export_task(export_db.getPath(),include_scores,only_filtered,true, EmailDB.this, new Runnable() {
+                ((AndZiApplication) getApplication()).getMyDB().create_export_task(export_db.getPath(),include_scores,only_filtered,true, EmailDB.this, new Runnable() {
                     public void run() {
                         Intent sendIntent = new Intent(Intent.ACTION_SEND);
                         sendIntent.setType("application/sqlite");
