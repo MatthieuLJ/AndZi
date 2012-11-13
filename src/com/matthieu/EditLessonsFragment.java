@@ -461,11 +461,13 @@ public class EditLessonsFragment extends Fragment {
         change_menu();
     }
 
+    @SuppressLint({"NewApi"})
     public void add_new() {
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         if (lv == null)
             return;
-        lv.smoothScrollToPosition(0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+            lv.smoothScrollToPosition(0);
         ((LessonArrayAdapter)lv.getAdapter()).expand_new_field(true);
     }
 

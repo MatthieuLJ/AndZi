@@ -10,10 +10,12 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -591,11 +593,13 @@ public class AddVocabularyFragment extends Fragment
         change_menu();
     }
 
+    @SuppressLint({"NewApi"})
     public void add_new() {
         ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
         if (lv == null)
             return;
-        lv.smoothScrollToPosition(0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+            lv.smoothScrollToPosition(0);
         ((VocabularyArrayAdapter)lv.getAdapter()).expand_new_field(true);
     }
 

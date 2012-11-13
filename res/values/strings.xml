@@ -13,7 +13,6 @@
     <string name="accept">Accept Answer</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="loading">Loading</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
@@ -110,8 +109,6 @@
     <string name="add_voc_pick_pinyin">Pick a pinyin for </string>
     <string name="add_voc_local_db">Vocabulary from your list</string>
     <string name="add_voc_ref_db">Vocabulary from dictionary</string>
-    <string name="add_voc_edit_lessons">Edit lessons</string>
-    <string name="add_voc_assign_lesson">Assign to lesson</string>
     <string name="add_voc_edit_translation">Edit translation for </string>
     <string name="add_voc_edit_new_word">Please enter a new word:</string>
     <string name="add_voc_new_translation">New translation</string>

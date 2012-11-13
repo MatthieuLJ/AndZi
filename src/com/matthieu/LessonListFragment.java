@@ -116,6 +116,7 @@ public class LessonListFragment extends Fragment {
         }
     }
 
+    @SuppressLint({"NewApi"})
     public synchronized void update_list() {
         if (loader != null) {
             loader.update_again();

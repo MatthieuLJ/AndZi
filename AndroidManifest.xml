@@ -42,11 +42,13 @@
                 />
 
         <activity android:name=".Help" />
-        <activity android:name=".settings.Settings" />
-        <activity android:name=".settings.ExportDB">
+        <activity android:name=".settings.Settings"/>
+        <activity android:name=".settings.ExportDB"
+                  android:exported="false">
             <intent-filter android:name="android.intent.action.MAIN" />
         </activity>
-        <activity android:name=".settings.EmailDB">
+        <activity android:name=".settings.EmailDB"
+                  android:exported="false">
             <intent-filter android:name="android.intent.action.MAIN" />
         </activity>
 
