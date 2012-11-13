@@ -14,13 +14,7 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (8):
-* In VocabularyEditorActivity:
- - if add word and default lesson is set -> update lesson list
- - if del word and it has lessons assigned -> update lesson list
- - if change lesson assignment -> update lesson list
- - if make any change to the lesson displayed but still exists, update (rename, add / del word, merge, clone)
- - if lesson displayed is deleted close the list
+BUGS (7):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
@@ -45,7 +39,14 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (155):
+DONE (157):
+* In VocabularyEditorActivity:
+ - if add word and default lesson is set -> update lesson list
+ - if del word and it has lessons assigned -> update lesson list
+ - if change lesson assignment -> update lesson list
+ - if make any change to the lesson displayed but still exists, update (rename, add / del word, merge, clone)
+ - if lesson displayed is deleted close the list
+* Show name of lesson in LessonList
 * Set default lesson
 * Can assign lesson to vocabulary
 * Handle screen rotation

@@ -610,7 +610,7 @@ public class EditLessonsFragment extends Fragment {
             return;
         }
 
-        String new_name = "Combined lesson ";
+        String new_name = "Combined lesson";
         StringBuilder other_new_name = new StringBuilder(new_name);
         int index = 1;
         while (lesson_exists(other_new_name.toString())) {

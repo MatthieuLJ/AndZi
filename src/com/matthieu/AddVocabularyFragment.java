@@ -538,6 +538,10 @@ public class AddVocabularyFragment extends Fragment
         default_lesson=lesson;
     }
 
+    public String get_default_lesson() {
+        return default_lesson;
+    }
+
     private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
 
     protected void change_menu() {
