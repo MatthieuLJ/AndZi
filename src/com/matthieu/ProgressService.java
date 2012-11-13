@@ -61,7 +61,6 @@ public class ProgressService extends Service {
             notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
             Intent start_test = new Intent(this, MainMenuActivity.class);
             start_test.putExtra("start_test", true);
-            start_test.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, PendingIntent.FLAG_CANCEL_CURRENT);
             notification.setLatestEventInfo(getApplicationContext(), getResources().getString(R.string.notification_title), getResources().getString(R.string.notification_content, expired), pi);
             nm.notify(NOTIFICATION_ID, notification);

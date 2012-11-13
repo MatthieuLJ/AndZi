@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -199,11 +200,11 @@ public class GuessContaining extends TestFragment {
                     answer_box.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            /* TODO
                             Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                            i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
                             i.putExtra("Hanzi", final_answer);
+                            i.putExtra("use_ref", false);
                             startActivity(i);
-                            */
                         }
                     });
                     cell.addView(answer_box);
@@ -222,18 +223,6 @@ public class GuessContaining extends TestFragment {
 
                 tl.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 bad_guess.addView(tl);
-                /*
-                TextView bad_guess_text = new TextView(getActivity());
-                bad_guess_text.setText("You guessed: "+answer);
-                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-                bad_guess_text.setTextColor(0xffdd0000);
-                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                FrameLayout bad_guess_details = new FrameLayout(getActivity());
-                bad_guess_details.setId(R.id.test_bad_guess);
-                DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) TestFragment.this.getActivity());
-                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                */
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
 

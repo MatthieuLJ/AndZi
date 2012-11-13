@@ -6,7 +6,6 @@
 package com.matthieu;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -109,6 +108,7 @@ public class DetailsFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent i=new Intent(getActivity(), VocabularyEditorActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 i.putExtra("Hanzi", current_hanzi);
                 startActivity(i);
             }

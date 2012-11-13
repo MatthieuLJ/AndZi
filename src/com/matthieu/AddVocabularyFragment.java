@@ -88,6 +88,13 @@ public class AddVocabularyFragment extends Fragment
         }
     }
 
+    public void set_word_to_edit(String hanzi) {
+        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
+        if (chinese_word!= null) {
+            chinese_word.setText(hanzi);
+        }
+    }
+
     // Handle when the content of the chinese word text field changes
     private class ChineseTextWatcher implements TextWatcher {
 
@@ -370,7 +377,6 @@ public class AddVocabularyFragment extends Fragment
                 }
 
                 TextView title = (TextView) row.findViewById(R.id.add_title);
-                title.setGravity(Gravity.RIGHT);
                 if ((position==1) && (my != 0))
                     title.setText(R.string.add_voc_local_db);
                 else

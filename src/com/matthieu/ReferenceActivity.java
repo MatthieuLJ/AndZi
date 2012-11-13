@@ -2,6 +2,7 @@ package com.matthieu;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -50,6 +51,12 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         else {
             // When we are on a larger screen without a pager
         }
+
+        String hanzi = getIntent().getStringExtra("Hanzi");
+        boolean use_ref = getIntent().getBooleanExtra("use_ref", false);
+        if (hanzi!=null) {
+            new_details_request(hanzi, use_ref);
+        }
     }
 
     @Override
@@ -64,6 +71,29 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
+        }
+    }
+
+    String new_query_to_open = null;
+    boolean new_query_use_ref = false;
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String hanzi = intent.getStringExtra("Hanzi");
+        boolean use_ref = intent.getBooleanExtra("use_ref", false);
+        if (hanzi!=null) {
+            new_query_to_open = hanzi;
+            new_query_use_ref = use_ref;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (new_query_to_open != null) {
+            new_details_request(new_query_to_open, new_query_use_ref);
+            new_query_to_open=null;
         }
     }
 

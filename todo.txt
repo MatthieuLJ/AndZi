@@ -14,12 +14,11 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (7):
+BUGS (6):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
 * Can go from details in test solutions into reference page
-* Can go from lesson list into reference page
 * Check database after merge (especially if it was cancelled in the middle)
 * Only offer to check details in list when it exists
 
@@ -39,7 +38,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (157):
+DONE (158):
+* Can go from lesson list into reference page
 * In VocabularyEditorActivity:
  - if add word and default lesson is set -> update lesson list
  - if del word and it has lessons assigned -> update lesson list

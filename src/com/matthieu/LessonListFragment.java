@@ -2,6 +2,7 @@ package com.matthieu;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -14,6 +15,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.matthieu.widget.VocabularyCursorAdapter;
+import com.matthieu.widget.VocabularyCursorClickHandle;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +65,7 @@ public class LessonListFragment extends Fragment {
         super.onResume();
         update_list();
     }
+
     private class update_lesson_list_task extends AsyncTask<Void,Void,Void> {
         private boolean do_it_again=false;
         public void update_again() {
@@ -95,7 +98,16 @@ public class LessonListFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             synchronized (LessonListFragment.this) {
                 ListView list = (ListView) getView().findViewById(R.id.review_list);
-                list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, null));
+                list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
+                    @Override
+                    public void click(String item_clicked) {
+                        Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        i.putExtra("Hanzi", item_clicked);
+                        i.putExtra("use_ref", false);
+                        startActivity(i);
+                    }
+                }));
 
                 ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
                 pb.setVisibility(View.GONE);
@@ -123,10 +135,10 @@ public class LessonListFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onPause() {
         if (cur != null)
             cur.close();
+        super.onPause();
     }
 
     public void change_menu() {

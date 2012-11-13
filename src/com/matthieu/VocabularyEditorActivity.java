@@ -1,5 +1,6 @@
 package com.matthieu;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -65,6 +66,19 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         }
         else {
             // TODO When we are on a larger screen without a pager
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String hanzi = intent.getStringExtra("Hanzi");
+        if ((hanzi != null) && (fragments[0] != null)) {
+            ((AddVocabularyFragment)fragments[0]).set_word_to_edit(hanzi);
+            LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+            if (pager != null) {
+                pager.setCurrentItem(0, false);
+            }
         }
     }
 
