@@ -1,5 +1,4 @@
-ONGOING (11):
-* Can go from details in test solutions into reference page
+ONGOING (10):
 * Only offer to check details in list when it exists
 * Move buttons in dictionary / details in actionbar
 * Make the icon in action bar go back to the main menu
@@ -15,11 +14,12 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (5):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
 * Check database after merge (especially if it was cancelled in the middle)
+* Looks like progress is not being recorded
 
 FUTURE (14):
 * When looking for Chinese translation (from English), separate the words if any
@@ -37,7 +37,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (159):
+DONE (160):
+* Can go from details in test solutions into reference page
 * Remove "show correct answer" setting
 * Can go from lesson list into reference page
 * In VocabularyEditorActivity:

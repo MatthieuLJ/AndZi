@@ -43,17 +43,17 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             if (pager != null) {
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
             }
-        } else {
+        }
+        if (fragments[0] == null) {
             fragments[0] = new AddVocabularyFragment();
             if (hanzi != null) {
                 Bundle bundle = new Bundle();
                 bundle.putString("hanzi", hanzi);
                 fragments[0].setArguments(bundle);
             }
-            fragments[1] = new EditLessonsFragment();
-            fragments[2] = null;
         }
-
+        if (fragments[1] == null)
+            fragments[1] = new EditLessonsFragment();
 
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
@@ -85,10 +85,16 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        try {
         getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        } catch (IllegalStateException e) {}
+        try {
         getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
+        } catch (IllegalStateException e) {}
         if (fragments[2] != null) {
-            getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
+            try {
+                getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
+            } catch (IllegalStateException e) {}
         }
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {

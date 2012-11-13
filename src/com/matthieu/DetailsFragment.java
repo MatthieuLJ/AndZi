@@ -20,6 +20,7 @@ import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.VocabularyCursorAdapter;
+import com.matthieu.widget.VocabularyCursorClickHandle;
 import com.matthieu.widget.handle_details_request;
 
 import java.lang.ref.WeakReference;
@@ -258,7 +259,13 @@ public class DetailsFragment extends Fragment {
             }
         }
 
-        populator populate = new populator(fragment, hanzi, pinyin, db, section);
+        populator populate = new populator(fragment, hanzi, pinyin, db, section, new VocabularyCursorClickHandle() {
+            @Override
+            public void click(String item_clicked) {
+                if (new_request != null)
+                    new_request.new_details_request(item_clicked, ref_query);
+            }
+        });
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             populate.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
         else
@@ -276,14 +283,16 @@ public class DetailsFragment extends Fragment {
         WeakReference<ViewGroup> container;
         public String hanzi;
         public String pinyin="";
+        VocabularyCursorClickHandle clicker;
 
-        public populator(Fragment f, String h, String p, HanziDB d, ViewGroup v) {
+        public populator(Fragment f, String h, String p, HanziDB d, ViewGroup v, VocabularyCursorClickHandle c) {
             fragment = f;
             hanzi = h;
             pinyin = p;
             db = d;
             container = new WeakReference<ViewGroup>(v);
             elements = new ArrayList<HanziDB.StringElement>();
+            clicker = c;
 
             ArrayList<Pinyin> pinyin_table = PinyinParser.parse_string_to_pinyin(pinyin);
             if ((!pinyin.equals("")) &&
@@ -341,7 +350,7 @@ public class DetailsFragment extends Fragment {
                     ListView list = (ListView) container.get().findViewById(R.id.details_list);
                     VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
                     if (adapter == null)
-                        list.setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, null));
+                        list.setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, clicker));
                     else
                         adapter.changeCursor(cursor);
                     list.setVisibility(View.VISIBLE);

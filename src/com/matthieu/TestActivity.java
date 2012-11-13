@@ -4,9 +4,8 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.*;
@@ -15,10 +14,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.widget.handle_details_request;
@@ -69,9 +66,9 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             if (pager != null) {
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
             }
-        } else {
-            fragments[0] = new StatsFragment();
         }
+        if (fragments[0] == null)
+            fragments[0] = new StatsFragment();
 
         if (pager != null) {
             pager.setAdapter(new test_pager(getSupportFragmentManager()));
@@ -96,12 +93,18 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        try {
+            getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        } catch (IllegalStateException e) {}
         if (fragments[1] != null) {
-            getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
+            try {
+                getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
+            } catch (IllegalStateException e) {}
         }
         if (fragments[2] != null) {
-            getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
+            try {
+                getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
+            } catch (IllegalStateException e) {}
         }
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
         if (pager != null) {
@@ -237,7 +240,11 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     @Override
     public void new_details_request(String hanzi, boolean use_ref) {
-        // TODO
+        Intent i=new Intent(this, ReferenceActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        i.putExtra("Hanzi", hanzi);
+        i.putExtra("use_ref", false);
+        startActivity(i);
     }
 
     public static class done_testing extends Fragment {
@@ -289,7 +296,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             Cancel_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ((TestActivity)getActivity()).finish();
+                    getActivity().finish();
                 }
             });
 

@@ -10,9 +10,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
@@ -35,11 +32,9 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             for (int i=0; i<=max_details_fragments; i++) {
                 fragments[i] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment"+i);
             }
-        } else {
-            fragments[0] = new DictionaryFragment();
-            for (int i=0; i<max_details_fragments; i++)
-                fragments[i+1] = null;
         }
+        if (fragments[0] == null)
+            fragments[0] = new DictionaryFragment();
 
         if (pager != null) {
             pager.setOffscreenPageLimit(max_details_fragments+1);
@@ -62,7 +57,9 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        try {
+            getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+        } catch (IllegalStateException e) {}
         for (int i=1; i<=max_details_fragments; i++) {
             if (fragments[i] != null) {
                 getSupportFragmentManager().putFragment(outState, "fragment"+i, fragments[i]);
