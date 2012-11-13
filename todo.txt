@@ -1,7 +1,8 @@
-ONGOING (10):
+ONGOING (11):
+* Can go from details in test solutions into reference page
+* Only offer to check details in list when it exists
 * Move buttons in dictionary / details in actionbar
 * Make the icon in action bar go back to the main menu
-* Remove "show correct answer" setting
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -14,13 +15,11 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (6):
+BUGS (4):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
-* Can go from details in test solutions into reference page
 * Check database after merge (especially if it was cancelled in the middle)
-* Only offer to check details in list when it exists
 
 FUTURE (14):
 * When looking for Chinese translation (from English), separate the words if any
@@ -38,7 +37,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (158):
+DONE (159):
+* Remove "show correct answer" setting
 * Can go from lesson list into reference page
 * In VocabularyEditorActivity:
  - if add word and default lesson is set -> update lesson list
@@ -228,7 +228,34 @@ Lint output:
 res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="match_parent"
                 ^
+src/com/matthieu/AddVocabularyFragment.java:598: Error: Call requires API level 8 (current min is 4): android.widget.ListView#smoothScrollToPosition [NewApi]
+        lv.smoothScrollToPosition(0);
+           ^
+src/com/matthieu/EditLessonsFragment.java:468: Error: Call requires API level 8 (current min is 4): android.widget.ListView#smoothScrollToPosition [NewApi]
+        lv.smoothScrollToPosition(0);
+           ^
+src/com/matthieu/LessonListFragment.java:128: Error: Call requires API level 11 (current min is 4): android.os.AsyncTask#executeOnExecutor [NewApi]
+            loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                   ^
+src/com/matthieu/LessonListFragment.java:128: Error: Field requires API level 11 (current min is 4): android.os.AsyncTask#THREAD_POOL_EXECUTOR [NewApi]
+            loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                                               ^
+AndroidManifest.xml:46: Warning: Exported activity does not require permission [ExportedActivity]
+        <activity android:name=".settings.ExportDB">
+        ^
+AndroidManifest.xml:49: Warning: Exported activity does not require permission [ExportedActivity]
+        <activity android:name=".settings.EmailDB">
+        ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
+res/values/strings.xml:16: Warning: The resource R.string.loading appears to be unused [UnusedResources]
+    <string name="loading">Loading</string>
+    ^
+res/values/strings.xml:113: Warning: The resource R.string.add_voc_edit_lessons appears to be unused [UnusedResources]
+    <string name="add_voc_edit_lessons">Edit lessons</string>
+    ^
+res/values/strings.xml:114: Warning: The resource R.string.add_voc_assign_lesson appears to be unused [UnusedResources]
+    <string name="add_voc_assign_lesson">Assign to lesson</string>
+    ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -244,24 +271,18 @@ res/drawable/no_tone.png: Warning: Found bitmap drawable res/drawable/no_tone.pn
 res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second_tone.png in densityless folder [IconLocation]
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
 res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
-res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
-res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
 res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
 res/menu/add_vocabulary_menu_add.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
           ^
+res/menu/add_vocabulary_menu_ready.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-res/layout/add_vocabulary_list_item.xml:52: Warning: [I18N] Hardcoded string "more info\nhere...", should use @string resource [HardcodedText]
-                android:text="more info\nhere..."
-                ^
 res/layout/add_vocabulary_pinyin_dialog.xml:28: Warning: [I18N] Hardcoded string "Enter Pinyin", should use @string resource [HardcodedText]
                 android:hint="Enter Pinyin"
                 ^
@@ -289,4 +310,4 @@ res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", shou
 res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
                 ^
-0 errors, 30 warnings
+4 errors, 33 warnings
