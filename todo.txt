@@ -15,14 +15,13 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (7):
+BUGS (6):
 * When checking english, break at '-' too
 * Looks like progress is not being recorded (to confirm...)
 * When merging, find which one is smaller to merge into
 * Make merging faster!
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Create a separate thread to clear database
-* Crash when changing orientation at the progress graph
 
 FUTURE (15):
 * When looking for Chinese translation (from English), separate the words if any
@@ -41,7 +40,9 @@ FUTURE (15):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (163):
+DONE (165):
+* Rotation causes test to change
+* Crash when changing orientation at the progress graph
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Check database after merge (especially if it was cancelled in the middle)

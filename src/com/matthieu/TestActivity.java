@@ -85,7 +85,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         TextView result_overlay = (TextView) findViewById(R.id.test_result);
         result_overlay.setVisibility(View.GONE);
         fill_hanzis_to_test();
-        start_test();
+        if (fragments[1] == null)
+            start_test();
         if (pager != null) {
             pager.setCurrentItem(1, false);
         }
@@ -400,7 +401,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         ((TestFragment)fragments[1]).handle_ok(v);
     }
 
-    private class test_pager extends FragmentStatePagerAdapter {
+    private class test_pager extends FragmentPagerAdapter {
         public test_pager(FragmentManager fm) {
             super(fm);
         }
