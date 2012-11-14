@@ -3235,7 +3235,7 @@ public class HanziDB extends SQLiteOpenHelper {
     public Cursor getCursorFilteredWordsToStudy() {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
             return  db.rawQuery("SELECT cword.cword_id AS _id, " +
-                    "cword.chinese AS chinese, cword.pinyin AS pinyin" +
+                    "cword.chinese AS chinese, cword.pinyin AS pinyin, " +
                     "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
                     "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
                     "GROUP_CONCAT(eword.translation,', ') AS english " +
@@ -3243,7 +3243,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
                     "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
@@ -3253,7 +3253,7 @@ public class HanziDB extends SQLiteOpenHelper {
     public Cursor getCursorFilteredWordsToStudy(int limit) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
             return  db.rawQuery("SELECT cword.cword_id AS _id, " +
-                    "cword.chinese AS chinese, cword.pinyin AS pinyin" +
+                    "cword.chinese AS chinese, cword.pinyin AS pinyin, " +
                     "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
                     "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
                     "GROUP_CONCAT(eword.translation,', ') AS english " +
@@ -3261,7 +3261,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
                     "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
                     new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
         else

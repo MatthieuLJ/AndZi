@@ -86,16 +86,29 @@ public class ReviewList extends Activity {
             switch (list_id) {
                 case 0:
                     cur = myDB.getCursorFilteredWordsToStudy();
-                    expired = myDB.getNumWordsExpiredInBoxOrAbove(0);
+                    expired_filtered = cur.getCount();
+                    if (myDB.isFilterEnabled()) {
+                        Cursor non_filtered_cur = myDB.getCursorWordsToStudy();
+                        expired = non_filtered_cur.getCount();
+                        non_filtered_cur.close();
+                    } else {
+                        expired = expired_filtered;
+                    }
                     break;
                 case 1:
-                    expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
                     cur = myDB.getCursorFilteredCharsToStudy();
+                    expired_filtered = cur.getCount();
+                    if (myDB.isFilterEnabled()) {
+                        Cursor non_filtered_cur = myDB.getCursorCharsToStudy();
+                        expired = non_filtered_cur.getCount();
+                        non_filtered_cur.close();
+                    } else {
+                        expired = expired_filtered;
+                    }
                     break;
                 default:
                     return null;
             }
-            expired_filtered = cur.getCount();
 
             return null;
         }

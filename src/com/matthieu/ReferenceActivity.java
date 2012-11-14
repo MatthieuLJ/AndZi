@@ -162,7 +162,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         bundle.putBoolean("use_ref", use_ref);
         fragments[1].setArguments(bundle);
 
-        ft.add(R.id.reference_pager, fragments[1]);
+        //ft.add(R.id.reference_pager, fragments[1]);
         ft.commit();
 
         // flush (?)

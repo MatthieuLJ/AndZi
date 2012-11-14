@@ -180,20 +180,20 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         if (elems.get(0).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
                             result_cursor = null;
                         else
-                            result_cursor = currentDB.getWordsStartingWithSequence(elems, true, true);
+                            result_cursor = currentDB.getWordsStartingWithSequence(elems, false, true);
                     }
                     else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
-                        result_cursor = currentDB.getDecomposedParts(elems, 4, true, true);
+                        result_cursor = currentDB.getDecomposedParts(elems, 4, false, true);
                     else
-                        result_cursor = currentDB.getWordsWithSequence(elems, true, true);
+                        result_cursor = currentDB.getWordsWithSequence(elems, false, true);
                 }
                 else if (msg_mode == ENGLISH_TO_CHINESE_MODE) {
                     if (msg_query.length()<2)
                         result_cursor=null;
                     else if (msg_query.length()<3)
-                        result_cursor = currentDB.getFilteredStartingCTranslations(msg_query);
+                        result_cursor = currentDB.getStartingCTranslations(msg_query);
                     else
-                        result_cursor = currentDB.getFilteredCTranslations(msg_query);
+                        result_cursor = currentDB.getCTranslations(msg_query);
                 }
                 else
                     result_cursor =null;

@@ -578,12 +578,15 @@ public class AddVocabularyFragment extends Fragment
         if (current_word_selection.contains(voc)) {
             current_word_selection.remove(voc);
             v.setBackgroundColor(0x00000000);
+        } else if (type == VocabularyEditorActivity.menu_types.VOCABULARY_READY) {
+            current_word_selection.add(voc);
+            v.setBackgroundColor(0xFF777777);
         } else if (translations_in_db.contains(voc) &&
-                (type == VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_SELECTED || type == VocabularyEditorActivity.menu_types.VOCABULARY_READY)) {
+                (type == VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_SELECTED || type == VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_MULTIPLE_SELECTED)) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else if (translations_from_ref.contains(voc) && !translations_in_db.contains(voc) &&
-                (type == VocabularyEditorActivity.menu_types.VOCABULARY_NEW_SELECTED || type == VocabularyEditorActivity.menu_types.VOCABULARY_READY)) {
+                (type == VocabularyEditorActivity.menu_types.VOCABULARY_NEW_SELECTED)) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else {
