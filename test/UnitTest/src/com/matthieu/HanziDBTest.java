@@ -510,23 +510,23 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.addVocabulary("you", "你", "ni3");
         target_db.addVocabulary("good", "好", "hao3");
         target_db.restartStudy("你");
-        assertTrue(target_db.getAllFilteredToStudy().contains("你"));
-        assertTrue(target_db.getAllFilteredToStudy().contains("好"));
+        assertTrue(getAllFilteredToStudy(target_db).contains("你"));
+        assertTrue(getAllFilteredToStudy(target_db).contains("好"));
         target_db.betterBox("好");
-        assertTrue(target_db.getAllFilteredToStudy().size() == 1);
-        assertTrue(target_db.getAllFilteredToStudy().get(0).equals("你"));
+        assertTrue(getAllFilteredToStudy(target_db).size() == 1);
+        assertTrue(getAllFilteredToStudy(target_db).get(0).equals("你"));
         target_db.betterBox("你");
-        assertTrue(target_db.getAllFilteredToStudy().size() == 0);
+        assertTrue(getAllFilteredToStudy(target_db).size() == 0);
         target_db.restartStudy("好");
-        assertTrue(target_db.getAllFilteredToStudy().size() == 1);
-        assertTrue(target_db.getAllFilteredToStudy().get(0).equals("好"));
+        assertTrue(getAllFilteredToStudy(target_db).size() == 1);
+        assertTrue(getAllFilteredToStudy(target_db).get(0).equals("好"));
         assertTrue(checkDB(target_db, false));
     }
 
     public void testNextToStudyNeverUsed() {
         target_db.addVocabulary("you", "你", "ni3");
-        assertTrue(target_db.getAllFilteredToStudy().size() == 1);
-        assertTrue(target_db.getAllFilteredToStudy().get(0).equals("你"));
+        assertTrue(getAllFilteredToStudy(target_db).size() == 1);
+        assertTrue(getAllFilteredToStudy(target_db).get(0).equals("你"));
         assertTrue(checkDB(target_db, false));
     }
 
@@ -590,32 +590,32 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         target_db.enableFilter(true);
         // only 好 is in the filter
         // check when leitner is not initialized for those
-        assertTrue(target_db.getAllFilteredToStudy().contains("好"));
+        assertTrue(getAllFilteredToStudy(target_db).contains("好"));
         assertTrue(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("好"));
-        assertFalse(target_db.getAllFilteredToStudy().contains("你"));
+        assertFalse(getAllFilteredToStudy(target_db).contains("你"));
         assertFalse(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("你"));
         target_db.restartStudy("你");
         target_db.restartStudy("好");
         // check when leitner is initialized for those
-        assertTrue(target_db.getAllFilteredToStudy().contains("好"));
+        assertTrue(getAllFilteredToStudy(target_db).contains("好"));
         assertTrue(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("好"));
-        assertFalse(target_db.getAllFilteredToStudy().contains("你"));
+        assertFalse(getAllFilteredToStudy(target_db).contains("你"));
         assertFalse(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("你"));
         // check when a character should not be studied anymore (for now)
         target_db.betterBox("好");
-        assertTrue(target_db.getAllFilteredToStudy().size() == 0);
+        assertTrue(getAllFilteredToStudy(target_db).size() == 0);
         assertTrue(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy()).size() == 0);
         // check after the filter is disabled
         target_db.enableFilter(false);
-        assertTrue(target_db.getAllFilteredToStudy().contains("你"));
+        assertTrue(getAllFilteredToStudy(target_db).contains("你"));
         assertTrue(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("你"));
         // check again after enabling the filter
         target_db.enableFilter(true);
-        assertFalse(target_db.getAllFilteredToStudy().contains("你"));
+        assertFalse(getAllFilteredToStudy(target_db).contains("你"));
         assertFalse(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("你"));
         // check after adding more into the filtered lessons
         target_db.assignWordLesson("lesson filter", "hello", "你好", "ni3hao3");
-        assertTrue(target_db.getAllFilteredToStudy().contains("你"));
+        assertTrue(getAllFilteredToStudy(target_db).contains("你"));
         assertTrue(voc_to_chinese(captureDataFromCursor(target_db.getCursorFilteredCharsToStudy())).contains("你"));
         assertTrue(checkDB(target_db, false));
     }
@@ -1443,6 +1443,20 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         for (Vocabulary v : voc) {
             res.add(v.chinese);
         }
+        return res;
+    }
+
+    private ArrayList<String> getAllFilteredToStudy(HanziDB db) {
+        ArrayList<String> res=new ArrayList<String>();
+
+        Cursor cur = db.getCursorFilteredToStudy();
+        if (cur.moveToFirst()) {
+            res.ensureCapacity(cur.getCount());
+            do {
+                res.add(cur.getString(cur.getColumnIndex("chinese")));
+            } while(cur.moveToNext());
+        }
+        cur.close();
         return res;
     }
 }

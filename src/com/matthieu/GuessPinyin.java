@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class GuessPinyin extends TestFragment implements TextWatcher {
     private String pinyin;
-    private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
+    private ArrayList<Vocabulary> words;
     private boolean show_words=false;
 
     private static final String TAG="GuessPinyin";
@@ -29,7 +29,7 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
         ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
 
-        if (pinyins.size() > 1) {
+        if ((pinyins.size() > 1) && (!myDB.is_char_toneless_pair(hanzi))) {
             show_words=true;
 
             ArrayList<Pinyin> pins=new ArrayList<Pinyin>();
@@ -51,11 +51,16 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
                 }
             }
             pinyin=pins.get((int)(Math.random()*pins.size())).get_lame();
+            words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
+        } else  {
+            if (myDB.is_char_toneless_pair(hanzi)) {
+                pinyin = myDB.get_toned_pinyin_in_pair(hanzi);
+            } else {
+                pinyin = pinyins.get(0);
+            }
+            words = myDB.getFilteredWordsWithPinyin(hanzi);
         }
-        else {
-            pinyin = pinyins.get(0);
-        }
-        words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
+
         boolean found=false;
         for (Vocabulary word : words) {
             if (!word.chinese.replace(hanzi, "").equals("")) {

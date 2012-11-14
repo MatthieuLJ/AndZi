@@ -25,9 +25,11 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         ArrayList<String> pinyins;
 
         pinyins = myDB.getPinyinForChar(hanzi);
-        if (pinyins.size() != 1)
+        if ((pinyins.size() != 1) && (!myDB.is_char_toneless_pair(hanzi)))
             hanzi=null;
-        else {
+        else if(myDB.is_char_toneless_pair(hanzi)) {
+            pinyin = new Pinyin(myDB.get_toned_pinyin_in_pair(hanzi));
+        } else {
             pinyin = new Pinyin(pinyins.get(0));
             if (pinyin.get_tone()==5)
                 hanzi=null;

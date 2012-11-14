@@ -79,11 +79,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         chinese.setText(hanzi);
         chinese.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                /*
-                Intent intent=new Intent(context, Details.class);
-                intent.putExtra("hanzi", hanzi);
-                context.startActivity(intent);
-                */
+                Intent i=new Intent(context, ReferenceActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                i.putExtra("Hanzi", hanzi);
+                i.putExtra("use_ref", false);
+                context.startActivity(i);
             }
         });
         final String pinyin = cursor.getString(pinyin_column_index);
@@ -120,10 +120,17 @@ public class CharacterCursorAdapter  extends CursorAdapter {
     private void fill_word_table(final Context context, final ViewGroup container, final CharPinyin char_pinyin) {
         LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ArrayList<Vocabulary> words;
-        if (filtered)
-            words = db.getFilteredWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
-        else
-            words = db.getWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
+        if (db.is_char_toneless_pair(char_pinyin.hanzi)) {
+            if (filtered)
+                words = db.getFilteredWordsWithPinyin(char_pinyin.hanzi);
+            else
+                words = db.getWordsWithPinyin(char_pinyin.hanzi);
+        } else {
+            if (filtered)
+                words = db.getFilteredWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
+            else
+                words = db.getWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
+        }
         TableLayout word_table = (TableLayout) container.findViewById(R.id.review_item_word_table);
         word_table.removeAllViews();
 
@@ -142,11 +149,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
             english_word.setText(english_translations);
             row.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View view) {
-                    /*
-                    Intent intent=new Intent(context, Details.class);
-                    intent.putExtra("hanzi", chinese_label);
-                    context.startActivity(intent);
-                    */
+                    Intent i=new Intent(context, ReferenceActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                    i.putExtra("Hanzi", chinese_label);
+                    i.putExtra("use_ref", false);
+                    context.startActivity(i);
                 }
             });
             word_table.addView(row);

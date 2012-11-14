@@ -880,6 +880,26 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public boolean is_char_toneless_pair(String hanzi) {
+        boolean res;
+        Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi=? AND " +
+                "(pinyin LIKE '%5' AND hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*)=2))",
+                new String[] {hanzi});
+        res = (cur.getCount() == 1);
+        cur.close();
+        return res;
+    }
+
+    public String get_toned_pinyin_in_pair(String hanzi) {
+        String res=null;
+        Cursor cur = db.rawQuery("SELECT pinyin FROM char_pinyin WHERE hanzi=? AND " +
+                "pinyin NOT LIKE '%5'", new String[] {hanzi});
+        if (cur.moveToFirst())
+            res = cur.getString(cur.getColumnIndex("pinyin"));
+        cur.close();
+        return res;
+    }
+
     public ArrayList<String> getPinyinForChar(String hanzi) {
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?", new String[] {hanzi});
@@ -3118,20 +3138,8 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
-    public ArrayList<String> getAllFilteredToStudy() {
-        ArrayList<String> res=new ArrayList<String>();
 
-        Cursor cur = getCursorFilteredToStudy();
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do {
-                res.add(cur.getString(cur.getColumnIndex("chinese")));
-            } while(cur.moveToNext());
-        }
-        cur.close();
-        return res;
-    }
-
+    // TestActivity
     public ArrayList<String> getAllFilteredToStudy(int limit) {
         ArrayList<String> res=new ArrayList<String>();
 
@@ -3146,28 +3154,20 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    // getCursorFilteredCharsToStudy <- ReviewList
     protected Cursor getCursorCharsToStudy() {
         return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
                 "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
                 "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
                 "FROM char_pinyin " +
                 "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "WHERE ((box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2))) " +
                 "ORDER BY forced_box DESC, exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
 
-    protected Cursor getCursorCharsToStudy(int limit) {
-        return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
-                "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                "FROM char_pinyin " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                "ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
-                new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
-    }
-
+    // ReviewList
     public Cursor getCursorFilteredCharsToStudy() {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
             return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
@@ -3180,30 +3180,15 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
                     "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) OR (leitner.box=0) OR (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
+                    "WHERE ((leitner.box IS NULL) OR (leitner.box=0) OR (leitner.exp_time<?)) " +
+                    "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2))) " +
+                    "ORDER BY forced_box DESC, exp_time DESC",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             return getCursorCharsToStudy();
     }
 
-    public Cursor getCursorFilteredCharsToStudy(int limit) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
-            return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
-                    "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) OR (leitner.box=0) OR (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC LIMIT ?",
-                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
-        else
-            return getCursorCharsToStudy();
-    }
-
+    // getCursorFilteredWordsToStudy <- ReviewList
     protected Cursor getCursorWordsToStudy() {
         return db.rawQuery("SELECT cword.cword_id AS _id, cword.chinese AS chinese, " +
                 "cword.pinyin AS pinyin, " +
@@ -3218,20 +3203,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
 
-    protected Cursor getCursorWordsToStudy(int limit) {
-        return db.rawQuery("SELECT cword.cword_id AS _id, cword.chinese AS chinese, " +
-                "cword.pinyin AS pinyin, " +
-                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
-                "GROUP_CONCAT(eword.translation,', ') AS english " +
-                "FROM cword " +
-                "JOIN eword ON eword.cword_id=cword.cword_id " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
-                new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
-    }
-
+    // ReviewList
     public Cursor getCursorFilteredWordsToStudy() {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
             return  db.rawQuery("SELECT cword.cword_id AS _id, " +
@@ -3243,31 +3215,15 @@ public class HanziDB extends SQLiteOpenHelper {
                     "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
                     "JOIN cword ON cword.cword_id=eword.cword_id " +
                     "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                    "WHERE ((box IS NULL) OR (box=0) OR (exp_time<?)) " +
                     "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             return getCursorWordsToStudy();
     }
 
-    public Cursor getCursorFilteredWordsToStudy(int limit) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
-            return  db.rawQuery("SELECT cword.cword_id AS _id, " +
-                    "cword.chinese AS chinese, cword.pinyin AS pinyin, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
-                    "GROUP_CONCAT(eword.translation,', ') AS english " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                    "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
-                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
-        else
-            return getCursorWordsToStudy(limit);
-    }
-
+    // TestActivity
+    // getCursorFilteredToStudy <- TestActivity
     protected Cursor getCursorToStudy() {
         return db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
                 "SELECT 2*char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese, " +
@@ -3287,6 +3243,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
     }
 
+    // getCursorFilteredToStudy
     protected Cursor getCursorToStudy(int limit) {
         return db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
                 "SELECT 2*char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese, " +
@@ -3306,6 +3263,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
     }
 
+    // TestActivity
     public Cursor getCursorFilteredToStudy() {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             return  db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
@@ -3338,6 +3296,7 @@ public class HanziDB extends SQLiteOpenHelper {
         }
     }
 
+    // getAllFilteredToStudy <- TestActivity
     public Cursor getCursorFilteredToStudy(int limit) {
         if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
             return  db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +

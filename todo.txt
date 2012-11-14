@@ -15,16 +15,18 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (6):
-* Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
+BUGS (7):
 * When checking english, break at '-' too
 * Looks like progress is not being recorded (to confirm...)
 * When merging, find which one is smaller to merge into
 * Make merging faster!
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
+* Create a separate thread to clear database
+* Crash when changing orientation at the progress graph
 
-FUTURE (14):
+FUTURE (15):
 * When looking for Chinese translation (from English), separate the words if any
+* Enable / Disable filter in reference activity (?)
 * Can reset score per lesson
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
@@ -39,7 +41,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (162):
+DONE (163):
+* Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Check database after merge (especially if it was cancelled in the middle)
 * Can go from details in test solutions into reference page

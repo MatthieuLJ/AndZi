@@ -116,7 +116,7 @@ public class ProgressGraph extends View {
         while (max_score > max_scale) {
             max_scale += pow(10,scale_magnitude);
         }
-        if (max_score > 5*pow(10, scale_magnitude+1))
+        if (max_score > 2*pow(10, scale_magnitude+1))
             scale_magnitude++;
 
         current_zoom=0;

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -15,11 +16,12 @@ import android.view.*;
 import android.widget.*;
 import com.matthieu.widget.CharacterCursorAdapter;
 import com.matthieu.widget.VocabularyCursorAdapter;
+import com.matthieu.widget.VocabularyCursorClickHandle;
 
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
 
-public class ReviewList extends Activity {
+public class ReviewList extends Activity  implements VocabularyCursorClickHandle {
     protected HanziDB myDB=null;
     private CursorAdapter adapters[]=null;
     int mode=3; // 3 (Default), both panes, 1=only chars, 2=only words, 0=nothing...
@@ -155,7 +157,7 @@ public class ReviewList extends Activity {
             CursorAdapter new_adapter=null;
             switch (list_id) {
                 case 0:
-                    new_adapter = new VocabularyCursorAdapter(ReviewList.this, cur, null);
+                    new_adapter = new VocabularyCursorAdapter(ReviewList.this, cur, ReviewList.this);
                     break;
                 case 1:
                     new_adapter = new CharacterCursorAdapter(ReviewList.this, cur, myDB, true);
@@ -165,6 +167,15 @@ public class ReviewList extends Activity {
             list.setAdapter(new_adapter);
 
         }
+    }
+
+    @Override
+    public void click(String item_clicked) {
+        Intent i=new Intent(this, ReferenceActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+        i.putExtra("Hanzi", item_clicked);
+        i.putExtra("use_ref", false);
+        startActivity(i);
     }
 
     @Override

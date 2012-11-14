@@ -96,16 +96,22 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         super.onSaveInstanceState(outState);
         try {
             getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
-        } catch (IllegalStateException e) {}
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Got an exception saving fragment 0 "+e);
+        }
         if (fragments[1] != null) {
             try {
                 getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
-            } catch (IllegalStateException e) {}
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "Got an exception saving fragment 1 "+e);
+            }
         }
         if (fragments[2] != null) {
             try {
                 getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
-            } catch (IllegalStateException e) {}
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "Got an exception saving fragment 2 "+e);
+            }
         }
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
         if (pager != null) {
