@@ -1,4 +1,4 @@
-ONGOING (10):
+ONGOING (11):
 * Only offer to check details in list when it exists
 * Move buttons in dictionary / details in actionbar
 * Make the icon in action bar go back to the main menu
@@ -9,16 +9,20 @@ ONGOING (10):
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
   - splash page + main menu layout
+* Update help
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (7):
 * Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
 * When checking english, break at '-' too
 * Looks like progress is not being recorded
+* When merging, find which one is smaller to merge into...
+* Make merging faster!
+* Sometimes the layout is messed up when the keyboard comes up in a test screen
 
 FUTURE (14):
 * When looking for Chinese translation (from English), separate the words if any

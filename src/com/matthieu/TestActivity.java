@@ -71,6 +71,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             fragments[0] = new StatsFragment();
 
         if (pager != null) {
+            pager.setOffscreenPageLimit(2);
             pager.setAdapter(new test_pager(getSupportFragmentManager()));
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);

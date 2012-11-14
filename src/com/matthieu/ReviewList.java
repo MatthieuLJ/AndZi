@@ -3,9 +3,7 @@ package com.matthieu;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -65,7 +63,7 @@ public class ReviewList extends Activity {
     }
 
     private class review_loader extends AsyncTask<Void, Void, Void> {
-        int expired_filtered;
+        int expired_filtered, expired;
         ListView list;
         View parent;
         Cursor cur;
@@ -88,8 +86,10 @@ public class ReviewList extends Activity {
             switch (list_id) {
                 case 0:
                     cur = myDB.getCursorFilteredWordsToStudy();
+                    expired = myDB.getNumWordsExpiredInBoxOrAbove(0);
                     break;
                 case 1:
+                    expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
                     cur = myDB.getCursorFilteredCharsToStudy();
                     break;
                 default:
@@ -108,13 +108,10 @@ public class ReviewList extends Activity {
             if (cur == null)
                 return;
 
-            int expired;
             String header_text="";
             switch(list_id) {
                 case 0:
-                    expired = myDB.getNumWordsExpiredInBoxOrAbove(0);
-
-                    if (expired != expired_filtered) {
+                   if (expired != expired_filtered) {
                         header_text = getString(R.string.review_list_num_words_to_study_filtered, expired_filtered, expired);
                     }
                     else {
@@ -122,8 +119,6 @@ public class ReviewList extends Activity {
                     }
                     break;
                 case 1:
-                    expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
-
                     if (expired != expired_filtered) {
                         header_text = getString(R.string.review_list_num_chars_to_study_filtered, expired_filtered, expired);
                     }
