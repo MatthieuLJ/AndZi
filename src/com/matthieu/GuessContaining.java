@@ -73,6 +73,7 @@ public class GuessContaining extends TestFragment {
     protected int check_guess(String guess) {
         int res = INCORRECT;
         correct_answers.clear();
+        new_answers.clear();
         bad_answers.clear();
         String[] guesses=guess.split("[,， ]");
         for (int i=0; i<guesses.length; i++) {
