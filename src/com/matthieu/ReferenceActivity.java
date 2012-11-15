@@ -4,11 +4,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
@@ -16,6 +14,7 @@ import com.viewpagerindicator.PageIndicator;
 public class ReferenceActivity extends SherlockFragmentActivity implements handle_details_request {
     final private static int max_details_fragments=3;
     Fragment fragments[];
+    final private static String TAG = "RerefenceActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +58,16 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         super.onSaveInstanceState(outState);
         try {
             getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
-        } catch (IllegalStateException e) {}
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Got an exception saving fragment 0 " + e);
+        }
         for (int i=1; i<=max_details_fragments; i++) {
             if (fragments[i] != null) {
-                getSupportFragmentManager().putFragment(outState, "fragment"+i, fragments[i]);
+                try {
+                    getSupportFragmentManager().putFragment(outState, "fragment"+i, fragments[i]);
+                } catch (IllegalStateException e) {
+                    Log.e(TAG, "Got an exception saving fragment "+i+" "+e);
+                }
             }
         }
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
@@ -162,7 +167,6 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         bundle.putBoolean("use_ref", use_ref);
         fragments[1].setArguments(bundle);
 
-        //ft.add(R.id.reference_pager, fragments[1]);
         ft.commit();
 
         // flush (?)
@@ -176,6 +180,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         }
     }
 
+    // use a FragmentPagerAdapter here because we are moving pages around (FragmentStatePagerAdapter does not do that well : http://code.google.com/p/android/issues/detail?id=37990)
     private class reference_pager extends FragmentPagerAdapter {
         public reference_pager(FragmentManager fm) {
             super(fm);
@@ -201,16 +206,16 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             return max;
         }
 
-
         @Override
         public int getItemPosition(Object object) {
             int res = POSITION_NONE;
             Fragment fragment = (Fragment) object;
-            for (int i=0; i<max_details_fragments+1; i++)
+            for (int i=0; i<max_details_fragments+1; i++) {
                 if (fragment.equals(fragments[i])) {
                     res = i;
                     break;
                 }
+            }
 
             return res;
         }

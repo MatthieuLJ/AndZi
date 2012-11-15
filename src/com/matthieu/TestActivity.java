@@ -123,21 +123,12 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     final static int size_limit = 30;
     final static int size_threshold = 5;
 
-    private void print_current_list() {
-        Log.d(TAG, "current list: ");
-        for (String h : hanzis_to_test) {
-            Log.d(TAG, h);
-        }
-    }
-
     private void fill_hanzis_to_test() {
         synchronized (TestActivity.this) {
             hanzis_to_test = myDB.getAllFilteredToStudy(size_limit);
             if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
                 hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
             table_filled=true;
-            Log.d(TAG, "filled table");
-            print_current_list();
         }
     }
 
@@ -154,8 +145,6 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 }
                 offset += Character.charCount(hanzi.codePointAt(offset));
             }
-            Log.d(TAG, "trimmed table with "+hanzi);
-            print_current_list();
         }
         if ((hanzis_to_test.size() < size_threshold) && (!table_filled)) {
             fill_hanzis_to_test();
@@ -342,7 +331,6 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         @Override
         public void onPageScrollStateChanged(int i) {
-
         }
     }
 
@@ -401,7 +389,9 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         ((TestFragment)fragments[1]).handle_ok(v);
     }
 
-    private class test_pager extends FragmentPagerAdapter {
+    // using a FragmentStatePagerAdapter here because some Fragments go away and come back (for the test)
+    // The FragmentPagerAdapter does not resume well old fragments
+    private class test_pager extends FragmentStatePagerAdapter {
         public test_pager(FragmentManager fm) {
             super(fm);
         }

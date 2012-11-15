@@ -38,13 +38,13 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        mode=CHINESE_TO_ENGLISH_MODE;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.dictionary, container, false);
         ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
-        mode=CHINESE_TO_ENGLISH_MODE;
 
         final ListView results = (ListView) res.findViewById(R.id.dict_results);
         results.setAdapter(new VocabularyCursorAdapter(getActivity(), null, this));

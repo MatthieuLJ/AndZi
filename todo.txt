@@ -15,13 +15,16 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (6):
+BUGS (9):
 * When checking english, break at '-' too
 * Looks like progress is not being recorded (to confirm...)
 * When merging, find which one is smaller to merge into
 * Make merging faster!
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Create a separate thread to clear database
+* Need to refresh lesson list (because of selection) after assigning lesson or setting the filter
+* Change the 'enable' button for filter setting
+* Block the viewpager on the lesson list when doing lesson assignment
 
 FUTURE (15):
 * When looking for Chinese translation (from English), separate the words if any
@@ -40,7 +43,9 @@ FUTURE (15):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (165):
+DONE (167):
+* Dictionary always resumes in Chinese->English mode
+* Sometimes test does not show
 * Rotation causes test to change
 * Crash when changing orientation at the progress graph
 * Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)

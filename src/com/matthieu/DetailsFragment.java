@@ -144,7 +144,7 @@ public class DetailsFragment extends Fragment {
             db = ((AndZiApplication)fragment.getActivity().getApplication()).getMyDB();
         }
 
-        Log.d(TAG, "populate_details_view: populate view for "+hanzi);
+        //Log.d(TAG, "populate_details_view: populate view for "+hanzi);
 
         // if the view already had a detail list...
         ListView old_list= (ListView) section.findViewById(R.id.details_list);
@@ -346,7 +346,7 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             synchronized (locker) {
-                if (container.get()!=null) {
+                if ((container.get()!=null) && (fragment.getActivity()!=null)) {
                     ListView list = (ListView) container.get().findViewById(R.id.details_list);
                     VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
                     if (adapter == null)

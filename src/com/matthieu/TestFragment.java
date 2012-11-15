@@ -68,12 +68,14 @@ public abstract class TestFragment extends Fragment {
             Thread updater = new Thread() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "Updating scores !");
+                    //Log.d(TAG, "Updating scores !");
                     update_score();
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ((TestActivity)getActivity()).update_stats();
+                            TestActivity parent_activity = (TestActivity)getActivity();
+                            if (parent_activity != null)
+                                parent_activity.update_stats();
                         }
                     });
                 }
