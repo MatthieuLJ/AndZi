@@ -242,6 +242,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 break;
             case LESSON_FILTER:
                 menu_resource = R.menu.add_vocabulary_lesson_filter;
+
                 break;
             case INITIAL:
             default:
@@ -250,12 +251,23 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         menu.clear();
         MenuInflater inflater = getSupportMenuInflater();
         inflater.inflate(menu_resource, menu);
+
+        if (menu_resource == R.menu.add_vocabulary_lesson_filter) {
+            MenuItem enable_item = menu.findItem(R.id.add_vocabulary_lesson_filter_enable);
+            if (myDB.isFilterEnabled()) {
+                enable_item.setTitle("Enabled");
+            } else {
+                enable_item.setTitle("Disabled");
+            }
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         String single_lesson;
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+
         switch (item.getItemId()) {
             case R.id.add_vocabulary_show_new_translation:
                 ((AddVocabularyFragment)fragments[0]).add_new();
@@ -290,6 +302,10 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
             case R.id.add_vocabulary_lesson_filter_start:
                 ((EditLessonsFragment)fragments[1]).set_filter_start();
+                if (pager != null) {
+                    pager.setCurrentItem(1);
+                    pager.setPagingEnabled(false);
+                }
                 break;
             case R.id.add_vocabulary_lesson_filter_all:
                 ((EditLessonsFragment)fragments[1]).set_filter_all();
@@ -299,9 +315,13 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 break;
             case R.id.add_vocabulary_lesson_filter_done:
                 ((EditLessonsFragment)fragments[1]).set_filter_done();
+                if (pager != null) {
+                    pager.setPagingEnabled(true);
+                }
                 break;
             case R.id.add_vocabulary_lesson_filter_enable:
                 ((EditLessonsFragment)fragments[1]).set_filter_enable();
+                invalidateOptionsMenu();
                 break;
 
             case R.id.add_vocabulary_lesson_show_new_lesson:
@@ -343,7 +363,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             pager.setCurrentItem(0, true);
-
         }
     }
 
@@ -366,6 +385,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             pager.setCurrentItem(0, true);
             pager.setPagingEnabled(true);
         }
+        ((EditLessonsFragment)fragments[1]).redraw_list();
         if ((fragments[2] != null) && (assignment.containsKey(((LessonListFragment)fragments[2]).current_lesson()))) {
             ((LessonListFragment)fragments[2]).update_list();
         }

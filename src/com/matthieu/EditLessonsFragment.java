@@ -379,9 +379,10 @@ public class EditLessonsFragment extends Fragment {
 
     protected void change_menu() {
         VocabularyEditorActivity.menu_types type;
+        VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
 
-        if ((((VocabularyEditorActivity)getActivity()).get_menu() == VocabularyEditorActivity.menu_types.LESSON_FILTER) ||
-                (((VocabularyEditorActivity)getActivity()).get_menu() == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
+        if ((current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) ||
+                (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
             return;
 
         switch (current_lesson_selection.size()) {
@@ -674,9 +675,11 @@ public class EditLessonsFragment extends Fragment {
 
     public void set_filter_done() {
         ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.LESSON_NONE_SELECTED);
+        change_menu();
+
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        change_menu();
+
         new Thread(new Runnable() {
             public void run() {
                 myDB.setLessonsToFilter(current_lesson_filter);
@@ -706,6 +709,11 @@ public class EditLessonsFragment extends Fragment {
         filter_on = !filter_on;
         myDB.enableFilter(filter_on);
         ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
+        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+    }
+
+    public void redraw_list() {
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
     }
