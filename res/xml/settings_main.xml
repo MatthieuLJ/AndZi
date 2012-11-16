@@ -38,6 +38,10 @@
                     android:targetClass="com.matthieu.settings.EmailDB"
                     />
         </PreferenceScreen>
+        <PreferenceScreen
+                android:title="@string/settings_db_import"
+                android:key="ImportDB"
+                />
         <Preference
                 android:title="@string/settings_db_reset_scores"
                 android:key="ResetDB"
@@ -49,10 +53,6 @@
         <com.matthieu.settings.TrimProgressPreference
                 android:title="@string/settings_db_forget_progress"
                 android:key="TrimProgress"
-                />
-        <PreferenceScreen
-                android:title="@string/settings_db_import"
-                android:key="ImportDB"
                 />
     </PreferenceCategory>
 

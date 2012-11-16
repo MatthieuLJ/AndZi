@@ -25,10 +25,13 @@ public class ProgressService extends Service {
             @Override
             public void run() {
                 if (!((AndZiApplication) getApplication()).isApplicationForeground()) {
-                    update_notification(true);
+                    update_notification();
+                    update_progress_data();
                     ((AndZiApplication) getApplication()).showSplash(true);
                 }else {
                     clear_notification(ProgressService.this);
+                    if (!((AndZiApplication) getApplication()).is_screen_on())
+                        update_progress_data();
                 }
             }
         };
@@ -37,9 +40,8 @@ public class ProgressService extends Service {
         //timer.scheduleAtFixedRate(task, 0, 120*1000); // every 2 minutes for test...
     }
 
-    public void update_notification(boolean store) {
+    public void update_progress_data() {
         ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
-        HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
         if (current_data == null)
@@ -48,8 +50,11 @@ public class ProgressService extends Service {
         if (current_data.num_chars_in_box[0] + current_data.num_chars_in_box[1] + current_data.num_chars_in_box[2] + current_data.num_chars_in_box[3] + current_data.num_chars_in_box[4] == 0)
             return;
 
-        if (store)
-            db.add_data(current_data);
+        db.add_data(current_data);
+    }
+
+    public void update_notification() {
+        HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         int expired = myDB.getNumExpired();

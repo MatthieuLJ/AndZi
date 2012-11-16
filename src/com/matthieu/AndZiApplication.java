@@ -7,10 +7,7 @@ package com.matthieu;
 
 import android.app.ActivityManager;
 import android.app.Application;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
@@ -27,6 +24,7 @@ public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
     private ProgressDB prog=null;
+    private ScreenBroadcastReceiver screenReceiver;
     private boolean ref_initialized=false;
     private boolean ref_enabled=true;
     private boolean ref_present=false;
@@ -43,6 +41,11 @@ public class AndZiApplication extends Application {
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
         this.startService(startServiceIntent);
+
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        screenReceiver = new ScreenBroadcastReceiver();
+        registerReceiver(screenReceiver, filter);
 
         Pinyin.prepare_pinyin_process();
     }
@@ -396,5 +399,9 @@ public class AndZiApplication extends Application {
     }
     public boolean getShowSplash() {
         return show_splash;
+    }
+
+    public boolean is_screen_on() {
+        return screenReceiver.wasScreenOn;
     }
 }
