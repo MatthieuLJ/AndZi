@@ -92,7 +92,7 @@ public class GuessEnglish extends TestFragment {
     }
 
     protected int check_guess(String guess) {
-        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase().split("[, ]");
+        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase().split("[, -]");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
                 continue;
@@ -106,7 +106,7 @@ public class GuessEnglish extends TestFragment {
                     return CORRECT;
                 }
 
-                String[] ens=HanziDB.bare_translation(en).split(" ");
+                String[] ens=HanziDB.bare_translation(en).split("[ -]");
                 for (String item:ens) {
                     String tmp=item.replaceAll("[^A-Za-z]", "");
                     if ((tmp.length()>2) && (tmp.equals(guesses[i].trim()))) {
