@@ -90,7 +90,7 @@ public class Settings extends PreferenceActivity {
                 alert.setMessage(R.string.settings_confirm_clear_db);
                 alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int i) {
-                        ((AndZiApplication) getApplication()).getMyDB().clearDB();
+                        ((AndZiApplication) getApplication()).getMyDB().create_clear_task(true, Settings.this, null);
                         dialog.dismiss();
                     }
                 });

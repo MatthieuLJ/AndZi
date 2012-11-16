@@ -2179,8 +2179,48 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Clear Database
     ////////////////////////////////////////
-    public void clearDB() {
-        onCreate(db);
+    public AsyncTask create_clear_task(final boolean with_dialog, final Activity context, final Runnable finishing) {
+        AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
+            ProgressDialog mProgressDialog;
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                HanziDB.this.onCreate(db);
+                return null;
+            }
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                // create the progress dialog if needed
+                if (with_dialog) {
+                    mProgressDialog = new ProgressDialog(context);
+                    mProgressDialog.setMessage("Clearing database");
+                    mProgressDialog.setIndeterminate(true);
+                    mProgressDialog.setCancelable(false);
+                    mProgressDialog.show();
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+
+                if (with_dialog)
+                    mProgressDialog.dismiss();
+
+                if (finishing!= null)
+                    finishing.run();
+            }
+
+        };
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            res.execute((Void[])null);
+
+        return res;
     }
 
     /*

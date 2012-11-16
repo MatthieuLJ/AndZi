@@ -674,6 +674,16 @@ public class AddVocabularyFragment extends Fragment
         EditText chinese_word = (EditText) getView().findViewById(R.id.add_vocabulary_chinese);
         if (chinese_word != null)
             chinese_word.setText("");
+        if (translations_from_ref != null)
+            translations_from_ref.clear();
+        if (translations_displayed_from_ref != null)
+            translations_displayed_from_ref.clear();
+        if (translations_in_db != null)
+            translations_in_db.clear();
+        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        if (lv != null) {
+            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        }
         change_menu();
     }
 
