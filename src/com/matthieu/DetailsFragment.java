@@ -6,6 +6,7 @@
 package com.matthieu;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
 import com.matthieu.widget.handle_details_request;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 public class DetailsFragment extends Fragment {
     private static final String TAG="Details";
     private boolean use_ref=false;
+    private boolean exists_in_db=true;
 
     private String current_hanzi;
     private String current_pinyin="";
@@ -50,17 +53,16 @@ public class DetailsFragment extends Fragment {
         return current_pinyin;
     }
 
-    public boolean get_use_ref() {
+    public boolean is_dictionary_search() {
         return use_ref;
+    }
+
+    public boolean exists_in_db() {
+        return exists_in_db;
     }
 
     public boolean isPinned() {
         return pinned;
-    }
-
-    public boolean is_same_query(DetailsFragment other) {
-        return other.get_pinyin().equals(get_pinyin()) && other.get_hanzi().equals(get_hanzi())
-                && (other.get_use_ref() == get_use_ref());
     }
 
     @Override
@@ -77,45 +79,37 @@ public class DetailsFragment extends Fragment {
         if (!current_hanzi.equals(""))
             populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
 
-        Button pin_button = (Button) res.findViewById(R.id.details_pin);
-        pin_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DetailsFragment.this.pinned = !DetailsFragment.this.pinned;
-                if (DetailsFragment.this.pinned)
-                    ((Button) view).setText(R.string.details_unpin);
-                else
-                    ((Button) view).setText(R.string.details_pin);
-            }
-        });
-
-        Button source = (Button) res.findViewById(R.id.details_dict);
-        source.setText(use_ref?R.string.details_dictionary:R.string.details_voc_list);
-        source.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((ReferenceActivity) getActivity()).new_details_request(current_hanzi, !use_ref);
-            }
-        });
-
-        Button add_edit = (Button) res.findViewById(R.id.details_add_edit);
-        HanziDB myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
-        if (myDB.getTranslations(current_hanzi).size()!=0) {
-            add_edit.setText(R.string.details_edit);
-        } else {
-            add_edit.setText(R.string.details_add);
-        }
-        add_edit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i=new Intent(getActivity(), VocabularyEditorActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                i.putExtra("Hanzi", current_hanzi);
-                startActivity(i);
-            }
-        });
+        if (use_ref)
+            check_if_exists_in_db();
 
         return res;
+    }
+
+    public void check_if_exists_in_db() {
+        AsyncTask<Void,Void,Void> checker = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Activity activity= DetailsFragment.this.getActivity();
+                if (activity == null)
+                    return null;
+                AndZiApplication app = (AndZiApplication) activity.getApplication();
+                if (app == null)
+                    return null;
+                HanziDB db = app.getMyDB();
+                if (db == null)
+                    return null;
+                exists_in_db = db.getTranslations(DetailsFragment.this.current_hanzi).size() > 0;
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                SherlockFragmentActivity parent = (SherlockFragmentActivity) getActivity();
+                if (parent != null)
+                    parent.invalidateOptionsMenu();
+            }
+        }.execute((Void[])null);
     }
 
     @Override
@@ -381,5 +375,20 @@ public class DetailsFragment extends Fragment {
                 old_adapter.changeCursor(null);
             }
         }
+    }
+
+    public void pin_unpin() {
+        pinned = !pinned;
+    }
+
+    public void change_source() {
+        ((ReferenceActivity) getActivity()).new_details_request(current_hanzi, !use_ref);
+    }
+
+    public void edit_add_word() {
+        Intent i=new Intent(getActivity(), VocabularyEditorActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        i.putExtra("Hanzi", current_hanzi);
+        startActivity(i);
     }
 }

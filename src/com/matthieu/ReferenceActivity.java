@@ -8,10 +8,13 @@ import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
-public class ReferenceActivity extends SherlockFragmentActivity implements handle_details_request {
+public class ReferenceActivity extends SherlockFragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
     final private static int max_details_fragments=3;
     Fragment fragments[];
     final private static String TAG = "RerefenceActivity";
@@ -41,6 +44,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
+            mIndicator.setOnPageChangeListener(this);
         }
         else {
             // When we are on a larger screen without a pager
@@ -105,7 +109,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         for (int i=1; i<=max_details_fragments; i++) {
             if (fragments[i] == null)
                 break;
-            if ((((DetailsFragment)fragments[i]).get_use_ref() == use_ref) &&
+            if ((((DetailsFragment)fragments[i]).is_dictionary_search() == use_ref) &&
                 ((DetailsFragment)fragments[i]).get_hanzi().equals(new_hanzi)) {
                 ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
                 if (pager != null) {
@@ -180,6 +184,17 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         }
     }
 
+    @Override
+    public void onPageScrolled(int i, float v, int i1) {}
+
+    @Override
+    public void onPageSelected(int i) {
+        invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int i) {}
+
     // use a FragmentPagerAdapter here because we are moving pages around (FragmentStatePagerAdapter does not do that well : http://code.google.com/p/android/issues/detail?id=37990)
     private class reference_pager extends FragmentPagerAdapter {
         public reference_pager(FragmentManager fm) {
@@ -219,5 +234,92 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
             return res;
         }
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+
+        menu.clear();
+        MenuInflater inflater = getSupportMenuInflater();
+
+        if (pager != null) {
+            int page = pager.getCurrentItem();
+            if (page == 0) {
+                inflater.inflate(R.menu.reference_dict, menu);
+                MenuItem direction = menu.findItem(R.id.reference_direction);
+                if (((DictionaryFragment)fragments[0]).is_chinese_to_english())
+                    direction.setTitle(R.string.dictionary_chinese_to_eng);
+                else
+                    direction.setTitle(R.string.dictionary_eng_to_chinese);
+
+                MenuItem source = menu.findItem(R.id.reference_source);
+                if (((DictionaryFragment)fragments[0]).is_dictionary_search())
+                    source.setTitle(R.string.details_dictionary);
+                else
+                    source.setTitle(R.string.details_voc_list);
+
+            } else {
+                inflater.inflate(R.menu.reference_details, menu);
+                MenuItem source = menu.findItem(R.id.details_source);
+                source.setEnabled(true);
+                if (((DetailsFragment)fragments[page]).is_dictionary_search()) {
+                    source.setTitle(R.string.details_dictionary);
+                    if (!((DetailsFragment)fragments[page]).exists_in_db())
+                        source.setEnabled(false);
+                } else
+                    source.setTitle(R.string.details_voc_list);
+
+                MenuItem pinned = menu.findItem(R.id.details_pinned);
+                if (((DetailsFragment)fragments[page]).isPinned())
+                    pinned.setTitle(R.string.details_unpin);
+                else
+                    pinned.setTitle(R.string.details_pin);
+
+                MenuItem add_edit = menu.findItem(R.id.details_add_edit);
+                if (((DetailsFragment)fragments[page]).exists_in_db())
+                    add_edit.setTitle(R.string.details_edit);
+                else
+                    add_edit.setTitle(R.string.details_add);
+
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        int page=0;
+        if (pager!= null)
+            page = pager.getCurrentItem();
+
+        switch (item.getItemId()) {
+            case R.id.reference_source:
+                ((DictionaryFragment)fragments[0]).change_source();
+                invalidateOptionsMenu();
+                break;
+            case R.id.reference_direction:
+                ((DictionaryFragment)fragments[0]).change_direction();
+                invalidateOptionsMenu();
+                break;
+            case R.id.details_add_edit:
+                ((DetailsFragment)fragments[page]).edit_add_word();
+                break;
+            case R.id.details_pinned:
+                ((DetailsFragment)fragments[page]).pin_unpin();
+                invalidateOptionsMenu();
+                break;
+            case R.id.details_source:
+                ((DetailsFragment)fragments[page]).change_source();
+                invalidateOptionsMenu();
+                break;
+            default:
+                return false;
+        }
+        return true;
     }
 }

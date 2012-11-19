@@ -1,6 +1,4 @@
-ONGOING (11):
-* Only offer to check details in list when it exists
-* Move buttons in dictionary / details in actionbar
+ONGOING (9):
 * Make the icon in action bar go back to the main menu
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -38,7 +36,9 @@ FUTURE (15):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (172):
+DONE (174):
+* Only offer to check details in list when it exists
+* Move buttons in dictionary / details in actionbar
 * When checking english, break at '-' too
 * Create a separate thread to clear database
 * Need to refresh lesson list (because of selection) after assigning lesson or setting the filter

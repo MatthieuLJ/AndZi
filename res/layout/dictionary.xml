@@ -8,24 +8,6 @@
         style="@style/AndZiTheme"
         >
 
-    <LinearLayout
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:gravity="right"
-            android:orientation="horizontal">
-        <Button
-                android:id="@+id/dict_source"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/details_pin"
-                />
-        <Button
-                android:id="@+id/dict_mode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                />
-
-    </LinearLayout>
     <EditText
             android:id="@+id/dict_query"
             android:layout_height="wrap_content"

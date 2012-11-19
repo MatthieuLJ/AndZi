@@ -49,48 +49,11 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         final ListView results = (ListView) res.findViewById(R.id.dict_results);
         results.setAdapter(new VocabularyCursorAdapter(getActivity(), null, this));
 
-        Button dict_mode = (Button) res.findViewById(R.id.dict_mode);
-        dict_mode.setText(R.string.dictionary_chinese_to_eng);
-        dict_mode.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                switch (mode) {
-                    case CHINESE_TO_ENGLISH_MODE:
-                        mode = ENGLISH_TO_CHINESE_MODE;
-                        ((TextView) view).setText(R.string.dictionary_eng_to_chinese);
-                        break;
-                    case ENGLISH_TO_CHINESE_MODE:
-                        mode = CHINESE_TO_ENGLISH_MODE;
-                        ((TextView) view).setText(R.string.dictionary_chinese_to_eng);
-                        break;
-                }
-                EditText edit_query= (EditText) res.findViewById(R.id.dict_query);
-                start_new_query(mode, edit_query.getText().toString());
-            }
-        });
-
         EditText query = (EditText) res.findViewById(R.id.dict_query);
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
 
-        Button change_dict = (Button) res.findViewById(R.id.dict_source);
-        if (((AndZiApplication)getActivity().getApplication()).getRefDB() != null) {
-            use_ref = true;
-            change_dict.setText(R.string.details_dictionary);
-            change_dict.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    use_ref = !use_ref;
-                    ((Button)view).setText(use_ref?R.string.details_dictionary:R.string.details_voc_list);
-                    EditText query = (EditText) res.findViewById(R.id.dict_query);
-                    if (query!=null) {
-                        start_new_query(mode, query.getText().toString());
-                    }
-                }
-            });
-        }
-        else {
-            change_dict.setEnabled(false);
-        }
+        use_ref = (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
 
         return res;
     }
@@ -259,5 +222,42 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
         public void afterTextChanged(Editable editable) {
         }
+    }
+
+    public void change_direction() {
+        switch (mode) {
+            case CHINESE_TO_ENGLISH_MODE:
+                mode = ENGLISH_TO_CHINESE_MODE;
+                break;
+            case ENGLISH_TO_CHINESE_MODE:
+                mode = CHINESE_TO_ENGLISH_MODE;
+                break;
+        }
+        View v = getView();
+        if (v == null)
+            return;
+        EditText query= (EditText) v.findViewById(R.id.dict_query);
+        if (query!=null) {
+            start_new_query(mode, query.getText().toString());
+        }
+    }
+
+    public void change_source() {
+        use_ref = !use_ref;
+        View v = getView();
+        if (v == null)
+            return;
+        EditText query = (EditText) v.findViewById(R.id.dict_query);
+        if (query!=null) {
+            start_new_query(mode, query.getText().toString());
+        }
+    }
+
+    public boolean is_dictionary_search() {
+        return use_ref;
+    }
+
+    public boolean is_chinese_to_english() {
+        return mode == CHINESE_TO_ENGLISH_MODE;
     }
 }
