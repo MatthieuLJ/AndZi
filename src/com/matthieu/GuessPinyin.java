@@ -51,14 +51,14 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
                 }
             }
             pinyin=pins.get((int)(Math.random()*pins.size())).get_lame();
-            words = myDB.getFilteredWordsWithPinyin(hanzi, pinyin);
+            words = myDB.getWordsWithPinyin(hanzi, pinyin);
         } else  {
             if (myDB.is_char_toneless_pair(hanzi)) {
                 pinyin = myDB.get_toned_pinyin_in_pair(hanzi);
             } else {
                 pinyin = pinyins.get(0);
             }
-            words = myDB.getFilteredWordsWithPinyin(hanzi);
+            words = myDB.getWordsWithPinyin(hanzi);
         }
 
         boolean found=false;

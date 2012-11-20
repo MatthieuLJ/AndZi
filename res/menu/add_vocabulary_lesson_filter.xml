@@ -2,9 +2,6 @@
 
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/add_vocabulary_lesson_filter_enable"
-          android:title="Enable"
-          android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_lesson_filter_all"
           android:title="All"
           android:showAsAction="ifRoom|withText"/>

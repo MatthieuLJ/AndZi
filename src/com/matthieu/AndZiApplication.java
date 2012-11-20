@@ -114,17 +114,6 @@ public class AndZiApplication extends Application {
         if (myDB != null)
             myDB.close();
         myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
-        ArrayList<String> lesson=new ArrayList<String>();
-        try {
-            lesson = (ArrayList<String>) ObjectSerializer.deserialize(prefs.getString("Lesson_Filter", (String) ObjectSerializer.serialize(new ArrayList<String>())));
-        } catch (IOException e) {
-            e.printStackTrace();
-            filter_on = false;
-        }
-        myDB.enableFilter(filter_on);
-        myDB.setLessonsToFilter(lesson);
     }
     
     public void initialize_ref_db() {

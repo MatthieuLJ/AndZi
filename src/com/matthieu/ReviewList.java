@@ -65,7 +65,7 @@ public class ReviewList extends Activity  implements VocabularyCursorClickHandle
     }
 
     private class review_loader extends AsyncTask<Void, Void, Void> {
-        int expired_filtered, expired;
+        int expired;
         ListView list;
         View parent;
         Cursor cur;
@@ -87,26 +87,12 @@ public class ReviewList extends Activity  implements VocabularyCursorClickHandle
         protected Void doInBackground(Void... voids) {
             switch (list_id) {
                 case 0:
-                    cur = myDB.getCursorFilteredWordsToStudy();
-                    expired_filtered = cur.getCount();
-                    if (myDB.isFilterEnabled()) {
-                        Cursor non_filtered_cur = myDB.getCursorWordsToStudy();
-                        expired = non_filtered_cur.getCount();
-                        non_filtered_cur.close();
-                    } else {
-                        expired = expired_filtered;
-                    }
+                    cur = myDB.getCursorWordsToStudy();
+                    expired = cur.getCount();
                     break;
                 case 1:
-                    cur = myDB.getCursorFilteredCharsToStudy();
-                    expired_filtered = cur.getCount();
-                    if (myDB.isFilterEnabled()) {
-                        Cursor non_filtered_cur = myDB.getCursorCharsToStudy();
-                        expired = non_filtered_cur.getCount();
-                        non_filtered_cur.close();
-                    } else {
-                        expired = expired_filtered;
-                    }
+                    cur = myDB.getCursorCharsToStudy();
+                    expired = cur.getCount();
                     break;
                 default:
                     return null;
@@ -126,20 +112,10 @@ public class ReviewList extends Activity  implements VocabularyCursorClickHandle
             String header_text="";
             switch(list_id) {
                 case 0:
-                   if (expired != expired_filtered) {
-                        header_text = getString(R.string.review_list_num_words_to_study_filtered, expired_filtered, expired);
-                    }
-                    else {
-                        header_text = getString(R.string.review_list_num_words_to_study, expired);
-                    }
+                    header_text = getString(R.string.review_list_num_words_to_study, expired);
                     break;
                 case 1:
-                    if (expired != expired_filtered) {
-                        header_text = getString(R.string.review_list_num_chars_to_study_filtered, expired_filtered, expired);
-                    }
-                    else {
-                        header_text = getString(R.string.review_list_num_chars_to_study, expired);
-                    }
+                    header_text = getString(R.string.review_list_num_chars_to_study, expired);
                     break;
             }
 
@@ -160,7 +136,7 @@ public class ReviewList extends Activity  implements VocabularyCursorClickHandle
                     new_adapter = new VocabularyCursorAdapter(ReviewList.this, cur, ReviewList.this);
                     break;
                 case 1:
-                    new_adapter = new CharacterCursorAdapter(ReviewList.this, cur, myDB, true);
+                    new_adapter = new CharacterCursorAdapter(ReviewList.this, cur, myDB);
                     break;
             }
             adapters[list_id] = new_adapter;

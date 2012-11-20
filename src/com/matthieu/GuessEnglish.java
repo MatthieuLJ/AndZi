@@ -21,7 +21,7 @@ public class GuessEnglish extends TestFragment {
     protected boolean set_hanzi_to_test(String hanzi) {
         super.set_hanzi_to_test(hanzi);
 
-        ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(hanzi);
+        ArrayList<Vocabulary> voc = myDB.getTranslations(hanzi);
         if ((voc.size() == 0) || (voc.size() > 1)) { // one case has multiple pinyins...
             return false;
         }

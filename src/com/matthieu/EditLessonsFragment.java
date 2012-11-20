@@ -29,7 +29,6 @@ public class EditLessonsFragment extends Fragment {
 
     protected ArrayList<Lesson> current_lessons;
     protected ArrayList<String> current_lesson_filter;
-    protected boolean filter_on;
     private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
@@ -46,7 +45,6 @@ public class EditLessonsFragment extends Fragment {
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
 
         current_lessons = new ArrayList<Lesson>();
-        filter_on = myDB.isFilterEnabled();
     }
 
     @Override
@@ -92,21 +90,11 @@ public class EditLessonsFragment extends Fragment {
         return res;
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (filter_on && (current_lesson_filter.size()==0)) {
-            filter_on = false;
-            myDB.enableFilter(filter_on);
-        }
-    }
-
     private class InitLessons extends AsyncTask<Void, Void, Void> {
         ArrayList<Lesson> tmp_lessons;
 
         @Override
         protected Void doInBackground(Void... voids) {
-            current_lesson_filter = myDB.getLessonsToFilter();
             tmp_lessons = new ArrayList<Lesson>();
             ArrayList<String> existing_lessons = myDB.getLessons();
 
@@ -118,8 +106,6 @@ public class EditLessonsFragment extends Fragment {
                 int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
                 Lesson new_lesson = new Lesson(lesson);
                 new_lesson.state = Lesson.EXISTING;
-                if (current_lesson_filter.contains(lesson))
-                    new_lesson.state|=Lesson.FILTERED_ENABLED;
                 new_lesson.num_items=num;
                 tmp_lessons.add(new_lesson);
             }
@@ -157,7 +143,6 @@ public class EditLessonsFragment extends Fragment {
         public static final int EXISTING=1;
         public static final int NEW=2;
         public static final int RENAMED=4;
-        public static final int FILTERED_ENABLED=8;
 
         public Lesson(String l) {
             label = l;
@@ -369,12 +354,11 @@ public class EditLessonsFragment extends Fragment {
 
     private ArrayList<Lesson> current_lesson_selection=new ArrayList<Lesson>();
 
-    public String get_single_selection() {
-        if (current_lesson_selection.size() != 1) {
-            change_menu();
-            return null;
-        } else
-            return current_lesson_selection.get(0).label;
+    public ArrayList<String> get_selection() {
+        ArrayList<String> res = new ArrayList<String>();
+        for (Lesson l : current_lesson_selection)
+            res.add(l.label);
+        return res;
     }
 
     protected void change_menu() {
@@ -407,12 +391,10 @@ public class EditLessonsFragment extends Fragment {
         VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
         if (current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) {
             if (!current_lesson_filter.contains(le.label)) {
-                le.state |= Lesson.FILTERED_ENABLED;
                 current_lesson_filter.add(le.label);
                 v.setBackgroundColor(0xFF777777);
             }
             else {
-                le.state &= ~Lesson.FILTERED_ENABLED;
                 current_lesson_filter.remove(le.label);
                 v.setBackgroundColor(0x00000000);
             }
@@ -673,42 +655,18 @@ public class EditLessonsFragment extends Fragment {
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
     }
 
-    public void set_filter_done() {
-        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.LESSON_NONE_SELECTED);
-        change_menu();
+    public void set_filter_all() {
+        current_lesson_filter.clear();
+        for (Lesson le : current_lessons)
+            current_lesson_filter.add(le.label);
 
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-
-        new Thread(new Runnable() {
-            public void run() {
-                myDB.setLessonsToFilter(current_lesson_filter);
-                ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
-            }
-        }).start();
-    }
-
-    public void set_filter_all() {
-        current_lesson_filter.clear();
-        for (Lesson le : current_lessons) {
-            current_lesson_filter.add(le.label);
-            le.state |= Lesson.FILTERED_ENABLED;
-        }
     }
 
     public void set_filter_none() {
         current_lesson_filter.clear();
-        for (Lesson le : current_lessons) {
-            le.state &= ~Lesson.FILTERED_ENABLED;
-        }
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-    }
 
-    public void set_filter_enable() {
-        filter_on = !filter_on;
-        myDB.enableFilter(filter_on);
-        ((AndZiApplication) getActivity().getApplication()).save_database_filter(filter_on, current_lesson_filter);
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
     }

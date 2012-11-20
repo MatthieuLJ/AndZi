@@ -5,9 +5,6 @@
     <item android:id="@+id/add_vocabulary_lesson_show_new_lesson"
           android:title="New"
           android:showAsAction="always"/>
-    <item android:id="@+id/add_vocabulary_lesson_filter_start"
-          android:title="Filter"
-          android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_lesson_list"
           android:title="List"
           android:showAsAction="ifRoom|withText"/>

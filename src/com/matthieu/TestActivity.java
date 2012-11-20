@@ -125,7 +125,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     private void fill_hanzis_to_test() {
         synchronized (TestActivity.this) {
-            hanzis_to_test = myDB.getAllFilteredToStudy(size_limit);
+            hanzis_to_test = myDB.getAllToStudy(size_limit);
             if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
                 hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
             table_filled=true;
@@ -173,15 +173,13 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         while(new_fragment1 == null) {
             set_next_char_to_study();
             if (current_hanzi == null) {
-                Cursor filtered = myDB.getCursorFilteredToStudy();
+                Cursor filtered = myDB.getCursorToStudy();
                 Cursor non_filtered = myDB.getCursorToStudy();
-                boolean can_disable_filter=((myDB.isFilterEnabled()) && (filtered.getCount() > non_filtered.getCount()));
                 boolean empty_db=(myDB.getNumChars()==0);
 
                 new_fragment1 = new done_testing();
                 Bundle bundle = new Bundle();
                 bundle.putBoolean("empty_db", empty_db);
-                bundle.putBoolean("filter_option", can_disable_filter);
                 new_fragment1.setArguments(bundle);
                 new_fragment1_is_test = false;
 
@@ -277,11 +275,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             OK_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (filter_option) {
-                        myDB.enableFilter(false);
-                    } else {
-                        ((TestActivity)getActivity()).continue_with_more_chars = true;
-                    }
+                    ((TestActivity)getActivity()).continue_with_more_chars = true;
                     ((TestActivity)getActivity()).table_filled = false;
                     ((TestActivity)getActivity()).start_test();
                 }

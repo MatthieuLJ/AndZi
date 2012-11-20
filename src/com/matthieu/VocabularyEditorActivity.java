@@ -14,6 +14,7 @@ import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.widget.LockableViewPager;
 import com.viewpagerindicator.PageIndicator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
@@ -58,6 +59,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
+            pager.setPagingEnabled(true);
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
@@ -252,21 +254,13 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         MenuInflater inflater = getSupportMenuInflater();
         inflater.inflate(menu_resource, menu);
 
-        if (menu_resource == R.menu.add_vocabulary_lesson_filter) {
-            MenuItem enable_item = menu.findItem(R.id.add_vocabulary_lesson_filter_enable);
-            if (myDB.isFilterEnabled()) {
-                enable_item.setTitle("Enabled");
-            } else {
-                enable_item.setTitle("Disabled");
-            }
-        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         String single_lesson;
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        ArrayList<String> selection;
 
         switch (item.getItemId()) {
             case R.id.add_vocabulary_show_new_translation:
@@ -300,13 +294,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 ((AddVocabularyFragment)fragments[0]).done();
                 return true;
 
-            case R.id.add_vocabulary_lesson_filter_start:
-                ((EditLessonsFragment)fragments[1]).set_filter_start();
-                if (pager != null) {
-                    pager.setCurrentItem(1);
-                    pager.setPagingEnabled(false);
-                }
-                break;
             case R.id.add_vocabulary_lesson_filter_all:
                 ((EditLessonsFragment)fragments[1]).set_filter_all();
                 break;
@@ -314,14 +301,11 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 ((EditLessonsFragment)fragments[1]).set_filter_none();
                 break;
             case R.id.add_vocabulary_lesson_filter_done:
-                ((EditLessonsFragment)fragments[1]).set_filter_done();
-                if (pager != null) {
-                    pager.setPagingEnabled(true);
-                }
-                break;
-            case R.id.add_vocabulary_lesson_filter_enable:
-                ((EditLessonsFragment)fragments[1]).set_filter_enable();
-                invalidateOptionsMenu();
+                Intent resultIntent = new Intent();
+                selection = ((EditLessonsFragment)fragments[1]).get_selection();
+                resultIntent.putExtra("lesson_list", selection.toArray());
+                setResult(RESULT_OK, resultIntent);
+                finish();
                 break;
 
             case R.id.add_vocabulary_lesson_show_new_lesson:
@@ -331,13 +315,23 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 ((EditLessonsFragment)fragments[1]).clone_selection();
                 break;
             case R.id.add_vocabulary_lesson_delete:
-                single_lesson = ((EditLessonsFragment)fragments[1]).get_single_selection();
+                selection = ((EditLessonsFragment)fragments[1]).get_selection();
+                if (selection.size() != 1) {
+                    ((EditLessonsFragment)fragments[1]).change_menu();
+                    break;
+                }
+                single_lesson = selection.get(0);
                 if ((fragments[2] != null) && (single_lesson != null) && (single_lesson.equals(((LessonListFragment)fragments[2]).current_lesson())))
                     close_lesson_list();
                 ((EditLessonsFragment)fragments[1]).del_selection();
                 break;
             case R.id.add_vocabulary_lesson_rename:
-                single_lesson = ((EditLessonsFragment)fragments[1]).get_single_selection();
+                selection = ((EditLessonsFragment)fragments[1]).get_selection();
+                if (selection.size() != 1) {
+                    ((EditLessonsFragment)fragments[1]).change_menu();
+                    break;
+                }
+                single_lesson = selection.get(0);
                 if ((fragments[2] != null) && (single_lesson != null) && (single_lesson.equals(((LessonListFragment)fragments[2]).current_lesson())))
                     close_lesson_list();
                 ((EditLessonsFragment)fragments[1]).rename_selection();
@@ -356,7 +350,12 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     }
 
     private void set_default_list() {
-        String lesson = ((EditLessonsFragment)fragments[1]).get_single_selection();
+        ArrayList<String> selection = ((EditLessonsFragment)fragments[1]).get_selection();
+        if (selection.size() != 1) {
+            ((EditLessonsFragment)fragments[1]).change_menu();
+            return;
+        }
+        String lesson = selection.get(0);
         if (lesson != null) {
             ((AddVocabularyFragment)fragments[0]).set_default_lesson(lesson);
         }

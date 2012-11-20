@@ -31,21 +31,15 @@ public class GuessChineseWord extends TestFragment {
         }
 
         // need some translations
-        ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(hanzi);
+        ArrayList<Vocabulary> voc = myDB.getTranslations(hanzi);
         if (voc.size() == 0) {
             return false;
         }
         solution = voc.get((int) (voc.size()*Math.random()));
 
         translations = solution.english;
-        if (myDB.isFilterEnabled()) {
-            more_translations = myDB.getTranslations(hanzi, solution.pinyin).english;
-        }
-        else {
-            more_translations = new ArrayList<String>();
-        }
         if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
-            more_translations.addAll(refDB.getTranslations(hanzi, solution.pinyin).english);
+            more_translations = refDB.getTranslations(hanzi, solution.pinyin).english;
         }
 
         showing_more_voc=false;

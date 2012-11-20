@@ -325,7 +325,7 @@ public class DetailsFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            cursor = db.getWordsWithSequence(elements, true, true);
+            cursor = db.getWordsWithSequence(elements, true);
             if (!isCancelled())
                 cursor.getCount();  // force the "calculation"
             return null;
