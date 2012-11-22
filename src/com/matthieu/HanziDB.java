@@ -1985,7 +1985,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Export Database
     ////////////////////////////////////////
     @SuppressLint({"NewApi"})
-    public AsyncTask create_export_task(final String path, final boolean with_scores, final boolean filtered_lessons, final boolean with_dialog, final Activity context, final Runnable finishing) {
+    public AsyncTask create_export_task(final String path, final boolean with_scores, final ArrayList<String> selected_lessons, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
             final String new_db_name = "tmp_db";
@@ -1993,12 +1993,12 @@ public class HanziDB extends SQLiteOpenHelper {
 
             @Override
             protected Void doInBackground(Void... voids) {
-                if ((with_scores) && (!filtered_lessons)) {
+                if ((with_scores) && (selected_lessons == null)) {
                     if (!app.copyFile(db.getPath(), path)) {
                         clean_up_on_cancel(true);
                         return null;
                     }
-                } else if (!filtered_lessons) {
+                } else if (selected_lessons == null) {
                     if (!app.copyFile(db.getPath(), HanziDB.this.app.getDatabasePath(new_db_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
@@ -2014,15 +2014,15 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     HanziDB.this.app.deleteDatabase(new_db_name);
                 } else {
-                    /*new_db = new HanziDB(app, new_db_name);
+                    new_db = new HanziDB(app, new_db_name);
 
-                    for (int i=0; i<lesson_filter.size(); i++) {
-                        String lesson = lesson_filter.get(i);
+                    for (int i=0; i<selected_lessons.size(); i++) {
+                        String lesson = selected_lessons.get(i);
                         if (isCancelled()) {
                             clean_up_on_cancel(false);
                             return null;
                         }
-                        publishProgress((i*80)/lesson_filter.size());
+                        publishProgress((i*80)/selected_lessons.size());
                         Log.d(TAG, "exporting lesson "+lesson);
                         if (lesson.equals(""))
                             continue;
@@ -2034,7 +2034,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             new_db.assignWordLesson(lesson, v);
                         }
                     }
-                    new_db.sortLessons(lesson_filter);
+                    new_db.sortLessons(selected_lessons);
 
                     if (with_scores) {
                         ArrayList<String> chars = new_db.getAllChars();
@@ -2082,7 +2082,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                     if (isCancelled()) { // everything went through anyway...
                         onPostExecute((Void) null);
-                    }*/
+                    }
                 }
                 return null;
             }
@@ -2092,7 +2092,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 super.onPreExecute();
                 // create the progress dialog if needed
                 if (with_dialog) {
-                    if (!filtered_lessons) {
+                    if (selected_lessons == null) {
                         mProgressDialog = ProgressDialog.show(context, "Exporting Database", "Copying...", false);
                         mProgressDialog.setIndeterminate(true);
                     }

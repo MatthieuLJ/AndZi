@@ -5,28 +5,30 @@ package com.matthieu.settings;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.EditTextPreference;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
+import android.preference.*;
 import android.widget.Toast;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
+import com.matthieu.VocabularyEditorActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ExportDB extends PreferenceActivity {
     String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ (1+Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
+    ArrayList<String> lesson_selection;
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
         addPreferencesFromResource(R.xml.settings_export_db);
         EditTextPreference path = (EditTextPreference) findPreference("export_path");
         path.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -42,9 +44,25 @@ public class ExportDB extends PreferenceActivity {
         });
         path.setText(file_path);
         path.setSummary(getString(R.string.settings_export_destination,file_path));
+
+        Preference select_lesson = findPreference("selected_lessons");
+        select_lesson.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object o) {
+                boolean select = sp.getBoolean("selected_lessons", false);
+                if (!select) { // this is called before it is actually called, let's go select some lessons
+                    Intent i = new Intent(ExportDB.this, VocabularyEditorActivity.class);
+                    i.setAction(Intent.ACTION_PICK);
+                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivityForResult(i, 0);
+                }
+                return true;
+            }
+        });
+
         Preference export = findPreference("do_export");
         export.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            private void do_export(final String destination, final boolean include_scores, final boolean only_filtered) {
+            private void do_export(final String destination, final boolean include_scores, final boolean selected_lessons) {
                 File export_db = new File(destination);
                 try {
                     if (!export_db.createNewFile()) {
@@ -56,7 +74,7 @@ public class ExportDB extends PreferenceActivity {
                     return;
                 }
                 if (((AndZiApplication) getApplication()).check_exporting_space(destination))
-                    ((AndZiApplication) getApplication()).getMyDB().create_export_task(destination, include_scores, only_filtered, true, ExportDB.this, new Runnable() {
+                    ((AndZiApplication) getApplication()).getMyDB().create_export_task(destination, include_scores, selected_lessons?lesson_selection:null, true, ExportDB.this, new Runnable() {
                         public void run() {
                             Toast.makeText(ExportDB.this, getString(R.string.settings_export_success, destination), Toast.LENGTH_SHORT).show();
                         }
@@ -68,9 +86,8 @@ public class ExportDB extends PreferenceActivity {
                 return;
             }
             public boolean onPreferenceClick(Preference preference) {
-                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
                 final boolean include_scores = sp.getBoolean("include_scores", false);
-                final boolean only_filtered = sp.getBoolean("only_filtered", false);
+                final boolean selected_lessons = sp.getBoolean("selected_lessons", false);
                 final String destination = sp.getString("export_path", file_path);
 
                 if (new File(destination).exists()) {
@@ -84,7 +101,7 @@ public class ExportDB extends PreferenceActivity {
                     alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int i) {
                             new File(destination).delete();
-                            do_export(destination, include_scores, only_filtered);
+                            do_export(destination, include_scores, selected_lessons);
                             dialog.dismiss();
                         }
                     });
@@ -92,11 +109,28 @@ public class ExportDB extends PreferenceActivity {
                     alert.show();
                 }
                 else {
-                    do_export(destination, include_scores, only_filtered);
+                    do_export(destination, include_scores, selected_lessons);
                 }
 
                 return true;
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode==0) {
+            if (resultCode == RESULT_OK) {
+                lesson_selection = data.getExtras().getStringArrayList("lesson_list");
+            } else {
+                final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putBoolean("selected_lessons", false);
+                editor.commit();
+
+                CheckBoxPreference select_lesson = (CheckBoxPreference) findPreference("selected_lessons");
+                select_lesson.setChecked(false);
+            }
+        }
     }
 }

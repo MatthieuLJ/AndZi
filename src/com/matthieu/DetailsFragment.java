@@ -387,6 +387,7 @@ public class DetailsFragment extends Fragment {
 
     public void edit_add_word() {
         Intent i=new Intent(getActivity(), VocabularyEditorActivity.class);
+        i.setAction(Intent.ACTION_EDIT);
         i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         i.putExtra("Hanzi", current_hanzi);
         startActivity(i);

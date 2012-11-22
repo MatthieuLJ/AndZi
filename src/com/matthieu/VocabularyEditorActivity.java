@@ -59,12 +59,12 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
-            pager.setPagingEnabled(true);
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
 
             mIndicator.setOnPageChangeListener(this);
+
         }
         else {
             // TODO When we are on a larger screen without a pager
@@ -74,13 +74,29 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        String hanzi = intent.getStringExtra("Hanzi");
-        if ((hanzi != null) && (fragments[0] != null)) {
-            ((AddVocabularyFragment)fragments[0]).set_word_to_edit(hanzi);
-            LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-            if (pager != null) {
-                pager.setCurrentItem(0, false);
+        if (intent.getAction() == Intent.ACTION_EDIT) {
+            String hanzi = intent.getStringExtra("Hanzi");
+            if ((hanzi != null) && (fragments[0] != null)) {
+                ((AddVocabularyFragment)fragments[0]).set_word_to_edit(hanzi);
             }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        if (getIntent().getAction().equals(Intent.ACTION_EDIT)) {
+            if (pager != null) {
+                pager.setCurrentItem(0);
+                pager.setPagingEnabled(true);
+            }
+        } else if (getIntent().getAction().equals(Intent.ACTION_PICK)) {  // lesson selection mode
+            if (pager != null) {
+                pager.setCurrentItem(1);
+                pager.setPagingEnabled(false);
+            }
+            set_menu(menu_types.LESSON_SELECTION);
         }
     }
 
@@ -194,7 +210,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         LESSON_NONE_SELECTED,
         LESSON_ONE_SELECTED,
         LESSON_MULTI_SELECTED,
-        LESSON_FILTER
+        LESSON_SELECTION
     }
     private menu_types current_type=menu_types.INITIAL;
 
@@ -242,8 +258,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             case LESSON_MULTI_SELECTED:
                 menu_resource = R.menu.add_vocabulary_lesson_multiple;
                 break;
-            case LESSON_FILTER:
-                menu_resource = R.menu.add_vocabulary_lesson_filter;
+            case LESSON_SELECTION:
+                menu_resource = R.menu.add_vocabulary_lesson_selection;
 
                 break;
             case INITIAL:
@@ -294,16 +310,18 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 ((AddVocabularyFragment)fragments[0]).done();
                 return true;
 
-            case R.id.add_vocabulary_lesson_filter_all:
-                ((EditLessonsFragment)fragments[1]).set_filter_all();
+            case R.id.add_vocabulary_lesson_select_all:
+                ((EditLessonsFragment)fragments[1]).set_select_all();
                 break;
-            case R.id.add_vocabulary_lesson_filter_none:
-                ((EditLessonsFragment)fragments[1]).set_filter_none();
+            case R.id.add_vocabulary_lesson_select_none:
+                ((EditLessonsFragment)fragments[1]).set_select_none();
                 break;
-            case R.id.add_vocabulary_lesson_filter_done:
-                Intent resultIntent = new Intent();
+            case R.id.add_vocabulary_lesson_select_done:
+                Intent resultIntent = getIntent();
                 selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                resultIntent.putExtra("lesson_list", selection.toArray());
+                Bundle b = new Bundle();
+                b.putStringArrayList("lesson_list", selection);
+                resultIntent.putExtras(b);
                 setResult(RESULT_OK, resultIntent);
                 finish();
                 break;

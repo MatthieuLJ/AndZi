@@ -28,7 +28,6 @@ public class EditLessonsFragment extends Fragment {
     protected HanziDB myDB=null;
 
     protected ArrayList<Lesson> current_lessons;
-    protected ArrayList<String> current_lesson_filter;
     private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
@@ -272,8 +271,8 @@ public class EditLessonsFragment extends Fragment {
                 label.setTag(R.id.lesson_item, le);
 
 
-                if (current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) {
-                    if (current_lesson_filter.contains(le.label)) {
+                if (current_type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) {
+                    if (current_lesson_selection.contains(le)) {
                         row.setBackgroundColor(0xFF777777);
                     } else {
                         row.setBackgroundColor(0x00000000);
@@ -362,10 +361,13 @@ public class EditLessonsFragment extends Fragment {
     }
 
     protected void change_menu() {
+        if (getActivity() == null)
+            return;
+
         VocabularyEditorActivity.menu_types type;
         VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
 
-        if ((current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) ||
+        if ((current_type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) ||
                 (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
             return;
 
@@ -389,13 +391,13 @@ public class EditLessonsFragment extends Fragment {
             return;
 
         VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
-        if (current_type == VocabularyEditorActivity.menu_types.LESSON_FILTER) {
-            if (!current_lesson_filter.contains(le.label)) {
-                current_lesson_filter.add(le.label);
+        if (current_type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) {
+            if (!current_lesson_selection.contains(le)) {
+                current_lesson_selection.add(le);
                 v.setBackgroundColor(0xFF777777);
             }
             else {
-                current_lesson_filter.remove(le.label);
+                current_lesson_selection.remove(le);
                 v.setBackgroundColor(0x00000000);
             }
 
@@ -648,24 +650,17 @@ public class EditLessonsFragment extends Fragment {
         ((VocabularyEditorActivity)getActivity()).open_lesson_list(to_list);
     }
 
-    public void set_filter_start() {
-        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.LESSON_FILTER);
-
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-    }
-
-    public void set_filter_all() {
-        current_lesson_filter.clear();
+    public void set_select_all() {
+        current_lesson_selection.clear();
         for (Lesson le : current_lessons)
-            current_lesson_filter.add(le.label);
+            current_lesson_selection.add(le);
 
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
     }
 
-    public void set_filter_none() {
-        current_lesson_filter.clear();
+    public void set_select_none() {
+        current_lesson_selection.clear();
 
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();

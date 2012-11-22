@@ -13,11 +13,14 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (7):
 * Looks like progress is not being recorded (to confirm...)
 * When merging, find which one is smaller to merge into
 * Make merging faster!
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
+* Export or Email gets cancelled when screen is rotated
+* Some Dictionary searches are too long
+* Crash if dictionary search finishes when phone is off
 
 FUTURE (15):
 * When looking for Chinese translation (from English), separate the words if any

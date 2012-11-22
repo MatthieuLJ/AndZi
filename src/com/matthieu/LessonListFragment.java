@@ -143,6 +143,9 @@ public class LessonListFragment extends Fragment {
     }
 
     public void change_menu() {
+        if (getActivity() == null)
+            return;
+
         ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.INITIAL);
     }
 }

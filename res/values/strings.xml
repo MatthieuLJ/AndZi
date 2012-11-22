@@ -66,8 +66,8 @@
     <string name="settings_import_progress">Import Progress</string>
 
     <string name="settings_include_scores">Include current score</string>
-    <string name="settings_include_filters">Export filtered lessons</string>
-    <string name="settings_include_filters_summary">Only include the lessons filtered</string>
+    <string name="settings_select_lessons">Export filtered lessons</string>
+    <string name="settings_select_lessons_summary">Only include the lessons filtered</string>
     <string name="settings_email">Email</string>
     <string name="settings_export">Export</string>
     <string name="settings_file_path">File path</string>

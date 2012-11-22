@@ -7,28 +7,53 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import com.matthieu.AndZiApplication;
 import com.matthieu.HanziDB;
 import com.matthieu.R;
+import com.matthieu.VocabularyEditorActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class EmailDB extends PreferenceActivity {
+    ArrayList<String> lesson_selection;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
+        final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(EmailDB.this);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putBoolean("selected_lessons", false);
+        editor.commit();
+
         addPreferencesFromResource(R.xml.settings_email_db);
+
+        Preference select_lesson = findPreference("selected_lessons");
+        select_lesson.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object o) {
+                boolean select = sp.getBoolean("selected_lessons", false);
+                if (!select) { // this is called before it is actually called, let's go select some lessons
+                    Intent i = new Intent(EmailDB.this, VocabularyEditorActivity.class);
+                    i.setAction(Intent.ACTION_PICK);
+                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivityForResult(i, 0);
+                }
+                return true;
+            }
+        });
 
         Preference email = findPreference("do_email");
         email.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
-                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(EmailDB.this);
                 boolean include_scores = sp.getBoolean("include_scores", false);
-                boolean only_filtered = sp.getBoolean("only_filtered", false);
+                boolean selected_lessons = sp.getBoolean("selected_lessons", false);
                 final File export_db;
                 try {
                     export_db = File.createTempFile("AndZi", ".azdb");
@@ -37,7 +62,8 @@ public class EmailDB extends PreferenceActivity {
                     return true;
                 }
 
-                ((AndZiApplication) getApplication()).getMyDB().create_export_task(export_db.getPath(),include_scores,only_filtered,true, EmailDB.this, new Runnable() {
+                ((AndZiApplication) getApplication()).getMyDB().create_export_task(export_db.getPath(),
+                        include_scores,selected_lessons?lesson_selection:null,true, EmailDB.this, new Runnable() {
                     public void run() {
                         Intent sendIntent = new Intent(Intent.ACTION_SEND);
                         sendIntent.setType("application/sqlite");
@@ -50,5 +76,22 @@ public class EmailDB extends PreferenceActivity {
                 return true;
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode==0) {
+            if (resultCode == RESULT_OK) {
+                lesson_selection = data.getExtras().getStringArrayList("lesson_list");
+            } else {
+                final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(EmailDB.this);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putBoolean("selected_lessons", false);
+                editor.commit();
+
+                CheckBoxPreference select_lesson = (CheckBoxPreference) findPreference("selected_lessons");
+                select_lesson.setChecked(false);
+            }
+        }
     }
 }

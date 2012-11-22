@@ -84,6 +84,11 @@ public class AddVocabularyFragment extends Fragment
         myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
         refDB = ((AndZiApplication) getActivity().getApplication()).getRefDB();
 
+        VocabularyEditorActivity.menu_types type = ((VocabularyEditorActivity)getActivity()).get_menu();
+        if ((type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) ||
+                (type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
+            return;
+
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
         if (current_chinese_word!= null) {
             chinese_word.setText(current_chinese_word);
@@ -553,6 +558,8 @@ public class AddVocabularyFragment extends Fragment
     private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
 
     protected void change_menu() {
+        if (getActivity() == null)
+            return;
         VocabularyEditorActivity.menu_types type;
         if (current_chinese_word.equals(""))
             type = VocabularyEditorActivity.menu_types.INITIAL;

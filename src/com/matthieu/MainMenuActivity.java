@@ -97,6 +97,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
 
     public void handle_add_vocabulary(View v) {
         Intent intent = new Intent(this, VocabularyEditorActivity.class);
+        intent.setAction(Intent.ACTION_EDIT);
         startActivity(intent);
     }
 
