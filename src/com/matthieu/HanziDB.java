@@ -35,7 +35,6 @@ public class HanziDB extends SQLiteOpenHelper {
         super(application.getApplicationContext(), db_name, null, DATABASE_VERSION);
         app = application;
         db = this.getWritableDatabase();
-        db.execSQL("PRAGMA synchronous=OFF");
         db.execSQL("PRAGMA case_sensitive_like=ON");
         db.acquireReference();
     }
@@ -1779,9 +1778,9 @@ public class HanziDB extends SQLiteOpenHelper {
     public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Activity context, final Runnable finishing) {
         AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
             ProgressDialog mProgressDialog;
-            boolean backup_ready=false;
-            final String new_db_name = "tmp_db", backup_db_name="backup_db";
+            final String to_merge_name = "tmp_db", new_db_name ="merged_db";
             HanziDB other_db=null;
+            HanziDB merge_from, merge_to;
 
             @Override
             protected Void doInBackground(Void... voids) {
@@ -1791,7 +1790,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
                 else {
                     // copy to the DB directory
-                    if (!app.copyFile(path, HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                    if (!app.copyFile(path, app.getApplicationContext().getDatabasePath(to_merge_name).getPath())) {
                         clean_up_on_cancel(true);
                         return null;
                     }
@@ -1803,22 +1802,28 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
 
                     // copy a backup
-                    if (!app.copyFile(db.getPath(), HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
-                        clean_up_on_cancel(true);
-                        return null;
-                    }
+                    other_db = new HanziDB(app, to_merge_name);
                     publishProgress(10);
-                    if (isCancelled()) {
-                        clean_up_on_cancel(false);
-                        return null;
-                    }
-                    backup_ready=true;
 
-                    other_db = new HanziDB(app, new_db_name);
+                    if (other_db.getNumChars() < getNumChars()) {
+                        merge_from = other_db;
+                        if (!app.copyFile(db.getPath(), app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                            clean_up_on_cancel(true);
+                            return null;
+                        }
+
+                    } else {
+                        merge_from = HanziDB.this;
+                        if (!app.copyFile(app.getDatabasePath(to_merge_name).getPath(), app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                            clean_up_on_cancel(true);
+                            return null;
+                        }
+                    }
+                    merge_to = new HanziDB(app, new_db_name);
 
                     // merge it
-                    ArrayList<String> original_lessons = getLessons();
-                    ArrayList<String> lessons = other_db.getLessons();
+                    ArrayList<String> original_lessons = merge_to.getLessons();
+                    ArrayList<String> lessons = merge_from.getLessons();
                     for (int i=0; i<lessons.size(); i++) {
                         publishProgress(10+(i*50)/(lessons.size()+1));
                         if (isCancelled()) {
@@ -1827,20 +1832,20 @@ public class HanziDB extends SQLiteOpenHelper {
                         }
                         String l = lessons.get(i);
                         if (!original_lessons.contains(l))
-                            addLesson(l);
+                            merge_to.addLesson(l);
 
-                        ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
-                        addVocabulary(voc);
+                        ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
+                        merge_to.addVocabulary(voc);
                         for (Vocabulary v:voc) {
-                            assignWordLesson(l,v);
+                            merge_to.assignWordLesson(l,v);
                         }
                     }
 
                     // add the vocabulary that's not in any lesson
-                    ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
-                    addVocabulary(voc);
+                    ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
+                    merge_to.addVocabulary(voc);
 
-                    ArrayList<String> chars = other_db.getAllChars();
+                    ArrayList<String> chars = merge_from.getAllChars();
                     for (int i=0; i<chars.size(); i++) {
                         publishProgress(60+(i*15)/chars.size());
                         if (isCancelled()) {
@@ -1848,13 +1853,13 @@ public class HanziDB extends SQLiteOpenHelper {
                             return null;
                         }
                         String c=chars.get(i);
-                        if (other_db.getBoxForChar(c) != 0) {
-                            setBoxForChar(c, other_db.getBoxForChar(c));
-                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
+                        if (merge_from.getBoxForChar(c) != 0) {
+                            merge_to.setBoxForChar(c, merge_from.getBoxForChar(c));
+                            merge_to.setExpirationTimeForChar(c, merge_from.getExpirationTimeForChar(c));
                         }
                     }
 
-                    ArrayList<String> words = other_db.getAllWords();
+                    ArrayList<String> words = merge_from.getAllWords();
                     for (int i=0; i<words.size(); i++) {
                         publishProgress(75+(i*15)/words.size());
                         if (isCancelled()) {
@@ -1862,9 +1867,9 @@ public class HanziDB extends SQLiteOpenHelper {
                             return null;
                         }
                         String c=words.get(i);
-                        if (other_db.getBoxForChar(c) != 0) {
-                            setBoxForChar(c, other_db.getBoxForChar(c));
-                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
+                        if (merge_from.getBoxForChar(c) != 0) {
+                            merge_to.setBoxForChar(c, merge_from.getBoxForChar(c));
+                            merge_to.setExpirationTimeForChar(c, merge_from.getExpirationTimeForChar(c));
                         }
                     }
 
@@ -1876,17 +1881,14 @@ public class HanziDB extends SQLiteOpenHelper {
                         if (all_lessons.indexOf(all_lessons.get(i))<i)
                             all_lessons.remove(i);
                     }
-                    sortLessons(all_lessons);
+                    merge_to.sortLessons(all_lessons);
 
                     other_db.close();
+                    HanziDB.this.close();
 
-                    backup_ready=false;
-                    // Erase the temporary database
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
                     publishProgress(95);
+                    app.replaceDataBase(app.getDatabasePath(new_db_name).getPath());
 
-                    // Erase backup
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
                     publishProgress(100);
 
                     if (isCancelled()) { // everything went through anyway...
@@ -1953,13 +1955,8 @@ public class HanziDB extends SQLiteOpenHelper {
 
             private void clean_up_on_cancel(final boolean error) {
                 // Erase the temporary database
+                app.getDatabasePath(to_merge_name).delete();
                 app.getDatabasePath(new_db_name).delete();
-
-                // restore the backup if it is ready
-                if (backup_ready)
-                    app.replaceDataBase(app.getDatabasePath(backup_db_name).getPath());
-
-                app.getDatabasePath(backup_db_name).delete();
 
                 if (other_db != null)
                     other_db.close();

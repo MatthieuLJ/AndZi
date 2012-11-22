@@ -13,10 +13,7 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (7):
-* Looks like progress is not being recorded (to confirm...)
-* When merging, find which one is smaller to merge into
-* Make merging faster!
+BUGS (4):
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Export or Email gets cancelled when screen is rotated
 * Some Dictionary searches are too long
@@ -39,7 +36,8 @@ FUTURE (15):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (174):
+DONE (175):
+* When merging, find which one is smaller to merge into
 * Only offer to check details in list when it exists
 * Move buttons in dictionary / details in actionbar
 * When checking english, break at '-' too
