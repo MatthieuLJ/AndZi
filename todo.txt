@@ -13,10 +13,31 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
+BUGS (4):
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Some Dictionary searches are too long
+1 element:
+ Chinese -> starting
+ Pinyin -> exact
+ Pinyin no tone -> exact
+ Incomplete pinyin -> nothing
+2 elements:
+ Chinese + Chinese -> all
+ Chinese + Pinyin -> all
+ Chinese + Pinyin no tone -> starting
+ Chinese + Incomplete pinyin -> starting
+ Pinyin + Chinese -> all
+ Pinyin + Pinyin -> all
+ Pinyin + Pinyin no tone -> starting
+ Pinyin + Incomplete pinyin -> starting
+ Pinyin no tone + Chinese -> starting
+ Pinyin no tone + Pinyin -> starting
+ Pinyin no tone + Pinyin no tone -> starting
+ Pinyin no tone + Incomplete pinyin -> exact
+3+ elements
+ All
 * Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
+* No toned pinyin is broken (的 as 'de5' or 'di4')
 
 FUTURE (14):
 * When looking for Chinese translation (from English), separate the words if any
