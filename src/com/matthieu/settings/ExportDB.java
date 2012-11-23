@@ -4,9 +4,11 @@
 package com.matthieu.settings;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
@@ -24,11 +26,17 @@ import java.util.Calendar;
 public class ExportDB extends PreferenceActivity {
     String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ (1+Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
     ArrayList<String> lesson_selection;
+    HanziDB.export_task running_task;
         
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ExportDB.this);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putBoolean("selected_lessons", false);
+        editor.commit();
+
         addPreferencesFromResource(R.xml.settings_export_db);
         EditTextPreference path = (EditTextPreference) findPreference("export_path");
         path.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -73,13 +81,14 @@ public class ExportDB extends PreferenceActivity {
                     Toast.makeText(ExportDB.this, R.string.settings_error_create_file, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (((AndZiApplication) getApplication()).check_exporting_space(destination))
-                    ((AndZiApplication) getApplication()).getMyDB().create_export_task(destination, include_scores, selected_lessons?lesson_selection:null, true, ExportDB.this, new Runnable() {
+                if (((AndZiApplication) getApplication()).check_exporting_space(destination)) {
+                    ProgressDialog dialog = new ProgressDialog(ExportDB.this);
+                    running_task = ((AndZiApplication) getApplication()).getMyDB().create_export_task(destination, include_scores, selected_lessons?lesson_selection:null, dialog, ExportDB.this, new Runnable() {
                         public void run() {
                             Toast.makeText(ExportDB.this, getString(R.string.settings_export_success, destination), Toast.LENGTH_SHORT).show();
                         }
                     });
-                else {
+                } else {
                     Toast.makeText(ExportDB.this, R.string.settings_error_not_enough_space_export, Toast.LENGTH_SHORT).show();
                 }
 
@@ -115,6 +124,22 @@ public class ExportDB extends PreferenceActivity {
                 return true;
             }
         });
+
+        Object saved = getLastNonConfigurationInstance();
+        if (saved instanceof HanziDB.export_task) {
+            running_task = (HanziDB.export_task) saved;
+            ProgressDialog dialog = new ProgressDialog(this);
+            running_task.change_context(this);
+            running_task.change_dialog(dialog);
+        }
+    }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        if ((running_task != null) && (running_task.getStatus()!= AsyncTask.Status.FINISHED) && (!running_task.isCancelled()))
+            return running_task;
+        else
+            return super.onRetainNonConfigurationInstance();
     }
 
     @Override

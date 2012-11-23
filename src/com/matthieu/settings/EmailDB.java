@@ -3,9 +3,11 @@
  */
 package com.matthieu.settings;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 
 public class EmailDB extends PreferenceActivity {
     ArrayList<String> lesson_selection;
+    HanziDB.export_task running_task;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,8 +65,9 @@ public class EmailDB extends PreferenceActivity {
                     return true;
                 }
 
-                ((AndZiApplication) getApplication()).getMyDB().create_export_task(export_db.getPath(),
-                        include_scores,selected_lessons?lesson_selection:null,true, EmailDB.this, new Runnable() {
+                ProgressDialog dialog = new ProgressDialog(EmailDB.this);
+                running_task = ((AndZiApplication) getApplication()).getMyDB().create_export_task(export_db.getPath(),
+                        include_scores,selected_lessons?lesson_selection:null,dialog, EmailDB.this, new Runnable() {
                     public void run() {
                         Intent sendIntent = new Intent(Intent.ACTION_SEND);
                         sendIntent.setType("application/sqlite");
@@ -76,6 +80,22 @@ public class EmailDB extends PreferenceActivity {
                 return true;
             }
         });
+
+        Object saved = getLastNonConfigurationInstance();
+        if (saved instanceof HanziDB.export_task) {
+            running_task = (HanziDB.export_task) saved;
+            ProgressDialog dialog = new ProgressDialog(this);
+            running_task.change_context(this);
+            running_task.change_dialog(dialog);
+        }
+    }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        if ((running_task != null) && (running_task.getStatus()!= AsyncTask.Status.FINISHED) && (!running_task.isCancelled()))
+            return running_task;
+        else
+            return super.onRetainNonConfigurationInstance();
     }
 
     @Override

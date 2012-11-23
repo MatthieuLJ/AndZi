@@ -79,25 +79,19 @@ public class DetailsFragment extends Fragment {
         if (!current_hanzi.equals(""))
             populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
 
+        HanziDB db = ((AndZiApplication) getActivity().getApplication()).getMyDB();
+        if (db == null)
+            return null;
         if (use_ref)
-            check_if_exists_in_db();
+            check_if_exists_in_db(db);
 
         return res;
     }
 
-    public void check_if_exists_in_db() {
+    public void check_if_exists_in_db(final HanziDB db) {
         AsyncTask<Void,Void,Void> checker = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-                Activity activity= DetailsFragment.this.getActivity();
-                if (activity == null)
-                    return null;
-                AndZiApplication app = (AndZiApplication) activity.getApplication();
-                if (app == null)
-                    return null;
-                HanziDB db = app.getMyDB();
-                if (db == null)
-                    return null;
                 exists_in_db = db.getTranslations(DetailsFragment.this.current_hanzi).size() > 0;
 
                 return null;

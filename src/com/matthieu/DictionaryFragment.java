@@ -16,14 +16,13 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.widget.MessageCursor;
 import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
 public class DictionaryFragment extends Fragment implements VocabularyCursorClickHandle {
     int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Cursor current_cursor =null;
-    static update_delayer update_thread=null;
+    static update_delayer update_task =null;
     boolean use_ref=true;
     private static final String TAG="Dictionary";
 
@@ -61,9 +60,9 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (update_thread != null) {
-            update_thread.cancel();
-            update_thread = null;
+        if (update_task != null) {
+            update_task.cancel();
+            update_task = null;
         }
         synchronized (DictionaryFragment.this) {
             if (current_cursor != null) {
@@ -78,19 +77,18 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         ((ReferenceActivity)getActivity()).new_details_request(item_clicked, use_ref);
     }
 
-    private static class update_delayer extends Thread {
+    private class update_delayer extends AsyncTask<Void, Cursor, Cursor> {
         String msg_query;
         int msg_mode;
         boolean msg_ref;
         Cursor result_cursor;
-        DictionaryFragment parent;
         boolean is_cancelled = false;
+        HanziDB currentDB=null;
 
-        public update_delayer(String query, int mode, boolean ref, DictionaryFragment dict) {
+        public update_delayer(String query, int mode, boolean ref) {
             msg_query = query;
             msg_mode = mode;
             msg_ref = ref;
-            parent = dict;
         }
 
         public void cancel() {
@@ -98,31 +96,39 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         }
 
         @Override
-        public void run() {
-            Log.d(TAG, "Starting a new query for "+msg_query);
-
-            if ((msg_query.equals(parent.last_query)) && (msg_mode == parent.last_mode) && (msg_ref == parent.last_use_ref) &&
-                    (parent.current_cursor != null)) {
-                Log.d(TAG, "Already had the results");
-                // just to make sure it's loaded....
-                parent.current_cursor.getCount();
-                parent.current_cursor.moveToFirst();
-                publish_cursor(parent.current_cursor);
+        protected void onPreExecute() {
+            if (getActivity()== null)
                 return;
-            }
 
-            parent.last_query = msg_query;
-            parent.last_mode = msg_mode;
-            parent.last_use_ref = msg_ref;
-            publish_cursor(null);
-
-            HanziDB currentDB=null;
             if (msg_ref) {
-                currentDB = ((AndZiApplication)parent.getActivity().getApplication()).getRefDB();
+                currentDB = ((AndZiApplication)getActivity().getApplication()).getRefDB();
             }
             if ((currentDB == null) || (!msg_ref)) {
-                currentDB = ((AndZiApplication)parent.getActivity().getApplication()).getMyDB();
+                currentDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
             }
+        }
+
+        @Override
+        protected Cursor doInBackground(Void... voids) {
+            Log.d(TAG, "Starting a new query for "+msg_query);
+
+            if (currentDB == null)
+                return null;
+
+            if ((msg_query.equals(last_query)) && (msg_mode == last_mode) && (msg_ref == last_use_ref) &&
+                    (current_cursor != null)) {
+                Log.d(TAG, "Already had the results");
+                // just to make sure it's loaded....
+                current_cursor.getCount();
+                current_cursor.moveToFirst();
+                return current_cursor;
+            }
+
+            last_query = msg_query;
+            last_mode = msg_mode;
+            last_use_ref = msg_ref;
+            publishProgress(null);
+
 
             if (msg_query.length()==0) {
                 result_cursor =null;
@@ -163,7 +169,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             }
 
             if (is_cancelled)
-                return;
+                return null;
 
             // Just to make sure the query actually happens in this thread (and not the UI thread)
             if ((result_cursor != null) && (!result_cursor.isClosed())) {
@@ -171,45 +177,57 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 result_cursor.moveToFirst();
             }
 
-            if (!is_cancelled) {
-                publish_cursor(result_cursor);
-            } else if (result_cursor != null) {
+            if (isCancelled() && result_cursor != null)
                 result_cursor.close();
+
+            return result_cursor;
+        }
+
+        @Override
+        protected void onProgressUpdate(Cursor... values) {
+            publish_cursor(values==null?null:values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Cursor cursor) {
+            publish_cursor(cursor);
+        }
+
+        private void publish_cursor(Cursor cur) {
+            if (getActivity()==null)
+                return;
+
+            if (getView()==null)
+                return;
+            EditText query = (EditText) getView().findViewById(R.id.dict_query);
+            if (query == null)
+                return;
+
+            ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(cur==null && !query.getText().toString().equals(""));
+
+            final ListView results = (ListView) getView().findViewById(R.id.dict_results);
+
+            if ((results == null) && (cur!=null)) {
+                cur.close();
+                return;
             }
+            ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
+            current_cursor = cur;
         }
 
-        private void publish_cursor(@Nullable final Cursor cur) {
-            parent.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (parent) {
-                        EditText query = (EditText) parent.getView().findViewById(R.id.dict_query);
-                        if (query == null)
-                            return;
 
-                        ((SherlockFragmentActivity)parent.getActivity()).setSupportProgressBarIndeterminateVisibility(cur==null && !query.getText().toString().equals(""));
-
-                        final ListView results = (ListView) parent.getView().findViewById(R.id.dict_results);
-
-                        if ((results == null) && (cur!=null)) {
-                            cur.close();
-                            return;
-                        }
-                        ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
-                        parent.current_cursor = cur;
-                    }
-                }
-            });
-        }
     }
 
     private void start_new_query(int mode, String query) {
-        if (update_thread != null) {
-            update_thread.cancel();
+        if (update_task != null) {
+            update_task.cancel();
         }
 
-        update_thread = new update_delayer(query, mode, use_ref, this);
-        update_thread.start();
+        update_task = new update_delayer(query, mode, use_ref);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            update_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            update_task.execute((Void[])null);
     }
 
     private class Dictionary_query_parse implements TextWatcher {

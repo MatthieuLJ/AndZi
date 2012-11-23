@@ -626,6 +626,8 @@ public class EditLessonsFragment extends Fragment {
                     @Override
                     public void run() {
                         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                        if (lv == null)
+                            return;
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
                 });

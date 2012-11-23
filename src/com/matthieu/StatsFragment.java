@@ -104,6 +104,8 @@ public class StatsFragment extends Fragment {
             @Override
             protected void onPostExecute(Void aVoid) {
                 final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
+                if (graph == null)
+                    return;
                 graph.update_graph();
 
                 TextView tv;

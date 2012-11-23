@@ -13,15 +13,13 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (3):
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
-* Export or Email gets cancelled when screen is rotated
 * Some Dictionary searches are too long
-* Crash if dictionary search finishes when phone is off
+* Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
 
-FUTURE (15):
+FUTURE (14):
 * When looking for Chinese translation (from English), separate the words if any
-* Enable / Disable filter in reference activity (?)
 * Can reset score per lesson
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
@@ -36,7 +34,9 @@ FUTURE (15):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (175):
+DONE (177):
+* Export or Email gets cancelled when screen is rotated
+* Crash if dictionary search finishes when phone is off
 * When merging, find which one is smaller to merge into
 * Only offer to check details in list when it exists
 * Move buttons in dictionary / details in actionbar
@@ -237,6 +237,14 @@ DONE (175):
 * Do not have duplicates in "Previous tries"
 * Handle correctly in 'guess chinese character' when translations are only "(...)"
 * Check for possible false-negative in character finder (several possible good results)
+
+Code to waste time:
+
+            double phi=1.0f;
+            for (int i=0;i<4000000; i++)
+                phi = Math.sqrt(1+phi);
+
+            Log.d(TAG, "Phi is "+phi);
 
 
 Lint output:

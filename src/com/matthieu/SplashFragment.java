@@ -42,6 +42,7 @@ public class SplashFragment extends Fragment {
         return res;
     }
 
+    // TODO asynctask work
     private class SplashLoader extends AsyncTask<Void,Integer,Void> {
         @Override
         protected Void doInBackground(Void... voids) {

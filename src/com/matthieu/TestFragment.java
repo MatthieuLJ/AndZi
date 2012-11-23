@@ -70,12 +70,13 @@ public abstract class TestFragment extends Fragment {
                 public void run() {
                     //Log.d(TAG, "Updating scores !");
                     update_score();
-                    getActivity().runOnUiThread(new Runnable() {
+                    final TestActivity act = (TestActivity) getActivity();
+                    if (act == null)
+                        return;
+                    act.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            TestActivity parent_activity = (TestActivity)getActivity();
-                            if (parent_activity != null)
-                                parent_activity.update_stats();
+                            act.update_stats();
                         }
                     });
                 }
@@ -133,10 +134,13 @@ public abstract class TestFragment extends Fragment {
                     restore_score();
                     good = CORRECT;
                     update_score();
-                    getActivity().runOnUiThread(new Runnable() {
+                    final TestActivity act = (TestActivity) getActivity();
+                    if (act == null)
+                        return;
+                    act.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ((TestActivity)getActivity()).update_stats();
+                            act.update_stats();
                         }
                     });
                 }
