@@ -13,8 +13,28 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (3):
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
+* Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
+* No toned pinyin is broken (的 as 'de5' or 'di4')
+
+FUTURE (14):
+* When looking for Chinese translation (from English), separate the words if any
+* Can reset score per lesson
+* Find a way to hilight the character sequence in Details list
+* Brag about the score on Facebook / Twitter
+* Pre-created lessons
+* Hide IME when not needed
+* Adaptive delays to how often the app is used
+* Find characters based on the composition
+* Can find similar characters based on composition (and test with MCQ)
+* Suggest vocabulary based on what is already known, frequency list
+* Push database from one phone to another (ICS)
+* Teach to write characters
+* Voice recognition... ?
+* OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
+
+DONE (178):
 * Some Dictionary searches are too long
 1 element:
  Chinese -> starting
@@ -36,26 +56,6 @@ BUGS (4):
  Pinyin no tone + Incomplete pinyin -> exact
 3+ elements
  All
-* Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
-* No toned pinyin is broken (的 as 'de5' or 'di4')
-
-FUTURE (14):
-* When looking for Chinese translation (from English), separate the words if any
-* Can reset score per lesson
-* Find a way to hilight the character sequence in Details list
-* Brag about the score on Facebook / Twitter
-* Pre-created lessons
-* Hide IME when not needed
-* Adaptive delays to how often the app is used
-* Find characters based on the composition
-* Can find similar characters based on composition (and test with MCQ)
-* Suggest vocabulary based on what is already known, frequency list
-* Push database from one phone to another (ICS)
-* Teach to write characters
-* Voice recognition... ?
-* OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
-
-DONE (177):
 * Export or Email gets cancelled when screen is rotated
 * Crash if dictionary search finishes when phone is off
 * When merging, find which one is smaller to merge into

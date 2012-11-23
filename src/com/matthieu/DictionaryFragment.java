@@ -81,7 +81,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         String msg_query;
         int msg_mode;
         boolean msg_ref;
-        Cursor result_cursor;
+
         boolean is_cancelled = false;
         HanziDB currentDB=null;
 
@@ -110,6 +110,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
         @Override
         protected Cursor doInBackground(Void... voids) {
+            Cursor result_cursor;
             Log.d(TAG, "Starting a new query for "+msg_query);
 
             if (currentDB == null)
@@ -136,6 +137,11 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             else {
                 if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
                     ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
+
+                    if (elems == null) {
+                        return new MessageCursor("Cannot understand this query");
+                    }
+
                     boolean all_chinese=true;
                     if (elems != null)
                         for (HanziDB.StringElement e : elems) {
@@ -143,15 +149,48 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                 all_chinese=false;
                         }
 
-                    if (elems == null)
-                        result_cursor = new MessageCursor("Cannot understand this query");
-                    else if (elems.size()==1) {
-                        if (elems.get(0).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
-                            result_cursor = null;
-                        else
-                            result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
-                    }
-                    else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
+                    if (elems.size()==1) {
+                        switch(elems.get(0).type) {
+                            case CHINESE:
+                                result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
+                                break;
+                            case PINYIN_WITH_TONE:
+                            case PINYIN_WITHOUT_TONE:
+                                result_cursor = currentDB.getWordsAsSequence(elems, true);
+                                break;
+                            case INCOMPLETE_PINYIN:
+                            default:
+                                result_cursor = null;
+                                break;
+                        }
+                    } else if (elems.size()==2) {
+                        switch(elems.get(0).type) {
+                            case CHINESE:
+                            case PINYIN_WITH_TONE:
+                                switch (elems.get(1).type) {
+                                    case CHINESE:
+                                    case PINYIN_WITH_TONE:
+                                        result_cursor = currentDB.getWordsWithSequence(elems, true);
+                                        break;
+                                    case PINYIN_WITHOUT_TONE:
+                                    case INCOMPLETE_PINYIN:
+                                        result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
+                                        break;
+                                    default:
+                                        result_cursor=null;
+                                }
+                                break;
+                            case PINYIN_WITHOUT_TONE:
+                                if (elems.get(1).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
+                                    result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
+                                else
+                                    result_cursor = currentDB.getWordsAsSequence(elems, true);
+                                break;
+                            default:
+                                result_cursor=null;
+                                break;
+                        }
+                    } else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
                         result_cursor = currentDB.getDecomposedParts(elems, 4, true);
                     else
                         result_cursor = currentDB.getWordsWithSequence(elems, true);
@@ -191,6 +230,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         @Override
         protected void onPostExecute(Cursor cursor) {
             publish_cursor(cursor);
+            if (getActivity()!=null)
+                ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
         }
 
         private void publish_cursor(Cursor cur) {

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class PinyinParser {
     private final static String TAG = "PinyinParser";
-    private final static String pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ\'0-5]*";
+    private final static String pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwyāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ\'0-5]*";
 
     static public ArrayList<String> parse_string(String pinyin_string)
     {
