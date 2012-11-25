@@ -27,7 +27,7 @@ public class GuessContaining extends TestFragment {
         ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
-            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals("") || w.chinese.codePointCount(0, w.chinese.length())>4)
+            if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals("") || w.chinese.codePointCount(0, w.chinese.length())>3)
                 words.remove(i);
         }
         if (words.size() == 0) {
@@ -86,9 +86,10 @@ public class GuessContaining extends TestFragment {
             if (guesses[i].codePointCount(0, guesses[i].length())==1)
                 continue;
             if (myDB.getTranslations(guesses[i]).size()==0) {
-                if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0) && (res!=CORRECT)) {
+                if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0)) {
                     new_answers.add(guesses[i]);
-                    res=OTHER;
+                    if (res != CORRECT)
+                        res=OTHER;
                 } else {
                     bad_answers.add(guesses[i]);
                 }
