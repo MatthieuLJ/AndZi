@@ -3,47 +3,58 @@
  */
 package com.matthieu;
 
-
-import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessContaining extends TestActivity {
+public class GuessContaining extends TestFragment {
     protected ArrayList<String> correct_answers=new ArrayList<String>();
+    protected ArrayList<String> bad_answers=new ArrayList<String>();
+    protected ArrayList<String> new_answers=new ArrayList<String>();
 
     private final String TAG="GuessContaining";
 
     @Override
-    protected void set_next_study() {
-        super.set_next_study();
+    protected boolean set_hanzi_to_test(String hanzi) {
+        super.set_hanzi_to_test(hanzi);
 
-        ArrayList<Vocabulary> words = myDB.getFilteredWordsWithPinyin(hanzi);
+        ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
             if (w.chinese.equals(hanzi+"子") || w.chinese.equals(hanzi+"儿") || w.chinese.replace(hanzi, "").equals("") || w.chinese.codePointCount(0, w.chinese.length())>4)
                 words.remove(i);
         }
         if (words.size() == 0) {
-            nothing_to_test();
-            return;
+            return false;
         }
-        display_test();
+        Log.d(TAG, "GuessContaining OK");
+
+        return true;
     }
 
     @Override
-    protected void display_test() {
-        setContentView(R.layout.guess_containing);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.guess_containing, container, false);
+    }
 
-        EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+    @Override
+    public void onResume() {
+        super.onResume();
+        update_test_view(getView());
+    }
+
+    @Override
+    public void update_test_view(View v) {
+        if (v==null)
+            return;
+
+        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -54,14 +65,16 @@ public class GuessContaining extends TestActivity {
         word_guess.setText("");
         word_guess.requestFocus();
 
-        TextView clue= (TextView) findViewById(R.id.guess_containing_chinese);
+        TextView clue= (TextView) v.findViewById(R.id.guess_containing_chinese);
         clue.setText(hanzi);
+        v.invalidate();
     }
 
-    @Override
     protected int check_guess(String guess) {
         int res = INCORRECT;
         correct_answers.clear();
+        new_answers.clear();
+        bad_answers.clear();
         String[] guesses=guess.split("[,， ]");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
@@ -74,7 +87,10 @@ public class GuessContaining extends TestActivity {
                 continue;
             if (myDB.getTranslations(guesses[i]).size()==0) {
                 if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0) && (res!=CORRECT)) {
+                    new_answers.add(guesses[i]);
                     res=OTHER;
+                } else {
+                    bad_answers.add(guesses[i]);
                 }
             }
             else {
@@ -86,60 +102,166 @@ public class GuessContaining extends TestActivity {
         return res;
     }
 
-    @Override
-    protected void update_scores(int good) {
-        switch(good) {
-            case CORRECT:
-                ArrayList<String> good_chars=new ArrayList<String>();
-                for (String answers:correct_answers) {
-                    for (int i=0; i<answers.length();) {
-                        String c = answers.substring(i, i+Character.charCount(answers.codePointAt(i)));
-                        if ((!good_chars.contains(c)) && (!c.equals(hanzi)))
-                            good_chars.add(c);
-                        i+=Character.charCount(answers.codePointAt(i));
-                    }
-                    myDB.betterBox(answers);
-                }
-                for (String c:good_chars) {
-                    myDB.resetTime(c);
-                }
-                myDB.betterBox(hanzi);
-                break;
-            case INCORRECT:
-                myDB.worseBox(hanzi);
-                break;
-            case OTHER:
-                myDB.resetTime(hanzi);
-                break;
-        }
-    }
-
     public void handle_ok(View v) {
-        EditText word_guess = (EditText) findViewById(R.id.guess_containing_word_guess);
+        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
             return;
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(guess) == OTHER) {
-            show_or_next(guess);
-        }
+        int correctness = check_guess(guess);
+        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt("good", correctness);
+        bundle.putString("answer", guess);
+        bundle.putString("question", hanzi);
+        bundle.putStringArrayList("correct", correct_answers);
+        bundle.putStringArrayList("bad", bad_answers);
+        bundle.putStringArrayList("new", new_answers);
+        solution_fragment.setArguments(bundle);
+        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
     }
 
-    public void show_solution(String guess, int good) {
-        super.show_solution(guess, good);
-        Details.populate_details_view(GuessContaining.this, (ViewGroup) findViewById(R.id.test_results), hanzi, myDB);
-        if ((good == INCORRECT) && (!guess.equals(""))) {
-            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessContaining.this);
-            bad_guess_text.setText("You guessed: "+guess);
-            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            bad_guess_text.setTextColor(0xffdd0000);
-            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+    public static class GuessContainingResultFragment extends TestFragment.SolutionFragment {
+        ArrayList<String> correct_answers, bad_answers, new_answers;
+
+        @Override
+        protected void get_arguments() {
+            super.get_arguments();
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                correct_answers = bundle.getStringArrayList("correct");
+                bad_answers = bundle.getStringArrayList("bad");
+                new_answers = bundle.getStringArrayList("new");
+            }
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+
+            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) GuessContainingResultFragment.this.getActivity());
+            if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                TableLayout tl = new TableLayout(getActivity());
+                //tl.setStretchAllColumns(true);
+                int table=0, offset_in_table=0, offset_in_column=0, table_size=bad_answers.size();
+                TableRow tr=null;
+                while(true) {
+                    while ((offset_in_table >= table_size) && (table < 3)){
+                        table++;
+                        offset_in_table=0;
+                        switch(table) {
+                            case 1:
+                                table_size = new_answers.size();
+                                break;
+                            case 2:
+                                table_size = correct_answers.size();
+                                break;
+                        }
+                    }
+
+                    if (table == 3)
+                        break;
+
+                    String answer=null;
+                    String label=null;
+                    switch(table) {
+                        case 0:
+                            answer = bad_answers.get(offset_in_table);
+                            label = "Wrong";
+                            break;
+                        case 1:
+                            answer = new_answers.get(offset_in_table);
+                            label = "New";
+                            break;
+                        case 2:
+                            answer = correct_answers.get(offset_in_table);
+                            label = "Correct";
+                            break;
+                    }
+                    offset_in_table++;
+
+                    if (offset_in_column == 0) {
+                        tr = new TableRow(getActivity());
+                        tr.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    }
+                    LinearLayout cell = new LinearLayout(getActivity());
+                    cell.setOrientation(LinearLayout.HORIZONTAL);
+                    TextView label_box = new TextView(getActivity());
+                    label_box.setText(label);
+                    label_box.setTextColor(Color.BLACK);
+                    label_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+                    cell.addView(label_box);
+                    TextView answer_box = new TextView(getActivity());
+                    answer_box.setText(answer);
+                    answer_box.setTextColor(Color.BLACK);
+                    answer_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2));
+                    final String final_answer = answer;
+                    answer_box.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                            i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                            i.putExtra("Hanzi", final_answer);
+                            i.putExtra("use_ref", false);
+                            startActivity(i);
+                        }
+                    });
+                    cell.addView(answer_box);
+                    cell.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+                    tr.addView(cell);
+
+                    offset_in_column++;
+                    if (offset_in_column == 2) {
+
+                        tl.addView(tr);
+                        offset_in_column = 0;
+                    }
+                }
+                if (offset_in_column != 0)
+                    tl.addView(tr);
+
+                tl.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                bad_guess.addView(tl);
+                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+            }
+
+            return res;
+        }
+
+        @Override
+        public void onDestroyView() {
+            hide_details((ViewGroup) getView());
+            super.onDestroyView();
+        }
+
+        @Override
+        public void update_score() {
+            switch(good) {
+                case CORRECT:
+                    ArrayList<String> good_chars=new ArrayList<String>();
+                    for (String answers:correct_answers) {
+                        for (int i=0; i<answers.length();) {
+                            String c = answers.substring(i, i+Character.charCount(answers.codePointAt(i)));
+                            if ((!good_chars.contains(c)) && (!c.equals(question)))
+                                good_chars.add(c);
+                            i+=Character.charCount(answers.codePointAt(i));
+                        }
+                        myDB.betterBox(answers);
+                    }
+                    for (String c:good_chars) {
+                        myDB.resetTime(c);
+                    }
+                    myDB.betterBox(question);
+                    break;
+                case INCORRECT:
+                    myDB.worseBox(question);
+                    break;
+                case OTHER:
+                    myDB.resetTime(question);
+                    break;
+            }
         }
     }
 }

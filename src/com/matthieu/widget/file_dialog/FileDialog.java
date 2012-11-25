@@ -123,18 +123,6 @@ public class FileDialog extends ListActivity {
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        ((AndZiApplication)getApplication()).activityPaused();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        ((AndZiApplication)getApplication()).activityResumed();
-    }
-
     private void getDir(String dirPath) {
 
         boolean useAutoSelection = dirPath.length() < currentPath.length();

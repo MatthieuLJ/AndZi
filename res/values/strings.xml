@@ -11,11 +11,9 @@
     <string name="create">Save</string>
     <string name="no_data">No Data</string>
 
-    <string name="next">Next</string>
     <string name="accept">Accept Answer</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="loading">Loading</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
@@ -52,8 +50,6 @@
 
     <string name="settings_colored_pinyins">Enable colored pinyins</string>
     <string name="settings_colored_pinyins_summary">Show different tones with colors</string>
-    <string name="settings_show_correct_answer">Show correct answer</string>
-    <string name="settings_show_correct_answer_summary">If you want to see the correct answer after a test</string>
     <string name="settings_notification">Enable study notification</string>
     <string name="settings_db_operations">Vocabulary list operations</string>
     <string name="settings_db_export">Export list to file…</string>
@@ -71,8 +67,8 @@
     <string name="settings_import_progress">Import Progress</string>
 
     <string name="settings_include_scores">Include current score</string>
-    <string name="settings_include_filters">Export filtered lessons</string>
-    <string name="settings_include_filters_summary">Only include the lessons filtered</string>
+    <string name="settings_select_lessons">Export filtered lessons</string>
+    <string name="settings_select_lessons_summary">Only include the lessons filtered</string>
     <string name="settings_email">Email</string>
     <string name="settings_export">Export</string>
     <string name="settings_file_path">File path</string>
@@ -105,6 +101,7 @@
     <string name="settings_trim_one_year">Keep the last year</string>
     <string name="settings_trim_progress">Deleting recent progress data…</string>
 
+    <string name="test_empty_db">Your database is empty, add some words before testing</string>
     <string name="test_mastering">You master everything, do you want to continue ?</string>
     <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
 
@@ -113,12 +110,11 @@
     <string name="add_voc_pick_pinyin">Pick a pinyin for </string>
     <string name="add_voc_local_db">Vocabulary from your list</string>
     <string name="add_voc_ref_db">Vocabulary from dictionary</string>
-    <string name="add_voc_edit_lessons">Edit lessons</string>
-    <string name="add_voc_assign_lesson">Assign to lesson</string>
-    <string name="add_voc_default_lesson">Choose the default lesson</string>
-    <string name="add_voc_lesson_none">(none)</string>
     <string name="add_voc_edit_translation">Edit translation for </string>
     <string name="add_voc_edit_new_word">Please enter a new word:</string>
+    <string name="add_voc_new_translation">New translation</string>
+
+    <string name="edit_lesson_new">New lesson name</string>
 
     <string name="review_list_nothing_to_study">Nothing to study</string>
     <string name="review_list_num_chars_to_study_filtered">You have %1$d characters to study (%2$d total)</string>
@@ -128,5 +124,15 @@
 
     <string name="notification_ticker">More to study</string>
     <string name="notification_title">More Chinese to study</string>
-    <string name="notification_content">You have %s characters to study</string>
+    <string name="notification_content">You have %s tests waiting</string>
+
+    <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
+    <string name="dictionary_eng_to_chinese">Eng\u2192中</string>
+    <string name="dictionary_chinese_to_eng">Eng\u2190中</string>
+    <string name="details_pin">Pin</string>
+    <string name="details_unpin">Unpin</string>
+    <string name="details_dictionary">Dict</string>
+    <string name="details_voc_list">List</string>
+    <string name="details_add">Add</string>
+    <string name="details_edit">Edit</string>
 </resources>

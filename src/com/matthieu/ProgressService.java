@@ -25,10 +25,13 @@ public class ProgressService extends Service {
             @Override
             public void run() {
                 if (!((AndZiApplication) getApplication()).isApplicationForeground()) {
-                    update_notification(true);
+                    update_notification();
+                    update_progress_data();
                     ((AndZiApplication) getApplication()).showSplash(true);
                 }else {
                     clear_notification(ProgressService.this);
+                    if (!((AndZiApplication) getApplication()).is_screen_on())
+                        update_progress_data();
                 }
             }
         };
@@ -37,7 +40,7 @@ public class ProgressService extends Service {
         //timer.scheduleAtFixedRate(task, 0, 120*1000); // every 2 minutes for test...
     }
 
-    public void update_notification(boolean store) {
+    public void update_progress_data() {
         ProgressDB db = ((AndZiApplication) getApplication()).getProgress();
 
         ProgressDB.ProgressData current_data = ((AndZiApplication)getApplication()).getCurrentProgress();
@@ -47,12 +50,14 @@ public class ProgressService extends Service {
         if (current_data.num_chars_in_box[0] + current_data.num_chars_in_box[1] + current_data.num_chars_in_box[2] + current_data.num_chars_in_box[3] + current_data.num_chars_in_box[4] == 0)
             return;
 
-        if (store)
-            db.add_data(current_data);
+        db.add_data(current_data);
+    }
+
+    public void update_notification() {
+        HanziDB myDB = ((AndZiApplication) getApplication()).getMyDB();
 
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        int expired = current_data.num_chars_expired_in_box[0] + current_data.num_chars_expired_in_box[1] + current_data.num_chars_expired_in_box[2] +
-                current_data.num_chars_expired_in_box[3] + current_data.num_chars_expired_in_box[4];
+        int expired = myDB.getNumExpired();
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean notification_enabled = sp.getBoolean("settings_notification", true);
@@ -61,7 +66,6 @@ public class ProgressService extends Service {
             notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
             Intent start_test = new Intent(this, MainMenuActivity.class);
             start_test.putExtra("start_test", true);
-            start_test.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, PendingIntent.FLAG_CANCEL_CURRENT);
             notification.setLatestEventInfo(getApplicationContext(), getResources().getString(R.string.notification_title), getResources().getString(R.string.notification_content, expired), pi);
             nm.notify(NOTIFICATION_ID, notification);

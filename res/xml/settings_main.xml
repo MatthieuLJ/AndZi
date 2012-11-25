@@ -11,14 +11,6 @@
                 android:defaultValue="true"
                 android:summary="@string/settings_colored_pinyins_summary"
                 />
-        <ListPreference
-                android:title="@string/settings_show_correct_answer"
-                android:summary="@string/settings_show_correct_answer_summary"
-                android:key="show_result"
-                android:defaultValue="1"
-                android:entries="@array/result_preference"
-                android:entryValues="@array/result_preference_values"
-                />
         <android.preference.CheckBoxPreference
                 android:title="@string/settings_notification"
                 android:key="notification_enabled"
@@ -46,6 +38,10 @@
                     android:targetClass="com.matthieu.settings.EmailDB"
                     />
         </PreferenceScreen>
+        <PreferenceScreen
+                android:title="@string/settings_db_import"
+                android:key="ImportDB"
+                />
         <Preference
                 android:title="@string/settings_db_reset_scores"
                 android:key="ResetDB"
@@ -57,10 +53,6 @@
         <com.matthieu.settings.TrimProgressPreference
                 android:title="@string/settings_db_forget_progress"
                 android:key="TrimProgress"
-                />
-        <PreferenceScreen
-                android:title="@string/settings_db_import"
-                android:key="ImportDB"
                 />
     </PreferenceCategory>
 

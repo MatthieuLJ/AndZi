@@ -19,6 +19,13 @@ public class ShrinkingScrollView extends ScrollView {
         super(context, attrs, defStyle);
     }
 
+    Runnable to_request_layout = new Runnable() {
+        @Override
+        public void run() {
+            requestLayout();
+        }
+    };
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) getLayoutParams();
@@ -36,11 +43,7 @@ public class ShrinkingScrollView extends ScrollView {
                     params.weight=0;
                     params.height = overall_height;
                     setLayoutParams(params);
-                    post(new Runnable() {
-                        public void run() {
-                            requestLayout();
-                        }
-                    });
+                    post(to_request_layout);
                 }
 
                 setMeasuredDimension(getMeasuredWidth(),overall_height);
@@ -49,11 +52,7 @@ public class ShrinkingScrollView extends ScrollView {
                 params.weight = original_weight;
                 params.height = 0;
                 setLayoutParams(params);
-                post(new Runnable() {
-                    public void run() {
-                        requestLayout();
-                    }
-                });
+                post(to_request_layout);
             }
         }
         else {

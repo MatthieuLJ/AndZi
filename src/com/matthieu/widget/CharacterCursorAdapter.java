@@ -15,7 +15,6 @@ import java.util.ArrayList;
 public class CharacterCursorAdapter  extends CursorAdapter {
     boolean show_pinyin_color;
     HanziDB db;
-    boolean filtered;
 
     ArrayList<String> expanded_map=new ArrayList<String>();
 
@@ -28,7 +27,7 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         }
     }
 
-    public CharacterCursorAdapter(final Context context, final Cursor cursor, final HanziDB db, final boolean filtered) {
+    public CharacterCursorAdapter(final Context context, final Cursor cursor, final HanziDB db) {
         super(context, cursor, true);
         if (cursor != null) {
             chinese_column_index = cursor.getColumnIndex("chinese");
@@ -39,7 +38,6 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
         this.db = db;
-        this.filtered = filtered;
     }
 
     private int chinese_column_index;
@@ -59,6 +57,14 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View newView = li.inflate(R.layout.review_list_item, viewGroup, false);
 
+        Button bt = (Button) newView.findViewById(R.id.review_expand_button);
+        bt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                expand(view);
+            }
+        });
+
         bindView(newView, context, cursor);
 
         return newView;
@@ -71,9 +77,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
         chinese.setText(hanzi);
         chinese.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                Intent intent=new Intent(context, Details.class);
-                intent.putExtra("hanzi", hanzi);
-                context.startActivity(intent);
+                Intent i=new Intent(context, ReferenceActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                i.putExtra("Hanzi", hanzi);
+                i.putExtra("use_ref", false);
+                context.startActivity(i);
             }
         });
         final String pinyin = cursor.getString(pinyin_column_index);
@@ -110,10 +118,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
     private void fill_word_table(final Context context, final ViewGroup container, final CharPinyin char_pinyin) {
         LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ArrayList<Vocabulary> words;
-        if (filtered)
-            words = db.getFilteredWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
-        else
+        if (db.is_char_toneless_pair(char_pinyin.hanzi)) {
+            words = db.getWordsWithPinyin(char_pinyin.hanzi);
+        } else {
             words = db.getWordsWithPinyin(char_pinyin.hanzi, char_pinyin.pinyin);
+        }
         TableLayout word_table = (TableLayout) container.findViewById(R.id.review_item_word_table);
         word_table.removeAllViews();
 
@@ -132,9 +141,11 @@ public class CharacterCursorAdapter  extends CursorAdapter {
             english_word.setText(english_translations);
             row.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View view) {
-                    Intent intent=new Intent(context, Details.class);
-                    intent.putExtra("hanzi", chinese_label);
-                    context.startActivity(intent);
+                    Intent i=new Intent(context, ReferenceActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                    i.putExtra("Hanzi", chinese_label);
+                    i.putExtra("use_ref", false);
+                    context.startActivity(i);
                 }
             });
             word_table.addView(row);

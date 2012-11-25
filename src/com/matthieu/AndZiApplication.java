@@ -5,15 +5,14 @@
  */
 package com.matthieu;
 
+import android.app.ActivityManager;
 import android.app.Application;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ViewConfiguration;
 import com.matthieu.widget.FileMountPoint;
 import com.matthieu.widget.ObjectSerializer;
 import org.acra.ACRA;
@@ -21,9 +20,8 @@ import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.lang.reflect.Field;
+import java.util.*;
 
 @ReportsCrashes(formKey = "", // will not be used
                 mailTo = "matthieu.jeanson@gmail.com",
@@ -33,6 +31,7 @@ public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
     private ProgressDB prog=null;
+    private ScreenBroadcastReceiver screenReceiver;
     private boolean ref_initialized=false;
     private boolean ref_enabled=true;
     private boolean ref_present=false;
@@ -42,7 +41,7 @@ public class AndZiApplication extends Application {
     static public final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     static public final String PROGRESS_DB_NAME = "progress_db";
 
-    private static final String VERSION="0.2.0-acra";
+    private static final String VERSION="0.3.0-acra";
 
     public void onCreate() {
         ACRA.init(this);
@@ -51,6 +50,11 @@ public class AndZiApplication extends Application {
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
         this.startService(startServiceIntent);
+
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        screenReceiver = new ScreenBroadcastReceiver();
+        registerReceiver(screenReceiver, filter);
 
         Pinyin.prepare_pinyin_process();
     }
@@ -119,17 +123,6 @@ public class AndZiApplication extends Application {
         if (myDB != null)
             myDB.close();
         myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean filter_on = prefs.getBoolean("Lesson_Filter_On", false);
-        ArrayList<String> lesson=new ArrayList<String>();
-        try {
-            lesson = (ArrayList<String>) ObjectSerializer.deserialize(prefs.getString("Lesson_Filter", (String) ObjectSerializer.serialize(new ArrayList<String>())));
-        } catch (IOException e) {
-            e.printStackTrace();
-            filter_on = false;
-        }
-        myDB.enableFilter(filter_on);
-        myDB.setLessonsToFilter(lesson);
     }
     
     public void initialize_ref_db() {
@@ -378,34 +371,35 @@ public class AndZiApplication extends Application {
            cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
-    int visibility=0;
-    public void activityPaused() {
-        Timer timer = new Timer();
-        TimerTask pausing_task = new TimerTask() {
-            @Override
-            public void run() {
-                synchronized (AndZiApplication.this) {
-                    visibility--;
-                }
+    ActivityManager mActivityManager;
+    public boolean isApplicationForeground() {
+        ActivityManager.RunningAppProcessInfo result=null, info=null;
+
+        if(mActivityManager==null)
+            mActivityManager = (ActivityManager)this.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> l = mActivityManager.getRunningAppProcesses();
+        Iterator<ActivityManager.RunningAppProcessInfo> i = l.iterator();
+        while(i.hasNext()){
+            info = i.next();
+            if ((info.processName.equals(this.getPackageName())) &&
+                    (info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)){
+//                Log.d(TAG, "We're in foreground!");
+                return true;
             }
-        };
-        timer.schedule(pausing_task, 30*1000); // give 30 seconds before another Activity may take over
+        }
+//        Log.d(TAG, "We're in the back!");
+        return false;
     }
 
-    public void activityResumed() {
-        ProgressService.clear_notification(this);
-        synchronized (AndZiApplication.this) {
-            visibility++;
-        }
-    }
-    public boolean isApplicationForeground() {
-        return (visibility>0);
-    }
     private boolean show_splash=true;
     public void showSplash(boolean set) {
         show_splash=set;
     }
     public boolean getShowSplash() {
         return show_splash;
+    }
+
+    public boolean is_screen_on() {
+        return screenReceiver.wasScreenOn;
     }
 }

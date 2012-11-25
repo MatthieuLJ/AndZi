@@ -1,5 +1,7 @@
 package com.matthieu;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
@@ -9,29 +11,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-import com.matthieu.widget.AndZiActivity;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Help extends AndZiActivity {
+public class Help extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.help);
         ViewPager pager = (ViewPager) findViewById(R.id.help);
         pager.setAdapter(new HelpPageAdapter());
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        ViewPager pager = (ViewPager) findViewById(R.id.help);
-        PagerAdapter adapter = pager.getAdapter();
-        setContentView(R.layout.help);
-        pager = (ViewPager) findViewById(R.id.help);
-        pager.setAdapter(adapter);
     }
 
     private class HelpPageAdapter extends PagerAdapter {
@@ -66,6 +57,7 @@ public class Help extends AndZiActivity {
         }
 
         @Override
+        @SuppressLint({"SetJavaScriptEnabled"})
         public Object instantiateItem(ViewGroup container, int position) {
             View new_view=null;
             if (view_storage.get(position) != null) {

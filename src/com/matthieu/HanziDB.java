@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -22,7 +23,6 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class HanziDB extends SQLiteOpenHelper {
     private static final String TAG = "HanziDB";
     private static final int DATABASE_VERSION = 5;
@@ -34,8 +34,8 @@ public class HanziDB extends SQLiteOpenHelper {
         super(application.getApplicationContext(), db_name, null, DATABASE_VERSION);
         app = application;
         db = this.getWritableDatabase();
-        db.execSQL("PRAGMA synchronous=OFF");
         db.execSQL("PRAGMA case_sensitive_like=ON");
+        db.execSQL("PRAGMA synchronous=NORMAL");
         db.acquireReference();
     }
 
@@ -234,9 +234,9 @@ public class HanziDB extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
-        super.close();
         db.releaseReference();
         db.close();
+        super.close();
     }
 
     public boolean checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
@@ -284,7 +284,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check every cword has at least one translation
             c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
@@ -300,7 +301,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from cword_segment to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
@@ -317,7 +319,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from cword_segment to char_pinyin_id
             c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
@@ -334,7 +337,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check all char_pinyins are used
             c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
@@ -350,7 +354,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from eword to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
@@ -367,7 +372,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check for unique char/pinyin pairs in char_pinyin
             c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
@@ -401,7 +407,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check for unique chinese/pinyin in cword
             c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
@@ -437,7 +444,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check cword length is correct
             c= db.rawQuery("SELECT cword_id FROM cword WHERE length(chinese) != length", null);
@@ -447,7 +455,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check for unique cword/translation in eword
             c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
@@ -482,7 +491,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             //
             // Lessons
@@ -503,7 +513,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check foreign key from lesson_word to eword
             c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
@@ -520,7 +531,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             //
             // Leitner
@@ -541,7 +553,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             // check all characters in leitner table are in DB
             c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE length(hanzi)>1 AND hanzi NOT IN (SELECT chinese FROM cword)", null);
@@ -558,7 +571,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
 
             c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE num_wrong > num_tested", null);
             if (c.moveToFirst()) {
@@ -574,7 +588,8 @@ public class HanziDB extends SQLiteOpenHelper {
             }
             c.close();
             current_step++;
-            handler.progress((int)(current_step*100/num_steps));
+            if (handler != null)
+                handler.progress((int)(current_step*100/num_steps));
         }
         catch (SQLiteException exp) {
             Log.d(TAG, "Ran into a problem while opening database");
@@ -616,7 +631,7 @@ public class HanziDB extends SQLiteOpenHelper {
             return;
 
         itemA.ensureCapacity(itemA.size()+itemB.size());
-        ArrayList<Vocabulary> original_A = (ArrayList<Vocabulary>) itemA.clone();
+        ArrayList<Vocabulary> original_A = new ArrayList<Vocabulary>(itemA);
         for (Vocabulary voc : itemB) {
             boolean found = false;
             for (Vocabulary orig_voc : original_A) {
@@ -864,6 +879,26 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public boolean is_char_toneless_pair(String hanzi) {
+        boolean res;
+        Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi=? AND " +
+                "(pinyin LIKE '%5' AND hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*)=2) AND hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi,SUBSTR(pinyin,1,LENGTH(pinyin)-1) HAVING COUNT(*) = 2))",
+                new String[] {hanzi});
+        res = (cur.getCount() == 1);
+        cur.close();
+        return res;
+    }
+
+    public String get_toned_pinyin_in_pair(String hanzi) {
+        String res=null;
+        Cursor cur = db.rawQuery("SELECT pinyin FROM char_pinyin WHERE hanzi=? AND " +
+                "pinyin NOT LIKE '%5'", new String[] {hanzi});
+        if (cur.moveToFirst())
+            res = cur.getString(cur.getColumnIndex("pinyin"));
+        cur.close();
+        return res;
+    }
+
     public ArrayList<String> getPinyinForChar(String hanzi) {
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?", new String[] {hanzi});
@@ -953,22 +988,212 @@ public class HanziDB extends SQLiteOpenHelper {
     // Query for mixed or incomplete data
     ////////////////////////////////////////
     public static class StringElement {
-        public static final int CHINESE=0;
-        public static final int PINYIN_WITH_TONE=1;
-        public static final int PINYIN_WITHOUT_TONE=2;
-        public static final int INCOMPLETE_PINYIN=3;
+        public static enum type_t {
+            CHINESE,
+            PINYIN_WITH_TONE,
+            PINYIN_WITHOUT_TONE,
+            INCOMPLETE_PINYIN,
+            CHINESE_WITH_PINYIN,
+            CHINESE_WITH_PINYIN_NO_TONE
+        };
 
         protected String content;
-        protected int type;
-        public StringElement(int t, String c) {
+        protected type_t type;
+        public StringElement(type_t t, String c) {
             type=t;
             content=c;
+        }
+        public String chinese_part() {
+            return content.substring(0, Character.charCount(content.codePointAt(0)));
+        }
+        public String pinyin_part() {
+            return content.substring(Character.charCount(content.codePointAt(0)));
         }
         public String toString() { return content; }
     }
 
-    public Cursor getWordsStartingWithSequence(final ArrayList<StringElement> elements, final boolean filtered, final boolean group) {
-        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
+    public Cursor getWordsAsSequence(final ArrayList<StringElement> elements, final boolean group) {
+        StringBuilder query = new StringBuilder();
+        ArrayList<String> query_args=new ArrayList<String>();
+
+        if (elements.size()==0)
+            return null;
+
+        if (group) {
+            query.append("SELECT _id, chinese, pinyin, GROUP_CONCAT(translation,', ') AS english FROM (" +
+                    "SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS translation, cword.length AS length ");
+        } else {
+            query.append("SELECT _id, chinese, pinyin, translation AS english FROM (" +
+                    "SELECT DISTINCT cword.cword_id AS _id, cword.chinese AS chinese, cword.pinyin AS pinyin, eword.translation AS translation, cword.length AS length ");
+        }
+
+        if (elements.size()==1) {
+            switch (elements.get(0).type) {
+                case CHINESE:
+                    query.append("FROM cword " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id " +
+                            "WHERE cword.chinese=? ");
+                    query_args.add(elements.get(0).content);
+                    break;
+                case PINYIN_WITH_TONE:
+                    query.append("FROM cword " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id " +
+                            "WHERE pinyin=? ");
+                    query_args.add(elements.get(0).content);
+                    break;
+                case PINYIN_WITHOUT_TONE:
+                    query.append("FROM cword " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id " +
+                            "WHERE pinyin LIKE ? ");
+                    query_args.add(elements.get(0).content+"_");
+                    break;
+                case INCOMPLETE_PINYIN:
+                    query.append("FROM cword " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id " +
+                            "WHERE (pinyin LIKE ? AND length=1) ");
+                    query_args.add(elements.get(0).content+"%");
+                    break;
+                case CHINESE_WITH_PINYIN:
+                    query.append("FROM cword " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id " +
+                            "WHERE (chinese=? AND pinyin=?) ");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part());
+                    break;
+                case CHINESE_WITH_PINYIN_NO_TONE:
+                    query.append("FROM cword " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id " +
+                            "WHERE (chinese=? AND pinyin LIKE ?) ");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part()+"_");
+                    break;
+            }
+        }
+        else {
+            StringElement.type_t type = elements.get(0).type;
+            int i=0;
+            String concat="";
+            if (type == StringElement.type_t.CHINESE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE)
+                        break;
+                }
+            } else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.PINYIN_WITH_TONE)
+                        break;
+                }
+            } else if (type == StringElement.type_t.CHINESE_WITH_PINYIN) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE_WITH_PINYIN)
+                        break;
+                }
+            } else if (type == StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE)
+                        break;
+                }
+            }
+
+            if ((i==elements.size()) && (type == StringElement.type_t.CHINESE)) {
+                query.append("FROM cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id " +
+                        "WHERE cword.chinese=? ");
+                query_args.add(concat);
+            } else if ((i==elements.size()) && (type == StringElement.type_t.PINYIN_WITH_TONE)) {
+                query.append("FROM cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id " +
+                        "WHERE cword.pinyin=? ");
+                query_args.add(concat);
+            } else if ((i==elements.size()) && (type == StringElement.type_t.CHINESE_WITH_PINYIN)) {
+                StringBuilder chinese = new StringBuilder();
+                StringBuilder pinyin = new StringBuilder();
+                for (StringElement e : elements) {
+                    chinese.append(e.chinese_part());
+                    pinyin.append(e.pinyin_part());
+                }
+                query.append("FROM cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id " +
+                        "WHERE cword.chinese=? AND cword.pinyin=? AS cword ");
+                query_args.add(chinese.toString());
+                query_args.add(pinyin.toString());
+            } else if ((i==elements.size()) && (type == StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE)) {
+                StringBuilder chinese = new StringBuilder();
+                StringBuilder pinyin = new StringBuilder();
+                for (StringElement e : elements) {
+                    chinese.append(e.chinese_part());
+                    pinyin.append(e.pinyin_part());
+                    pinyin.append("_");
+                }
+                query.append("FROM cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id " +
+                        "WHERE cword.chinese=? AND cword.pinyin LIKE ?) AS cword ");
+                query_args.add(Integer.toString(elements.size()));
+                query_args.add(chinese.toString());
+                query_args.add(pinyin.toString());
+            } else {
+                // mixed up
+                for (i=0; i<elements.size(); i++) {
+                    if (i==0)
+                        query.append("FROM (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    else
+                        query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    switch (elements.get(i).type) {
+                        case CHINESE:
+                            query.append("hanzi=?");
+                            query_args.add(elements.get(i).content);
+                            break;
+                        case PINYIN_WITH_TONE:
+                            query.append("pinyin=?");
+                            query_args.add(elements.get(i).content);
+                            break;
+                        case PINYIN_WITHOUT_TONE:
+                            query.append("pinyin LIKE ?");
+                            query_args.add(elements.get(i).content+"_");
+                            break;
+                        case INCOMPLETE_PINYIN:
+                            query.append("pinyin LIKE ?");
+                            query_args.add(elements.get(i).content+"%");
+                            break;
+                        case CHINESE_WITH_PINYIN:
+                            query.append("hanzi=? AND pinyin=?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part());
+                            break;
+                        case CHINESE_WITH_PINYIN_NO_TONE:
+                            query.append("hanzi=? AND pinyin LIKE ?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part()+"_");
+                            break;
+                    }
+                    query.append(" AND cword_segment.pos=?");
+                    query_args.add(Integer.toString(i));
+                    query.append(") AS elem").append(i);
+                    if (i>0)
+                        query.append(" ON (elem").append(i).append(".cword_id=elem").append(i-1).append(".cword_id) ");
+                }
+                query.append(" JOIN cword ON cword.cword_id=elem0.cword_id " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id WHERE cword.length=? ");
+                query_args.add(Integer.toString(elements.size()));
+
+            }
+        }
+        if (group) {
+            query.append(") GROUP BY _id ");
+        } else {
+            query.append(") ");
+        }
+        query.append("ORDER BY pinyin, _id;");
+        Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+
+        return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
+    }
+
+    public Cursor getWordsStartingWithSequence(final ArrayList<StringElement> elements, final boolean group) {
         StringBuilder query = new StringBuilder();
         ArrayList<String> query_args=new ArrayList<String>();
 
@@ -985,7 +1210,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         if (elements.size()==1) {
             switch (elements.get(0).type) {
-                case StringElement.CHINESE:
+                case CHINESE:
                     query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=?) AS char_pinyin " +
                             "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -993,7 +1218,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content);
                     break;
-                case StringElement.PINYIN_WITH_TONE:
+                case PINYIN_WITH_TONE:
                     query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin=?) AS char_pinyin " +
                             "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1001,7 +1226,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content);
                     break;
-                case StringElement.PINYIN_WITHOUT_TONE:
+                case PINYIN_WITHOUT_TONE:
                     query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
                             "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1009,7 +1234,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content+"_");
                     break;
-                case StringElement.INCOMPLETE_PINYIN:
+                case INCOMPLETE_PINYIN:
                     query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
                             "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1017,73 +1242,145 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content+"%");
                     break;
+                case CHINESE_WITH_PINYIN:
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part());
+                    break;
+                case CHINESE_WITH_PINYIN_NO_TONE:
+                    query.append("CASE WHEN cword.length=1 THEN 0 ELSE 1 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN (SELECT * FROM cword_segment WHERE cword_segment.pos=0) AS cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part()+"_");
+                    break;
             }
         }
         else {
-            int type = elements.get(0).type;
+            StringElement.type_t type = elements.get(0).type;
             int i=0;
             String concat="";
-            if (type == StringElement.CHINESE) {
+            if (type == StringElement.type_t.CHINESE) {
                 for (i=0; i<elements.size(); i++) {
                     concat+=elements.get(i).content;
-                    if (elements.get(i).type != StringElement.CHINESE)
+                    if (elements.get(i).type != StringElement.type_t.CHINESE)
                         break;
                 }
-            }
-            else if (type == StringElement.PINYIN_WITH_TONE) {
+            } else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
                 for (i=0; i<elements.size(); i++) {
                     concat+=elements.get(i).content;
-                    if (elements.get(i).type != StringElement.PINYIN_WITH_TONE)
+                    if (elements.get(i).type != StringElement.type_t.PINYIN_WITH_TONE)
+                        break;
+                }
+            } else if (type == StringElement.type_t.CHINESE_WITH_PINYIN) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE_WITH_PINYIN)
+                        break;
+                }
+            } else if (type == StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE) {
+                for (i=0; i<elements.size(); i++) {
+                    concat+=elements.get(i).content;
+                    if (elements.get(i).type != StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE)
                         break;
                 }
             }
 
-            if ((i==elements.size()) && (type == StringElement.CHINESE)) {
+            if ((i==elements.size()) && (type == StringElement.type_t.CHINESE)) {
                 query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
                         "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ?) AS cword " +
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
                 query_args.add(Integer.toString(elements.size()));
                 query_args.add(concat+"%");
-            } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
+            } else if ((i==elements.size()) && (type == StringElement.type_t.PINYIN_WITH_TONE)) {
                 query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
                         "FROM (SELECT * FROM cword WHERE cword.pinyin LIKE ?) AS cword " +
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
                 query_args.add(Integer.toString(elements.size()));
                 query_args.add(concat+"%");
+            } else if ((i==elements.size()) && (type == StringElement.type_t.CHINESE_WITH_PINYIN)) {
+                StringBuilder chinese = new StringBuilder();
+                StringBuilder pinyin = new StringBuilder();
+                for (StringElement e : elements) {
+                    chinese.append(e.chinese_part());
+                    pinyin.append(e.pinyin_part());
+                }
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ? AND cword.pinyin LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                chinese.append("%");
+                pinyin.append("%");
+                query_args.add(chinese.toString());
+                query_args.add(pinyin.toString());
+            } else if ((i==elements.size()) && (type == StringElement.type_t.CHINESE_WITH_PINYIN_NO_TONE)) {
+                StringBuilder chinese = new StringBuilder();
+                StringBuilder pinyin = new StringBuilder();
+                for (StringElement e : elements) {
+                    chinese.append(e.chinese_part());
+                    pinyin.append(e.pinyin_part());
+                    pinyin.append("_");
+                }
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort " +
+                        "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ? AND cword.pinyin LIKE ?) AS cword " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
+                query_args.add(Integer.toString(elements.size()));
+                chinese.append("%");
+                pinyin.append("%");
+                query_args.add(chinese.toString());
+                query_args.add(pinyin.toString());
             } else {
                 // mixed up
-                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort FROM (SELECT * FROM cword) AS cword JOIN eword ON cword.cword_id=eword.cword_id ");
+                query.append("CASE WHEN cword.length=? THEN 0 ELSE 1 END AS sort ");
                 query_args.add(Integer.toString(elements.size()));
                 for (i=0; i<elements.size(); i++) {
-                    query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    if (i==0)
+                        query.append("FROM (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    else
+                        query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
                     switch (elements.get(i).type) {
-                        case StringElement.CHINESE:
+                        case CHINESE:
                             query.append("hanzi=?");
                             query_args.add(elements.get(i).content);
                             break;
-                        case StringElement.PINYIN_WITH_TONE:
+                        case PINYIN_WITH_TONE:
                             query.append("pinyin=?");
                             query_args.add(elements.get(i).content);
                             break;
-                        case StringElement.PINYIN_WITHOUT_TONE:
+                        case PINYIN_WITHOUT_TONE:
                             query.append("pinyin LIKE ?");
                             query_args.add(elements.get(i).content+"_");
                             break;
-                        case StringElement.INCOMPLETE_PINYIN:
+                        case INCOMPLETE_PINYIN:
                             query.append("pinyin LIKE ?");
                             query_args.add(elements.get(i).content+"%");
+                            break;
+                        case CHINESE_WITH_PINYIN:
+                            query.append("hanzi=? AND pinyin=?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part());
+                            break;
+                        case CHINESE_WITH_PINYIN_NO_TONE:
+                            query.append("hanzi=? AND pinyin LIKE ?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part()+"_");
                             break;
                     }
                     query.append(" AND cword_segment.pos=?");
                     query_args.add(Integer.toString(i));
                     query.append(") AS elem").append(i);
-                    query.append(" ON (elem").append(i).append(".cword_id=cword.cword_id)");
+                    if (i>0)
+                        query.append(" ON (elem").append(i).append(".cword_id=elem").append(i-1).append(".cword_id) ");
                 }
+                query.append(" JOIN cword ON cword.cword_id=elem0.cword_id " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
             }
-        }
-        if (lesson_filtered) {
-            query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
-            query.append(where_filter+" ");
         }
         if (group) {
             query.append(") GROUP BY _id ");
@@ -1096,8 +1393,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
 
-    public Cursor getWordsWithSequence(final ArrayList<StringElement> elements, final boolean filtered, final boolean group) {
-        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
+    public Cursor getWordsWithSequence(final ArrayList<StringElement> elements, final boolean group) {
         StringBuilder query = new StringBuilder();
         ArrayList<String> query_args=new ArrayList<String>();
 
@@ -1114,7 +1410,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         if (elements.size()==1) {
             switch (elements.get(0).type) {
-                case StringElement.CHINESE:
+                case CHINESE:
                     query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=?) AS char_pinyin " +
                             "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1123,7 +1419,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     query_args.add(elements.get(0).content+"%");
                     query_args.add(elements.get(0).content);
                     break;
-                case StringElement.PINYIN_WITH_TONE:
+                case PINYIN_WITH_TONE:
                     query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin=?) AS char_pinyin " +
                             "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1132,7 +1428,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     query_args.add(elements.get(0).content+"%");
                     query_args.add(elements.get(0).content);
                     break;
-                case StringElement.PINYIN_WITHOUT_TONE:
+                case PINYIN_WITHOUT_TONE:
                     query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR " +
                             "cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
@@ -1146,7 +1442,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     query_args.add(elements.get(0).content+"5%");
                     query_args.add(elements.get(0).content+"_");
                     break;
-                case StringElement.INCOMPLETE_PINYIN:
+                case INCOMPLETE_PINYIN:
                     query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
                             "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.pinyin LIKE ?) AS char_pinyin " +
                             "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
@@ -1154,35 +1450,55 @@ public class HanziDB extends SQLiteOpenHelper {
                             "JOIN eword ON cword.cword_id=eword.cword_id ");
                     query_args.add(elements.get(0).content+"%");
                     query_args.add(elements.get(0).content+"%");
+                    break;
+                case CHINESE_WITH_PINYIN:
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part()+"%");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part());
+                    break;
+                case CHINESE_WITH_PINYIN_NO_TONE:
+                    query.append("CASE WHEN cword.length=1 THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
+                            "FROM (SELECT * FROM char_pinyin WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin LIKE ?) AS char_pinyin " +
+                            "JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
+                            "JOIN cword ON cword.cword_id=cword_segment.cword_id " +
+                            "JOIN eword ON cword.cword_id=eword.cword_id ");
+                    query_args.add(elements.get(0).chinese_part()+"%");
+                    query_args.add(elements.get(0).chinese_part());
+                    query_args.add(elements.get(0).pinyin_part()+"_");
+                    break;
             }
         }
         else {
-            int type = elements.get(0).type;
+            StringElement.type_t type = elements.get(0).type;
             int i=0;
             String concat="";
-            if (type == StringElement.CHINESE) {
+            if (type == StringElement.type_t.CHINESE) {
                 for (i=0; i<elements.size(); i++) {
                     concat+=elements.get(i).content;
-                    if (elements.get(i).type != StringElement.CHINESE)
+                    if (elements.get(i).type != StringElement.type_t.CHINESE)
                         break;
                 }
-            }
-            else if (type == StringElement.PINYIN_WITH_TONE) {
+            } else if (type == StringElement.type_t.PINYIN_WITH_TONE) {
                 for (i=0; i<elements.size(); i++) {
                     concat+=elements.get(i).content;
-                    if (elements.get(i).type != StringElement.PINYIN_WITH_TONE)
+                    if (elements.get(i).type != StringElement.type_t.PINYIN_WITH_TONE)
                         break;
                 }
             }
 
-            if ((i==elements.size()) && (type == StringElement.CHINESE)) {
+            if ((i==elements.size()) && (type == StringElement.type_t.CHINESE)) {
                 query.append("CASE WHEN cword.length=? THEN 0 WHEN cword.chinese LIKE ? THEN 1 ELSE 2 END AS sort " +
                         "FROM (SELECT * FROM cword WHERE cword.chinese LIKE ?) AS cword " +
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
                 query_args.add(Integer.toString(elements.size()));
                 query_args.add(concat+"%");
                 query_args.add("%"+concat+"%");
-            } else if ((i==elements.size()) && (type == StringElement.PINYIN_WITH_TONE)) {
+            } else if ((i==elements.size()) && (type == StringElement.type_t.PINYIN_WITH_TONE)) {
                 query.append("CASE WHEN cword.length=? THEN 0 WHEN cword.pinyin LIKE ? THEN 1 ELSE 2 END AS sort " +
                         "FROM (SELECT * FROM cword WHERE cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ? OR cword.pinyin LIKE ?) AS cword " +
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
@@ -1196,42 +1512,49 @@ public class HanziDB extends SQLiteOpenHelper {
                 query_args.add("%5"+concat+"%");
             } else {
                 // mixed up
-                query.append("CASE WHEN cword.length=? THEN 0 WHEN elem0.pos=0 THEN 1 ELSE 2 END AS sort FROM (SELECT * FROM cword ");
+                query.append("CASE WHEN cword.length=? THEN 0 WHEN elem0.pos=0 THEN 1 ELSE 2 END AS sort ");
                 query_args.add(Integer.toString(elements.size()));
-                query.append(") AS cword JOIN eword ON cword.cword_id=eword.cword_id ");
                 for (i=0; i<elements.size(); i++) {
-                    query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    if (i==0)
+                        query.append("FROM (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
+                    else
+                        query.append(" JOIN (SELECT * FROM char_pinyin JOIN cword_segment ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id WHERE ");
                     switch (elements.get(i).type) {
-                        case StringElement.CHINESE:
+                        case CHINESE:
                             query.append("hanzi=?");
                             query_args.add(elements.get(i).content);
                             break;
-                        case StringElement.PINYIN_WITH_TONE:
+                        case PINYIN_WITH_TONE:
                             query.append("pinyin=?");
                             query_args.add(elements.get(i).content);
                             break;
-                        case StringElement.PINYIN_WITHOUT_TONE:
+                        case PINYIN_WITHOUT_TONE:
                             query.append("pinyin LIKE ?");
                             query_args.add(elements.get(i).content+"_");
                             break;
-                        case StringElement.INCOMPLETE_PINYIN:
+                        case INCOMPLETE_PINYIN:
                             query.append("pinyin LIKE ?");
                             query_args.add(elements.get(i).content+"%");
+                            break;
+                        case CHINESE_WITH_PINYIN:
+                            query.append("hanzi=? AND pinyin=?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part());
+                            break;
+                        case CHINESE_WITH_PINYIN_NO_TONE:
+                            query.append("hanzi=? AND pinyin LIKE ?");
+                            query_args.add(elements.get(i).chinese_part());
+                            query_args.add(elements.get(i).pinyin_part()+"_");
                             break;
                     }
                     query.append(") AS elem").append(i);
                     if (i>0) {
                         query.append(" ON (elem").append(i).append(".pos=elem").append(i - 1).append(".pos+1) AND (elem").append(i).append(".cword_id=elem").append(i - 1).append(".cword_id)");
                     }
-                    else {
-                        query.append(" ON (elem").append(i).append(".cword_id=cword.cword_id)");
-                    }
                 }
+                query.append(" JOIN cword ON elem0.cword_id=cword.cword_id " +
+                        "JOIN eword ON cword.cword_id=eword.cword_id ");
             }
-        }
-        if (lesson_filtered) {
-            query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ");
-            query.append(where_filter+" ");
         }
         if (group) {
             query.append(") GROUP BY _id ");
@@ -1244,9 +1567,8 @@ public class HanziDB extends SQLiteOpenHelper {
         return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
 
-    public Cursor getDecomposedParts(final ArrayList<StringElement> elements, final int max_size, final boolean filtered, final boolean group) {
+    public Cursor getDecomposedParts(final ArrayList<StringElement> elements, final int max_size, final boolean group) {
         // Assuming all elements are Chinese...
-        final boolean lesson_filtered = filtered && ((lesson_filter.size() > 0) && (lesson_filter_enabled));
         StringBuilder query = new StringBuilder();
         ArrayList<String> query_args=new ArrayList<String>();
         for (int i=0; i<elements.size(); i++) {
@@ -1261,9 +1583,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 query.append("FROM (SELECT * FROM cword WHERE cword.chinese=?) AS cword " +
                         "JOIN eword ON cword.cword_id=eword.cword_id ");
                 query_args.add(part_query.toString());
-                if (lesson_filtered) {
-                    query.append("JOIN lesson_word ON eword.eng_id=lesson_word.eng_id ").append(where_filter);
-                }
                 if (group)
                     query.append("GROUP BY cword.cword_id ");
 
@@ -1295,17 +1614,22 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected int addVocabulary(String english, String chinese, String pinyin) {
-        String pinyin_to_insert = PinyinParser.convert_to_lame_version(pinyin);
-
+        ArrayList<String> pin_array = PinyinParser.parse_string(pinyin);
         ArrayList<String> ch_array = new ArrayList<String>();
+
         int len = chinese.codePointCount(0, chinese.length());
+        if (len != pin_array.size())
+            return -1;
+
+        StringBuilder pinyin_to_insert = new StringBuilder();
         for (int i = 0; i< len; i++) {
             int from = chinese.offsetByCodePoints(0, i);
             int to = chinese.offsetByCodePoints(0, i + 1);
 
             ch_array.add(chinese.substring(from, to));
+            pinyin_to_insert.append(pin_array.get(i));
         }
-        ArrayList<String> pin_array = PinyinParser.parse_string(pinyin_to_insert);
+
         if ((pin_array == null) || (pin_array.size() != ch_array.size()))
             return -1;
 
@@ -1314,13 +1638,16 @@ public class HanziDB extends SQLiteOpenHelper {
 
         ContentValues cv = new ContentValues();
         cv.put("chinese", chinese);
-        cv.put("pinyin", pinyin_to_insert);
+        cv.put("pinyin", pinyin_to_insert.toString());
         cv.put("length", chinese.codePointCount(0, chinese.length()));
-        db.insert("cword", null, cv);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+            db.insertWithOnConflict("cword", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        else
+            db.insert("cword", null, cv);
 
         cached_num_chars=-1;
 
-        cword_id = getWordId(chinese, pinyin_to_insert);
+        cword_id = getWordId(chinese, pinyin_to_insert.toString());
         if (cword_id == -1) {
             Log.w(TAG, "Added a cword id, but got no ID");
         }
@@ -1333,7 +1660,10 @@ public class HanziDB extends SQLiteOpenHelper {
                 cv.clear();
                 cv.put("hanzi", han);
                 cv.put("pinyin", pin);
-                db.insert("char_pinyin", null, cv);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                    db.insertWithOnConflict("char_pinyin", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                else
+                    db.insert("char_pinyin", null, cv);
                 char_pinyin_id = getCharPinyinId(han, pin);
 
                 // add the link between the work and the char_pinyin pair
@@ -1341,7 +1671,10 @@ public class HanziDB extends SQLiteOpenHelper {
                 cv.put("cword_id", cword_id);
                 cv.put("char_pinyin_id", char_pinyin_id);
                 cv.put("pos", i);
-                db.insert("cword_segment", null, cv);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                    db.insertWithOnConflict("cword_segment", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                else
+                    db.insert("cword_segment", null, cv);
             }
         }
 
@@ -1351,6 +1684,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return cword_id;
     }
 
+    @SuppressLint({"NewApi"})
     protected void addVocabulary(String english, int cword_id) {
         ContentValues cv = new ContentValues();
         cv.put("cword_id", cword_id);
@@ -1642,200 +1976,247 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Merge Database
     ////////////////////////////////////////
-    public AsyncTask create_merge_task(final String path, final boolean with_dialog, final Activity context, final Runnable finishing) {
-        AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
-            ProgressDialog mProgressDialog;
-            boolean backup_ready=false;
-            final String new_db_name = "tmp_db", backup_db_name="backup_db";
+    public class merge_task extends AsyncTask<Void,Integer,Void> {
+        final String to_merge_name = "tmp_db", new_db_name ="merged_db";
+        HanziDB other_db=null;
+        HanziDB merge_from, merge_to;
+        String path;
+        ProgressDialog dialog;
+        Activity context;
+        Runnable finishing;
+        boolean copying;
+        int last_progress;
 
-            @Override
-            protected Void doInBackground(Void... voids) {
+        public merge_task(String path, ProgressDialog dialog, Activity context,  Runnable finishing) {
+            this.path = path;
+            this.dialog = dialog;
+            this.context = context;
+            this.finishing = finishing;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if (getAllChars().size()==0) {
+                // just need to copy
+                app.replaceDataBase(path);
+            }
+            else {
+                // copy to the DB directory
+                if (!app.copyFile(path, app.getApplicationContext().getDatabasePath(to_merge_name).getPath())) {
+                    clean_up_on_cancel(true);
+                    return null;
+                }
+                publishProgress(5);
+
+                if (isCancelled()) {
+                    clean_up_on_cancel(false);
+                    return null;
+                }
+
+                // copy a backup
+                other_db = new HanziDB(app, to_merge_name);
+                publishProgress(10);
+
+                if (other_db.getNumChars() < getNumChars()) {
+                    merge_from = other_db;
+                    if (!app.copyFile(db.getPath(), app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
+
+                } else {
+                    merge_from = HanziDB.this;
+                    if (!app.copyFile(app.getDatabasePath(to_merge_name).getPath(), app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
+                }
+                merge_to = new HanziDB(app, new_db_name);
+
+                // merge it
+                ArrayList<String> original_lessons = merge_to.getLessons();
+                ArrayList<String> lessons = merge_from.getLessons();
+                for (int i=0; i<lessons.size(); i++) {
+                    publishProgress(10+(i*50)/(lessons.size()+1));
+                    if (isCancelled()) {
+                        clean_up_on_cancel(false);
+                        return null;
+                    }
+                    String l = lessons.get(i);
+                    if (!original_lessons.contains(l))
+                        merge_to.addLesson(l);
+
+                    ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
+                    merge_to.addVocabulary(voc);
+                    for (Vocabulary v:voc) {
+                        merge_to.assignWordLesson(l,v);
+                    }
+                }
+
+                // add the vocabulary that's not in any lesson
+                ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
+                merge_to.addVocabulary(voc);
+
+                ArrayList<String> chars = merge_from.getAllChars();
+                for (int i=0; i<chars.size(); i++) {
+                    publishProgress(60+(i*15)/chars.size());
+                    if (isCancelled()) {
+                        clean_up_on_cancel(false);
+                        return null;
+                    }
+                    String c=chars.get(i);
+                    if (merge_from.getBoxForChar(c) != 0) {
+                        merge_to.setBoxForChar(c, merge_from.getBoxForChar(c));
+                        merge_to.setExpirationTimeForChar(c, merge_from.getExpirationTimeForChar(c));
+                    }
+                }
+
+                ArrayList<String> words = merge_from.getAllWords();
+                for (int i=0; i<words.size(); i++) {
+                    publishProgress(75+(i*15)/words.size());
+                    if (isCancelled()) {
+                        clean_up_on_cancel(false);
+                        return null;
+                    }
+                    String c=words.get(i);
+                    if (merge_from.getBoxForChar(c) != 0) {
+                        merge_to.setBoxForChar(c, merge_from.getBoxForChar(c));
+                        merge_to.setExpirationTimeForChar(c, merge_from.getExpirationTimeForChar(c));
+                    }
+                }
+
+                ArrayList<String> all_lessons=new ArrayList<String>();
+                all_lessons.addAll(lessons);
+                all_lessons.addAll(0,original_lessons);
+                // remove duplicate from the end
+                for (int i=all_lessons.size()-1; i>=0; i--) {
+                    if (all_lessons.indexOf(all_lessons.get(i))<i)
+                        all_lessons.remove(i);
+                }
+                merge_to.sortLessons(all_lessons);
+
+                other_db.close();
+                HanziDB.this.close();
+
+                publishProgress(95);
+                app.copyFile(app.getDatabasePath(new_db_name).getPath(), db.getPath());
+
+                publishProgress(100);
+
+                if (isCancelled()) { // everything went through anyway...
+                    onPostExecute((Void) null);
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            // create the progress dialog if needed
+            if (dialog!=null) {
                 if (getAllChars().size()==0) {
-                    // just need to copy
-                    app.replaceDataBase(path);
+                    copying = true;
+                    dialog.setTitle("Importing Database");
+                    dialog.setMessage("Copying...");
+                    dialog.setIndeterminate(true);
+                    dialog.show();
                 }
                 else {
-                    // copy to the DB directory
-                    if (!app.copyFile(path, HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath())) {
-                        clean_up_on_cancel(true);
-                        return null;
-                    }
-                    publishProgress(5);
-
-                    if (isCancelled()) {
-                        clean_up_on_cancel(false);
-                        return null;
-                    }
-
-                    // copy a backup
-                    if (!app.copyFile(db.getPath(), HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath())) {
-                        clean_up_on_cancel(true);
-                        return null;
-                    }
-                    publishProgress(10);
-                    if (isCancelled()) {
-                        clean_up_on_cancel(false);
-                        return null;
-                    }
-                    backup_ready=true;
-
-                    HanziDB other_db = new HanziDB(app, new_db_name);
-
-                    // merge it
-                    ArrayList<String> original_lessons = getLessons();
-                    ArrayList<String> lessons = other_db.getLessons();
-                    for (int i=0; i<lessons.size(); i++) {
-                        publishProgress(10+(i*50)/(lessons.size()+1));
-                        if (isCancelled()) {
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-                        String l = lessons.get(i);
-                        if (!original_lessons.contains(l))
-                            addLesson(l);
-
-                        ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
-                        addVocabulary(voc);
-                        for (Vocabulary v:voc) {
-                            assignWordLesson(l,v);
-                        }
-                    }
-
-                    // add the vocabulary that's not in any lesson
-                    ArrayList<Vocabulary> voc = other_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
-                    addVocabulary(voc);
-
-                    ArrayList<String> chars = other_db.getAllChars();
-                    for (int i=0; i<chars.size(); i++) {
-                        publishProgress(60+(i*15)/chars.size());
-                        if (isCancelled()) {
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-                        String c=chars.get(i);
-                        if (other_db.getBoxForChar(c) != 0) {
-                            setBoxForChar(c, other_db.getBoxForChar(c));
-                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
-                        }
-                    }
-
-                    ArrayList<String> words = other_db.getAllWords();
-                    for (int i=0; i<words.size(); i++) {
-                        publishProgress(75+(i*15)/words.size());
-                        if (isCancelled()) {
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-                        String c=words.get(i);
-                        if (other_db.getBoxForChar(c) != 0) {
-                            setBoxForChar(c, other_db.getBoxForChar(c));
-                            setExpirationTimeForChar(c, other_db.getExpirationTimeForChar(c));
-                        }
-                    }
-
-                    ArrayList<String> all_lessons=new ArrayList<String>();
-                    all_lessons.addAll(lessons);
-                    all_lessons.addAll(0,original_lessons);
-                    // remove duplicate from the end
-                    for (int i=all_lessons.size()-1; i>=0; i--) {
-                        if (all_lessons.indexOf(all_lessons.get(i))<i)
-                            all_lessons.remove(i);
-                    }
-                    sortLessons(all_lessons);
-
-                    other_db.close();
-
-                    backup_ready=false;
-                    // Erase the temporary database
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
-                    publishProgress(95);
-
-                    // Erase backup
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
-                    publishProgress(100);
-
-                    if (isCancelled()) { // everything went through anyway...
-                        onPostExecute((Void) null);
-                    }
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-
-                // create the progress dialog if needed
-                if (with_dialog) {
-                    if (getAllChars().size()==0) {
-                        mProgressDialog = ProgressDialog.show(context, "Importing Database", "Copying...", false);
-                        mProgressDialog.setIndeterminate(true);
-                    }
-                    else {
-                        mProgressDialog = new ProgressDialog(context);
-                        mProgressDialog.setMessage("Merging database");
-                        mProgressDialog.setIndeterminate(false);
-                        mProgressDialog.setMax(100);
-                        mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            public void onCancel(DialogInterface dialogInterface) {
-                                cancel(false);
-                            }
-                        });
-                        mProgressDialog.setCancelable(true);
-                        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                        mProgressDialog.show();
-                    }
-                }
-            }
-
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                super.onProgressUpdate(values);
-                if (with_dialog)
-                    mProgressDialog.setProgress(values[0]);
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                // Dismiss progress dialog
-                if (with_dialog)
-                    mProgressDialog.dismiss();
-
-                if (finishing != null)
-                    finishing.run();
-            }
-
-            private void clean_up_on_cancel(final boolean error) {
-                // Erase the temporary database
-                new File(HanziDB.this.app.getApplicationContext().getDatabasePath(new_db_name).getPath()).delete();
-
-                // restore the backup if it is ready
-                if (backup_ready) {
-                    String db_path = db.getPath();
-                    new File(db_path).delete();
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).renameTo(new File(db_path));
-                }
-                else {
-                    // delete the possible backup
-                    new File(HanziDB.this.app.getApplicationContext().getDatabasePath(backup_db_name).getPath()).delete();
-                }
-
-                if (with_dialog || error)
-                    context.runOnUiThread(new Runnable() {
-                        public void run() {
-                            if (with_dialog)
-                                mProgressDialog.dismiss();
-
-                            if (error) {
-                                Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
-                            }
+                    copying = false;
+                    dialog.setMessage("Merging database");
+                    dialog.setIndeterminate(false);
+                    dialog.setMax(100);
+                    dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        public void onCancel(DialogInterface dialogInterface) {
+                            cancel(false);
                         }
                     });
+                    dialog.setCancelable(true);
+                    dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    dialog.show();
+                }
             }
-        };
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            last_progress = values[0];
+            if (dialog!=null)
+                dialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            // Dismiss progress dialog
+            if (dialog!=null)
+                dialog.dismiss();
+
+            if (finishing != null)
+                finishing.run();
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+
+            if (dialog!=null)
+                dialog.dismiss();
+        }
+
+        private void clean_up_on_cancel(final boolean error) {
+            // Erase the temporary database
+            app.getDatabasePath(to_merge_name).delete();
+            app.getDatabasePath(new_db_name).delete();
+
+            if (other_db != null)
+                other_db.close();
+
+            if (error)
+                context.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        }
+
+        public void change_progress_dialog(ProgressDialog new_progress) {
+            this.dialog = new_progress;
+            if (copying) {
+                dialog.setTitle("Importing Database");
+                dialog.setMessage("Copying...");
+                dialog.setIndeterminate(true);
+                dialog.show();
+            }
+            else {
+                dialog.setMessage("Merging database");
+                dialog.setIndeterminate(false);
+                dialog.setMax(100);
+                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    public void onCancel(DialogInterface dialogInterface) {
+                        cancel(false);
+                    }
+                });
+                dialog.setCancelable(true);
+                dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                dialog.show();
+                dialog.setProgress(last_progress);
+            }
+        }
+
+        public void change_context(Activity context) {
+            this.context = context;
+        }
+    }
+
+    @SuppressLint({"NewApi"})
+    public merge_task create_merge_task(final String path, final ProgressDialog mProgressDialog, final Activity context, final Runnable finishing) {
+        merge_task res = new merge_task(path, mProgressDialog, context, finishing);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
@@ -1848,174 +2229,223 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Export Database
     ////////////////////////////////////////
-    public AsyncTask create_export_task(final String path, final boolean with_scores, final boolean filtered_lessons, final boolean with_dialog, final Activity context, final Runnable finishing) {
-        AsyncTask<Void,Integer,Void> res = new AsyncTask<Void,Integer,Void>() {
-            ProgressDialog mProgressDialog;
-            final String new_db_name = "tmp_db";
-            HanziDB new_db=null;
+    public class export_task extends AsyncTask<Void,Integer,Void> {
+        ProgressDialog mProgressDialog;
+        final String new_db_name = "tmp_db";
+        HanziDB new_db=null;
+        boolean with_scores;
+        ArrayList<String> selected_lessons;
+        String path;
+        Activity context;
+        Runnable finishing;
+        int last_progress=0;
 
-            @Override
-            protected Void doInBackground(Void... voids) {
-                if ((with_scores) && (!filtered_lessons)) {
-                    if (!app.copyFile(db.getPath(), path)) {
-                        clean_up_on_cancel(true);
+        public export_task(String path, ArrayList<String> selected_lessons, ProgressDialog dialog, boolean with_scores, Activity context, Runnable finishing) {
+            this.path = path;
+            this.selected_lessons = selected_lessons;
+            this.with_scores = with_scores;
+            this.context = context;
+            this.finishing = finishing;
+            mProgressDialog = dialog;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if ((with_scores) && (selected_lessons == null)) {
+                if (!app.copyFile(db.getPath(), path)) {
+                    clean_up_on_cancel(true);
+                    return null;
+                }
+            } else if (selected_lessons == null) {
+                if (!app.copyFile(db.getPath(), HanziDB.this.app.getDatabasePath(new_db_name).getPath())) {
+                    clean_up_on_cancel(true);
+                    return null;
+                }
+                new_db = new HanziDB(app, new_db_name);
+                new_db.resetAllScores();
+                new_db.close();
+
+                if (!app.copyFile(HanziDB.this.app.getDatabasePath(new_db_name).getPath(), path)) {
+                    clean_up_on_cancel(true);
+                    return null;
+                }
+
+                HanziDB.this.app.deleteDatabase(new_db_name);
+            } else {
+                new_db = new HanziDB(app, new_db_name);
+                publishProgress(10);
+
+                for (int i=0; i<selected_lessons.size(); i++) {
+                    String lesson = selected_lessons.get(i);
+                    if (isCancelled()) {
+                        clean_up_on_cancel(false);
                         return null;
                     }
-                } else if (!filtered_lessons) {
-                    if (!app.copyFile(db.getPath(), HanziDB.this.app.getDatabasePath(new_db_name).getPath())) {
-                        clean_up_on_cancel(true);
-                        return null;
+                    publishProgress(10+(i*70)/selected_lessons.size());
+                    Log.d(TAG, "exporting lesson "+lesson);
+                    if (lesson.equals(""))
+                        continue;
+                    new_db.addLesson(lesson);
+
+                    ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
+                    new_db.addVocabulary(lesson_voc);
+                    for (Vocabulary v : lesson_voc) {
+                        new_db.assignWordLesson(lesson, v);
                     }
-                    new_db = new HanziDB(app, new_db_name);
-                    new_db.resetAllScores();
-                    new_db.close();
+                }
+                new_db.sortLessons(selected_lessons);
 
-                    if (!app.copyFile(HanziDB.this.app.getDatabasePath(new_db_name).getPath(), path)) {
-                        clean_up_on_cancel(true);
-                        return null;
-                    }
-
-                    HanziDB.this.app.deleteDatabase(new_db_name);
-                } else {
-                    new_db = new HanziDB(app, new_db_name);
-
-                    for (int i=0; i<lesson_filter.size(); i++) {
-                        String lesson = lesson_filter.get(i);
+                if (with_scores) {
+                    ArrayList<String> chars = new_db.getAllChars();
+                    for (int i=0; i<chars.size(); i++) {
+                        String c = chars.get(i);
                         if (isCancelled()) {
                             clean_up_on_cancel(false);
                             return null;
                         }
-                        publishProgress((i*80)/lesson_filter.size());
-                        Log.d(TAG, "exporting lesson "+lesson);
-                        if (lesson.equals(""))
-                            continue;
-                        new_db.addLesson(lesson);
-
-                        ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
-                        new_db.addVocabulary(lesson_voc);
-                        for (Vocabulary v : lesson_voc) {
-                            new_db.assignWordLesson(lesson, v);
+                        publishProgress(80+(i*5)/chars.size());
+                        int b = getBoxForChar(c);
+                        if (b!=0) {
+                            long t = getExpirationTimeForChar(c);
+                            new_db.setBoxForChar(c, b);
+                            new_db.setExpirationTimeForChar(c, t);
                         }
                     }
-                    new_db.sortLessons(lesson_filter);
-
-                    if (with_scores) {
-                        ArrayList<String> chars = new_db.getAllChars();
-                        for (int i=0; i<chars.size(); i++) {
-                            String c = chars.get(i);
-                            if (isCancelled()) {
-                                clean_up_on_cancel(false);
-                                return null;
-                            }
-                            publishProgress(80+(i*5)/chars.size());
-                            int b = getBoxForChar(c);
-                            if (b!=0) {
-                                long t = getExpirationTimeForChar(c);
-                                new_db.setBoxForChar(c, b);
-                                new_db.setExpirationTimeForChar(c, t);
-                            }
+                    ArrayList<String> words = new_db.getAllWords();
+                    for (int i=0; i<words.size(); i++) {
+                        String c = words.get(i);
+                        if (isCancelled()) {
+                            clean_up_on_cancel(false);
+                            return null;
                         }
-                        ArrayList<String> words = new_db.getAllWords();
-                        for (int i=0; i<words.size(); i++) {
-                            String c = words.get(i);
-                            if (isCancelled()) {
-                                clean_up_on_cancel(false);
-                                return null;
-                            }
-                            publishProgress(85+(i*5)/words.size());
-                            int b = getBoxForChar(c);
-                            if (b!=0) {
-                                long t = getExpirationTimeForChar(c);
-                                new_db.setBoxForChar(c, b);
-                                new_db.setExpirationTimeForChar(c, t);
-                            }
+                        publishProgress(85+(i*5)/words.size());
+                        int b = getBoxForChar(c);
+                        if (b!=0) {
+                            long t = getExpirationTimeForChar(c);
+                            new_db.setBoxForChar(c, b);
+                            new_db.setExpirationTimeForChar(c, t);
                         }
-                    }
-
-
-                    if (!app.copyFile(new_db.getWritableDatabase().getPath(), path)) {
-                        clean_up_on_cancel(true);
-                        return null;
-                    }
-                    new_db.close();
-
-                    publishProgress(90);
-
-                    HanziDB.this.app.deleteDatabase(new_db_name);
-
-                    if (isCancelled()) { // everything went through anyway...
-                        onPostExecute((Void) null);
                     }
                 }
-                return null;
-            }
 
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                // create the progress dialog if needed
-                if (with_dialog) {
-                    if (!filtered_lessons) {
-                        mProgressDialog = ProgressDialog.show(context, "Exporting Database", "Copying...", false);
-                        mProgressDialog.setIndeterminate(true);
-                    }
-                    else {
-                        mProgressDialog = new ProgressDialog(context);
-                        mProgressDialog.setMessage("Exporting database");
-                        mProgressDialog.setIndeterminate(false);
-                        mProgressDialog.setMax(100);
-                        mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            public void onCancel(DialogInterface dialogInterface) {
-                                cancel(false);
-                            }
-                        });
-                        mProgressDialog.setCancelable(true);
-                        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                        mProgressDialog.show();
-                    }
+
+                if (!app.copyFile(new_db.getWritableDatabase().getPath(), path)) {
+                    clean_up_on_cancel(true);
+                    return null;
                 }
-            }
+                new_db.close();
 
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                super.onProgressUpdate(values);
-                if (with_dialog)
-                    mProgressDialog.setProgress(values[0]);
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-
-                if (with_dialog)
-                    mProgressDialog.dismiss();
-
-                if (finishing!= null)
-                    finishing.run();
-            }
-
-            private void clean_up_on_cancel(final boolean error) {
-                Log.d(TAG, "Cancelling export !");
-                if(new_db!=null)
-                    new_db.close();
+                publishProgress(95);
 
                 HanziDB.this.app.deleteDatabase(new_db_name);
-                new File(path).delete();
 
-                if (with_dialog || error)
-                    context.runOnUiThread(new Runnable() {
-                        public void run() {
-                            if (with_dialog)
-                                mProgressDialog.dismiss();
+                if (isCancelled()) { // everything went through anyway...
+                    onPostExecute((Void) null);
+                }
+            }
+            return null;
+        }
 
-                            if (error) {
-                                Toast.makeText(context, "An error occured while exporting the database", Toast.LENGTH_SHORT).show();
-                            }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // create the progress dialog if needed
+            if (mProgressDialog != null) {
+                if (selected_lessons == null) {
+                    mProgressDialog.setTitle("Exporting Database");
+                    mProgressDialog.setMessage("Copying....");
+                    mProgressDialog.setIndeterminate(true);
+                    mProgressDialog.show();
+                }
+                else {
+                    mProgressDialog.setMessage("Exporting database");
+                    mProgressDialog.setIndeterminate(false);
+                    mProgressDialog.setMax(100);
+                    mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        public void onCancel(DialogInterface dialogInterface) {
+                            cancel(false);
                         }
                     });
-
+                    mProgressDialog.setCancelable(true);
+                    mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    mProgressDialog.show();
+                }
             }
-        };
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            last_progress = values[0];
+            if (mProgressDialog != null)
+                mProgressDialog.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if (mProgressDialog != null)
+                mProgressDialog.dismiss();
+
+            if (finishing!= null)
+                finishing.run();
+        }
+
+        private void clean_up_on_cancel(final boolean error) {
+            Log.d(TAG, "Cancelling export !");
+            if(new_db!=null)
+                new_db.close();
+
+            HanziDB.this.app.deleteDatabase(new_db_name);
+            new File(path).delete();
+
+            if (mProgressDialog != null || error) {
+                context.runOnUiThread(new Runnable() {
+                    public void run() {
+                        if (mProgressDialog != null)
+                            mProgressDialog.dismiss();
+
+                        if (error) {
+                            Toast.makeText(context, "An error occured while exporting the database", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        }
+
+        public void change_context(Activity context) {
+            this.context = context;
+        }
+
+        public void change_dialog(ProgressDialog dialog) {
+            mProgressDialog = dialog;
+            if (selected_lessons == null) {
+                mProgressDialog.setTitle("Exporting Database");
+                mProgressDialog.setMessage("Copying....");
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.show();
+            }
+            else {
+                mProgressDialog.setMessage("Exporting database");
+                mProgressDialog.setIndeterminate(false);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.setMax(100);
+                mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    public void onCancel(DialogInterface dialogInterface) {
+                        cancel(false);
+                    }
+                });
+                mProgressDialog.setCancelable(true);
+                mProgressDialog.show();
+                mProgressDialog.setProgress(last_progress);
+            }
+        }
+    }
+
+    @SuppressLint({"NewApi"})
+    public export_task create_export_task(final String path, final boolean with_scores, final ArrayList<String> selected_lessons, ProgressDialog dialog, final Activity context, final Runnable finishing) {
+        export_task res = new export_task(path, selected_lessons, dialog, with_scores, context, finishing);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
@@ -2028,8 +2458,64 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Clear Database
     ////////////////////////////////////////
-    public void clearDB() {
-        onCreate(db);
+    public class clear_task extends AsyncTask<Void,Integer,Void> {
+        ProgressDialog mProgressDialog;
+        Runnable finishing;
+
+        public clear_task(ProgressDialog dialog, Runnable finishing) {
+            mProgressDialog = dialog;
+            this.finishing = finishing;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            HanziDB.this.onCreate(db);
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // create the progress dialog if needed
+            if (mProgressDialog != null) {
+                mProgressDialog.setMessage("Clearing database");
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.show();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if (mProgressDialog != null)
+                mProgressDialog.dismiss();
+
+            if (finishing!= null)
+                finishing.run();
+        }
+
+        public void change_dialog(ProgressDialog dialog) {
+            mProgressDialog = dialog;
+            mProgressDialog.setMessage("Clearing database");
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
+
+    }
+
+    @SuppressLint({"NewApi"})
+    public clear_task create_clear_task(ProgressDialog dialog, final Runnable finishing) {
+        clear_task res = new clear_task(dialog, finishing);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            res.execute((Void[])null);
+
+        return res;
     }
 
     /*
@@ -2042,6 +2528,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Manage Lessons
     ////////////////////////////////////////
+    @SuppressLint({"NewApi"})
     public void addLesson(String name) {
         ContentValues cv = new ContentValues();
         cv.put("name", name);
@@ -2060,10 +2547,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         db.delete("lesson_word", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
         db.delete("lessons", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
-
-        if (lesson_filter.contains(name)) {
-            lesson_filter.remove(name);
-        }
     }
 
     public void renameLesson(String old_name, String new_name) {
@@ -2077,11 +2560,6 @@ public class HanziDB extends SQLiteOpenHelper {
         cv.put("name", new_name);
 
         db.update("lessons", cv, "lesson_id=?", new String[] {Integer.toString(lesson_id)});
-
-        if (lesson_filter.contains(old_name)) {
-            lesson_filter.remove(old_name);
-            lesson_filter.add(new_name);
-        }
     }
 
     public ArrayList<String> getLessons() {
@@ -2125,6 +2603,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Manage Words in lessons
     ////////////////////////////////////////
+    @SuppressLint({"NewApi"})
     public void assignWordLesson(String lesson, String english, String chinese, String pinyin) {
         int eng_id=-1;
         int lesson_id;
@@ -2371,234 +2850,6 @@ public class HanziDB extends SQLiteOpenHelper {
         return whereQuery;
     }
 
-    ////////////////////////////////////////
-    // Manage lesson filter
-    ////////////////////////////////////////
-    protected boolean lesson_filter_enabled =false;
-    protected ArrayList<String> lesson_filter=new ArrayList<String>();
-    protected String where_filter; // = "WHERE lesson_word.lesson_id IN ( ... )"
-
-    public void enableFilter(boolean enable) {
-        lesson_filter_enabled = enable;
-    }
-
-    public boolean isFilterEnabled() {
-        return lesson_filter_enabled;
-    }
-
-    public void setLessonsToFilter(ArrayList<String> lessons) {
-        lesson_filter.clear();
-        for (String lesson: getLessons()) {
-            if (lessons.contains(lesson))
-                lesson_filter.add(lesson);
-        }
-        where_filter = buildWhereQuery(lessons);
-    }
-
-    public ArrayList<String> getLessonsToFilter() {
-        return (ArrayList<String>) lesson_filter.clone();
-    }
-
-    ////////////////////////////////////////
-    // Use lesson filter
-    ////////////////////////////////////////
-    public ArrayList<Vocabulary> getFilteredTranslations(String chinese) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            Vocabulary to_add=null;
-            Cursor cur = db.rawQuery("SELECT DISTINCT cword.cword_id AS cword_id, cword.pinyin AS pinyin, eword.translation AS translation " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                    "WHERE cword.chinese=? ORDER BY cword.cword_id", new String[] {chinese});
-            int id_column_index      = cur.getColumnIndex("cword_id");
-            int pinyin_column_index  = cur.getColumnIndex("pinyin");
-            int english_column_index = cur.getColumnIndex("translation");
-            int current_id = -1;
-            if (cur.moveToFirst()) {
-                do{
-                    int new_id = cur.getInt(id_column_index);
-                    String pinyin =  cur.getString(pinyin_column_index);
-                    String english = cur.getString(english_column_index);
-
-                    if (new_id != current_id) {
-                        if (to_add != null)
-                            res.add(to_add);
-                        to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
-                        current_id=new_id;
-                    }
-                    assert to_add != null;
-                    to_add.english.add(english);
-                }while(cur.moveToNext());
-            }
-            if (to_add != null)
-                res.add(to_add);
-            cur.close();
-            return res;
-        }
-        else
-            return getTranslations(chinese);
-    }
-
-    public Vocabulary getFilteredTranslations(String chinese, String pinyin) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            Vocabulary res = null;
-            Cursor cur = db.rawQuery("SELECT DISTINCT cword.cword_id AS cword_id, cword.pinyin AS pinyin, eword.translation AS translation " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                    "WHERE cword.chinese=? AND cword.pinyin=?", new String[]{chinese, pinyin});
-            int english_column_index = cur.getColumnIndex("translation");
-            if (cur.moveToFirst()) {
-                res = new Vocabulary(chinese,pinyin);
-                do{
-                    String english = cur.getString(english_column_index);
-                    res.english.add(english);
-                }while(cur.moveToNext());
-            }
-            cur.close();
-            return res;
-        }
-        else
-            return getTranslations(chinese, pinyin);
-    }
-
-    public Cursor getFilteredCTranslations(String english) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<String> query_arg=new ArrayList<String>();
-            String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
-                    "FROM ( " +
-                    "    SELECT DISTINCT cword.cword_id AS cword_id, " +
-                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
-                    "    WHEN eword.translation LIKE ? THEN 2 WHEN eword.translation LIKE ? THEN 3 ELSE 4 END AS sort " +
-                    "    FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "    JOIN (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword ON eword.eng_id=lesson_word.eng_id " +
-                    "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
-                    "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
-            query_arg.add(english);
-            query_arg.add(english+" %");
-            query_arg.add("% "+english);
-            query_arg.add("% "+english+" %");
-            query_arg.add("%"+english+"%");
-
-            return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
-        }
-        else
-            return getCTranslations(english);
-    }
-
-    public Cursor getFilteredStartingCTranslations(String english) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<String> query_arg=new ArrayList<String>();
-            String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
-                    "FROM ( " +
-                    "    SELECT DISTINCT cword.cword_id AS cword_id, " +
-                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
-                    "    ELSE 2 END AS sort " +
-                    "    FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "    JOIN (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword ON eword.eng_id=lesson_word.eng_id " +
-                    "    JOIN cword ON cword.cword_id=eword.cword_id ) AS selection " +
-                    "JOIN cword AS c ON c.cword_id=selection.cword_id " +
-                    "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY selection.sort, c.length, eword.translation";
-            query_arg.add(english);
-            query_arg.add(english+" %");
-            query_arg.add(english+"%");
-
-            return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
-        }
-        else
-            return getStartingCTranslations(english);
-    }
-
-    public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            Vocabulary to_add=null;
-            Cursor cur = db.rawQuery("SELECT DISTINCT cword_segment.cword_id AS cword_id, cword.chinese AS chinese, " +
-                    "cword.pinyin AS pinyin, eword.translation AS translation " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "WHERE char_pinyin.hanzi=?", new String[] {hanzi});
-            int id_column_index      = cur.getColumnIndex("cword_id");
-            int chinese_column_index = cur.getColumnIndex("chinese");
-            int pinyin_column_index  = cur.getColumnIndex("pinyin");
-            int english_column_index = cur.getColumnIndex("translation");
-            int current_id = -1;
-            if (cur.moveToFirst()) {
-                do{
-                    int new_id = cur.getInt(id_column_index);
-                    String chinese = cur.getString(chinese_column_index);
-                    String pinyin =  cur.getString(pinyin_column_index);
-                    String english = cur.getString(english_column_index);
-
-                    if (new_id != current_id) {
-                        if (to_add != null)
-                            res.add(to_add);
-                        to_add = new Vocabulary(chinese,pinyin, new ArrayList<String>());
-                        current_id = new_id;
-                    }
-                    assert to_add != null;
-                    to_add.english.add(english);
-                }while(cur.moveToNext());
-            }
-            if (to_add != null)
-                res.add(to_add);
-            cur.close();
-            return res;
-        }
-        else {
-            return getWordsWithPinyin(hanzi);
-        }
-    }
-
-    public ArrayList<Vocabulary> getFilteredWordsWithPinyin(String hanzi, String pinyin) {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-            Vocabulary to_add=null;
-            Cursor cur = db.rawQuery("SELECT DISTINCT cword_segment.cword_id AS cword_id, cword.chinese AS chinese, " +
-                    "cword.pinyin AS pinyin, eword.translation AS translation " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON cword.cword_id=eword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "WHERE char_pinyin.hanzi=? AND char_pinyin.pinyin=?", new String[] {hanzi, pinyin});
-            int id_column_index      = cur.getColumnIndex("cword_id");
-            int chinese_column_index = cur.getColumnIndex("chinese");
-            int pinyin_column_index  = cur.getColumnIndex("pinyin");
-            int english_column_index = cur.getColumnIndex("translation");
-            int current_id = -1;
-            if (cur.moveToFirst()) {
-                do{
-                    int new_id = cur.getInt(id_column_index);
-                    String chinese = cur.getString(chinese_column_index);
-                    String pinyin_w =  cur.getString(pinyin_column_index);
-                    String english = cur.getString(english_column_index);
-
-                    if (new_id != current_id) {
-                        if (to_add != null)
-                            res.add(to_add);
-                        to_add = new Vocabulary(chinese,pinyin_w, new ArrayList<String>());
-                        current_id = new_id;
-                    }
-                    assert to_add != null;
-                    to_add.english.add(english);
-                }while(cur.moveToNext());
-            }
-            if (to_add != null)
-                res.add(to_add);
-            cur.close();
-            return res;
-        }
-        else {
-            return getWordsWithPinyin(hanzi, pinyin);
-        }
-    }
-
     /*
      *
      *  Leitner learning database management
@@ -2686,7 +2937,7 @@ public class HanziDB extends SQLiteOpenHelper {
             cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
                     "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
                     "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (exp_time<?) OR (box IS NULL)",
+                    "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
@@ -2711,7 +2962,7 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             cur = db.rawQuery("SELECT COUNT(cword.chinese) AS count FROM cword " +
                     "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (exp_time<?) OR (box IS NULL)",
+                    "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)",
                     new String[] {Long.toString(System.currentTimeMillis())});
         else
             cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
@@ -2725,6 +2976,26 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public int getNumExpired() {
+        int res;
+
+        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
+                "SELECT cword.chinese AS chinese FROM cword " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (exp_time<?) OR (box IS NULL) OR (box=0) " +
+                "UNION " +
+                "SELECT chars.hanzi AS chinese FROM " +
+                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)" +
+                ") GROUP BY chinese",
+                new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
+
+        res=cur.getCount();
+
+        cur.close();
+        return res;
+    }
     public int getBoxForChar(String hanzi) {
         int res;
 
@@ -2814,7 +3085,6 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     public void resetAllScores() {
         db.delete("leitner", null, null);
-        ContentValues cv=new ContentValues();
     }
 
     public void resetTime(String hanzi) {
@@ -2931,7 +3201,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    protected void setExpirationTimeForChar(String hanzi, long time) {
+    public void setExpirationTimeForChar(String hanzi, long time) {
         ContentValues cv = new ContentValues();
         cv.put("exp_time", time);
         Cursor cur = db.rawQuery("SELECT box FROM leitner WHERE hanzi=?",
@@ -2947,7 +3217,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
-    protected void setBoxForChar(String hanzi, int box) {
+    public void setBoxForChar(String hanzi, int box) {
         ContentValues cv = new ContentValues();
         cv.put("box", box);
         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(box));
@@ -2966,10 +3236,12 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Use to find what character to study
     ////////////////////////////////////////
-    public ArrayList<String> getAllFilteredCharsToStudy() {
+
+    // TestActivity
+    public ArrayList<String> getAllToStudy(int limit) {
         ArrayList<String> res=new ArrayList<String>();
 
-        Cursor cur = getCursorFilteredCharsToStudy();
+        Cursor cur = getCursorToStudy(limit);
         if (cur.moveToFirst()) {
             res.ensureCapacity(cur.getCount());
             do {
@@ -2980,50 +3252,20 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    public ArrayList<String> getAllFilteredToStudy() {
-        ArrayList<String> res=new ArrayList<String>();
-
-        Cursor cur = getCursorFilteredToStudy();
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do {
-                res.add(cur.getString(cur.getColumnIndex("chinese")));
-            } while(cur.moveToNext());
-        }
-        cur.close();
-        return res;
-    }
-
-    protected Cursor getCursorCharsToStudy() {
+    // getCursorFilteredCharsToStudy <- ReviewList
+    public Cursor getCursorCharsToStudy() {
         return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
                 "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
                 "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
                 "FROM char_pinyin " +
                 "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "WHERE ((box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2)) OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi,SUBSTR(pinyin,1, LENGTH(pinyin)-1) HAVING COUNT(*) <> 2))) " +
                 "ORDER BY forced_box DESC, exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
 
-    public Cursor getCursorFilteredCharsToStudy() {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
-            return  db.rawQuery("SELECT DISTINCT char_pinyin.char_pinyin_id AS _id, " +
-                    "char_pinyin.hanzi AS chinese, char_pinyin.pinyin AS pinyin, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) ORDER BY forced_box DESC, exp_time DESC",
-                    new String[] {Long.toString(System.currentTimeMillis())});
-        else
-            return getCursorCharsToStudy();
-    }
-
-    protected Cursor getCursorWordsToStudy() {
+    public Cursor getCursorWordsToStudy() {
         return db.rawQuery("SELECT cword.cword_id AS _id, cword.chinese AS chinese, " +
                 "cword.pinyin AS pinyin, " +
                 "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
@@ -3037,27 +3279,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
 
-    public Cursor getCursorFilteredWordsToStudy() {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled))
-            return  db.rawQuery("SELECT cword.cword_id AS _id, " +
-                    "cword.chinese AS chinese, cword.pinyin AS pinyin" +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
-                    "GROUP_CONCAT(eword.translation,', ') AS english " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "JOIN eword ON eword.cword_id=cword.cword_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                    "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
-                    new String[] {Long.toString(System.currentTimeMillis())});
-        else
-            return getCursorWordsToStudy();
-    }
-
-    protected Cursor getCursorToStudy() {
+    public Cursor getCursorToStudy() {
         return db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
                 "SELECT 2*char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese, " +
                 "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
@@ -3074,40 +3296,24 @@ public class HanziDB extends SQLiteOpenHelper {
                 "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
                 "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
-
     }
 
-    public Cursor getCursorFilteredToStudy() {
-        if ((lesson_filter.size() > 0) && (lesson_filter_enabled)) {
-            return  db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
-                    "SELECT 2*char_pinyin.char_pinyin_id AS _id, " +
-                    "char_pinyin.hanzi AS chinese, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN cword_segment ON cword_segment.cword_id=cword.cword_id " +
-                    "JOIN char_pinyin ON char_pinyin.char_pinyin_id=cword_segment.char_pinyin_id " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                    "WHERE (leitner.box IS NULL) or (leitner.exp_time<?) " +
-                    "UNION " +
-                    "SELECT 1+2*cword.cword_id AS _id, " +
-                    "cword.chinese AS chinese, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                    "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                    "FROM (SELECT eng_id FROM lesson_word " + where_filter + ") AS lesson_word " +
-                    "JOIN eword ON eword.eng_id=lesson_word.eng_id " +
-                    "JOIN cword ON eword.cword_id=cword.cword_id " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                    "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC",
-                    new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis())});
-
-        }
-        else {
-            return getCursorToStudy();
-        }
+    public Cursor getCursorToStudy(int limit) {
+        return db.rawQuery("SELECT _id, chinese, exp_time, forced_box FROM (" +
+                "SELECT 2*char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese, " +
+                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                "FROM char_pinyin " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
+                "UNION " +
+                "SELECT 1+2*cword.cword_id AS _id, cword.chinese AS chinese," +
+                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
+                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
+                "FROM cword " +
+                "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?)) " +
+                "GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC LIMIT ?",
+                new String[] {Long.toString(System.currentTimeMillis()), Long.toString(System.currentTimeMillis()), Integer.toString(limit)});
     }
 }

@@ -1,11 +1,13 @@
-/bin/
-/gen/
+bin/
+gen/
 /out/
 
 *.pyc
 .idea/
 
 local.properties
+project.properties
 build.properties
 build.xml
 proguard.cfg
+proguard-project.txt

@@ -2,19 +2,19 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         style="@style/AndZiTheme">
     <View
             android:id="@+id/spacer"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1"
             />
     <TextView
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
             android:textColor="#000000"
@@ -38,32 +38,32 @@
     <com.matthieu.widget.ShrinkingScrollView
             android:scrollbars="vertical"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="3"
             >
         <TableLayout
                 android:id="@+id/guess_pinyin_word_grid"
                 android:layout_height="wrap_content"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:stretchColumns="1"
                 android:visibility="gone"
                 />
     </com.matthieu.widget.ShrinkingScrollView>
     <View
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1"
             />
     <LinearLayout
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
         <EditText
-                android:id="@+id/guess_pinyin_guess"
-                android:layout_width="fill_parent"
+                android:id="@+id/test_guess"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:inputType="text"
                 android:singleLine="true"
                 android:textColor="#000000"
@@ -71,16 +71,16 @@
                 />
         <Button
                 android:id="@+id/ok"
-                android:layout_width="fill_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
+                android:layout_weight="1"
                 android:text="@string/ok"
                 android:onClick="handle_ok"
                 />
     </LinearLayout>
     <View
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1"
             />
 </LinearLayout>

@@ -3,63 +3,27 @@
  */
 package com.matthieu;
 
-import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.ArrayList;
+import java.util.HashMap;
 
-public class GuessEnglish extends TestActivity {
+public class GuessEnglish extends TestFragment {
     private Vocabulary solution=null;
 
     private final String TAG="GuessEnglish";
 
     @Override
-    protected int check_guess(String guess) {
-        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase().split("[, ]");
-        for (int i=0; i<guesses.length; i++) {
-            if (guesses[i].equals(""))
-                continue;
-            Log.d(TAG, "Checking "+guesses[i]);
-            guesses[i]=guesses[i].trim();
-            for (String en:solution.english) {
-                Log.d(TAG, "Against "+en);
-                en=en.toLowerCase();
-                if (en.equals(guesses[i].trim())) {
-                    Log.d(TAG, "got a match "+en+" and "+guesses[i].trim());
-                    return CORRECT;
-                }
+    protected boolean set_hanzi_to_test(String hanzi) {
+        super.set_hanzi_to_test(hanzi);
 
-                String[] ens=HanziDB.bare_translation(en).split(" ");
-                for (String item:ens) {
-                    String tmp=item.replaceAll("[^A-Za-z]", "");
-                    if ((tmp.length()>2) && (tmp.equals(guesses[i].trim()))) {
-                        Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
-                        return CORRECT;
-                    }
-                }
-            }
-        }
-        return INCORRECT;
-    }
-
-
-    @Override
-    protected void set_next_study() {
-        super.set_next_study();
-
-        ArrayList<Vocabulary> voc = myDB.getFilteredTranslations(hanzi);
+        ArrayList<Vocabulary> voc = myDB.getTranslations(hanzi);
         if ((voc.size() == 0) || (voc.size() > 1)) { // one case has multiple pinyins...
-            nothing_to_test();
-            return;
+            return false;
         }
         do {
             solution = voc.remove((int) (voc.size()*Math.random()));
@@ -88,17 +52,30 @@ public class GuessEnglish extends TestActivity {
         } while(voc.size()>0);
 
         if (solution == null) {
-            nothing_to_test();
-            return;
+            return false;
         }
-        display_test();
+        Log.d(TAG, "GuessEnglish OK");
+
+        return true;
     }
 
     @Override
-    protected void display_test() {
-        setContentView(R.layout.guess_english);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.guess_english, container, false);
+    }
 
-        EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
+    @Override
+    public void onResume() {
+        super.onResume();
+        update_test_view(getView());
+    }
+
+    @Override
+    public void update_test_view(View v) {
+        if (v==null)
+            return;
+
+        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
         word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -109,76 +86,115 @@ public class GuessEnglish extends TestActivity {
         word_guess.setText("");
         word_guess.requestFocus();
 
-        TextView text = (TextView) findViewById(R.id.guess_english_word_voc);
+        TextView text = (TextView) v.findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
+        v.invalidate();
     }
 
-    @Override
-    protected void update_scores(int good) {
-
-        int min_box = 5;
-
-        if (good == CORRECT) {
-            myDB.betterBox(solution.chinese);
-            int word_box = myDB.getBoxForChar(solution.chinese);
-            for (int i=0; i<solution.chinese.length();) {
-                int new_box = myDB.getBoxForChar(solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i))));
-                if (new_box < min_box) {
-                    min_box = new_box;
+    protected int check_guess(String guess) {
+        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase().split("[, -]");
+        for (int i=0; i<guesses.length; i++) {
+            if (guesses[i].equals(""))
+                continue;
+            Log.d(TAG, "Checking "+guesses[i]);
+            guesses[i]=guesses[i].trim();
+            for (String en:solution.english) {
+                Log.d(TAG, "Against "+en);
+                en=en.toLowerCase();
+                if (en.equals(guesses[i].trim())) {
+                    Log.d(TAG, "got a match "+en+" and "+guesses[i].trim());
+                    return CORRECT;
                 }
 
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                int box = myDB.getBoxForChar(hanzi);
-                if ((box == min_box) && (min_box < word_box)) {
-                    myDB.betterBox(hanzi);
+                String[] ens=HanziDB.bare_translation(en).split("[ -]");
+                for (String item:ens) {
+                    String tmp=item.replaceAll("[^A-Za-z]", "");
+                    if ((tmp.length()>2) && (tmp.equals(guesses[i].trim()))) {
+                        Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
+                        return CORRECT;
+                    }
                 }
-                else {
-                    myDB.resetTime(hanzi);
-                }
-
-                i+=Character.charCount(solution.chinese.codePointAt(i));
             }
         }
-        else {
-            for (int i=0; i<solution.chinese.length();) {
-                String hanzi = solution.chinese.substring(i, i+Character.charCount(solution.chinese.codePointAt(i)));
-                myDB.worseBox(hanzi);
-                i+=Character.charCount(solution.chinese.codePointAt(i));
-            }
-            myDB.worseBox(solution.chinese);
-        }
+        return INCORRECT;
     }
 
     public void handle_ok(View v) {
-        EditText word_guess = (EditText) findViewById(R.id.guess_english_word_guess);
+        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
         if (word_guess==null)
             return;
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(word_guess.getWindowToken(), 0);
 
         String guess = word_guess.getText().toString();
 
-        if (handle_submit(guess) == -1)
-            word_guess.setText("");
+        int correctness = check_guess(guess);
+        switch(correctness) {
+            case OTHER:
+                word_guess.setText("");
+                break;
+            case CORRECT:
+            case INCORRECT:
+                GuessEnglishResultFragment solution_fragment = new GuessEnglishResultFragment();
+                Bundle bundle = new Bundle();
+                bundle.putInt("good", correctness);
+                bundle.putString("answer", guess);
+                bundle.putString("question", hanzi);
+                solution_fragment.setArguments(bundle);
+                ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+                break;
+        }
     }
 
-    @Override
-    protected void show_solution(String guess, int good) {
-        super.show_solution(guess, good);
-        Details.populate_details_view(GuessEnglish.this, (ViewGroup) findViewById(R.id.test_results), solution.chinese, myDB);
-        if ((good == INCORRECT) && (!guess.equals(""))) {
-            LinearLayout bad_guess = (LinearLayout) findViewById(R.id.test_result_wrong_guess);
-            TextView bad_guess_text = new TextView(GuessEnglish.this);
-            bad_guess_text.setText("You guessed: "+guess);
-            bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            bad_guess_text.setTextColor(0xffdd0000);
-            bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-            bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            (findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
-            (findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
+    public static class GuessEnglishResultFragment extends SolutionFragment {
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return show_details(inflater, container, true);
+        }
+
+        @Override
+        public void onDestroyView() {
+            hide_details((ViewGroup) getView());
+            super.onDestroyView();
+        }
+
+        @Override
+        public void update_score() {
+            int min_box = 5;
+
+            if (good == CORRECT) {
+                myDB.betterBox(question);
+                int word_box = myDB.getBoxForChar(question);
+                for (int i=0; i<question.length();) {
+                    int new_box = myDB.getBoxForChar(question.substring(i, i+Character.charCount(question.codePointAt(i))));
+                    if (new_box < min_box) {
+                        min_box = new_box;
+                    }
+
+                    i+=Character.charCount(question.codePointAt(i));
+                }
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
+                    int box = myDB.getBoxForChar(character);
+                    if ((box == min_box) && (min_box < word_box)) {
+                        myDB.betterBox(character);
+                    }
+                    else {
+                        myDB.resetTime(character);
+                    }
+
+                    i+=Character.charCount(question.codePointAt(i));
+                }
+            }
+            else {
+                old_scores = new HashMap<String, saved_score>();
+                for (int i=0; i<question.length();) {
+                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
+                    old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
+                    myDB.worseBox(character);
+                    i+=Character.charCount(question.codePointAt(i));
+                }
+                old_scores.put(question, new saved_score(myDB.getBoxForChar(question), myDB.getExpirationTimeForChar(question)));
+                myDB.worseBox(question);
+            }
         }
     }
 }

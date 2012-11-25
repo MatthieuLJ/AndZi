@@ -2,14 +2,14 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         style="@style/AndZiTheme"
         >
     <TableLayout
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:stretchColumns="1"
             >
         <TableRow>
@@ -60,23 +60,23 @@
     <com.matthieu.widget.ProgressGraph
             android:id="@+id/graph"
             android:layout_height="0dp"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_weight="1" />
 
     <LinearLayout
             android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:orientation="horizontal">
         <Button
                 android:id="@+id/graph_in"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/zoom_in" />
         <Button
                 android:id="@+id/graph_out"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/zoom_out" />
     </LinearLayout>

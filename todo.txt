@@ -1,13 +1,25 @@
-ONGOING (5):
+ONGOING (10):
+* Make the icon in action bar go back to the main menu
+* Back key should go back to a particular fragment before going back home...
+* Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
+* Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Make it pretty(ier)
+  - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
+  - splash page + main menu layout
+* Update help
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
 
-BUGS (00):
+ http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-FUTURE (12):
+BUGS (2):
+* Sometimes the layout is messed up when the keyboard comes up in a test screen
+* Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
+
+FUTURE (14):
+* When looking for Chinese translation (from English), separate the words if any
 * Can reset score per lesson
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
@@ -22,7 +34,71 @@ FUTURE (12):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (138):
+DONE (179):
+* No toned pinyin is broken (的 as 'de5' or 'di4')
+* Some Dictionary searches are too long
+1 element:
+ Chinese -> starting
+ Pinyin -> exact
+ Pinyin no tone -> exact
+ Incomplete pinyin -> nothing
+2 elements:
+ Chinese + Chinese -> all
+ Chinese + Pinyin -> all
+ Chinese + Pinyin no tone -> starting
+ Chinese + Incomplete pinyin -> starting
+ Pinyin + Chinese -> all
+ Pinyin + Pinyin -> all
+ Pinyin + Pinyin no tone -> starting
+ Pinyin + Incomplete pinyin -> starting
+ Pinyin no tone + Chinese -> starting
+ Pinyin no tone + Pinyin -> starting
+ Pinyin no tone + Pinyin no tone -> starting
+ Pinyin no tone + Incomplete pinyin -> exact
+3+ elements
+ All
+* Export or Email gets cancelled when screen is rotated
+* Crash if dictionary search finishes when phone is off
+* When merging, find which one is smaller to merge into
+* Only offer to check details in list when it exists
+* Move buttons in dictionary / details in actionbar
+* When checking english, break at '-' too
+* Create a separate thread to clear database
+* Need to refresh lesson list (because of selection) after assigning lesson or setting the filter
+* Change the 'enable' button for filter setting
+* Block the viewpager on the lesson list when doing lesson assignment
+* Dictionary always resumes in Chinese->English mode
+* Sometimes test does not show
+* Rotation causes test to change
+* Crash when changing orientation at the progress graph
+* Handle properly when one pinyin is just a "no tone" version of another one (GuessPinyin / GuessTone / Review list of characters)
+* Number of characters to study filtered or not is not correct... (try with one pinyin with no tone / with tone pair)
+* Check database after merge (especially if it was cancelled in the middle)
+* Can go from details in test solutions into reference page
+* Remove "show correct answer" setting
+* Can go from lesson list into reference page
+* In VocabularyEditorActivity:
+ - if add word and default lesson is set -> update lesson list
+ - if del word and it has lessons assigned -> update lesson list
+ - if change lesson assignment -> update lesson list
+ - if make any change to the lesson displayed but still exists, update (rename, add / del word, merge, clone)
+ - if lesson displayed is deleted close the list
+* Show name of lesson in LessonList
+* Set default lesson
+* Can assign lesson to vocabulary
+* Handle screen rotation
+* List items become black when scrolling
+* Can show lesson content
+* Can enable lesson filter
+* Do not show modal window with loading wheel when loading lesson list
+* Show better test details: containing show list of guesses + good/bad # restrict to one pinyin when guess pinyin #
+* Show an overlay of the test result (good, bad, so-so) on the test page
+* Add or Edit word from Details view
+* Be able to switch between CEDICT and local list in details / dictionary
+* Show dialog when too many details fragments are pinned
+* Be able to "pin" details page from the reference activity (have a maximum number of 3)
+* Close cursors from detail views
+* Fragments and ViewPager everywhere!
 * App crashes in a lot of cases when screen is rotated
 * Show review lists for both chars and words
 * Show the number of characters to guess for a Chinese word
@@ -88,7 +164,7 @@ DONE (138):
 * Keep current answers when turning screen in test
 * Make the layout of tests consistent (especially with position of the edit box)
 * Can change what to see in Review List (?) - or be able to see the content of lessons (?)
-   * Cannot really access Review list if there is nothing to study
+   - Cannot really access Review list if there is nothing to study
 * Only do guess character when there are other characters to display
 * Do not shortcut enter in guess character
 * Add graph of progress
@@ -184,28 +260,20 @@ DONE (138):
 * Handle correctly in 'guess chinese character' when translations are only "(...)"
 * Check for possible false-negative in character finder (several possible good results)
 
+Code to waste time:
+
+            double phi=1.0f;
+            for (int i=0;i<4000000; i++)
+                phi = Math.sqrt(1+phi);
+
+            Log.d(TAG, "Phi is "+phi);
+
 
 Lint output:
-src/com/matthieu/Help.java:67: Warning: Using setJavaScriptEnabled can introduce XSS vulnerabilities into you application, review carefully. [SetJavaScriptEnabled]
-                wv.getSettings().setJavaScriptEnabled(true);
-                 ^
-AndroidManifest.xml:78: Warning: Exported receiver does not require permission [ExportedReceiver]
-        <receiver android:name=".BootBroadcastReceiver">
-        ^
-AndroidManifest.xml:66: Warning: Exported activity does not require permission [ExportedActivity]
-        <activity android:name=".settings.ExportDB">
-        ^
-AndroidManifest.xml:69: Warning: Exported activity does not require permission [ExportedActivity]
-        <activity android:name=".settings.EmailDB">
-        ^
-src/com/matthieu/widget/ProgressGraph.java:306: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                    data0 = new ProgressData();
-                             ^
-src/com/matthieu/widget/ShrinkingScrollView.java:39: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
-                    post(new Runnable() {
-                          ^
+res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
+                android:layout_width="match_parent"
+                ^
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
-res/layout/simple_list_item_multiple_choice.xml: Warning: The resource R.layout.simple_list_item_multiple_choice appears to be unused [UnusedResources]
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -221,23 +289,20 @@ res/drawable/no_tone.png: Warning: Found bitmap drawable res/drawable/no_tone.pn
 res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second_tone.png in densityless folder [IconLocation]
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
 res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
-res/layout/add_vocabulary_list_new_item.xml:11: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
-res/layout/add_vocabulary_pinyin_dialog.xml:21: Warning: This text field does not specify an inputType or a hint [TextFields]
-        <EditText
-        ^
-res/layout/edit_lesson_list_new_item.xml:17: Warning: This text field does not specify an inputType or a hint [TextFields]
-    <EditText
-    ^
 res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
+res/menu/add_vocabulary_menu_add.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ^
+res/menu/add_vocabulary_menu_ready.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-res/layout/add_vocabulary_list_item.xml:54: Warning: [I18N] Hardcoded string "more info\nhere...", should use @string resource [HardcodedText]
-                android:text="more info\nhere..."
+res/layout/add_vocabulary_pinyin_dialog.xml:28: Warning: [I18N] Hardcoded string "Enter Pinyin", should use @string resource [HardcodedText]
+                android:hint="Enter Pinyin"
                 ^
 res/layout/add_vocabulary_top.xml:14: Warning: [I18N] Hardcoded string "Enter a Chinese Word", should use @string resource [HardcodedText]
             android:hint="Enter a Chinese Word"
@@ -248,25 +313,19 @@ res/layout/add_vocabulary_wrong_entry.xml:14: Warning: [I18N] Hardcoded string "
 res/layout/main_menu.xml:16: Warning: [I18N] Hardcoded string "Add Vocabulary", should use @string resource [HardcodedText]
                 android:text="Add Vocabulary"
                 ^
-res/layout/main_menu.xml:23: Warning: [I18N] Hardcoded string "Edit Lessons", should use @string resource [HardcodedText]
-                android:text="Edit Lessons"
-                ^
-res/layout/main_menu.xml:36: Warning: [I18N] Hardcoded string "Test me!", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:29: Warning: [I18N] Hardcoded string "Test me!", should use @string resource [HardcodedText]
                 android:text="Test me!"
                 ^
-res/layout/main_menu.xml:42: Warning: [I18N] Hardcoded string "Help", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:35: Warning: [I18N] Hardcoded string "Help", should use @string resource [HardcodedText]
                 android:text="Help"
                 ^
-res/layout/main_menu.xml:54: Warning: [I18N] Hardcoded string "Review list", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:47: Warning: [I18N] Hardcoded string "Review list", should use @string resource [HardcodedText]
                 android:text="Review list"
                 ^
-res/layout/main_menu.xml:60: Warning: [I18N] Hardcoded string "Dictionary", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", should use @string resource [HardcodedText]
                 android:text="Dictionary"
                 ^
-res/layout/main_menu.xml:71: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
+res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
                 ^
-res/layout/main_menu.xml:78: Warning: [I18N] Hardcoded string "Stats", should use @string resource [HardcodedText]
-                android:text="Stats"
-                ^
-0 errors, 37 warnings
+0 errors, 28 warnings
