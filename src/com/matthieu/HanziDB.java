@@ -882,7 +882,7 @@ public class HanziDB extends SQLiteOpenHelper {
     public boolean is_char_toneless_pair(String hanzi) {
         boolean res;
         Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin WHERE hanzi=? AND " +
-                "(pinyin LIKE '%5' AND hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*)=2))",
+                "(pinyin LIKE '%5' AND hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*)=2) AND hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi,SUBSTR(pinyin,1,LENGTH(pinyin)-1) HAVING COUNT(*) = 2))",
                 new String[] {hanzi});
         res = (cur.getCount() == 1);
         cur.close();
@@ -3260,7 +3260,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FROM char_pinyin " +
                 "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
                 "WHERE ((box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2))) " +
+                "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2)) OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi,SUBSTR(pinyin,1, LENGTH(pinyin)-1) HAVING COUNT(*) <> 2))) " +
                 "ORDER BY forced_box DESC, exp_time ASC",
                 new String[] {Long.toString(System.currentTimeMillis())});
     }
