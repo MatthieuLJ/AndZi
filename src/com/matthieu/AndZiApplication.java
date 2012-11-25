@@ -35,7 +35,7 @@ public class AndZiApplication extends Application {
     static public final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     static public final String PROGRESS_DB_NAME = "progress_db";
 
-    private static final String VERSION="0.2.0";
+    private static final String VERSION="0.3.0";
 
     public void onCreate() {
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
