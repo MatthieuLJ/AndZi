@@ -1,6 +1,7 @@
-ONGOING (10):
+ONGOING (11):
 * Make the icon in action bar go back to the main menu
 * Back key should go back to a particular fragment before going back home...
+* Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -14,9 +15,11 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (2):
+BUGS (4):
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
+* Crash when turning phone off during loading splash screen
+* Trim when doing english dictionary search
 
 FUTURE (14):
 * When looking for Chinese translation (from English), separate the words if any
