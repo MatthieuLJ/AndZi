@@ -13,13 +13,12 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
-* Sometimes the layout is messed up when the keyboard comes up in a test screen
+BUGS (2):
 * Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
 * Trim when doing english dictionary search
 
 FUTURE (14):
-* When looking for Chinese translation (from English), separate the words if any
+* Load results in dictionary progressively
 * Can reset score per lesson
 * Find a way to hilight the character sequence in Details list
 * Brag about the score on Facebook / Twitter
@@ -34,7 +33,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (181):
+DONE (182):
+* Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Make the icon in action bar go back to the main menu
 * Back key should go back to a particular fragment before going back home...
 * Crash when turning phone off during loading splash screen
