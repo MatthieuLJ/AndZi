@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
@@ -175,49 +176,77 @@ public class DetailsFragment extends Fragment {
         }
 
         // write the pinyin(s) if applicable
-        String info_pinyins="";
         final TextView info = (TextView) new_view.findViewById(R.id.details_info);
         if (old_pinyins != null) {
-            info_pinyins = old_pinyins.toString();
+            info.setText(old_pinyins);
+            info.setVisibility(View.VISIBLE);
         } else if (!pinyin.equals("")) {
-            info_pinyins="(";
-            if (show_pinyin_color)
-                info_pinyins+=PinyinParser.convert_to_html_version(pinyin);
-            else
-                info_pinyins+=PinyinParser.convert_to_pretty_version(pinyin);
-            info_pinyins+=")";
+            if (show_pinyin_color) {
+                SpannableStringBuilder info_pinyin_builder = PinyinParser.convert_to_spannable_version(pinyin);
+                info_pinyin_builder.insert(0, "(");
+                info_pinyin_builder.append(")");
+                info.setText(info_pinyin_builder);
+                info.setVisibility(View.VISIBLE);
+            } else {
+                StringBuilder info_pinyin_builder = new StringBuilder();
+                info_pinyin_builder.append("(");
+                info_pinyin_builder.append(PinyinParser.convert_to_pretty_version(pinyin));
+                info_pinyin_builder.append(")");
+                info.setText(info_pinyin_builder);
+                info.setVisibility(View.VISIBLE);
+            }
         } else if (hanzi.codePointCount(0, hanzi.length()) == 1) {
             ArrayList<String> pinyins = db.getPinyinForChar(hanzi);
-            info_pinyins="(";
-            for (int i=0; i<pinyins.size(); i++) {
-                String pin=pinyins.get(i);
 
-                if (show_pinyin_color)
-                    info_pinyins+=PinyinParser.convert_to_html_version(pin);
-                else
-                    info_pinyins+=PinyinParser.convert_to_pretty_version(pin);
-                if (i < pinyins.size()-1)
-                    info_pinyins+=", ";
+            if (show_pinyin_color) {
+                SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
+                info_pinyin_builder.insert(0, "(");
+                for (int i=0; i<pinyins.size(); i++) {
+                    String pin=pinyins.get(i);
+                    info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pin));
+                    if (i < pinyins.size()-1)
+                        info_pinyin_builder.append(", ");
+                }
+                info_pinyin_builder.append(")");
+                info.setText(info_pinyin_builder);
+                info.setVisibility(View.VISIBLE);
+            } else {
+                StringBuilder info_pinyin_builder = new StringBuilder();
+                info_pinyin_builder.append("(");
+                for (int i=0; i<pinyins.size(); i++) {
+                    String pin=pinyins.get(i);
+
+                    info_pinyin_builder.append(PinyinParser.convert_to_pretty_version(pin));
+                    if (i < pinyins.size()-1)
+                        info_pinyin_builder.append(", ");
+                }
+                info_pinyin_builder.append(")");
+                info.setText(info_pinyin_builder);
+                info.setVisibility(View.VISIBLE);
             }
-            info_pinyins+=")";
         }
-        else { // TODO: handle the case where the word is in the DB and has only one pronounciation
+        else {
             ArrayList<Vocabulary> voc = db.getTranslations(hanzi);
             if (voc.size() == 1) {
-                info_pinyins="(";
-                if (show_pinyin_color)
-                    info_pinyins+=PinyinParser.convert_to_html_version(voc.get(0).pinyin);
-                else
-                    info_pinyins+=PinyinParser.convert_to_pretty_version(voc.get(0).pinyin);
-                info_pinyins+=")";
+                if (show_pinyin_color) {
+                    SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
+                    info_pinyin_builder.append("(");
+                    info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(voc.get(0).pinyin));
+                    info_pinyin_builder.append(")");
+                    info.setText(info_pinyin_builder);
+                    info.setVisibility(View.VISIBLE);
+                } else {
+                    StringBuilder info_pinyin_builder = new StringBuilder();
+                    info_pinyin_builder.append("(");
+                    info_pinyin_builder.append(PinyinParser.convert_to_pretty_version(voc.get(0).pinyin));
+                    info_pinyin_builder.append(")");
+                    info.setText(info_pinyin_builder);
+                    info.setVisibility(View.VISIBLE);
+                }
             }
-        }
-
-        if (info_pinyins.equals("")) {
-            info.setVisibility(View.GONE);
-        } else {
-            info.setText(Html.fromHtml(info_pinyins));
-            info.setVisibility(View.VISIBLE);
+            else {
+                info.setVisibility(View.GONE);
+            }
         }
 
         // populate the list
