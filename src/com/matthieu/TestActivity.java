@@ -383,6 +383,15 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         ((TestFragment)fragments[1]).handle_ok(v);
     }
 
+    @Override
+    public void onBackPressed() {
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if ((pager != null) && (pager.getCurrentItem() != 1))
+            pager.setCurrentItem(1, true);
+        else
+            super.onBackPressed();
+    }
+
     // using a FragmentStatePagerAdapter here because some Fragments go away and come back (for the test)
     // The FragmentPagerAdapter does not resume well old fragments
     private class test_pager extends FragmentStatePagerAdapter {

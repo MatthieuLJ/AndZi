@@ -195,6 +195,15 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
     @Override
     public void onPageScrollStateChanged(int i) {}
 
+    @Override
+    public void onBackPressed() {
+        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        if ((pager != null) && (pager.getCurrentItem() != 0))
+            pager.setCurrentItem(0, true);
+        else
+            super.onBackPressed();
+    }
+
     // use a FragmentPagerAdapter here because we are moving pages around (FragmentStatePagerAdapter does not do that well : http://code.google.com/p/android/issues/detail?id=37990)
     private class reference_pager extends FragmentPagerAdapter {
         public reference_pager(FragmentManager fm) {

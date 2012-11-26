@@ -174,6 +174,15 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     public void onPageScrollStateChanged(int i) {
     }
 
+    @Override
+    public void onBackPressed() {
+        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        if ((pager != null) && (pager.getCurrentItem() != 0))
+            pager.setCurrentItem(0, true);
+        else
+            super.onBackPressed();
+    }
+
     private class editor_pager extends FragmentPagerAdapter {
         public editor_pager(FragmentManager fm) {
             super(fm);
