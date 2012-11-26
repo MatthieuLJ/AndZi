@@ -15,10 +15,9 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (3):
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
-* Crash when turning phone off during loading splash screen
 * Trim when doing english dictionary search
 
 FUTURE (14):
@@ -37,7 +36,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (179):
+DONE (180):
+* Crash when turning phone off during loading splash screen
 * No toned pinyin is broken (的 as 'de5' or 'di4')
 * Some Dictionary searches are too long
 1 element:

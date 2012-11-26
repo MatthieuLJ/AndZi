@@ -37,7 +37,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
 
     public void start_it() {
         if (splash_fragment != null) {
-            getSupportFragmentManager().beginTransaction().remove(splash_fragment).commit();
+            getSupportFragmentManager().beginTransaction().remove(splash_fragment).commitAllowingStateLoss();
             splash_fragment = null;
         }
         if (start_test) {
