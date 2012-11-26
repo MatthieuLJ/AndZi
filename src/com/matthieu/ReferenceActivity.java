@@ -55,6 +55,10 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         if (hanzi!=null) {
             new_details_request(hanzi, use_ref);
         }
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
     @Override
@@ -307,6 +311,9 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             page = pager.getCurrentItem();
 
         switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
             case R.id.reference_source:
                 ((DictionaryFragment)fragments[0]).change_source();
                 invalidateOptionsMenu();

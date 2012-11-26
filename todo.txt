@@ -1,5 +1,4 @@
-ONGOING (10):
-* Make the icon in action bar go back to the main menu
+ONGOING (9):
 * Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -36,6 +35,7 @@ FUTURE (14):
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
 DONE (181):
+* Make the icon in action bar go back to the main menu
 * Back key should go back to a particular fragment before going back home...
 * Crash when turning phone off during loading splash screen
 * No toned pinyin is broken (的 as 'de5' or 'di4')

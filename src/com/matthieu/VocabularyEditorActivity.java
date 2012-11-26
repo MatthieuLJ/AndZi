@@ -69,6 +69,10 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         else {
             // TODO When we are on a larger screen without a pager
         }
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
     @Override
@@ -288,6 +292,9 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         ArrayList<String> selection;
 
         switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
             case R.id.add_vocabulary_show_new_translation:
                 ((AddVocabularyFragment)fragments[0]).add_new();
                 break;
