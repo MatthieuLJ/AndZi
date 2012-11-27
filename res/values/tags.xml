@@ -8,7 +8,8 @@
     <item type="id" name="review_item"/>
     <item type="id" name="header_view"/>
     <item type="id" name="detail_populator"/>
-    <item type="id" name="detail_query"/>
+    <item type="id" name="detail_query_hanzi"/>
+    <item type="id" name="detail_query_pinyin"/>
     <item type="id" name="review_list_content"/>
     <item type="id" name="test_bad_guess"/>
 </resources>
