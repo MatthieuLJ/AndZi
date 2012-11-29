@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout
+        android:id="@+id/ref_table"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        >
+    <TableRow
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            >
+        <FrameLayout
+                android:id="@+id/ref_fragment0"
+                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"/>
+        <FrameLayout
+                android:id="@+id/ref_fragment1"
+                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:visibility="gone"/>
+    </TableRow>
+    <TableRow
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            >
+        <FrameLayout
+                android:id="@+id/ref_fragment2"
+                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:visibility="gone"/>
+        <FrameLayout
+                android:id="@+id/ref_fragment3"
+                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:visibility="gone"/>
+    </TableRow>
+
+</TableLayout>

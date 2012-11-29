@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="reference_frame_ids">
+        <item>@id/ref_fragment0</item>
+        <item>@id/ref_fragment1</item>
+        <item>@id/ref_fragment2</item>
+        <item>@id/ref_fragment3</item>
+    </array>
+</resources>
