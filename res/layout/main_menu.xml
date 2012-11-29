@@ -6,7 +6,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
     <TableRow
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             >
         <Button
@@ -18,7 +18,7 @@
     </TableRow>
 
     <TableRow
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             >
 
@@ -37,7 +37,7 @@
 
     </TableRow>
     <TableRow
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             >
         <Button
@@ -54,7 +54,7 @@
                 android:onClick="handle_dictionary" />
     </TableRow>
     <TableRow
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             >
         <Button
