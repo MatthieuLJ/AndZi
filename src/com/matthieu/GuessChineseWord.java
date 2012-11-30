@@ -40,6 +40,8 @@ public class GuessChineseWord extends TestFragment {
         translations = solution.english;
         if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
             more_translations = refDB.getTranslations(hanzi, solution.pinyin).english;
+        } else {
+            more_translations = new ArrayList<String>();
         }
 
         showing_more_voc=false;

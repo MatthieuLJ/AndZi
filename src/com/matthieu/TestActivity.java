@@ -18,6 +18,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
@@ -90,6 +91,10 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         if (pager != null) {
             pager.setCurrentItem(1, false);
         }
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
     @Override
@@ -381,6 +386,25 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     public void handle_ok(View v) {
         ((TestFragment)fragments[1]).handle_ok(v);
+    }
+
+    @Override
+    public void onBackPressed() {
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if ((pager != null) && (pager.getCurrentItem() != 1))
+            pager.setCurrentItem(1, true);
+        else
+            super.onBackPressed();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return false;
     }
 
     // using a FragmentStatePagerAdapter here because some Fragments go away and come back (for the test)

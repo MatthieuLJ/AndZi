@@ -42,11 +42,17 @@ public class SplashFragment extends Fragment {
         return res;
     }
 
-    // TODO asynctask work
     private class SplashLoader extends AsyncTask<Void,Integer,Void> {
+        AndZiApplication application;
+
+        @Override
+        protected void onPreExecute() {
+            application = (AndZiApplication) getActivity().getApplication();
+        }
+
         @Override
         protected Void doInBackground(Void... voids) {
-            ((AndZiApplication) getActivity().getApplication()).initialize_ref_db();
+            application.initialize_ref_db();
 
             publishProgress(5);
             HanziDB myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
@@ -74,7 +80,8 @@ public class SplashFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             synchronized (SplashFragment.this) {
                 db_loader=null;
-                ((MainMenuActivity)getActivity()).start_it();
+                if (getActivity()!=null)
+                    ((MainMenuActivity)getActivity()).start_it();
             }
         }
     };

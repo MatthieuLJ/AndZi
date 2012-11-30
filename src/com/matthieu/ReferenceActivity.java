@@ -3,10 +3,18 @@ package com.matthieu;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
@@ -17,6 +25,7 @@ import com.viewpagerindicator.PageIndicator;
 public class ReferenceActivity extends SherlockFragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
     final private static int max_details_fragments=3;
     Fragment fragments[];
+    int ids[];
     final private static String TAG = "RerefenceActivity";
 
     @Override
@@ -24,19 +33,57 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         setTheme(R.style.Theme_Sherlock);
         requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.reference);
 
         ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
 
         fragments = new Fragment[max_details_fragments+1];
+        ids = new int[max_details_fragments+1];
 
         if (savedInstanceState != null) {
             for (int i=0; i<=max_details_fragments; i++) {
                 fragments[i] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment"+i);
             }
-        }
-        if (fragments[0] == null)
+
+            if (pager == null) {
+                ids = savedInstanceState.getIntArray("ids");
+
+                LinearLayout master_linear = (LinearLayout) findViewById(R.id.ref_linear);
+                if (master_linear!=null) {
+                    for (int i=1; i<=max_details_fragments; i++) {
+                        master_linear.getChildAt(i).setId(ids[i]);
+                        if (fragments[i]!=null)
+                            master_linear.getChildAt(i).setVisibility(View.VISIBLE);
+                    }
+                }
+
+                TableLayout master_table = (TableLayout) findViewById(R.id.ref_table);
+                if (master_table != null) {
+                    for (int i=1; i<=max_details_fragments; i++) {
+                        ((TableRow)master_table.getChildAt(i/2)).getChildAt(i%2).setId(ids[i]);
+                        if (fragments[i]!=null) {
+                            ((TableRow)master_table.getChildAt(i/2)).setVisibility(View.VISIBLE);
+                            ((TableRow)master_table.getChildAt(i/2)).getChildAt(i%2).setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+            }
+
+        } else {
+            TypedArray ar = getResources().obtainTypedArray(R.array.reference_frame_ids);
+            for (int i=0; i<=max_details_fragments; i++)
+                ids[i] = ar.getResourceId(i, 0);
+            ar.recycle();
+
             fragments[0] = new DictionaryFragment();
+
+            if (pager == null) {
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                ft.add(R.id.ref_fragment0, fragments[0]);
+                ft.commit();
+            }
+        }
 
         if (pager != null) {
             pager.setOffscreenPageLimit(max_details_fragments+1);
@@ -45,9 +92,8 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
             mIndicator.setOnPageChangeListener(this);
-        }
-        else {
-            // When we are on a larger screen without a pager
+            if (savedInstanceState != null)
+                pager.setCurrentItem(savedInstanceState.getInt("position"));
         }
 
         String hanzi = getIntent().getStringExtra("Hanzi");
@@ -55,6 +101,10 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         if (hanzi!=null) {
             new_details_request(hanzi, use_ref);
         }
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
     @Override
@@ -78,6 +128,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
+        outState.putIntArray("ids", ids);
     }
 
     String new_query_to_open = null;
@@ -123,7 +174,11 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         int max;
         if (fragments[max_details_fragments] == null) {
             // we still have space, just have to shift everything else
-            max = max_details_fragments;
+            int index;
+            for (index = max_details_fragments; index>0; index--)
+                if (fragments[index]!=null)
+                    break;
+            max = index+1;
         } else {
             // find the rightmost fragment not pinned
             int index;
@@ -152,15 +207,15 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             max = index;
         }
 
+        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
-        // remove the top fragment
-        if (fragments[max] != null) {
-            ft.remove(fragments[max]);
-        }
+
+        // shift
         for (int i=max; i>1; i--) {
-            // shift
             fragments[i] = fragments[i-1];
+            ids[i] = ids[i-1];
         }
 
         // insert the new one
@@ -171,13 +226,43 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         bundle.putBoolean("use_ref", use_ref);
         fragments[1].setArguments(bundle);
 
+        LinearLayout master_linear = (LinearLayout) findViewById(R.id.ref_linear);
+        if (master_linear != null) {
+            int id_removed = master_linear.getChildAt(max).getId();
+            master_linear.removeViewAt(max);
+            FrameLayout fl = new FrameLayout(this);
+            fl.setId(id_removed);
+            fl.setVisibility(View.VISIBLE);
+            master_linear.addView(fl, 1, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
+            ft.add(id_removed, fragments[1]);
+            ids[1] = id_removed;
+        }
+
+        TableLayout master_table = (TableLayout) findViewById(R.id.ref_table);
+        if (master_table != null) {
+            int row = max / 2;
+            TableRow tr = (TableRow) master_table.getChildAt(row);
+            int id_removed = tr.getChildAt(max % 2).getId();
+            tr.removeViewAt(max%2);
+            // shift
+            for (int r=max/2; r>0; r--) {
+                FrameLayout moving_fl = (FrameLayout) ((TableRow) master_table.getChildAt(r-1)).getChildAt(1);
+                ((TableRow) master_table.getChildAt(r-1)).removeViewAt(1);
+                ((TableRow) master_table.getChildAt(r)).addView(moving_fl, 0);
+                ((TableRow) master_table.getChildAt(r)).setVisibility(View.VISIBLE);
+            }
+            FrameLayout fl = new FrameLayout(this);
+            fl.setId(id_removed);
+            fl.setVisibility(View.VISIBLE);
+            ((TableRow) master_table.getChildAt(0)).addView(fl, 1, new TableRow.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
+            ft.add(id_removed, fragments[1]);
+            ids[1] = id_removed;
+        }
+
         ft.commit();
 
-        // flush (?)
-        fm.executePendingTransactions();
-
         // refresh
-        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+
         if (pager != null) {
             pager.getAdapter().notifyDataSetChanged();
             pager.setCurrentItem(1, true);
@@ -195,6 +280,15 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
     @Override
     public void onPageScrollStateChanged(int i) {}
 
+    @Override
+    public void onBackPressed() {
+        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        if ((pager != null) && (pager.getCurrentItem() != 0))
+            pager.setCurrentItem(0, true);
+        else
+            super.onBackPressed();
+    }
+
     // use a FragmentPagerAdapter here because we are moving pages around (FragmentStatePagerAdapter does not do that well : http://code.google.com/p/android/issues/detail?id=37990)
     private class reference_pager extends FragmentPagerAdapter {
         public reference_pager(FragmentManager fm) {
@@ -204,6 +298,17 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         @Override
         public Fragment getItem(int i) {
             return fragments[i];
+        }
+
+        @Override
+        public float getPageWidth(int position) {
+            if ((getResources().getConfiguration().screenLayout &
+                    Configuration.SCREENLAYOUT_SIZE_MASK) ==
+                    Configuration.SCREENLAYOUT_SIZE_LARGE) {
+                return 0.5f;
+            } else {
+                return 1.0f;
+            }
         }
 
         @Override
@@ -298,6 +403,9 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             page = pager.getCurrentItem();
 
         switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
             case R.id.reference_source:
                 ((DictionaryFragment)fragments[0]).change_source();
                 invalidateOptionsMenu();

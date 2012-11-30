@@ -5,6 +5,7 @@ package com.matthieu;
 
 import android.graphics.Color;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import org.jetbrains.annotations.Nullable;
@@ -381,20 +382,20 @@ public class PinyinParser {
         return result.toString();
     }
 
-    public static SpannableString convert_to_spannable_version(String input) {
+    public static SpannableStringBuilder convert_to_spannable_version(String input) {
         int i;
         if (input.equals(""))
-            return new SpannableString("");
+            return new SpannableStringBuilder("");
 
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         if (parsed == null)
-            return new SpannableString("");
+            return new SpannableStringBuilder("");
 
         StringBuilder result_builder = new StringBuilder();
         for (i = 0; i < parsed.size(); i++) {
             result_builder.append(parsed.get(i).get_pretty());
         }
-        SpannableString result = new SpannableString(result_builder.toString());
+        SpannableStringBuilder result = new SpannableStringBuilder(result_builder.toString());
         int offset=0;
         for (i = 0; i < parsed.size(); i++) {
             int size=parsed.get(i).get_radical().length();
