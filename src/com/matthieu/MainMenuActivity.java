@@ -81,6 +81,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        ProgressService.clear_notification(getApplicationContext());
 
         showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
         ((AndZiApplication) getApplication()).showSplash(false);

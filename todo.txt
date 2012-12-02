@@ -1,4 +1,6 @@
-ONGOING (9):
+ONGOING (11):
+* Change stats with whole Leitner DB
+* Change number of test remaining (instead of chars+words)
 * Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -13,12 +15,13 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (5):
+BUGS (6):
 * Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
 * Trim when doing english dictionary search
 * Update graph when testing
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 * Dictionary seem to stop when an "intermediary" query is finished
+* Should not have to redo a search in details when screen turns
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -36,7 +39,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (183):
+DONE (184):
+* Notification does not get cleared when app is opened
 * Make tests faster to go through
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Make the icon in action bar go back to the main menu
