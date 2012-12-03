@@ -328,8 +328,9 @@ public class DetailsFragment extends Fragment {
             pinyin_info=null;
             if (!pinyin.equals("")) {
                 if (show_pinyin_color) {
-                    SpannableStringBuilder info_pinyin_builder = PinyinParser.convert_to_spannable_version(pinyin);
-                    info_pinyin_builder.insert(0, "(");
+                    SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
+                    info_pinyin_builder.append("(");
+                    info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pinyin));
                     info_pinyin_builder.append(")");
                     pinyin_info = info_pinyin_builder;
                 } else {
@@ -344,7 +345,7 @@ public class DetailsFragment extends Fragment {
 
                 if (show_pinyin_color) {
                     SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
-                    info_pinyin_builder.insert(0, "(");
+                    info_pinyin_builder.append("(");
                     for (int i=0; i<pinyins.size(); i++) {
                         String pin=pinyins.get(i);
                         info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pin));
