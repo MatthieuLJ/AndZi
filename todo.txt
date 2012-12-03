@@ -15,13 +15,12 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (6):
+BUGS (5):
 * Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
 * Trim when doing english dictionary search
 * Update graph when testing
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 * Dictionary seem to stop when an "intermediary" query is finished
-* Should not have to redo a search in details when screen turns
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -39,7 +38,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (184):
+DONE (185):
+* Should not have to redo a search in details when screen turns
 * Notification does not get cleared when app is opened
 * Make tests faster to go through
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
