@@ -15,8 +15,7 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
-* Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
+BUGS (2):
 * Update graph when testing
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 

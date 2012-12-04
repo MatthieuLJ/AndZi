@@ -37,8 +37,6 @@
         <activity android:name=".TestActivity"
                 android:windowSoftInputMode="adjustResize"/>
 
-        <activity android:name=".ReviewList"
-                  android:windowSoftInputMode="stateHidden"/>
         <activity android:name=".ReferenceActivity"
                   android:windowSoftInputMode="stateHidden|adjustPan"
                 />

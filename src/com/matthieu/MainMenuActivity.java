@@ -106,11 +106,6 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         Intent intent = new Intent(this, Settings.class);
         startActivity(intent);
     }
-
-    public void handle_reviewlist(View v) {
-        Intent intent = new Intent(this, ReviewList.class);
-        startActivity(intent);
-    }
     
     public void handle_test(@Nullable View v) {
         Intent intent = new Intent(this, TestActivity.class);

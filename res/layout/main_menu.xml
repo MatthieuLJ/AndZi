@@ -44,12 +44,6 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Review list"
-                android:onClick="handle_reviewlist" />
-        <Button
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:text="Dictionary"
                 android:onClick="handle_dictionary" />
     </TableRow>

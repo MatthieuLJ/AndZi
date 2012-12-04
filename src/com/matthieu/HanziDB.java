@@ -3252,7 +3252,6 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    // getCursorFilteredCharsToStudy <- ReviewList
     public Cursor getCursorCharsToStudy() {
         return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
                 "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
