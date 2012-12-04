@@ -27,7 +27,7 @@ public class LessonListFragment extends Fragment {
 
     private static final String TAG="LessonListFragment";
     update_lesson_list_task loader=null;
-    private String lesson=null;
+    private ArrayList<String> lesson=null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class LessonListFragment extends Fragment {
 
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
         Bundle bundle = getArguments();
-        lesson = bundle.getString("lesson");
+        lesson = bundle.getStringArrayList("lesson");
     }
 
     @Override
@@ -52,8 +52,15 @@ public class LessonListFragment extends Fragment {
         TextView header = (TextView) inflater.inflate(R.layout.review_list_header, list, false);
         if (lesson.equals(""))
             header.setText("Words that are not assigned to any lesson");
-        else
+        else {
+            StringBuilder lessons = new StringBuilder();
+            for (int i=0; i<lesson.size(); i++) {
+                lessons.append(lesson.get(i));
+                if (i<lesson.size()-1)
+                    lessons.append(", ");
+            }
             header.setText("Words in lesson "+lesson);
+        }
 
         list.addHeaderView(header, null, false);
         return res;
@@ -87,7 +94,7 @@ public class LessonListFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             do {
                 do_it_again=false;
-                cur = myDB.getVocabularyCursorInLessons(new ArrayList<String>(Arrays.asList(lesson)), true);
+                cur = myDB.getVocabularyCursorInLessons(lesson, true);
                 cur.getCount();
             } while (do_it_again);
 
@@ -131,7 +138,7 @@ public class LessonListFragment extends Fragment {
             loader.execute((Void[])null);
     }
 
-    public String current_lesson() {
+    public ArrayList<String> current_lessons() {
         return lesson;
     }
 
@@ -140,12 +147,5 @@ public class LessonListFragment extends Fragment {
         if (cur != null)
             cur.close();
         super.onPause();
-    }
-
-    public void change_menu() {
-        if (getActivity() == null)
-            return;
-
-        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.INITIAL);
     }
 }

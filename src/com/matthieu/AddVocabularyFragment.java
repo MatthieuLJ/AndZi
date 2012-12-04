@@ -72,7 +72,6 @@ public class AddVocabularyFragment extends Fragment
         chinese_word.setMinimumTextSize(10);
         View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
 
-
         return res;
     }
 
@@ -84,9 +83,8 @@ public class AddVocabularyFragment extends Fragment
         myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
         refDB = ((AndZiApplication) getActivity().getApplication()).getRefDB();
 
-        VocabularyEditorActivity.menu_types type = ((VocabularyEditorActivity)getActivity()).get_menu();
-        if ((type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) ||
-                (type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
+        VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
+        if (state == VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTION)
             return;
 
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
@@ -129,6 +127,12 @@ public class AddVocabularyFragment extends Fragment
                 // Populate the choices for the pinyin buttons
                 PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
                 buttons.setPinyinButtons(charSequence.toString(), i, i1, i2, current_chinese_word);
+
+                ((VocabularyEditorActivity) getActivity()).clear_lesson_selection();
+                ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD);
+            }
+            else {
+                ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
             }
         }
 
@@ -170,7 +174,6 @@ public class AddVocabularyFragment extends Fragment
                             View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
                         }
                         ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_enter_chinese);
-                        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.INITIAL);
                         break;
                     case 1:
                         // all chinese characters
@@ -182,8 +185,6 @@ public class AddVocabularyFragment extends Fragment
                         ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
-
-                        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.VOCABULARY_READY);
                         break;
                     case 2:
                         // some non-chinese characters...
@@ -192,7 +193,6 @@ public class AddVocabularyFragment extends Fragment
                             View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
                         }
                         ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_only_chinese);
-                        ((VocabularyEditorActivity)getActivity()).set_menu(VocabularyEditorActivity.menu_types.INITIAL);
                         break;
                 }
                 state = new_state;
@@ -557,50 +557,63 @@ public class AddVocabularyFragment extends Fragment
 
     private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
 
-    protected void change_menu() {
-        if (getActivity() == null)
-            return;
-        VocabularyEditorActivity.menu_types type;
-        if (current_chinese_word.equals(""))
-            type = VocabularyEditorActivity.menu_types.INITIAL;
-        else if (current_word_selection.size() == 0)
-            type = VocabularyEditorActivity.menu_types.VOCABULARY_READY;
-        else if (translations_in_db.contains(current_word_selection.get(0))) {
-            if (current_word_selection.size() == 1)
-                type = VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_SELECTED;
-            else
-                type = VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_MULTIPLE_SELECTED;
-        } else
-            type = VocabularyEditorActivity.menu_types.VOCABULARY_NEW_SELECTED;
+    protected void update_state() {
+        VocabularyEditorActivity.activity_state state;
 
-        ((VocabularyEditorActivity)getActivity()).set_menu(type);
+        if (current_chinese_word.equals("")) {
+            state = VocabularyEditorActivity.activity_state.STATE_INIT;
+            ((VocabularyEditorActivity)getActivity()).clear_lesson_selection();
+        } else if (current_word_selection.size() == 0) {
+            state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD;
+            ((VocabularyEditorActivity)getActivity()).clear_lesson_selection();
+        } else if (translations_in_db.contains(current_word_selection.get(0))) {
+            if (current_word_selection.size() == 1)
+                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE;
+            else
+                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE;
+            ((VocabularyEditorActivity)getActivity()).edit_lesson_assignment(get_current_lesson_assignment());
+        } else {
+            state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED;
+            ((VocabularyEditorActivity)getActivity()).clear_lesson_selection();
+        }
+
+        ((VocabularyEditorActivity)getActivity()).set_state(state);
     }
 
     public void handle_word_click(View v) {
         final VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
-        VocabularyEditorActivity.menu_types type = ((VocabularyEditorActivity)getActivity()).get_menu();
+        VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
         if (voc == null)
             return;
+
+        if (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) {
+            set_new_lesson_assignment(((VocabularyEditorActivity)getActivity()).flush_lesson_assignment());
+
+            if (current_word_selection.size() == 1)
+                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE;
+            else
+                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE;
+        }
 
         if (current_word_selection.contains(voc)) {
             current_word_selection.remove(voc);
             v.setBackgroundColor(0x00000000);
-        } else if (type == VocabularyEditorActivity.menu_types.VOCABULARY_READY) {
+        } else if (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else if (translations_in_db.contains(voc) &&
-                (type == VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_SELECTED || type == VocabularyEditorActivity.menu_types.VOCABULARY_CURRENT_MULTIPLE_SELECTED)) {
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE || state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE)) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else if (translations_from_ref.contains(voc) && !translations_in_db.contains(voc) &&
-                (type == VocabularyEditorActivity.menu_types.VOCABULARY_NEW_SELECTED)) {
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED)) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else {
             return;
         }
         v.invalidate();
-        change_menu();
+        update_state();
     }
 
     @SuppressLint({"NewApi"})
@@ -615,7 +628,7 @@ public class AddVocabularyFragment extends Fragment
 
     public void add_selection() {
         if (current_word_selection.size()==0) {
-            change_menu();
+            update_state();
             return;
         }
         final ArrayList<Vocabulary> to_add = new ArrayList<Vocabulary>();
@@ -645,12 +658,12 @@ public class AddVocabularyFragment extends Fragment
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
-        change_menu();
+        update_state();
     }
 
     public void del_selection() {
         if (current_word_selection.size()==0) {
-            change_menu();
+            update_state();
             return;
         }
         final ArrayList<Vocabulary> to_del = new ArrayList<Vocabulary>();
@@ -674,10 +687,11 @@ public class AddVocabularyFragment extends Fragment
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
-        change_menu();
+        update_state();
     }
 
     public void done() {
+        ((VocabularyEditorActivity)getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
         EditText chinese_word = (EditText) getView().findViewById(R.id.add_vocabulary_chinese);
         if (chinese_word != null)
             chinese_word.setText("");
@@ -687,16 +701,17 @@ public class AddVocabularyFragment extends Fragment
             translations_displayed_from_ref.clear();
         if (translations_in_db != null)
             translations_in_db.clear();
+        current_chinese_word="";
         ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
-        change_menu();
+        update_state();
     }
 
     public void edit_selection() {
         if (current_word_selection.size()!=1) {
-            change_menu();
+            update_state();
             return;
         }
         AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
@@ -734,7 +749,7 @@ public class AddVocabularyFragment extends Fragment
                     if (lv != null) {
                         ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
-                    change_menu();
+                    update_state();
                     new Thread(new Runnable() {
                         public void run() {
                             myDB.addVocabulary(modified_voc);
@@ -759,7 +774,7 @@ public class AddVocabularyFragment extends Fragment
 
     public HashMap<String, VocabularyEditorActivity.LessonAssignment> get_current_lesson_assignment() {
         if (current_word_selection.size()==0) {
-            change_menu();
+            update_state();
             return null;
         }
         HashMap<String, VocabularyEditorActivity.LessonAssignment> res = new HashMap<String, VocabularyEditorActivity.LessonAssignment>();
@@ -795,11 +810,12 @@ public class AddVocabularyFragment extends Fragment
 
     public void set_new_lesson_assignment(HashMap<String, VocabularyEditorActivity.LessonAssignment> assignment) {
         if (current_word_selection.size()==0) {
-            change_menu();
+            update_state();
             return;
         }
         for (final String l : assignment.keySet()) {
             VocabularyEditorActivity.LessonAssignment this_lesson = assignment.get(l);
+            final String current_pinyin = get_current_pinyin();
             if (this_lesson.state == 2)
                 continue;
             for (final VocabularyItem v : current_word_selection) {
@@ -808,7 +824,7 @@ public class AddVocabularyFragment extends Fragment
                         v.lessons.remove(l);
                         new Thread(new Runnable() {
                             public void run() {
-                                myDB.removeWordLesson(l, v.translation, current_chinese_word, get_current_pinyin());
+                                myDB.removeWordLesson(l, v.translation, current_chinese_word, current_pinyin);
                             }
                         }).start();
                         break;
@@ -816,7 +832,7 @@ public class AddVocabularyFragment extends Fragment
                         v.lessons.add(l);
                         new Thread(new Runnable() {
                             public void run() {
-                                myDB.assignWordLesson(l, v.translation, current_chinese_word, get_current_pinyin());
+                                myDB.assignWordLesson(l, v.translation, current_chinese_word, current_pinyin);
                             }
                         }).start();
                         break;
