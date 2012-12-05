@@ -88,7 +88,7 @@ public class AddVocabularyFragment extends Fragment
             return;
 
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
-        if (current_chinese_word!= null) {
+        if (!current_chinese_word.equals("")) {
             chinese_word.setText(current_chinese_word);
         }
     }
@@ -132,7 +132,13 @@ public class AddVocabularyFragment extends Fragment
                 ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD);
             }
             else {
-                ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
+                VocabularyEditorActivity.activity_state current_state = ((VocabularyEditorActivity) getActivity()).get_state();
+                if ((current_state== VocabularyEditorActivity.activity_state.STATE_EDIT_WORD) ||
+                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE) ||
+                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
+                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED) ||
+                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED))
+                    ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
             }
         }
 

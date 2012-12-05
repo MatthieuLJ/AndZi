@@ -7,13 +7,15 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.widget.LockableViewPager;
 import com.viewpagerindicator.PageIndicator;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,8 +55,10 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         fragments = new Fragment[3];
 
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LinearLayout master_linear = (LinearLayout) findViewById(R.id.voc_editor_linear);
 
         if (savedInstanceState != null) {
+            current_state = activity_state.values()[savedInstanceState.getInt("state")];
             fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
             fragments[1] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment1");
             fragments[2] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment2");
@@ -62,6 +66,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
             }
         }
+
         if (fragments[0] == null) {
             fragments[0] = new AddVocabularyFragment();
             if (hanzi != null) {
@@ -73,15 +78,30 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         if (fragments[1] == null)
             fragments[1] = new EditLessonsFragment();
 
+        if ((savedInstanceState == null) && (master_linear != null)) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.add(R.id.ve_fragment0, fragments[0]);
+            ft.add(R.id.ve_fragment1, fragments[1]);
+            if (fragments[2] != null) {
+                ft.add(R.id.ve_fragment2, fragments[2]);
+            }
+
+            ft.commit();
+        }
+
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
-        }
-        else {
-            // TODO When we are on a larger screen without a pager
+        } else if (master_linear != null) {
+            FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+            if (fragments[2] == null) {
+                lesson_content.setVisibility(View.GONE);
+            } else {
+                lesson_content.setVisibility(View.VISIBLE);
+            }
         }
 
         if ((hanzi!=null) && (!hanzi.equals(""))){
@@ -140,15 +160,27 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
+        outState.putInt("state", current_state.ordinal());
     }
 
     public void open_lesson_list(ArrayList<String> label) {
-        if (fragments[2]!=null)
-            close_lesson_list();
-        fragments[2] = new LessonListFragment();
-        Bundle bundle = new Bundle();
-        bundle.putStringArrayList("lesson", label);
-        fragments[2].setArguments(bundle);
+        if (fragments[2]!=null) {
+            ((LessonListFragment) fragments[2]).change_lessons(label);
+        } else {
+            fragments[2] = new LessonListFragment();
+            Bundle bundle = new Bundle();
+            bundle.putStringArrayList("lesson", label);
+            fragments[2].setArguments(bundle);
+            FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+            if (lesson_content != null) {
+                lesson_content.setVisibility(View.VISIBLE);
+
+                FragmentManager fm = getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+                ft.add(R.id.ve_fragment2, fragments[2]);
+                ft.commit();
+            }
+        }
     }
 
     public void close_lesson_list() {
@@ -165,6 +197,9 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         fragments[2]=null;
         if (pager != null)
             pager.getAdapter().notifyDataSetChanged();
+        FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+        if (lesson_content != null)
+            lesson_content.setVisibility(View.GONE);
     }
 
     @Override

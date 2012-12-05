@@ -27,7 +27,8 @@ import java.util.HashMap;
 public class EditLessonsFragment extends Fragment {
     protected HanziDB myDB=null;
 
-    protected ArrayList<Lesson> current_lessons;
+    protected ArrayList<Lesson> current_lessons= new ArrayList<Lesson>();
+    protected Boolean loaded = false;
     private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
@@ -42,8 +43,6 @@ public class EditLessonsFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
-
-        current_lessons = new ArrayList<Lesson>();
     }
 
     @Override
@@ -75,16 +74,25 @@ public class EditLessonsFragment extends Fragment {
                 }).start();
             }
         });
-        //registerForContextMenu(list);
 
         ProgressBar pb = (ProgressBar) res.findViewById(R.id.lessons_loading);
-        pb.setVisibility(View.VISIBLE);
 
-        init_lessons_thread = new InitLessons();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            init_lessons_thread.execute((Void[])null);
+        Log.d(TAG, "Finishing onCreateView");
+        if (init_lessons_thread == null) {
+            if (!loaded) {
+                Log.d(TAG, "Finishing onCreateView");
+                init_lessons_thread = new InitLessons();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                    init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                else
+                    init_lessons_thread.execute((Void[])null);
+
+                pb.setVisibility(View.VISIBLE);
+            } else {
+                list.setAdapter(new LessonArrayAdapter());
+                pb.setVisibility(View.GONE);
+            }
+        }
 
         return res;
     }
@@ -95,6 +103,7 @@ public class EditLessonsFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             tmp_lessons = new ArrayList<Lesson>();
+            Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
 
             for (int i=0; i<existing_lessons.size(); i++) {
@@ -109,6 +118,7 @@ public class EditLessonsFragment extends Fragment {
                 tmp_lessons.add(new_lesson);
             }
 
+            Log.d(TAG, "Done with lesson list, will populate");
             return null;
         }
 
@@ -117,18 +127,17 @@ public class EditLessonsFragment extends Fragment {
             super.onPostExecute(aVoid);
 
             current_lessons = tmp_lessons;
+            loaded = true;
 
-            synchronized (EditLessonsFragment.this) {
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                if (lv != null) {
-                    lv.setAdapter(new LessonArrayAdapter());
-                }
-
-                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
-                pb.setVisibility(View.GONE);
-
-                init_lessons_thread=null;
+            TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+            if (lv != null) {
+                lv.setAdapter(new LessonArrayAdapter());
             }
+
+            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+            pb.setVisibility(View.GONE);
+
+            init_lessons_thread=null;
         }
     }
 
@@ -676,6 +685,8 @@ public class EditLessonsFragment extends Fragment {
     }
 
     public void redraw_list() {
+        if (getView() == null)
+            return;
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
     }

@@ -47,9 +47,18 @@ public class LessonListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View res = inflater.inflate(R.layout.review_list, container, false);
+        return res;
+    }
 
-        ListView list = (ListView) res.findViewById(R.id.review_list);
-        TextView header = (TextView) inflater.inflate(R.layout.review_list_header, list, false);
+    private void update_header_view() {
+        ListView list = (ListView) getView().findViewById(R.id.review_list);
+        TextView header = (TextView) list.getTag(R.id.header_view);
+        if (header == null) {
+            header = (TextView) getLayoutInflater(null).inflate(R.layout.review_list_header, list, false);
+            list.setTag(R.id.header_view, header);
+            list.addHeaderView(header, null, false);
+        }
+
         if (lesson.equals(""))
             header.setText("Words that are not assigned to any lesson");
         else {
@@ -61,16 +70,31 @@ public class LessonListFragment extends Fragment {
             }
             header.setText("Words in lesson "+lesson);
         }
-
-        list.addHeaderView(header, null, false);
-        return res;
     }
 
     @Override
     @SuppressLint({"NewApi"})
     public void onResume() {
         super.onResume();
-        update_list();
+        if (cur != null) {
+            ListView list = (ListView) getView().findViewById(R.id.review_list);
+            list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
+                @Override
+                public void click(String item_clicked) {
+                    Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    i.putExtra("Hanzi", item_clicked);
+                    i.putExtra("use_ref", false);
+                    startActivity(i);
+                }
+            }));
+
+            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+            pb.setVisibility(View.GONE);
+            loader=null;
+        } else {
+            update_list();
+        }
     }
 
     private class update_lesson_list_task extends AsyncTask<Void,Void,Void> {
@@ -83,6 +107,10 @@ public class LessonListFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
+            if (getView() == null) {
+                this.cancel(true);
+                return;
+            }
             ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
             pb.setVisibility(View.VISIBLE);
 
@@ -103,8 +131,11 @@ public class LessonListFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (getView() == null)
+                return;
             synchronized (LessonListFragment.this) {
                 ListView list = (ListView) getView().findViewById(R.id.review_list);
+                update_header_view();
                 list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
                     @Override
                     public void click(String item_clicked) {
@@ -142,10 +173,17 @@ public class LessonListFragment extends Fragment {
         return lesson;
     }
 
+    public void change_lessons(ArrayList<String> new_lessons) {
+        synchronized (LessonListFragment.this) {
+            lesson = new_lessons;
+            update_list();
+        }
+    }
+
     @Override
-    public void onPause() {
+    public void onDestroy() {
         if (cur != null)
             cur.close();
-        super.onPause();
+        super.onDestroy();
     }
 }

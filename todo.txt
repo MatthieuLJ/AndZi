@@ -35,7 +35,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (187):
+DONE (188):
+* Lesson list and lesson content list get reloaded at every rotation (and selection is lost)
 * Trim when doing english dictionary search
 * Dictionary seem to stop when an "intermediary" query is finished
 * Should not have to redo a search in details when screen turns
