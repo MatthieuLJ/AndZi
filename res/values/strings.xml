@@ -86,7 +86,7 @@
     <string name="settings_ref_db_install_progress">Installing…</string>
     <string name="settings_error_not_enough_space_install_ref">Not enough space on device to download and install Dictionary</string>
     <string name="settings_error_cannot_connect">Cannot connect</string>
-    <string name="settings_error_install_ref">An error occured while installing the dictionary</string>
+    <string name="settings_error_install_ref">An error occurred while installing the dictionary</string>
     <string name="settings_export_destination">Destination: %s</string>
     <string name="settings_export_check_overwrite">The file [%s] already exists, do you want to overwrite?</string>
     <string name="settings_export_success">List was copied to %s</string>

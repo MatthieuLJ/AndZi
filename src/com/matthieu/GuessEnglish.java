@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 public class GuessEnglish extends TestFragment {
     private Vocabulary solution=null;
@@ -92,7 +93,7 @@ public class GuessEnglish extends TestFragment {
     }
 
     protected int check_guess(String guess) {
-        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase().split("[, -]");
+        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase(Locale.ENGLISH).split("[, -]");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
                 continue;
@@ -100,7 +101,7 @@ public class GuessEnglish extends TestFragment {
             guesses[i]=guesses[i].trim();
             for (String en:solution.english) {
                 Log.d(TAG, "Against "+en);
-                en=en.toLowerCase();
+                en=en.toLowerCase(Locale.ENGLISH);
                 if (en.equals(guesses[i].trim())) {
                     Log.d(TAG, "got a match "+en+" and "+guesses[i].trim());
                     return CORRECT;

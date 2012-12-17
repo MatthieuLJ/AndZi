@@ -4,6 +4,7 @@
 
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
@@ -269,6 +270,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
     }
 
+    @SuppressLint({"NewApi"})
     private void start_new_query(int mode, String query) {
         if (update_task != null) {
             update_task.cancel();

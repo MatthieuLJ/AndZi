@@ -11,6 +11,7 @@ import android.util.Log;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class PinyinParser {
     private final static String TAG = "PinyinParser";
@@ -330,12 +331,12 @@ public class PinyinParser {
                 i+=Character.charCount(entry);
             }
             else {
-                if (!input.substring(i, i+1).toLowerCase().matches(pinyin_chars)) {
+                if (!input.substring(i, i+1).toLowerCase(Locale.ENGLISH).matches(pinyin_chars)) {
                     res.clear();
                     return res;
                 }
                 int j=i+1;
-                while ((j<=input.length()) && (input.substring(i, j).toLowerCase().matches(pinyin_chars))) {
+                while ((j<=input.length()) && (input.substring(i, j).toLowerCase(Locale.ENGLISH).matches(pinyin_chars))) {
                     j++;
                 }
                 String pinyins=input.substring(i, j-1);
