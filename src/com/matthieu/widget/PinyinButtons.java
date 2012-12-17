@@ -1,5 +1,6 @@
 package com.matthieu.widget;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -35,6 +36,7 @@ public class PinyinButtons extends LinearLayout {
         myDB = ((AndZiApplication) context.getApplicationContext()).getMyDB();
     }
 
+    @SuppressLint({"NewApi"})
     public PinyinButtons(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         refDB = ((AndZiApplication) context.getApplicationContext()).getRefDB();

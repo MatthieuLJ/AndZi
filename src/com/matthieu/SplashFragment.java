@@ -55,7 +55,7 @@ public class SplashFragment extends Fragment {
             application.initialize_ref_db();
 
             publishProgress(5);
-            HanziDB myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
+            HanziDB myDB = application.getMyDB();
 
             publishProgress(10);
             myDB.checkDatabase(true, new DBCheckProgressHandler() {

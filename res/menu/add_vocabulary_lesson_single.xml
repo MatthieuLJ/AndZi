@@ -5,9 +5,6 @@
     <item android:id="@+id/add_vocabulary_lesson_clone"
           android:title="Clone"
           android:showAsAction="ifRoom|withText"/>
-    <item android:id="@+id/add_vocabulary_lesson_list"
-          android:title="Inspect"
-          android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_lesson_rename"
           android:title="Rename"
           android:showAsAction="ifRoom|withText"/>

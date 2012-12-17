@@ -2,9 +2,9 @@
 
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/add_vocabulary_assign_lesson"
-          android:title="Lesson"
-          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/add_vocabulary_show_new_translation"
+          android:title="New Translation"
+          android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_delete_selection"
           android:title="Delete"
           android:showAsAction="always"/>

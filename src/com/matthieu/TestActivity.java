@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuItem;
@@ -57,6 +59,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         setContentView(R.layout.test);
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
 
         fragments = new Fragment[3];
 
@@ -68,8 +71,20 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
             }
         }
-        if (fragments[0] == null)
+        if (fragments[0] == null) {
             fragments[0] = new StatsFragment();
+            if (linear != null) {
+                FragmentManager fm = getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+                ft.add(R.id.test_fragment0, fragments[0]);
+                ft.commit();
+            }
+        }
+
+        if (linear != null) {
+            FrameLayout solution_frame = (FrameLayout) findViewById(R.id.test_fragment2);
+            solution_frame.setVisibility(fragments[2]==null ? View.GONE : View.VISIBLE);
+        }
 
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
@@ -213,7 +228,16 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         if ((old_fragment1 != null) && (old_fragment1 != new_fragment1)) {
             FragmentManager fm = getSupportFragmentManager();
-            fm.beginTransaction().remove(old_fragment1).commit();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.remove(old_fragment1);
+            ft.commit();
+        }
+        LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
+        if ((linear != null) && (old_fragment1 != new_fragment1)) {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.add(R.id.test_fragment1, new_fragment1);
+            ft.commit();
         }
 
         fragments[1] = new_fragment1;
@@ -345,13 +369,27 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             }
         }
 
+
         if (fragments[2] != null) {
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
             ft.remove(fragments[2]);
             ft.commit();
         }
+
+        LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
+        if (linear!= null) {
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.add(R.id.test_fragment2, solution);
+            ft.commit();
+        }
+
         fragments[2] = solution;
+        FrameLayout solution_frame = (FrameLayout) findViewById(R.id.test_fragment2);
+        if (solution_frame != null)
+            solution_frame.setVisibility(View.VISIBLE);
+
         final TextView result_overlay = (TextView) findViewById(R.id.test_result);
         switch(correctness) {
             case TestFragment.INCORRECT:

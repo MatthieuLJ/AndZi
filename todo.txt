@@ -1,4 +1,6 @@
-ONGOING (9):
+ONGOING (11):
+* Change stats with whole Leitner DB
+* Change number of test remaining (instead of chars+words)
 * Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -13,12 +15,9 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (5):
-* Cursor in ReviewList does not get closed in onDestroy (or it breaks screen rotation)
-* Trim when doing english dictionary search
+BUGS (2):
 * Update graph when testing
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Dictionary seem to stop when an "intermediary" query is finished
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -36,7 +35,12 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (183):
+DONE (188):
+* Lesson list and lesson content list get reloaded at every rotation (and selection is lost)
+* Trim when doing english dictionary search
+* Dictionary seem to stop when an "intermediary" query is finished
+* Should not have to redo a search in details when screen turns
+* Notification does not get cleared when app is opened
 * Make tests faster to go through
 * Sometimes the layout is messed up when the keyboard comes up in a test screen
 * Make the icon in action bar go back to the main menu
@@ -279,8 +283,39 @@ Code to waste time:
 Lint output:
 res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
                 android:layout_width="match_parent"
-                ^
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout-xlarge-land/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
+                android:layout_width="match_parent"
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bin/classes/com/matthieu/ReviewList.class: Warning: The <activity> com.matthieu.ReviewList is not registered in the manifest [Registered]
+res/layout-xlarge/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
+                android:layout_weight="1"/>
+                ~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/matthieu/projects/AndZi/external/ActionBarSherlock-4.2.0-0/res/layout/abs__action_bar_home.xml:21: Warning: Possible overdraw: Root element paints background ?attr/actionBarItemBackground with a theme that also paints a background (inferred theme is @android:style/Theme.Holo) [Overdraw]
+      android:background="?attr/actionBarItemBackground">
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/menu/add_vocabulary_assign_lesson.xml: Warning: The resource R.menu.add_vocabulary_assign_lesson appears to be unused [UnusedResources]
+res/layout/details_landscape.xml: Warning: The resource R.layout.details_landscape appears to be unused [UnusedResources]
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
+res/values/strings.xml:83: Warning: The resource R.string.settings_import_progress_success appears to be unused [UnusedResources]
+    <string name="settings_import_progress_success">Successfully imported progress</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/strings.xml:119: Warning: The resource R.string.review_list_nothing_to_study appears to be unused [UnusedResources]
+    <string name="review_list_nothing_to_study">Nothing to study</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/strings.xml:120: Warning: The resource R.string.review_list_num_chars_to_study_filtered appears to be unused [UnusedResources]
+    <string name="review_list_num_chars_to_study_filtered">You have %1$d characters to study (%2$d total)</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/strings.xml:121: Warning: The resource R.string.review_list_num_words_to_study_filtered appears to be unused [UnusedResources]
+    <string name="review_list_num_words_to_study_filtered">You have %1$d words to study (%2$d total)</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/strings.xml:122: Warning: The resource R.string.review_list_num_chars_to_study appears to be unused [UnusedResources]
+    <string name="review_list_num_chars_to_study">You have %1$d characters to study</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/strings.xml:123: Warning: The resource R.string.review_list_num_words_to_study appears to be unused [UnusedResources]
+    <string name="review_list_num_words_to_study">You have %1$d words to study</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout/test_backup.xml: Warning: The resource R.layout.test_backup appears to be unused [UnusedResources]
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -301,38 +336,47 @@ res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an
    ^
 res/menu/add_vocabulary_menu_add.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
-          ^
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/menu/add_vocabulary_menu_edit.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/menu/add_vocabulary_menu_edit_multiple.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/menu/add_vocabulary_menu_ready.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
-          ^
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/menu/reference_dict.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
+          android:showAsAction="always"/>
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
 res/layout/add_vocabulary_pinyin_dialog.xml:28: Warning: [I18N] Hardcoded string "Enter Pinyin", should use @string resource [HardcodedText]
                 android:hint="Enter Pinyin"
-                ^
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/add_vocabulary_top.xml:14: Warning: [I18N] Hardcoded string "Enter a Chinese Word", should use @string resource [HardcodedText]
             android:hint="Enter a Chinese Word"
-            ^
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/add_vocabulary_wrong_entry.xml:14: Warning: [I18N] Hardcoded string "Enter a Chinese word", should use @string resource [HardcodedText]
             android:text="Enter a Chinese word" />
-            ^
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/main_menu.xml:16: Warning: [I18N] Hardcoded string "Add Vocabulary", should use @string resource [HardcodedText]
                 android:text="Add Vocabulary"
-                ^
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/main_menu.xml:29: Warning: [I18N] Hardcoded string "Test me!", should use @string resource [HardcodedText]
                 android:text="Test me!"
-                ^
+                ~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/main_menu.xml:35: Warning: [I18N] Hardcoded string "Help", should use @string resource [HardcodedText]
                 android:text="Help"
-                ^
-res/layout/main_menu.xml:47: Warning: [I18N] Hardcoded string "Review list", should use @string resource [HardcodedText]
-                android:text="Review list"
-                ^
-res/layout/main_menu.xml:53: Warning: [I18N] Hardcoded string "Dictionary", should use @string resource [HardcodedText]
+                ~~~~~~~~~~~~~~~~~~~
+res/layout/main_menu.xml:47: Warning: [I18N] Hardcoded string "Dictionary", should use @string resource [HardcodedText]
                 android:text="Dictionary"
-                ^
-res/layout/main_menu.xml:64: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
+                ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout/main_menu.xml:58: Warning: [I18N] Hardcoded string "Settings", should use @string resource [HardcodedText]
                 android:text="Settings"
-                ^
-0 errors, 28 warnings
+                ~~~~~~~~~~~~~~~~~~~~~~~
+0 errors, 44 warnings

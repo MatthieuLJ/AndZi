@@ -20,6 +20,7 @@ import com.matthieu.widget.DBCheckProgressHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -614,7 +615,7 @@ public class HanziDB extends SQLiteOpenHelper {
             res = matcher.group(1) + " " + matcher.group(2);
             matcher = pattern.matcher(res);
         }
-        return res.toLowerCase().trim();
+        return res.toLowerCase(Locale.ENGLISH).trim();
     }
 
     public static boolean compare_translations(String ref, String guess) {
@@ -1613,6 +1614,7 @@ public class HanziDB extends SQLiteOpenHelper {
         addVocabulary(english, cword_id);
     }
 
+    @SuppressLint({"NewApi"})
     protected int addVocabulary(String english, String chinese, String pinyin) {
         ArrayList<String> pin_array = PinyinParser.parse_string(pinyin);
         ArrayList<String> ch_array = new ArrayList<String>();
@@ -3252,7 +3254,6 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
-    // getCursorFilteredCharsToStudy <- ReviewList
     public Cursor getCursorCharsToStudy() {
         return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
                 "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +

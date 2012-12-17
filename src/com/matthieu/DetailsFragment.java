@@ -66,26 +66,32 @@ public class DetailsFragment extends Fragment {
         return pinned;
     }
 
+    private saved_details saved_data;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Bundle bundle = getArguments();
-        if (bundle != null) {
-            current_hanzi = bundle.getString("hanzi");
-            current_pinyin = bundle.getString("pinyin");
-            use_ref = bundle.getBoolean("use_ref");
-        }
         final View res = inflater.inflate(R.layout.details_fragment, container, false);
         FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
 
-        if (!current_hanzi.equals(""))
-            populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
+        if (saved_data != null) {
+            populate_details_view(this, frame, saved_data, (ReferenceActivity) getActivity());
+        } else {
+            Bundle bundle = getArguments();
+            if (bundle != null) {
+                current_hanzi = bundle.getString("hanzi");
+                current_pinyin = bundle.getString("pinyin");
+                use_ref = bundle.getBoolean("use_ref");
+            }
 
-        HanziDB db = ((AndZiApplication) getActivity().getApplication()).getMyDB();
-        if (db == null)
-            return null;
-        if (use_ref)
-            check_if_exists_in_db(db);
+            if (!current_hanzi.equals(""))
+                populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
 
+            HanziDB db = ((AndZiApplication) getActivity().getApplication()).getMyDB();
+            if (db == null)
+                return null;
+            if (use_ref)
+                check_if_exists_in_db(db);
+        }
         return res;
     }
 
@@ -109,8 +115,15 @@ public class DetailsFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        kill_detail_view((ViewGroup) getView());
+        FrameLayout frame = (FrameLayout) getView().findViewById(R.id.top_level_detail_view);
+        saved_data = save_detail_view(frame);
         super.onDestroyView();
+    }
+
+    public void onDestroy() {
+        if (saved_data != null)
+            kill_detail_view(saved_data);
+        super.onDestroy();
     }
 
     static void populate_details_view(final Fragment fragment, ViewGroup section,
@@ -141,8 +154,6 @@ public class DetailsFragment extends Fragment {
                     old_adapter.changeCursor(null);
                 }
             }
-        } else {
-            View.inflate(fragment.getActivity(), R.layout.details, section);
         }
 
         populator populate = new populator(fragment, hanzi, pinyin, ref_query, section, new VocabularyCursorClickHandle() {
@@ -157,6 +168,73 @@ public class DetailsFragment extends Fragment {
             populate.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
         else
             populate.execute((Void[])null);
+    }
+
+    static void populate_details_view(final Fragment fragment, ViewGroup section, final saved_details saved,
+                                      final handle_details_request new_request) {
+        section.removeAllViews();
+        View.inflate(fragment.getActivity(), R.layout.details, section);
+        synchronized (locker) {
+            // first write the word at the top
+            LinearLayout top_word = (LinearLayout) section.findViewById(R.id.details_title);
+            top_word.removeAllViews();
+            for (int i=0; i<saved.saved_hanzi.length(); ) {
+                TextView character = new TextView(fragment.getActivity());
+                final String character_label = saved.saved_hanzi.substring(i, i + Character.charCount(saved.saved_hanzi.codePointAt(i)));
+                character.setTextAppearance(fragment.getActivity(), android.R.style.TextAppearance_Large_Inverse);
+                character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
+                character.setText(character_label);
+                if (saved.saved_hanzi.codePointCount(0, saved.saved_hanzi.length())!= 1)
+                    character.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View view) {
+                            if (new_request != null)
+                                new_request.new_details_request(character_label, saved.saved_use_ref);
+                        }
+                    });
+                top_word.addView(character);
+                i+=Character.charCount(saved.saved_hanzi.codePointAt(i));
+            }
+
+            // write the pinyin info
+            final TextView info = (TextView) section.findViewById(R.id.details_info);
+            if (saved.saved_pinyin_info != null) {
+                info.setText(saved.saved_pinyin_info);
+                info.setVisibility(View.VISIBLE);
+            } else {
+                info.setVisibility(View.GONE);
+            }
+
+            if (saved.saved_task != null) {
+                saved.saved_task.change_container(section);
+            }
+
+            ListView list = (ListView) section.findViewById(R.id.details_list);
+            if (saved.saved_cursor!= null) {
+                VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
+                if (adapter == null) {
+                    VocabularyCursorClickHandle clicker = new VocabularyCursorClickHandle() {
+                        @Override
+                        public void click(String item_clicked) {
+                            if (new_request != null)
+                                new_request.new_details_request(item_clicked, saved.saved_use_ref);
+                        }
+                    };
+                    list.setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), saved.saved_cursor, clicker));
+                } else
+                    adapter.changeCursor(saved.saved_cursor);
+                list.setVisibility(View.VISIBLE);
+
+            }
+
+            ProgressBar loading_wheel = (ProgressBar) section.findViewById(R.id.details_loading);
+            if ((saved.saved_task == null) &&(loading_wheel != null))
+                loading_wheel.setVisibility(View.GONE);
+
+            list.setTag(R.id.detail_populator, new WeakReference<populator>(saved.saved_task));
+            list.setTag(R.id.detail_query_hanzi, saved.saved_hanzi);
+            list.setTag(R.id.detail_query_pinyin, saved.saved_pinyin);
+            list.setTag(R.id.details_query_ref, saved.saved_use_ref);
+        }
     }
 
     static private class populator extends AsyncTask<Void,Void,Void> {
@@ -190,6 +268,8 @@ public class DetailsFragment extends Fragment {
             clicker = c;
             new_request = n_r;
 
+            View.inflate(fragment.getActivity(), R.layout.details, v);
+
             ArrayList<Pinyin> pinyin_table = PinyinParser.parse_string_to_pinyin(pinyin);
             if ((!pinyin.equals("")) &&
                     ((pinyin_table==null) || ((pinyin_table.size() != hanzi.codePointCount(0, hanzi.length()))))) {
@@ -211,15 +291,24 @@ public class DetailsFragment extends Fragment {
             }
         }
 
+        public void change_container(ViewGroup v) {
+            container = new WeakReference<ViewGroup>(v);
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            if (container.get() == null) {
+                this.cancel(true);
+                return;
+            }
             ListView list = (ListView) container.get().findViewById(R.id.details_list);
             list.setVisibility(View.GONE);
 
             list.setTag(R.id.detail_populator, new WeakReference<populator>(this));
             list.setTag(R.id.detail_query_hanzi, hanzi);
             list.setTag(R.id.detail_query_pinyin, pinyin);
+            list.setTag(R.id.details_query_ref, ref_query);
 
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(fragment.getActivity());
             show_pinyin_color = sp.getBoolean("color_pinyin", true);
@@ -239,8 +328,9 @@ public class DetailsFragment extends Fragment {
             pinyin_info=null;
             if (!pinyin.equals("")) {
                 if (show_pinyin_color) {
-                    SpannableStringBuilder info_pinyin_builder = PinyinParser.convert_to_spannable_version(pinyin);
-                    info_pinyin_builder.insert(0, "(");
+                    SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
+                    info_pinyin_builder.append("(");
+                    info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pinyin));
                     info_pinyin_builder.append(")");
                     pinyin_info = info_pinyin_builder;
                 } else {
@@ -255,7 +345,7 @@ public class DetailsFragment extends Fragment {
 
                 if (show_pinyin_color) {
                     SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
-                    info_pinyin_builder.insert(0, "(");
+                    info_pinyin_builder.append("(");
                     for (int i=0; i<pinyins.size(); i++) {
                         String pin=pinyins.get(i);
                         info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pin));
@@ -310,7 +400,6 @@ public class DetailsFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             synchronized (locker) {
                 if ((container.get()!=null) && (fragment.getActivity()!=null)) {
-
                     // first write the word at the top
                     LinearLayout top_word = (LinearLayout) container.get().findViewById(R.id.details_title);
                     top_word.removeAllViews();
@@ -374,6 +463,52 @@ public class DetailsFragment extends Fragment {
                 old_adapter.changeCursor(null);
             }
         }
+    }
+
+    static public class saved_details {
+        Cursor saved_cursor;
+        CharSequence saved_pinyin_info;
+        populator saved_task;
+        Boolean saved_use_ref;
+        String saved_hanzi;
+        String saved_pinyin;
+    }
+
+    static public saved_details save_detail_view(ViewGroup section) {
+        if (section == null)
+            return null;
+        ListView old_list= (ListView) section.findViewById(R.id.details_list);
+        if (old_list == null)
+            return null;
+        saved_details res = new saved_details();
+        synchronized (locker) {
+            WeakReference<populator> old_populate_task = (WeakReference<populator>) old_list.getTag(R.id.detail_populator);
+            if ((old_populate_task!=null) && (old_populate_task.get()!=null) && (old_populate_task.get().getStatus()!= AsyncTask.Status.FINISHED))
+                res.saved_task = old_populate_task.get();
+
+            VocabularyCursorAdapter old_adapter = (VocabularyCursorAdapter) old_list.getAdapter();
+            if (old_adapter != null) {
+                res.saved_cursor = old_adapter.getCursor();
+            }
+
+            final TextView pinyin_info = (TextView) section.findViewById(R.id.details_info);
+            if (pinyin_info != null) {
+                res.saved_pinyin_info = pinyin_info.getText();
+            }
+
+            res.saved_hanzi = (String) old_list.getTag(R.id.detail_query_hanzi);
+            res.saved_pinyin = (String) old_list.getTag(R.id.detail_query_pinyin);
+            res.saved_use_ref = (Boolean) old_list.getTag(R.id.details_query_ref);
+        }
+        return res;
+    }
+
+    static public void kill_detail_view(saved_details saved) {
+        if (saved.saved_task != null)
+            saved.saved_task.cancel(false);
+
+        if (saved.saved_cursor != null)
+            saved.saved_cursor.close();
     }
 
     public void pin_unpin() {

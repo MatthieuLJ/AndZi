@@ -7,6 +7,7 @@ package com.matthieu;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class Pinyin {
@@ -269,11 +270,11 @@ public class Pinyin {
 
         for (i = 0; i < 6; i++) {
             if (entry.endsWith(""+i)) {
-                temp=entry.substring(0, entry.length()-1).toLowerCase();
+                temp=entry.substring(0, entry.length()-1).toLowerCase(Locale.ENGLISH);
             }
         }
         if (temp.equals(""))
-            temp=entry.toLowerCase();
+            temp=entry.toLowerCase(Locale.ENGLISH);
 
         if (!pinyin_by_first_letter.containsKey(temp.substring(0,1)))
             return false;

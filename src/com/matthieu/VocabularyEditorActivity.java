@@ -7,6 +7,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
@@ -17,10 +20,26 @@ import com.viewpagerindicator.PageIndicator;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
+public class VocabularyEditorActivity extends SherlockFragmentActivity {
     Fragment fragments[];
 
     HanziDB refDB, myDB;
+
+    public enum activity_state {
+        STATE_INIT,
+        STATE_EDIT_WORD,
+        STATE_EDIT_WORD_VOC_SELECTED_SINGLE,
+        STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE,
+        STATE_EDIT_WORD_DIC_SELECTED,
+        STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED,
+        STATE_LESSON_SELECTED_SINGLE,
+        STATE_LESSON_SELECTED_MULTIPLE,
+        STATE_LESSON_SELECTION
+    }
+    private activity_state current_state = activity_state.STATE_INIT;
+    public activity_state get_state() {
+        return current_state;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +55,10 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         fragments = new Fragment[3];
 
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LinearLayout master_linear = (LinearLayout) findViewById(R.id.voc_editor_linear);
 
         if (savedInstanceState != null) {
+            current_state = activity_state.values()[savedInstanceState.getInt("state")];
             fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
             fragments[1] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment1");
             fragments[2] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment2");
@@ -45,6 +66,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
             }
         }
+
         if (fragments[0] == null) {
             fragments[0] = new AddVocabularyFragment();
             if (hanzi != null) {
@@ -56,18 +78,34 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         if (fragments[1] == null)
             fragments[1] = new EditLessonsFragment();
 
+        if ((savedInstanceState == null) && (master_linear != null)) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.add(R.id.ve_fragment0, fragments[0]);
+            ft.add(R.id.ve_fragment1, fragments[1]);
+            if (fragments[2] != null) {
+                ft.add(R.id.ve_fragment2, fragments[2]);
+            }
+
+            ft.commit();
+        }
+
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
-
-            mIndicator.setOnPageChangeListener(this);
-
+        } else if (master_linear != null) {
+            FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+            if (fragments[2] == null) {
+                lesson_content.setVisibility(View.GONE);
+            } else {
+                lesson_content.setVisibility(View.VISIBLE);
+            }
         }
-        else {
-            // TODO When we are on a larger screen without a pager
+
+        if ((hanzi!=null) && (!hanzi.equals(""))){
+            // TODO set the right state
         }
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -100,7 +138,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 pager.setCurrentItem(1);
                 pager.setPagingEnabled(false);
             }
-            set_menu(menu_types.LESSON_SELECTION);
+            set_state(activity_state.STATE_LESSON_SELECTION);
         }
     }
 
@@ -108,10 +146,10 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         try {
-        getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
+            getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
         } catch (IllegalStateException e) {}
         try {
-        getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
+            getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
         } catch (IllegalStateException e) {}
         if (fragments[2] != null) {
             try {
@@ -122,19 +160,26 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
+        outState.putInt("state", current_state.ordinal());
     }
 
-    public void open_lesson_list(String label) {
-        if (fragments[2]!=null)
-            close_lesson_list();
-        fragments[2] = new LessonListFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString("lesson", label);
-        fragments[2].setArguments(bundle);
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-        if (pager != null) {
-            pager.getAdapter().notifyDataSetChanged();
-            pager.setCurrentItem(2, true);
+    public void open_lesson_list(ArrayList<String> label) {
+        if (fragments[2]!=null) {
+            ((LessonListFragment) fragments[2]).change_lessons(label);
+        } else {
+            fragments[2] = new LessonListFragment();
+            Bundle bundle = new Bundle();
+            bundle.putStringArrayList("lesson", label);
+            fragments[2].setArguments(bundle);
+            FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+            if (lesson_content != null) {
+                lesson_content.setVisibility(View.VISIBLE);
+
+                FragmentManager fm = getSupportFragmentManager();
+                FragmentTransaction ft = fm.beginTransaction();
+                ft.add(R.id.ve_fragment2, fragments[2]);
+                ft.commit();
+            }
         }
     }
 
@@ -142,7 +187,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if ((pager != null) && (pager.getCurrentItem()==2)) {
             pager.setCurrentItem(1, true);
-
         }
         if (fragments[2] == null)
             return;
@@ -153,38 +197,26 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         fragments[2]=null;
         if (pager != null)
             pager.getAdapter().notifyDataSetChanged();
-    }
-
-    @Override
-    public void onPageScrolled(int i, float v, int i1) {
-    }
-
-    @Override
-    public void onPageSelected(int i) {
-        switch(i) {
-            case 0:
-                ((AddVocabularyFragment)fragments[0]).change_menu();
-                break;
-            case 1:
-                ((EditLessonsFragment)fragments[1]).change_menu();
-                break;
-            case 2:
-                ((LessonListFragment)fragments[2]).change_menu();
-                break;
-        }
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int i) {
+        FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+        if (lesson_content != null)
+            lesson_content.setVisibility(View.GONE);
     }
 
     @Override
     public void onBackPressed() {
         ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
         if ((pager != null) && (pager.getCurrentItem() != 0))
-            pager.setCurrentItem(0, true);
+            pager.setCurrentItem(0, true); // TODO: only do that when we are in "editor" mode, not for lesson picking
         else
             super.onBackPressed();
+    }
+
+    public void set_state(activity_state new_state) {
+        if (current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) {
+            ((AddVocabularyFragment)fragments[0]).set_new_lesson_assignment(flush_lesson_assignment());
+        }
+        current_state = new_state;
+        invalidateOptionsMenu();
     }
 
     private class editor_pager extends FragmentPagerAdapter {
@@ -213,82 +245,49 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         }
     }
 
-    public enum menu_types {
-        INITIAL,
-        VOCABULARY_NEW_SELECTED,
-        VOCABULARY_CURRENT_SELECTED,
-        VOCABULARY_CURRENT_MULTIPLE_SELECTED,
-        VOCABULARY_ASSIGN_LESSON,
-        VOCABULARY_READY,
-        LESSON_NONE_SELECTED,
-        LESSON_ONE_SELECTED,
-        LESSON_MULTI_SELECTED,
-        LESSON_SELECTION
-    }
-    private menu_types current_type=menu_types.INITIAL;
-
-    public void set_menu(menu_types new_type) {
-        current_type = new_type;
-        invalidateOptionsMenu();
-    }
-
-    public menu_types get_menu() {
-        return current_type;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getSupportMenuInflater();
-        inflater.inflate(R.menu.add_vocabulary_init, menu);
-        return true;
-    }
-
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        int menu_resource;
-        switch(current_type) {
-            case VOCABULARY_NEW_SELECTED:
-                menu_resource = R.menu.add_vocabulary_menu_add;
-                break;
-            case VOCABULARY_CURRENT_SELECTED:
-                menu_resource = R.menu.add_vocabulary_menu_edit;
-                break;
-            case VOCABULARY_CURRENT_MULTIPLE_SELECTED:
-                menu_resource = R.menu.add_vocabulary_menu_edit_multiple;
-                break;
-            case VOCABULARY_READY:
-                menu_resource = R.menu.add_vocabulary_menu_ready;
-                break;
-            case VOCABULARY_ASSIGN_LESSON:
-                menu_resource = R.menu.add_vocabulary_assign_lesson;
-                break;
-            case LESSON_NONE_SELECTED:
+        int menu_resource=0;
+        switch(current_state) {
+            case STATE_INIT:
                 menu_resource = R.menu.add_vocabulary_lesson_none;
                 break;
-            case LESSON_ONE_SELECTED:
+            case STATE_EDIT_WORD:
+                menu_resource = R.menu.add_vocabulary_menu_ready;
+                break;
+            case STATE_EDIT_WORD_VOC_SELECTED_SINGLE:
+                menu_resource = R.menu.add_vocabulary_menu_edit;
+                break;
+            case STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE:
+                menu_resource = R.menu.add_vocabulary_menu_edit_multiple;
+                break;
+            case STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED:
+                menu_resource = R.menu.add_vocabulary_menu_ready;
+                break;
+            case STATE_EDIT_WORD_DIC_SELECTED:
+                menu_resource = R.menu.add_vocabulary_menu_add;
+                break;
+            case STATE_LESSON_SELECTED_SINGLE:
                 menu_resource = R.menu.add_vocabulary_lesson_single;
                 break;
-            case LESSON_MULTI_SELECTED:
+            case STATE_LESSON_SELECTED_MULTIPLE:
                 menu_resource = R.menu.add_vocabulary_lesson_multiple;
                 break;
-            case LESSON_SELECTION:
+            case STATE_LESSON_SELECTION:
                 menu_resource = R.menu.add_vocabulary_lesson_selection;
-
                 break;
-            case INITIAL:
-            default:
-                menu_resource = R.menu.add_vocabulary_init;
         }
         menu.clear();
-        MenuInflater inflater = getSupportMenuInflater();
-        inflater.inflate(menu_resource, menu);
+        if (menu_resource != 0) {
+            MenuInflater inflater = getSupportMenuInflater();
+            inflater.inflate(menu_resource, menu);
+        }
 
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        String single_lesson;
         ArrayList<String> selection;
 
         switch (item.getItemId()) {
@@ -301,7 +300,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             case R.id.add_vocabulary_add_selection:
                 ((AddVocabularyFragment)fragments[0]).add_selection();
                 if ((fragments[2] != null) && ((AddVocabularyFragment)fragments[0]).get_default_lesson().equals(
-                        ((LessonListFragment)fragments[2]).current_lesson())) {
+                        ((LessonListFragment)fragments[2]).current_lessons())) {
                     ((LessonListFragment)fragments[2]).update_list();
                 }
 
@@ -316,11 +315,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 if (fragments[2] != null)
                     ((LessonListFragment)fragments[2]).update_list();
                 return true;
-            case R.id.add_vocabulary_assign_lesson:
-                edit_lesson_assignment();
-                return true;
             case R.id.add_vocabulary_assign_lesson_done:
-                done_lesson_assignment();
+                flush_lesson_assignment();
                 return true;
             case R.id.add_vocabulary_done:
                 ((AddVocabularyFragment)fragments[0]).done();
@@ -344,6 +340,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
             case R.id.add_vocabulary_lesson_show_new_lesson:
                 ((EditLessonsFragment)fragments[1]).add_new();
+                // TODO: move to lesson list fragment if we have a ViewPager
                 break;
             case R.id.add_vocabulary_lesson_clone:
                 ((EditLessonsFragment)fragments[1]).clone_selection();
@@ -351,30 +348,23 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             case R.id.add_vocabulary_lesson_delete:
                 selection = ((EditLessonsFragment)fragments[1]).get_selection();
                 if (selection.size() != 1) {
-                    ((EditLessonsFragment)fragments[1]).change_menu();
+                    ((EditLessonsFragment)fragments[1]).update_state();
                     break;
                 }
-                single_lesson = selection.get(0);
-                if ((fragments[2] != null) && (single_lesson != null) && (single_lesson.equals(((LessonListFragment)fragments[2]).current_lesson())))
-                    close_lesson_list();
+                close_lesson_list();
                 ((EditLessonsFragment)fragments[1]).del_selection();
                 break;
             case R.id.add_vocabulary_lesson_rename:
                 selection = ((EditLessonsFragment)fragments[1]).get_selection();
                 if (selection.size() != 1) {
-                    ((EditLessonsFragment)fragments[1]).change_menu();
+                    ((EditLessonsFragment)fragments[1]).update_state();
                     break;
                 }
-                single_lesson = selection.get(0);
-                if ((fragments[2] != null) && (single_lesson != null) && (single_lesson.equals(((LessonListFragment)fragments[2]).current_lesson())))
-                    close_lesson_list();
+                close_lesson_list();
                 ((EditLessonsFragment)fragments[1]).rename_selection();
                 break;
             case R.id.add_vocabulary_lesson_merge:
                 ((EditLessonsFragment)fragments[1]).merge_selection();
-                break;
-            case R.id.add_vocabulary_lesson_list:
-                ((EditLessonsFragment)fragments[1]).list_selection();
                 break;
             case R.id.add_vocabulary_lesson_set_default:
                 set_default_list();
@@ -386,7 +376,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     private void set_default_list() {
         ArrayList<String> selection = ((EditLessonsFragment)fragments[1]).get_selection();
         if (selection.size() != 1) {
-            ((EditLessonsFragment)fragments[1]).change_menu();
+            ((EditLessonsFragment)fragments[1]).update_state();
             return;
         }
         String lesson = selection.get(0);
@@ -399,29 +389,17 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         }
     }
 
-    private void edit_lesson_assignment() {
-        HashMap<String, LessonAssignment> assignment = ((AddVocabularyFragment)fragments[0]).get_current_lesson_assignment();
+    public void edit_lesson_assignment(HashMap<String, LessonAssignment> assignment) {
         ((EditLessonsFragment)fragments[1]).start_assigning_lesson(assignment);
-        set_menu(menu_types.VOCABULARY_ASSIGN_LESSON);
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-        if (pager != null) {
-            pager.setCurrentItem(1, true);
-            pager.setPagingEnabled(false);
-        }
     }
 
-    private void done_lesson_assignment() {
-        HashMap<String, LessonAssignment> assignment = ((EditLessonsFragment)fragments[1]).get_assignment();
-        ((AddVocabularyFragment)fragments[0]).set_new_lesson_assignment(assignment);
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-        if (pager != null) {
-            pager.setCurrentItem(0, true);
-            pager.setPagingEnabled(true);
-        }
-        ((EditLessonsFragment)fragments[1]).redraw_list();
-        if ((fragments[2] != null) && (assignment.containsKey(((LessonListFragment)fragments[2]).current_lesson()))) {
-            ((LessonListFragment)fragments[2]).update_list();
-        }
+    public void clear_lesson_selection() {
+        ((EditLessonsFragment)fragments[1]).clear_selection();
+        close_lesson_list();
+    }
+
+    public HashMap<String, LessonAssignment> flush_lesson_assignment() {
+        return ((EditLessonsFragment)fragments[1]).get_assignment();
     }
 
     public static class LessonAssignment {

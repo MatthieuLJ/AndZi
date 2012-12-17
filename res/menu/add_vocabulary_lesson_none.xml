@@ -3,9 +3,6 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/add_vocabulary_lesson_show_new_lesson"
-          android:title="New"
+          android:title="New Lesson"
           android:showAsAction="always"/>
-    <item android:id="@+id/add_vocabulary_lesson_list"
-          android:title="List"
-          android:showAsAction="ifRoom|withText"/>
 </menu>

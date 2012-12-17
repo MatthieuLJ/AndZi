@@ -27,7 +27,8 @@ import java.util.HashMap;
 public class EditLessonsFragment extends Fragment {
     protected HanziDB myDB=null;
 
-    protected ArrayList<Lesson> current_lessons;
+    protected ArrayList<Lesson> current_lessons= new ArrayList<Lesson>();
+    protected Boolean loaded = false;
     private InitLessons init_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
@@ -42,8 +43,6 @@ public class EditLessonsFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
-
-        current_lessons = new ArrayList<Lesson>();
     }
 
     @Override
@@ -75,16 +74,25 @@ public class EditLessonsFragment extends Fragment {
                 }).start();
             }
         });
-        //registerForContextMenu(list);
 
         ProgressBar pb = (ProgressBar) res.findViewById(R.id.lessons_loading);
-        pb.setVisibility(View.VISIBLE);
 
-        init_lessons_thread = new InitLessons();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            init_lessons_thread.execute((Void[])null);
+        Log.d(TAG, "Finishing onCreateView");
+        if (init_lessons_thread == null) {
+            if (!loaded) {
+                Log.d(TAG, "Finishing onCreateView");
+                init_lessons_thread = new InitLessons();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                    init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                else
+                    init_lessons_thread.execute((Void[])null);
+
+                pb.setVisibility(View.VISIBLE);
+            } else {
+                list.setAdapter(new LessonArrayAdapter());
+                pb.setVisibility(View.GONE);
+            }
+        }
 
         return res;
     }
@@ -95,6 +103,7 @@ public class EditLessonsFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             tmp_lessons = new ArrayList<Lesson>();
+            Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
 
             for (int i=0; i<existing_lessons.size(); i++) {
@@ -109,6 +118,7 @@ public class EditLessonsFragment extends Fragment {
                 tmp_lessons.add(new_lesson);
             }
 
+            Log.d(TAG, "Done with lesson list, will populate");
             return null;
         }
 
@@ -117,18 +127,17 @@ public class EditLessonsFragment extends Fragment {
             super.onPostExecute(aVoid);
 
             current_lessons = tmp_lessons;
+            loaded = true;
 
-            synchronized (EditLessonsFragment.this) {
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                if (lv != null) {
-                    lv.setAdapter(new LessonArrayAdapter());
-                }
-
-                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
-                pb.setVisibility(View.GONE);
-
-                init_lessons_thread=null;
+            TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+            if (lv != null) {
+                lv.setAdapter(new LessonArrayAdapter());
             }
+
+            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+            pb.setVisibility(View.GONE);
+
+            init_lessons_thread=null;
         }
     }
 
@@ -215,8 +224,7 @@ public class EditLessonsFragment extends Fragment {
                         new_collapsed = true;
                         InputMethodManager imm = (InputMethodManager)EditLessonsFragment.this.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(new_lesson_field.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                        TouchListView lv = (TouchListView) EditLessonsFragment.this.getView().findViewById(R.id.lesson_list);
-                        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                        redraw_list();
                         new Thread(new Runnable() {
                             public void run() {
                                 myDB.addLesson(new_lesson_label);
@@ -238,13 +246,13 @@ public class EditLessonsFragment extends Fragment {
 
                 Lesson le = current_lessons.get(position-1);
 
-                VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
+                VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
 
                 String more_info = "";
                 if ((le.state & Lesson.RENAMED) != 0) {
                     more_info = "was : " + le.old_label;
                 }
-                if ((le.num_items != 0) && (current_type != VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON)) {
+                if ((le.num_items != 0) && (state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED)) {
                     if (!more_info.equals(""))
                         more_info = more_info + ", ";
                     more_info = more_info + "has " + le.num_items + " chinese word";
@@ -271,13 +279,11 @@ public class EditLessonsFragment extends Fragment {
                 label.setTag(R.id.lesson_item, le);
 
 
-                if (current_type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) {
-                    if (current_lesson_selection.contains(le)) {
-                        row.setBackgroundColor(0xFF777777);
-                    } else {
-                        row.setBackgroundColor(0x00000000);
-                    }
-                } else if (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON) {
+                if (state == VocabularyEditorActivity.activity_state.STATE_INIT) {
+                    row.setBackgroundColor(0x00000000);
+                } else if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) ||
+                        (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
+                        (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE)) {
                     if (!current_lesson_assignment.containsKey(le.label)) {
                         row.setBackgroundColor(0x00000000);
                     } else {
@@ -360,29 +366,35 @@ public class EditLessonsFragment extends Fragment {
         return res;
     }
 
-    protected void change_menu() {
+    protected void update_state() {
         if (getActivity() == null)
             return;
 
-        VocabularyEditorActivity.menu_types type;
-        VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
+        VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
+        VocabularyEditorActivity.activity_state new_state;
 
-        if ((current_type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) ||
-                (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON))
-            return;
+        if ((state == VocabularyEditorActivity.activity_state.STATE_INIT) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTED_MULTIPLE) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTED_SINGLE)) {
 
-        switch (current_lesson_selection.size()) {
-            case 0:
-                type = VocabularyEditorActivity.menu_types.LESSON_NONE_SELECTED;
-                break;
-            case 1:
-                type = VocabularyEditorActivity.menu_types.LESSON_ONE_SELECTED;
-                break;
-            default:
-                type = VocabularyEditorActivity.menu_types.LESSON_MULTI_SELECTED;
-                break;
+            switch (current_lesson_selection.size()) {
+                case 0:
+                    new_state = VocabularyEditorActivity.activity_state.STATE_INIT;
+                    break;
+                case 1:
+                    new_state = VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTED_SINGLE;
+                    break;
+                default:
+                    new_state = VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTED_MULTIPLE;
+                    break;
+            }
+            if (current_lesson_selection.size()>0)
+                list_selection();
+            else
+                ((VocabularyEditorActivity)getActivity()).close_lesson_list();
+
+            ((VocabularyEditorActivity)getActivity()).set_state(new_state);
         }
-        ((VocabularyEditorActivity)getActivity()).set_menu(type);
     }
 
     public void handle_lesson_click(View v) {
@@ -390,8 +402,12 @@ public class EditLessonsFragment extends Fragment {
         if (le == null)
             return;
 
-        VocabularyEditorActivity.menu_types current_type = ((VocabularyEditorActivity)getActivity()).get_menu();
-        if (current_type == VocabularyEditorActivity.menu_types.LESSON_SELECTION) {
+        VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
+        if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD))
+            return;
+
+        if (state == VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTION) {
             if (!current_lesson_selection.contains(le)) {
                 current_lesson_selection.add(le);
                 v.setBackgroundColor(0xFF777777);
@@ -403,7 +419,9 @@ public class EditLessonsFragment extends Fragment {
 
             /*TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
             ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();*/
-        } else if (current_type == VocabularyEditorActivity.menu_types.VOCABULARY_ASSIGN_LESSON) {
+        } else if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE)) {
             if (!current_lesson_assignment.containsKey(le.label)) {
                 VocabularyEditorActivity.LessonAssignment assign = new VocabularyEditorActivity.LessonAssignment();
                 assign.partiable = false;
@@ -432,6 +450,7 @@ public class EditLessonsFragment extends Fragment {
                         break;
                 }
             }
+            ((VocabularyEditorActivity)getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED);
         } else {
             if (current_lesson_selection.contains(le)) {
                 current_lesson_selection.remove(le);
@@ -443,7 +462,7 @@ public class EditLessonsFragment extends Fragment {
         }
 
         v.invalidate();
-        change_menu();
+        update_state();
     }
 
     @SuppressLint({"NewApi"})
@@ -458,7 +477,7 @@ public class EditLessonsFragment extends Fragment {
 
     public void clone_selection() {
         if (current_lesson_selection.size() != 1) {
-            change_menu();
+            update_state();
             return;
         }
         final Lesson le = current_lesson_selection.get(0);
@@ -489,17 +508,21 @@ public class EditLessonsFragment extends Fragment {
             }
         }).start();
         current_lesson_selection.clear();
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        change_menu();
+        redraw_list();
+        update_state();
     }
 
-    HashMap<String, VocabularyEditorActivity.LessonAssignment> current_lesson_assignment = null;
+    HashMap<String, VocabularyEditorActivity.LessonAssignment> current_lesson_assignment = new HashMap<String, VocabularyEditorActivity.LessonAssignment>();
 
     public void start_assigning_lesson(HashMap<String, VocabularyEditorActivity.LessonAssignment> current_assignment) {
         current_lesson_assignment = current_assignment;
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        redraw_list();
+    }
+
+    public void clear_selection() {
+        current_lesson_assignment.clear();
+        current_lesson_selection.clear();
+        redraw_list();
     }
 
     public HashMap<String, VocabularyEditorActivity.LessonAssignment> get_assignment() {
@@ -508,7 +531,7 @@ public class EditLessonsFragment extends Fragment {
 
     public void del_selection() {
         if (current_lesson_selection.size() == 0) {
-            change_menu();
+            update_state();
             return;
         }
         final ArrayList<Lesson> to_delete = new ArrayList<Lesson>(current_lesson_selection);
@@ -520,14 +543,13 @@ public class EditLessonsFragment extends Fragment {
             }
         }).start();
         current_lesson_selection.clear();
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        change_menu();
+        redraw_list();
+        update_state();
     }
 
     public void rename_selection() {
         if (current_lesson_selection.size() != 1) {
-            change_menu();
+            update_state();
             return;
         }
         final Lesson le = current_lesson_selection.get(0);
@@ -575,9 +597,8 @@ public class EditLessonsFragment extends Fragment {
                 }).start();
 
                 current_lesson_selection.clear();
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
-                change_menu();
+                redraw_list();
+                update_state();
 
                 dialog.dismiss();
             }
@@ -593,7 +614,7 @@ public class EditLessonsFragment extends Fragment {
 
     public void merge_selection() {
         if (current_lesson_selection.size() < 1) {
-            change_menu();
+            update_state();
             return;
         }
 
@@ -635,19 +656,18 @@ public class EditLessonsFragment extends Fragment {
         }).start();
 
         current_lesson_selection.clear();
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        change_menu();
+        redraw_list();
+        update_state();
     }
 
     public void list_selection() {
-        if (current_lesson_selection.size() > 1) {
-            change_menu();
+        if (current_lesson_selection.size() == 0) {
+            update_state();
             return;
         }
-        String to_list="";
-        if (current_lesson_selection.size() > 0)
-            to_list = current_lesson_selection.get(0).label;
+        ArrayList<String> to_list=new ArrayList<String>();
+        for (Lesson l : current_lesson_selection)
+            to_list.add(l.label);
 
         ((VocabularyEditorActivity)getActivity()).open_lesson_list(to_list);
     }
@@ -656,19 +676,17 @@ public class EditLessonsFragment extends Fragment {
         current_lesson_selection.clear();
         for (Lesson le : current_lessons)
             current_lesson_selection.add(le);
-
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        redraw_list();
     }
 
     public void set_select_none() {
         current_lesson_selection.clear();
-
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        redraw_list();
     }
 
     public void redraw_list() {
+        if (getView() == null)
+            return;
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
     }

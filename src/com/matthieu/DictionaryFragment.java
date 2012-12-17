@@ -4,6 +4,7 @@
 
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
@@ -116,108 +117,110 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if (currentDB == null)
                 return null;
 
-            if ((msg_query.equals(last_query)) && (msg_mode == last_mode) && (msg_ref == last_use_ref) &&
-                    (current_cursor != null)) {
-                Log.d(TAG, "Already had the results");
-                // just to make sure it's loaded....
-                current_cursor.getCount();
-                current_cursor.moveToFirst();
-                return current_cursor;
-            }
-
-            last_query = msg_query;
-            last_mode = msg_mode;
-            last_use_ref = msg_ref;
-            publishProgress(null);
-
-
-            if (msg_query.length()==0) {
-                result_cursor =null;
-            }
-            else {
-                if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
-                    ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
-
-                    if (elems == null) {
-                        return new MessageCursor("Cannot understand this query");
-                    }
-
-                    boolean all_chinese=true;
-                    if (elems != null)
-                        for (HanziDB.StringElement e : elems) {
-                            if (e.type != HanziDB.StringElement.type_t.CHINESE)
-                                all_chinese=false;
-                        }
-
-                    if (elems.size()==1) {
-                        switch(elems.get(0).type) {
-                            case CHINESE:
-                                result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
-                                break;
-                            case PINYIN_WITH_TONE:
-                            case PINYIN_WITHOUT_TONE:
-                                result_cursor = currentDB.getWordsAsSequence(elems, true);
-                                break;
-                            case INCOMPLETE_PINYIN:
-                            default:
-                                result_cursor = null;
-                                break;
-                        }
-                    } else if (elems.size()==2) {
-                        switch(elems.get(0).type) {
-                            case CHINESE:
-                            case PINYIN_WITH_TONE:
-                                switch (elems.get(1).type) {
-                                    case CHINESE:
-                                    case PINYIN_WITH_TONE:
-                                        result_cursor = currentDB.getWordsWithSequence(elems, true);
-                                        break;
-                                    case PINYIN_WITHOUT_TONE:
-                                    case INCOMPLETE_PINYIN:
-                                        result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
-                                        break;
-                                    default:
-                                        result_cursor=null;
-                                }
-                                break;
-                            case PINYIN_WITHOUT_TONE:
-                                if (elems.get(1).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
-                                    result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
-                                else
-                                    result_cursor = currentDB.getWordsAsSequence(elems, true);
-                                break;
-                            default:
-                                result_cursor=null;
-                                break;
-                        }
-                    } else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
-                        result_cursor = currentDB.getDecomposedParts(elems, 4, true);
-                    else
-                        result_cursor = currentDB.getWordsWithSequence(elems, true);
+            synchronized (DictionaryFragment.this) {
+                if ((msg_query.trim().equals(last_query.trim())) && (msg_mode == last_mode) && (msg_ref == last_use_ref) &&
+                        (current_cursor != null)) {
+                    Log.d(TAG, "Already had the results");
+                    // just to make sure it's loaded....
+                    current_cursor.getCount();
+                    current_cursor.moveToFirst();
+                    return current_cursor;
                 }
-                else if (msg_mode == ENGLISH_TO_CHINESE_MODE) {
-                    if (msg_query.length()<2)
-                        result_cursor=null;
-                    else if (msg_query.length()<3)
-                        result_cursor = currentDB.getStartingCTranslations(msg_query);
-                    else
-                        result_cursor = currentDB.getCTranslations(msg_query);
-                }
-                else
+
+                last_query = msg_query;
+                last_mode = msg_mode;
+                last_use_ref = msg_ref;
+                publishProgress(null);
+
+
+                if (msg_query.length()==0) {
                     result_cursor =null;
+                }
+                else {
+                    if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
+                        ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
+
+                        if (elems == null) {
+                            return new MessageCursor("Cannot understand this query");
+                        }
+
+                        boolean all_chinese=true;
+                        if (elems != null)
+                            for (HanziDB.StringElement e : elems) {
+                                if (e.type != HanziDB.StringElement.type_t.CHINESE)
+                                    all_chinese=false;
+                            }
+
+                        if (elems.size()==1) {
+                            switch(elems.get(0).type) {
+                                case CHINESE:
+                                    result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
+                                    break;
+                                case PINYIN_WITH_TONE:
+                                case PINYIN_WITHOUT_TONE:
+                                    result_cursor = currentDB.getWordsAsSequence(elems, true);
+                                    break;
+                                case INCOMPLETE_PINYIN:
+                                default:
+                                    result_cursor = null;
+                                    break;
+                            }
+                        } else if (elems.size()==2) {
+                            switch(elems.get(0).type) {
+                                case CHINESE:
+                                case PINYIN_WITH_TONE:
+                                    switch (elems.get(1).type) {
+                                        case CHINESE:
+                                        case PINYIN_WITH_TONE:
+                                            result_cursor = currentDB.getWordsWithSequence(elems, true);
+                                            break;
+                                        case PINYIN_WITHOUT_TONE:
+                                        case INCOMPLETE_PINYIN:
+                                            result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
+                                            break;
+                                        default:
+                                            result_cursor=null;
+                                    }
+                                    break;
+                                case PINYIN_WITHOUT_TONE:
+                                    if (elems.get(1).type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)
+                                        result_cursor = currentDB.getWordsStartingWithSequence(elems, true);
+                                    else
+                                        result_cursor = currentDB.getWordsAsSequence(elems, true);
+                                    break;
+                                default:
+                                    result_cursor=null;
+                                    break;
+                            }
+                        } else if ((all_chinese) && (elems.size() >= 3) && (currentDB.getTranslations(msg_query).size()==0))
+                            result_cursor = currentDB.getDecomposedParts(elems, 4, true);
+                        else
+                            result_cursor = currentDB.getWordsWithSequence(elems, true);
+                    }
+                    else if (msg_mode == ENGLISH_TO_CHINESE_MODE) {
+                        if (msg_query.trim().length()<2)
+                            result_cursor=null;
+                        else if (msg_query.trim().length()<3)
+                            result_cursor = currentDB.getStartingCTranslations(msg_query.trim());
+                        else
+                            result_cursor = currentDB.getCTranslations(msg_query.trim());
+                    }
+                    else
+                        result_cursor =null;
+                }
+
+                if (is_cancelled)
+                    return null;
+
+                // Just to make sure the query actually happens in this thread (and not the UI thread)
+                if ((result_cursor != null) && (!result_cursor.isClosed())) {
+                    result_cursor.getCount();
+                    result_cursor.moveToFirst();
+                }
+
+                if (isCancelled() && result_cursor != null)
+                    result_cursor.close();
             }
-
-            if (is_cancelled)
-                return null;
-
-            // Just to make sure the query actually happens in this thread (and not the UI thread)
-            if ((result_cursor != null) && (!result_cursor.isClosed())) {
-                result_cursor.getCount();
-                result_cursor.moveToFirst();
-            }
-
-            if (isCancelled() && result_cursor != null)
-                result_cursor.close();
 
             return result_cursor;
         }
@@ -230,8 +233,11 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         @Override
         protected void onPostExecute(Cursor cursor) {
             publish_cursor(cursor);
-            if (getActivity()!=null)
-                ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
+            if ((getActivity()!=null) && (getView() != null)) {
+                EditText query = (EditText) getView().findViewById(R.id.dict_query);
+                if ((mode == last_mode) && (last_query.trim().equals(query.getText().toString().trim())))
+                    ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
+            }
         }
 
         private void publish_cursor(Cursor cur) {
@@ -243,6 +249,11 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             EditText query = (EditText) getView().findViewById(R.id.dict_query);
             if (query == null)
                 return;
+
+            if ((cur != null) && ((mode!=last_mode) || (!last_query.trim().equals(query.getText().toString().trim()))))
+                return;
+
+            Log.d(TAG, "cursor is not null, last_query is "+last_query+", and current search is "+query.getText());
 
             ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(cur==null && !query.getText().toString().equals(""));
 
@@ -259,6 +270,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
     }
 
+    @SuppressLint({"NewApi"})
     private void start_new_query(int mode, String query) {
         if (update_task != null) {
             update_task.cancel();
