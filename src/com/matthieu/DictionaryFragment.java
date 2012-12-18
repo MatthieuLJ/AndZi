@@ -266,8 +266,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
             current_cursor = cur;
         }
-
-
     }
 
     @SuppressLint({"NewApi"})
@@ -324,8 +322,18 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         }
     }
 
+    public boolean has_search() {
+        View v = getView();
+        if (v == null)
+            return false;
+        EditText query = (EditText) v.findViewById(R.id.dict_query);
+        if (query == null)
+            return false;
+        return !query.getText().toString().equals("");
+    }
+
     public boolean is_dictionary_search() {
-        return use_ref;
+        return use_ref && (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
     }
 
     public boolean is_chinese_to_english() {

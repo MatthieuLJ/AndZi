@@ -12,7 +12,6 @@ import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.ViewConfiguration;
 import com.matthieu.widget.FileMountPoint;
 import com.matthieu.widget.ObjectSerializer;
 

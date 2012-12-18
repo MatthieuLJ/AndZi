@@ -35,7 +35,9 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (188):
+DONE (190):
+* In reference, do not go back to the search page if there is no search
+* In reference, should not be able to select Dictionary when it is not available
 * Lesson list and lesson content list get reloaded at every rotation (and selection is lost)
 * Trim when doing english dictionary search
 * Dictionary seem to stop when an "intermediary" query is finished
