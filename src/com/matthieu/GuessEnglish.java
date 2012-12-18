@@ -3,25 +3,27 @@
  */
 package com.matthieu;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
-public class GuessEnglish extends TestFragment {
+public class GuessEnglish extends Test {
+    private String current_test;
     private Vocabulary solution=null;
 
     private final String TAG="GuessEnglish";
 
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
-        super.set_hanzi_to_test(hanzi);
-
         ArrayList<Vocabulary> voc = myDB.getTranslations(hanzi);
         if ((voc.size() == 0) || (voc.size() > 1)) { // one case has multiple pinyins...
             return false;
@@ -55,41 +57,50 @@ public class GuessEnglish extends TestFragment {
         if (solution == null) {
             return false;
         }
+        current_test = hanzi;
         Log.d(TAG, "GuessEnglish OK");
 
         return true;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.guess_english, container, false);
-    }
+    View get_view() {
+        LayoutInflater inflater = activity.getLayoutInflater();
+        View res = inflater.inflate(R.layout.guess_english, null);
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        update_test_view(getView());
-    }
-
-    @Override
-    public void update_test_view(View v) {
-        if (v==null)
-            return;
-
-        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
-        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        EditText guess = (EditText) res.findViewById(R.id.english_test_guess);
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
+                    check_answer();
                 return true;
             }
         });
-        word_guess.setText("");
-        word_guess.requestFocus();
+        guess.setText("");
+        /*guess.requestFocus();
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        TextView text = (TextView) v.findViewById(R.id.guess_english_word_voc);
+        TextView text = (TextView) res.findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
-        v.invalidate();
+
+        Button submit_answer = (Button) res.findViewById(R.id.guess_english_ok);
+        submit_answer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                check_answer();
+            }
+        });
+
+        return res;
+    }
+
+    @Override
+    public void kill_view(ViewGroup v) {
+        EditText guess = (EditText) v.findViewById(R.id.english_test_guess);
+        guess.setOnEditorActionListener(null);
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     protected int check_guess(String guess) {
@@ -120,8 +131,8 @@ public class GuessEnglish extends TestFragment {
         return INCORRECT;
     }
 
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
+    public void check_answer() {
+        EditText word_guess = (EditText) activity.findViewById(R.id.english_test_guess);
         if (word_guess==null)
             return;
 
@@ -138,14 +149,14 @@ public class GuessEnglish extends TestFragment {
                 Bundle bundle = new Bundle();
                 bundle.putInt("good", correctness);
                 bundle.putString("answer", guess);
-                bundle.putString("question", hanzi);
+                bundle.putString("question", current_test);
                 solution_fragment.setArguments(bundle);
-                ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
     }
 
-    public static class GuessEnglishResultFragment extends SolutionFragment {
+    public static class GuessEnglishResultFragment extends Test.SolutionFragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             return show_details(inflater, container, true);

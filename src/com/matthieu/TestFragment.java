@@ -6,166 +6,214 @@ package com.matthieu;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import java.util.HashMap;
 
-public abstract class TestFragment extends Fragment {
-    protected String hanzi;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
-    protected static HanziDB myDB=null;
-    protected static HanziDB refDB=null;
+public class TestFragment extends Fragment {
+    private static ArrayList<Test> tests;
+    static {
+        tests = new ArrayList<Test>(Arrays.asList(
+                new GuessMissingChar(), new GuessContaining(), new GuessPinyin(), new GuessTone(), // characters
+                new GuessChineseWord(), new GuessEnglish() // words
+        ));
+    }
+    private static final int num_char_tests = 4;
 
-    private static final String TAG="TestFragment";
+    private Test current_test_type;
+    private String current_test_hanzi;
+    private int test_index;
 
-    final static public int CORRECT=1;
-    final static public int INCORRECT=2;
-    final static public int OTHER=3;
+    private HanziDB myDB;
+
+    ArrayList<String> hanzis_to_test = new ArrayList<String>();
+    boolean table_filled=false;
+    private boolean continue_with_more_chars=false;
+
+    final static int size_limit = 30;
+    final static int size_threshold = 5;
+
+    private static final String TAG = "TestFragment";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+        //setRetainInstance(true);
     }
 
-    public void set_activity(Activity activity) {
-        myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
-        refDB = ((AndZiApplication) activity.getApplication()).getRefDB();
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        for (Test t:tests)
+            t.attach(activity);
+        myDB = ((AndZiApplication)activity.getApplication()).getMyDB();
     }
 
-    protected boolean set_hanzi_to_test(String hanzi) {
-        this.hanzi = hanzi;
-        return true;
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return start_test(inflater, container, savedInstanceState);
     }
 
-    abstract public void handle_ok(View v);
-    abstract public void update_test_view(View v);
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("test_index", test_index);
+        outState.putString("test_hanzi", current_test_hanzi);
+    }
 
-    public abstract static class SolutionFragment extends Fragment {
-        int good;
-        String question, answer;
-
-        protected void get_arguments() {
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                good = bundle.getInt("good");
-                answer = bundle.getString("answer");
-                question = bundle.getString("question");
-            }
+    public void new_test() {
+        if (getView() == null)
+            return;
+        ViewGroup container = (ViewGroup) getView();
+        if (current_test_type != null) {
+            current_test_type.kill_view(container);
         }
+        if (getActivity() == null)
+            return;
+        LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            get_arguments();
-            Thread updater = new Thread() {
-                @Override
-                public void run() {
-                    //Log.d(TAG, "Updating scores !");
-                    update_score();
-                    final TestActivity act = (TestActivity) getActivity();
-                    if (act == null)
-                        return;
-                    act.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            act.update_stats();
-                        }
-                    });
+        View new_test_view = start_test(inflater, container, null);
+        container.removeAllViews();
+        container.addView(new_test_view);
+    }
+
+    private void fill_hanzis_to_test() {
+        synchronized (TestFragment.this) {
+            hanzis_to_test = myDB.getAllToStudy(size_limit);
+            if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
+                hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
+            table_filled=true;
+        }
+    }
+
+    private void trim_hanzis_to_test(String hanzi) {
+        synchronized (TestFragment.this) {
+            for (int offset=0; offset<hanzi.length();) {
+                String c = hanzi.substring(offset, offset + Character.charCount(hanzi.codePointAt(offset)));
+                for (int i=0; i<hanzis_to_test.size(); i++) {
+                    String h = hanzis_to_test.get(i);
+                    if (h.contains(c)) {
+                        hanzis_to_test.remove(i);
+                        i--;
+                    }
                 }
-            };
-            updater.start();
+                offset += Character.charCount(hanzi.codePointAt(offset));
+            }
+        }
+        if ((hanzis_to_test.size() < size_threshold) && (!table_filled)) {
+            fill_hanzis_to_test();
+            trim_hanzis_to_test(hanzi);
+        }
+    }
+
+    private void set_next_char_to_study() {
+        if ((hanzis_to_test.size()==0) && (table_filled)) {
+            current_test_hanzi =null;
+        }
+        else if (hanzis_to_test.size()==0) {
+            fill_hanzis_to_test();
+            set_next_char_to_study();
+        }
+        else {
+            current_test_hanzi = hanzis_to_test.remove((int)(hanzis_to_test.size()*Math.pow(Math.random(),2)));
+            Log.d(TAG, "Will study " + current_test_hanzi);
+        }
+    }
+
+    public void resume_test() {
+        if (current_test_type == null)
+            new_test();
+    }
+
+    public View start_test(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (savedInstanceState == null)
+            set_next_char_to_study();
+        else
+            current_test_hanzi = savedInstanceState.getString("test_hanzi");
+
+        if (current_test_hanzi == null) {
+            return done_testing(myDB.getNumChars()==0, inflater, container);
+        }
+        int min_test, max_test;
+        if (current_test_hanzi.length()==1) {
+            min_test=0;
+            if (myDB.getTranslations(current_test_hanzi).size()>0)
+                max_test = tests.size();
+            else
+                max_test = num_char_tests;
+        } else {
+            min_test = num_char_tests;
+            max_test = tests.size();
         }
 
-        abstract public void update_score();
-
-        protected View show_details(LayoutInflater inflater, ViewGroup container, boolean show_accept) {
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-
-            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
-            if ((good == INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
-                TextView bad_guess_text = new TextView(getActivity());
-                bad_guess_text.setText("You guessed: "+answer);
-                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-                bad_guess_text.setTextColor(0xffdd0000);
-                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
-                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                FrameLayout bad_guess_details = new FrameLayout(getActivity());
-                bad_guess_details.setId(R.id.test_bad_guess);
-                DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) getActivity());
-                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
-                if (show_accept) {
-                    (res.findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
-                    (res.findViewById(R.id.test_result_accept)).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            handle_good(view);
-                        }
-                    });
+        if (savedInstanceState == null) {
+            test_index = min_test + (int)Math.floor(Math.random()*(max_test-min_test));
+            current_test_type = null;
+            for (; ; test_index = ((test_index+1) % (max_test - min_test)) + min_test) {
+                if (tests.get(test_index).set_hanzi_to_test(current_test_hanzi)) {
+                    break;
                 }
             }
-
-            return res;
+        } else {
+            test_index = savedInstanceState.getInt("test_index");
+            tests.get(test_index).set_hanzi_to_test(current_test_hanzi);
         }
+        current_test_type = tests.get(test_index);
 
-        protected void hide_details(ViewGroup container) {
-            ViewGroup test_results = (ViewGroup) container.findViewById(R.id.test_results);
-            if (test_results != null)
-                DetailsFragment.kill_detail_view(test_results);
-            ViewGroup test_bad_guess = (ViewGroup) container.findViewById(R.id.test_bad_guess);
-            if (test_bad_guess != null)
-                DetailsFragment.kill_detail_view(test_bad_guess);
-        }
-
-        public void handle_good(View v) {
-            v.setEnabled(false);
-            Thread updater = new Thread() {
-                @Override
-                public void run() {
-                    restore_score();
-                    good = CORRECT;
-                    update_score();
-                    final TestActivity act = (TestActivity) getActivity();
-                    if (act == null)
-                        return;
-                    act.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            act.update_stats();
-                        }
-                    });
-                }
-            };
-            updater.start();
-        }
-
-        protected class saved_score {
-            int box;
-            long time;
-            public saved_score(int b, long t) {
-                this.box = b;
-                this.time = t;
+        table_filled = false;
+        Thread filler = new Thread() {
+            @Override
+            public void run() {
+                trim_hanzis_to_test(current_test_hanzi);
             }
-        }
-        HashMap<String, saved_score> old_scores;
+        };
+        filler.start();
 
-        protected void restore_score() {
-            if (old_scores == null)
-                return;
-            for (String c : old_scores.keySet()) {
-                myDB.setBoxForChar(c, old_scores.get(c).box);
-                myDB.setExpirationTimeForChar(c, old_scores.get(c).time);
+        return current_test_type.get_view();
+    }
+
+
+    private View done_testing(boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
+        final View res = inflater.inflate(R.layout.test_done, container, false);
+        TextView message = (TextView) res.findViewById(R.id.test_done_text);
+        if (empty_db) {
+            message.setText(R.string.test_empty_db);
+        }
+        else {
+            message.setText(R.string.test_mastering);
+        }
+
+        Button OK_button = (Button) res.findViewById(R.id.ok);
+        OK_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                continue_with_more_chars = true;
+                table_filled = false;
+                start_test(inflater, container, null);
             }
-        }
+        });
 
+        Button Cancel_button = (Button) res.findViewById(R.id.cancel);
+        if (empty_db)
+            Cancel_button.setVisibility(View.GONE);
+        Cancel_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getActivity().finish();
+            }
+        });
+
+        return res;
     }
 }

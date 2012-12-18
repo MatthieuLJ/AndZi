@@ -3,18 +3,20 @@
  */
 package com.matthieu;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GuessChineseWord extends TestFragment {
+public class GuessChineseWord extends Test {
+    private String current_test;
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
     private boolean showing_more_voc;
@@ -22,8 +24,7 @@ public class GuessChineseWord extends TestFragment {
     private final String TAG="GuessChineseWord";
 
     @Override
-    protected boolean set_hanzi_to_test(String hanzi) {
-        super.set_hanzi_to_test(hanzi);
+    public boolean set_hanzi_to_test(String hanzi) {
         solution=null;
 
         if (hanzi.codePointCount(0, hanzi.length())>3) {
@@ -36,6 +37,7 @@ public class GuessChineseWord extends TestFragment {
             return false;
         }
         solution = voc.get((int) (voc.size()*Math.random()));
+        current_test = hanzi;
 
         translations = solution.english;
         if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
@@ -51,33 +53,24 @@ public class GuessChineseWord extends TestFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.guess_chinese_word, container, false);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        update_test_view(getView());
-    }
-
-    @Override
-    public void update_test_view(View v) {
-        if (v==null)
-            return;
+    View get_view() {
+        LayoutInflater inflater = activity.getLayoutInflater();
+        View res = inflater.inflate(R.layout.guess_chinese_word, null);
 
         ArrayList<String> bare_translations = new ArrayList<String>();
 
-        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
-        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        EditText guess = (EditText) res.findViewById(R.id.chinese_word_test_guess);
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
+                    check_answer();
                 return true;
             }
         });
-        word_guess.setText("");
-        word_guess.requestFocus();
+        guess.setText("");
+        /*guess.requestFocus();
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
         for (String s : translations) {
             bare_translations.add(HanziDB.bare_translation(s));
@@ -87,7 +80,7 @@ public class GuessChineseWord extends TestFragment {
                 more_translations.remove(j);
         }
 
-        TextView text = (TextView) v.findViewById(R.id.guess_chinese_word_voc);
+        TextView text = (TextView) res.findViewById(R.id.guess_chinese_word_voc);
         text.setText("");
         for (int i=0; i<translations.size(); i++) {
             text.setText(text.getText()+translations.get(i));
@@ -95,14 +88,14 @@ public class GuessChineseWord extends TestFragment {
                 text.setText(text.getText()+"\n");
         }
         if (!showing_more_voc) {
-            TextView more_text = (TextView) v.findViewById(R.id.guess_chinese_word_more_voc);
+            TextView more_text = (TextView) res.findViewById(R.id.guess_chinese_word_more_voc);
             more_text.setText("");
 
-            ScrollView scroll = (ScrollView) v.findViewById(R.id.guess_chinese_word_more_voc_scroll);
+            ScrollView scroll = (ScrollView) res.findViewById(R.id.guess_chinese_word_more_voc_scroll);
             scroll.setVisibility(View.GONE);
 
-            Button more = (Button) v.findViewById(R.id.guess_chinese_word_more_voc_button);
-            View more_spacer = v.findViewById(R.id.guess_chinese_word_more_spacer);
+            Button more = (Button) res.findViewById(R.id.guess_chinese_word_more_voc_button);
+            View more_spacer = res.findViewById(R.id.guess_chinese_word_more_spacer);
             if (more_translations.size() == 0) {
                 more.setVisibility(View.GONE);
                 more_spacer.setVisibility(View.GONE);
@@ -121,27 +114,43 @@ public class GuessChineseWord extends TestFragment {
         else {
             more_voc(null);
         }
-        
+
         previous_guess = new ArrayList<String>();
-        TextView previous = (TextView) v.findViewById(R.id.guess_chinese_word_previous_guess);
+        TextView previous = (TextView) res.findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
 
-        EditText guess = (EditText) v.findViewById(R.id.test_guess);
         StringBuffer hint = new StringBuffer();
         for (int i=0; i<solution.chinese.codePointCount(0, solution.chinese.length()); i++) {
             hint.append("_ ");
         }
         guess.setHint(hint.toString());
-        v.invalidate();
+
+        Button submit_answer = (Button) res.findViewById(R.id.guess_chinese_word_ok);
+        submit_answer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                check_answer();
+            }
+        });
+
+        return res;
+    }
+
+    @Override
+    public void kill_view(ViewGroup v) {
+        EditText guess = (EditText) v.findViewById(R.id.chinese_word_test_guess);
+        guess.setOnEditorActionListener(null);
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     protected int check_guess(String guess) {
         if (guess.equals(solution.chinese)) {
             return CORRECT;
         }
-        if (guess.equals(""))
+        if (guess.equals("")) {
             return INCORRECT;
-
+        }
         if ((solution.chinese.contains(guess)) || (guess.contains(solution.chinese))) {
             return OTHER;
         }
@@ -166,23 +175,23 @@ public class GuessChineseWord extends TestFragment {
     }
 
     public void more_voc(@Nullable View v) {
-        Button more = (Button) getView().findViewById(R.id.guess_chinese_word_more_voc_button);
+        Button more = (Button) activity.findViewById(R.id.guess_chinese_word_more_voc_button);
         more.setVisibility(View.GONE);
 
-        TextView more_text = (TextView) getView().findViewById(R.id.guess_chinese_word_more_voc);
+        TextView more_text = (TextView) activity.findViewById(R.id.guess_chinese_word_more_voc);
         more_text.setText("");
         for (int i=0; i<more_translations.size(); i++) {
             more_text.setText(more_text.getText()+more_translations.get(i));
             if (i<more_translations.size()-1)
                 more_text.setText(more_text.getText()+"\n");
         }
-        ScrollView scroll = (ScrollView) getView().findViewById(R.id.guess_chinese_word_more_voc_scroll);
+        ScrollView scroll = (ScrollView) activity.findViewById(R.id.guess_chinese_word_more_voc_scroll);
         scroll.setVisibility(View.VISIBLE);
         showing_more_voc=true;
     }
 
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
+    void check_answer() {
+        EditText word_guess = (EditText) activity.findViewById(R.id.chinese_word_test_guess);
         if (word_guess==null)
             return;
 
@@ -193,7 +202,7 @@ public class GuessChineseWord extends TestFragment {
             case OTHER:
                 if (!previous_guess.contains(guess)) {
                     previous_guess.add(guess);
-                    TextView previous = (TextView) getView().findViewById(R.id.guess_chinese_word_previous_guess);
+                    TextView previous = (TextView) activity.findViewById(R.id.guess_chinese_word_previous_guess);
                     previous.setText("Previous try:\n");
                     for (int i=0; i<previous_guess.size(); i++) {
                         previous.setText(previous.getText() + previous_guess.get(i));
@@ -210,15 +219,15 @@ public class GuessChineseWord extends TestFragment {
                 Bundle bundle = new Bundle();
                 bundle.putInt("good", correctness);
                 bundle.putString("answer", guess);
-                bundle.putString("question", hanzi);
+                bundle.putString("question", current_test);
                 bundle.putStringArrayList("previous_guess", previous_guess);
                 solution_fragment.setArguments(bundle);
-                ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
     }
 
-    public static class GuessChineseWordResultFragment extends TestFragment.SolutionFragment {
+    public static class GuessChineseWordResultFragment extends Test.SolutionFragment {
         ArrayList<String> previous_guess;
 
         @Override

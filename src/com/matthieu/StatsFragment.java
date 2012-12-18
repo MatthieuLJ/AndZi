@@ -3,8 +3,10 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.*;
@@ -23,7 +25,6 @@ public class StatsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
     }
 
     @Override
@@ -82,6 +83,7 @@ public class StatsFragment extends Fragment {
         update_stats(getView());
     }
 
+    @SuppressLint({"NewApi"})
     public void update_stats(final View v) {
         if (v == null)
             return;
@@ -106,7 +108,7 @@ public class StatsFragment extends Fragment {
                 final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
                 if (graph == null)
                     return;
-                graph.update_graph();
+                graph.update_graph(true);
 
                 TextView tv;
 
@@ -124,7 +126,10 @@ public class StatsFragment extends Fragment {
             }
         };
 
-        stats_updater.execute((Void[]) null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            stats_updater.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            stats_updater.execute((Void[])null);
     }
 
     private void update_buttons(View v) {

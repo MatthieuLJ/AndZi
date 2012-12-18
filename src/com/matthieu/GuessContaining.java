@@ -3,17 +3,20 @@
  */
 package com.matthieu;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessContaining extends TestFragment {
+public class GuessContaining extends Test {
+    private String current_test;
     protected ArrayList<String> correct_answers=new ArrayList<String>();
     protected ArrayList<String> bad_answers=new ArrayList<String>();
     protected ArrayList<String> new_answers=new ArrayList<String>();
@@ -22,8 +25,6 @@ public class GuessContaining extends TestFragment {
 
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
-        super.set_hanzi_to_test(hanzi);
-
         ArrayList<Vocabulary> words = myDB.getWordsWithPinyin(hanzi);
         for (int i=words.size()-1; i>=0; i--) {
             Vocabulary w = words.get(i);
@@ -33,41 +34,50 @@ public class GuessContaining extends TestFragment {
         if (words.size() == 0) {
             return false;
         }
+        current_test = hanzi;
         Log.d(TAG, "GuessContaining OK");
 
         return true;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.guess_containing, container, false);
-    }
+    View get_view() {
+        LayoutInflater inflater = activity.getLayoutInflater();
+        View res = inflater.inflate(R.layout.guess_containing, null);
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        update_test_view(getView());
-    }
-
-    @Override
-    public void update_test_view(View v) {
-        if (v==null)
-            return;
-
-        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
-        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        EditText guess = (EditText) res.findViewById(R.id.containing_test_guess);
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
+                    check_answer();
                 return true;
             }
         });
-        word_guess.setText("");
-        word_guess.requestFocus();
+        guess.setText("");
+        /*guess.requestFocus();
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        TextView clue= (TextView) v.findViewById(R.id.guess_containing_chinese);
-        clue.setText(hanzi);
-        v.invalidate();
+        TextView clue= (TextView) res.findViewById(R.id.guess_containing_chinese);
+        clue.setText(current_test);
+
+        Button submit_answer = (Button) res.findViewById(R.id.guess_containing_ok);
+        submit_answer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                check_answer();
+            }
+        });
+
+        return res;
+    }
+
+    @Override
+    public void kill_view(ViewGroup v) {
+        EditText guess = (EditText) v.findViewById(R.id.containing_test_guess);
+        guess.setOnEditorActionListener(null);
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     protected int check_guess(String guess) {
@@ -81,7 +91,7 @@ public class GuessContaining extends TestFragment {
                 continue;
             Log.d(TAG, "Checking "+guesses[i]);
             guesses[i]=guesses[i].trim();
-            if (!guesses[i].contains(hanzi))
+            if (!guesses[i].contains(current_test))
                 continue;
             if (guesses[i].codePointCount(0, guesses[i].length())==1)
                 continue;
@@ -103,8 +113,8 @@ public class GuessContaining extends TestFragment {
         return res;
     }
 
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
+    public void check_answer() {
+        EditText word_guess = (EditText) activity.findViewById(R.id.containing_test_guess);
         if (word_guess==null)
             return;
 
@@ -115,15 +125,15 @@ public class GuessContaining extends TestFragment {
         Bundle bundle = new Bundle();
         bundle.putInt("good", correctness);
         bundle.putString("answer", guess);
-        bundle.putString("question", hanzi);
+        bundle.putString("question", current_test);
         bundle.putStringArrayList("correct", correct_answers);
         bundle.putStringArrayList("bad", bad_answers);
         bundle.putStringArrayList("new", new_answers);
         solution_fragment.setArguments(bundle);
-        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
     }
 
-    public static class GuessContainingResultFragment extends TestFragment.SolutionFragment {
+    public static class GuessContainingResultFragment extends Test.SolutionFragment {
         ArrayList<String> correct_answers, bad_answers, new_answers;
 
         @Override

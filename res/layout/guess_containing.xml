@@ -40,7 +40,7 @@
             android:orientation="horizontal"
             >
         <EditText
-                android:id="@+id/test_guess"
+                android:id="@+id/containing_test_guess"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
@@ -50,11 +50,11 @@
                 android:imeOptions="actionDone"
                 />
         <Button
+                android:id="@+id/guess_containing_ok"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/ok"
-                android:onClick="handle_ok"/>
+                android:text="@string/ok"/>
     </LinearLayout>
     <View
             android:layout_height="0dp"

@@ -5,9 +5,6 @@ package com.matthieu.widget;
 
 import android.content.Context;
 import android.graphics.*;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -59,19 +56,22 @@ public class ProgressGraph extends View {
 
     private class update_delayer extends Thread {
         range query;
+        boolean force;
 
-        public update_delayer(range query) {
+        public update_delayer(range query, boolean force) {
             this.query = query;
+            this.force = force;
         }
         @Override
         public void run() {
-            if ((query.date_min != range_date_min) | (query.date_max != range_date_max) || (query.zoom != current_zoom))
+            if (!force && ((query.date_min != range_date_min) || (query.date_max != range_date_max) || (query.zoom != current_zoom)))
                 return;
 
             synchronized (ProgressGraph.this) {
                 if (((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) &&
-                    ((current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
+                    (force || (current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
                     ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
+                    recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
                         current_data.add(recent_data);
@@ -129,7 +129,7 @@ public class ProgressGraph extends View {
             range_date_max=-1;
             range_date_min=-1;
         }
-        update_graph();
+        update_graph(false);
     }
 
     private int current_zoom=0; // the power of 2, so 0 is normal zoom (show everything), 1 is 2x, 2 is 4x...
@@ -148,7 +148,7 @@ public class ProgressGraph extends View {
             if (current_offset_x>0)
                 // stay centered
                 current_offset_x=2*current_offset_x+(getMeasuredWidth()-left_size)/2;
-            update_graph();
+            update_graph(false);
         }
     }
     public boolean can_zoom_out() {
@@ -160,7 +160,7 @@ public class ProgressGraph extends View {
             if (current_offset_x>0)
                 // stay centered
                 current_offset_x=Math.max(-right_size,current_offset_x/2-(getMeasuredWidth()-left_size)/4);
-            update_graph();
+            update_graph(false);
         }
     }
 
@@ -191,19 +191,19 @@ public class ProgressGraph extends View {
                 if (current_offset_x > max_offset_x)
                     current_offset_x = max_offset_x;
                 finger_down=true;
-                update_graph();
+                update_graph(false);
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 finger_down=false;
-                update_graph();
+                update_graph(false);
                 break;
 
         }
         return true;
     }
 
-    public void update_graph() {
+    public void update_graph(boolean force) {
         if (getMeasuredWidth()==0)
             return;
 
@@ -220,7 +220,7 @@ public class ProgressGraph extends View {
         new_query.date_max = range_date_max;
         new_query.zoom = current_zoom;
 
-        new update_delayer(new_query).start();
+        new update_delayer(new_query, force).start();
     }
 
     private double log_scale(double y, double max) {

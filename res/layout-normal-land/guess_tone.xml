@@ -182,10 +182,9 @@
                 android:layout_weight="1"/>
 
         <Button
-                android:id="@+id/tone_tester_submit"
+                android:id="@+id/guess_tone_ok"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
-                android:text="@string/ok"
-                android:onClick="handle_ok"/>
+                android:text="@string/ok"/>
     </LinearLayout>
 </android.gesture.GestureOverlayView>
