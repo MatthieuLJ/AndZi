@@ -16,8 +16,8 @@ public class ProgressDB extends SQLiteOpenHelper {
 
     static public class ProgressData {
         public long date=0;
-        public int num_chars_in_box[]={0,0,0,0,0};
-        public int num_chars_expired_in_box[]={0,0,0,0,0};
+        public int num_in_box[]={0,0,0,0,0};
+        public int num_expired_in_box[]={0,0,0,0,0};
     }
 
     private static final String TAG="ProgressDB";
@@ -176,15 +176,15 @@ public class ProgressDB extends SQLiteOpenHelper {
     public void add_data(ProgressData data) {
         ContentValues cv = new ContentValues();
         cv.put("date", data.date);
-        cv.put("total_box_1", data.num_chars_in_box[0]);
-        cv.put("total_box_2", data.num_chars_in_box[1]);
-        cv.put("total_box_3", data.num_chars_in_box[2]);
-        cv.put("total_box_4", data.num_chars_in_box[3]);
-        cv.put("total_box_5", data.num_chars_in_box[4]);
-        cv.put("expired_box_2", data.num_chars_expired_in_box[1]);
-        cv.put("expired_box_3", data.num_chars_expired_in_box[2]);
-        cv.put("expired_box_4", data.num_chars_expired_in_box[3]);
-        cv.put("expired_box_5", data.num_chars_expired_in_box[4]);
+        cv.put("total_box_1", data.num_in_box[0]);
+        cv.put("total_box_2", data.num_in_box[1]);
+        cv.put("total_box_3", data.num_in_box[2]);
+        cv.put("total_box_4", data.num_in_box[3]);
+        cv.put("total_box_5", data.num_in_box[4]);
+        cv.put("expired_box_2", data.num_expired_in_box[1]);
+        cv.put("expired_box_3", data.num_expired_in_box[2]);
+        cv.put("expired_box_4", data.num_expired_in_box[3]);
+        cv.put("expired_box_5", data.num_expired_in_box[4]);
         db.insert("progress", null, cv);
         check_to_distribute(db);
     }
@@ -206,16 +206,16 @@ public class ProgressDB extends SQLiteOpenHelper {
             do {
                 ProgressData data = new ProgressData();
                 data.date = cur.getLong(cur.getColumnIndex("date"));
-                data.num_chars_in_box[0]=cur.getInt(total_box_1_column);
-                data.num_chars_in_box[1]=cur.getInt(total_box_2_column);
-                data.num_chars_in_box[2]=cur.getInt(total_box_3_column);
-                data.num_chars_in_box[3]=cur.getInt(total_box_4_column);
-                data.num_chars_in_box[4]=cur.getInt(total_box_5_column);
-                data.num_chars_expired_in_box[0]=data.num_chars_in_box[0];
-                data.num_chars_expired_in_box[1]=cur.getInt(expired_box2_column);
-                data.num_chars_expired_in_box[2]=cur.getInt(expired_box3_column);
-                data.num_chars_expired_in_box[3]=cur.getInt(expired_box4_column);
-                data.num_chars_expired_in_box[4]=cur.getInt(expired_box5_column);
+                data.num_in_box[0]=cur.getInt(total_box_1_column);
+                data.num_in_box[1]=cur.getInt(total_box_2_column);
+                data.num_in_box[2]=cur.getInt(total_box_3_column);
+                data.num_in_box[3]=cur.getInt(total_box_4_column);
+                data.num_in_box[4]=cur.getInt(total_box_5_column);
+                data.num_expired_in_box[0]=data.num_in_box[0];
+                data.num_expired_in_box[1]=cur.getInt(expired_box2_column);
+                data.num_expired_in_box[2]=cur.getInt(expired_box3_column);
+                data.num_expired_in_box[3]=cur.getInt(expired_box4_column);
+                data.num_expired_in_box[4]=cur.getInt(expired_box5_column);
 
                 res.add(data);
             } while (cur.moveToNext());
@@ -237,16 +237,16 @@ public class ProgressDB extends SQLiteOpenHelper {
             if (cur.moveToFirst()) {
                 ProgressData data = new ProgressData();
                 data.date = cur.getLong(cur.getColumnIndex("date"));
-                data.num_chars_in_box[0]=cur.getInt(cur.getColumnIndex("total_box_1"));
-                data.num_chars_in_box[1]=cur.getInt(cur.getColumnIndex("total_box_2"));
-                data.num_chars_in_box[2]=cur.getInt(cur.getColumnIndex("total_box_3"));
-                data.num_chars_in_box[3]=cur.getInt(cur.getColumnIndex("total_box_4"));
-                data.num_chars_in_box[4]=cur.getInt(cur.getColumnIndex("total_box_5"));
-                data.num_chars_expired_in_box[0]=data.num_chars_in_box[0];
-                data.num_chars_expired_in_box[1]=cur.getInt(cur.getColumnIndex("expired_box_2"));
-                data.num_chars_expired_in_box[2]=cur.getInt(cur.getColumnIndex("expired_box_3"));
-                data.num_chars_expired_in_box[3]=cur.getInt(cur.getColumnIndex("expired_box_4"));
-                data.num_chars_expired_in_box[4]=cur.getInt(cur.getColumnIndex("expired_box_5"));
+                data.num_in_box[0]=cur.getInt(cur.getColumnIndex("total_box_1"));
+                data.num_in_box[1]=cur.getInt(cur.getColumnIndex("total_box_2"));
+                data.num_in_box[2]=cur.getInt(cur.getColumnIndex("total_box_3"));
+                data.num_in_box[3]=cur.getInt(cur.getColumnIndex("total_box_4"));
+                data.num_in_box[4]=cur.getInt(cur.getColumnIndex("total_box_5"));
+                data.num_expired_in_box[0]=data.num_in_box[0];
+                data.num_expired_in_box[1]=cur.getInt(cur.getColumnIndex("expired_box_2"));
+                data.num_expired_in_box[2]=cur.getInt(cur.getColumnIndex("expired_box_3"));
+                data.num_expired_in_box[3]=cur.getInt(cur.getColumnIndex("expired_box_4"));
+                data.num_expired_in_box[4]=cur.getInt(cur.getColumnIndex("expired_box_5"));
 
                 res.add(data);
             }
@@ -269,16 +269,16 @@ public class ProgressDB extends SQLiteOpenHelper {
             do {
                 ProgressData data = new ProgressData();
                 data.date = cur.getLong(cur.getColumnIndex("date"));
-                data.num_chars_in_box[0]=cur.getInt(total_box_1_column);
-                data.num_chars_in_box[1]=cur.getInt(total_box_2_column);
-                data.num_chars_in_box[2]=cur.getInt(total_box_3_column);
-                data.num_chars_in_box[3]=cur.getInt(total_box_4_column);
-                data.num_chars_in_box[4]=cur.getInt(total_box_5_column);
-                data.num_chars_expired_in_box[0]=data.num_chars_in_box[0];
-                data.num_chars_expired_in_box[1]=cur.getInt(expired_box2_column);
-                data.num_chars_expired_in_box[2]=cur.getInt(expired_box3_column);
-                data.num_chars_expired_in_box[3]=cur.getInt(expired_box4_column);
-                data.num_chars_expired_in_box[4]=cur.getInt(expired_box5_column);
+                data.num_in_box[0]=cur.getInt(total_box_1_column);
+                data.num_in_box[1]=cur.getInt(total_box_2_column);
+                data.num_in_box[2]=cur.getInt(total_box_3_column);
+                data.num_in_box[3]=cur.getInt(total_box_4_column);
+                data.num_in_box[4]=cur.getInt(total_box_5_column);
+                data.num_expired_in_box[0]=data.num_in_box[0];
+                data.num_expired_in_box[1]=cur.getInt(expired_box2_column);
+                data.num_expired_in_box[2]=cur.getInt(expired_box3_column);
+                data.num_expired_in_box[3]=cur.getInt(expired_box4_column);
+                data.num_expired_in_box[4]=cur.getInt(expired_box5_column);
 
                 res.add(data);
             } while (cur.moveToNext());
@@ -294,16 +294,16 @@ public class ProgressDB extends SQLiteOpenHelper {
             if (cur.moveToFirst()) {
                 ProgressData data = new ProgressData();
                 data.date = cur.getLong(cur.getColumnIndex("date"));
-                data.num_chars_in_box[0]=cur.getInt(cur.getColumnIndex("total_box_1"));
-                data.num_chars_in_box[1]=cur.getInt(cur.getColumnIndex("total_box_2"));
-                data.num_chars_in_box[2]=cur.getInt(cur.getColumnIndex("total_box_3"));
-                data.num_chars_in_box[3]=cur.getInt(cur.getColumnIndex("total_box_4"));
-                data.num_chars_in_box[4]=cur.getInt(cur.getColumnIndex("total_box_5"));
-                data.num_chars_expired_in_box[0]=data.num_chars_in_box[0];
-                data.num_chars_expired_in_box[1]=cur.getInt(cur.getColumnIndex("expired_box_2"));
-                data.num_chars_expired_in_box[2]=cur.getInt(cur.getColumnIndex("expired_box_3"));
-                data.num_chars_expired_in_box[3]=cur.getInt(cur.getColumnIndex("expired_box_4"));
-                data.num_chars_expired_in_box[4]=cur.getInt(cur.getColumnIndex("expired_box_5"));
+                data.num_in_box[0]=cur.getInt(cur.getColumnIndex("total_box_1"));
+                data.num_in_box[1]=cur.getInt(cur.getColumnIndex("total_box_2"));
+                data.num_in_box[2]=cur.getInt(cur.getColumnIndex("total_box_3"));
+                data.num_in_box[3]=cur.getInt(cur.getColumnIndex("total_box_4"));
+                data.num_in_box[4]=cur.getInt(cur.getColumnIndex("total_box_5"));
+                data.num_expired_in_box[0]=data.num_in_box[0];
+                data.num_expired_in_box[1]=cur.getInt(cur.getColumnIndex("expired_box_2"));
+                data.num_expired_in_box[2]=cur.getInt(cur.getColumnIndex("expired_box_3"));
+                data.num_expired_in_box[3]=cur.getInt(cur.getColumnIndex("expired_box_4"));
+                data.num_expired_in_box[4]=cur.getInt(cur.getColumnIndex("expired_box_5"));
 
                 res.add(data);
             }

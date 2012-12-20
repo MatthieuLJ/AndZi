@@ -5,8 +5,6 @@ import android.content.ContextWrapper;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 
-import java.util.concurrent.ExecutionException;
-
 public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivity> {
     public ProgressDBTest() {
         super("com.matthieu", EmptyActivity.class);
@@ -37,29 +35,29 @@ public class ProgressDBTest extends ActivityInstrumentationTestCase2<EmptyActivi
     public void testAddData() {
         assertTrue(target_db.get_data(0).size()==0);
         ProgressDB.ProgressData data = new ProgressDB.ProgressData();
-        data.num_chars_expired_in_box=new int[] {10,10,10,10,10};
-        data.num_chars_in_box=new int[] {20,20,20,20,20};
+        data.num_expired_in_box =new int[] {10,10,10,10,10};
+        data.num_in_box =new int[] {20,20,20,20,20};
         data.date=100000L;
         target_db.add_data(data);
         assertTrue(target_db.get_data(0).size()==1);
         assertTrue(target_db.get_data(0).get(0).date==100000L);
-        assertTrue(target_db.get_data(0).get(0).num_chars_in_box[1]==20);
-        assertTrue(target_db.get_data(0).get(0).num_chars_expired_in_box[1]==10);
+        assertTrue(target_db.get_data(0).get(0).num_in_box[1]==20);
+        assertTrue(target_db.get_data(0).get(0).num_expired_in_box[1]==10);
     }
 
     public void testSortedData() {
         assertTrue(target_db.get_data(0).size()==0);
         ProgressDB.ProgressData data = new ProgressDB.ProgressData();
-        data.num_chars_expired_in_box=new int[] {10,10,10,10,10};
-        data.num_chars_in_box=new int[] {20,20,20,20,20};
+        data.num_expired_in_box =new int[] {10,10,10,10,10};
+        data.num_in_box =new int[] {20,20,20,20,20};
         data.date=100000L;
         target_db.add_data(data);
-        data.num_chars_expired_in_box=new int[] {10,10,10,10,10};
-        data.num_chars_in_box=new int[] {30,30,30,30,30};
+        data.num_expired_in_box =new int[] {10,10,10,10,10};
+        data.num_in_box =new int[] {30,30,30,30,30};
         data.date=50000L;
         target_db.add_data(data);
-        data.num_chars_expired_in_box=new int[] {20,20,20,20,20};
-        data.num_chars_in_box=new int[] {30,30,30,30,30};
+        data.num_expired_in_box =new int[] {20,20,20,20,20};
+        data.num_in_box =new int[] {30,30,30,30,30};
         data.date=150000L;
         target_db.add_data(data);
         assertTrue(target_db.get_data(0).size()==3);
