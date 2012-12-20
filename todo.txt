@@ -1,6 +1,5 @@
-ONGOING (12):
+ONGOING (11):
 * Change stats with whole Leitner DB
-* Change number of test remaining (instead of chars+words)
 * Put back buttons for Reference Activity (for larger screens)
 * Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
@@ -35,7 +34,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (191):
+DONE (192):
+* Change number of test remaining (instead of chars+words)
 * Update graph when testing
 * In reference, do not go back to the search page if there is no search
 * In reference, should not be able to select Dictionary when it is not available

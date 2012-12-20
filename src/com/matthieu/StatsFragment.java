@@ -23,11 +23,6 @@ public class StatsFragment extends Fragment {
     private final String TAG="Stats";
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
@@ -92,14 +87,12 @@ public class StatsFragment extends Fragment {
             int num_chars;
             int num_words;
             int expired;
-            int expired_words;
 
             @Override
             protected Void doInBackground(Void... voids) {
                 num_chars = myDB.getNumChars();
                 num_words = myDB.getNumWords();
-                expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
-                expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
+                expired = myDB.getNumExpired();
                 return null;
             }
 
@@ -120,9 +113,6 @@ public class StatsFragment extends Fragment {
 
                 tv = (TextView) v.findViewById(R.id.stats_to_study);
                 tv.setText(""+expired);
-
-                tv = (TextView) v.findViewById(R.id.stats_to_study_words);
-                tv.setText(""+expired_words);
             }
         };
 
