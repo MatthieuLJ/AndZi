@@ -19,6 +19,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
     private String current_test;
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private ArrayList<String> previous_guess=new ArrayList<String>();
+    private View master_view=null;
 
     private final String TAG="GuessMissingChar";
 
@@ -41,8 +42,12 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
     @Override
     View get_view() {
-        LayoutInflater inflater = activity.getLayoutInflater();
-        View res = inflater.inflate(R.layout.guess_missing_char, null);
+        if (master_view == null) {
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view = inflater.inflate(R.layout.guess_missing_char, null);
+        }
+
+        View res = master_view;
 
         EditText guess = (EditText) res.findViewById(R.id.missing_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -54,9 +59,20 @@ public class GuessMissingChar extends Test implements TextWatcher {
         });
         guess.setText("");
         guess.addTextChangedListener(this);
+        guess.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInputFromInputMethod(view.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);
+                return false;
+            }
+        });
         /*guess.requestFocus();
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
+
+        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.missing_test_focusable_linear);
+        focusable.requestFocus();
 
         TextView previous = (TextView) res.findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
@@ -121,6 +137,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
         guess.setOnEditorActionListener(null);
         guess.removeTextChangedListener(this);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
         imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 

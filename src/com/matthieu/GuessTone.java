@@ -6,17 +6,21 @@ package com.matthieu;
 import android.gesture.*;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GuessTone extends Test implements GestureOverlayView.OnGesturePerformedListener {
     private String current_test;
     private Pinyin pinyin;
     private ArrayList<Integer> tones=new ArrayList<Integer>();
+    private View master_view=null;
 
     private final String TAG="GuessTone";
 
@@ -46,8 +50,12 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
 
     @Override
     View get_view() {
-        LayoutInflater inflater = activity.getLayoutInflater();
-        View res = inflater.inflate(R.layout.guess_tone, null);
+        if (master_view == null) {
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view = inflater.inflate(R.layout.guess_tone, null);
+        }
+
+        View res = master_view;
 
         ArrayList<String> pinyins;
         String radical;
@@ -255,7 +263,14 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+                }
+            }, 500);
+
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());

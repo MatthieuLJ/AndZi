@@ -268,8 +268,6 @@ public class DetailsFragment extends Fragment {
             clicker = c;
             new_request = n_r;
 
-            View.inflate(fragment.getActivity(), R.layout.details, v);
-
             ArrayList<Pinyin> pinyin_table = PinyinParser.parse_string_to_pinyin(pinyin);
             if ((!pinyin.equals("")) &&
                     ((pinyin_table==null) || ((pinyin_table.size() != hanzi.codePointCount(0, hanzi.length()))))) {
@@ -298,10 +296,13 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+
             if (container.get() == null) {
                 this.cancel(true);
                 return;
             }
+            View.inflate(fragment.getActivity(), R.layout.details, container.get());
+
             ListView list = (ListView) container.get().findViewById(R.id.details_list);
             list.setVisibility(View.GONE);
 

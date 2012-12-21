@@ -5,20 +5,20 @@ package com.matthieu;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
+import android.widget.*;
+
+import java.util.*;
 
 public class GuessEnglish extends Test {
     private String current_test;
     private Vocabulary solution=null;
+    private View master_view=null;
 
     private final String TAG="GuessEnglish";
 
@@ -36,7 +36,7 @@ public class GuessEnglish extends Test {
             for (i=0; i<solution.english.size(); i++) {
                 String[] translations=HanziDB.bare_translation(solution.english.get(i)).split(" ");
 
-                if (translations.length > 2)
+                if (translations.length > 3)
                     // too many words in this translation
                     continue;
                 for (j=0; j<translations.length; j++) {
@@ -65,8 +65,12 @@ public class GuessEnglish extends Test {
 
     @Override
     View get_view() {
-        LayoutInflater inflater = activity.getLayoutInflater();
-        View res = inflater.inflate(R.layout.guess_english, null);
+        if (master_view == null) {
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view = inflater.inflate(R.layout.guess_english, null);
+        }
+
+        View res = master_view;
 
         EditText guess = (EditText) res.findViewById(R.id.english_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -77,9 +81,20 @@ public class GuessEnglish extends Test {
             }
         });
         guess.setText("");
+        guess.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInputFromInputMethod(view.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);
+                return false;
+            }
+        });
         /*guess.requestFocus();
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
+
+        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.english_test_focusable_linear);
+        focusable.requestFocus();
 
         TextView text = (TextView) res.findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
@@ -100,6 +115,7 @@ public class GuessEnglish extends Test {
         EditText guess = (EditText) v.findViewById(R.id.english_test_guess);
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
         imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
@@ -159,7 +175,37 @@ public class GuessEnglish extends Test {
     public static class GuessEnglishResultFragment extends Test.SolutionFragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return show_details(inflater, container, true);
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DetailsFragment.populate_details_view(GuessEnglishResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+                }
+            }, 500);
+
+            if ((good == Test.INCORRECT) && (!answer.equals(""))) {
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                TextView bad_guess_text = new TextView(getActivity());
+                bad_guess_text.setText("You guessed: "+answer);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+
+                (res.findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
+                (res.findViewById(R.id.test_result_accept)).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        handle_good(view);
+                    }
+                });
+
+            }
+
+            return res;
         }
 
         @Override

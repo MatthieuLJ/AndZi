@@ -35,9 +35,11 @@
             />
 
     <LinearLayout
+            android:id="@+id/containing_focusable_linear"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:focusableInTouchMode="true"
             >
         <EditText
                 android:id="@+id/containing_test_guess"

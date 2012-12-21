@@ -20,6 +20,7 @@ public class GuessChineseWord extends Test {
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
     private boolean showing_more_voc;
+    private View master_view=null;
 
     private final String TAG="GuessChineseWord";
 
@@ -54,8 +55,12 @@ public class GuessChineseWord extends Test {
 
     @Override
     View get_view() {
-        LayoutInflater inflater = activity.getLayoutInflater();
-        View res = inflater.inflate(R.layout.guess_chinese_word, null);
+        if (master_view == null) {
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view = inflater.inflate(R.layout.guess_chinese_word, null);
+        }
+
+        View res = master_view;
 
         ArrayList<String> bare_translations = new ArrayList<String>();
 
@@ -68,9 +73,20 @@ public class GuessChineseWord extends Test {
             }
         });
         guess.setText("");
+        guess.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInputFromInputMethod(view.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);
+                return false;
+            }
+        });
+
         /*guess.requestFocus();
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
+        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.chinese_work_focusable_linear);
+        focusable.requestFocus();
 
         for (String s : translations) {
             bare_translations.add(HanziDB.bare_translation(s));
@@ -141,6 +157,7 @@ public class GuessChineseWord extends Test {
         EditText guess = (EditText) v.findViewById(R.id.chinese_word_test_guess);
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
         imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 

@@ -66,6 +66,17 @@ public class TestFragment extends Fragment {
     }
 
     @Override
+    public void onDestroyView() {
+        if (current_test_type != null) {
+            ViewGroup container = (ViewGroup) getView();
+            current_test_type.kill_view(container);
+            container.removeAllViews();
+        }
+
+        super.onDestroyView();
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt("test_index", test_index);
