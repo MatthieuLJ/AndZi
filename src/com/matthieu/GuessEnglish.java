@@ -3,25 +3,28 @@
  */
 package com.matthieu;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.TextView;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.*;
 
-public class GuessEnglish extends TestFragment {
+import java.util.*;
+
+public class GuessEnglish extends Test {
+    private String current_test;
     private Vocabulary solution=null;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private final String TAG="GuessEnglish";
 
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
-        super.set_hanzi_to_test(hanzi);
-
         ArrayList<Vocabulary> voc = myDB.getTranslations(hanzi);
         if ((voc.size() == 0) || (voc.size() > 1)) { // one case has multiple pinyins...
             return false;
@@ -34,7 +37,7 @@ public class GuessEnglish extends TestFragment {
             for (i=0; i<solution.english.size(); i++) {
                 String[] translations=HanziDB.bare_translation(solution.english.get(i)).split(" ");
 
-                if (translations.length > 2)
+                if (translations.length > 3)
                     // too many words in this translation
                     continue;
                 for (j=0; j<translations.length; j++) {
@@ -55,41 +58,69 @@ public class GuessEnglish extends TestFragment {
         if (solution == null) {
             return false;
         }
+        current_test = hanzi;
         Log.d(TAG, "GuessEnglish OK");
 
         return true;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.guess_english, container, false);
-    }
+    View get_view() {
+        if (master_view == null) {
+            master_view = new View[2];
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view[0] = inflater.inflate(R.layout.guess_english, null);
+            master_view[1] = inflater.inflate(R.layout.guess_english, null);
+        }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        update_test_view(getView());
-    }
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
-    @Override
-    public void update_test_view(View v) {
-        if (v==null)
-            return;
-
-        EditText word_guess = (EditText) v.findViewById(R.id.test_guess);
-        word_guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        EditText guess = (EditText) res.findViewById(R.id.english_test_guess);
+        guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
+                    check_answer();
                 return true;
             }
         });
-        word_guess.setText("");
-        word_guess.requestFocus();
+        guess.setText("");
+        guess.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInputFromInputMethod(view.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);
+                return false;
+            }
+        });
+        /*guess.requestFocus();
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        TextView text = (TextView) v.findViewById(R.id.guess_english_word_voc);
+        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.english_test_focusable_linear);
+        focusable.requestFocus();
+
+        TextView text = (TextView) res.findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
-        v.invalidate();
+
+        Button submit_answer = (Button) res.findViewById(R.id.guess_english_ok);
+        submit_answer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                check_answer();
+            }
+        });
+
+        return res;
+    }
+
+    @Override
+    public void kill_view(View v) {
+        EditText guess = (EditText) v.findViewById(R.id.english_test_guess);
+        guess.setOnEditorActionListener(null);
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+        imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     protected int check_guess(String guess) {
@@ -120,8 +151,8 @@ public class GuessEnglish extends TestFragment {
         return INCORRECT;
     }
 
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
+    public void check_answer() {
+        EditText word_guess = (EditText) activity.findViewById(R.id.english_test_guess);
         if (word_guess==null)
             return;
 
@@ -138,17 +169,47 @@ public class GuessEnglish extends TestFragment {
                 Bundle bundle = new Bundle();
                 bundle.putInt("good", correctness);
                 bundle.putString("answer", guess);
-                bundle.putString("question", hanzi);
+                bundle.putString("question", current_test);
                 solution_fragment.setArguments(bundle);
-                ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
                 break;
         }
     }
 
-    public static class GuessEnglishResultFragment extends SolutionFragment {
+    public static class GuessEnglishResultFragment extends Test.SolutionFragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return show_details(inflater, container, true);
+            final View res = inflater.inflate(R.layout.test_result, container, false);
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DetailsFragment.populate_details_view(GuessEnglishResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+                }
+            }, 500);
+
+            if ((good == Test.INCORRECT) && (!answer.equals(""))) {
+                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                TextView bad_guess_text = new TextView(getActivity());
+                bad_guess_text.setText("You guessed: "+answer);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
+                bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+
+                (res.findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
+                (res.findViewById(R.id.test_result_accept)).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        handle_good(view);
+                    }
+                });
+
+            }
+
+            return res;
         }
 
         @Override

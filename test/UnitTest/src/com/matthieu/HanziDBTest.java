@@ -405,7 +405,6 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
     public void testCharPath() {
         target_db.addVocabulary("hello", "你好", "ni3hao3");
         assertTrue(target_db.getBoxForChar("你") == 0);
-        assertTrue(target_db.getNumCharsInBox(0) == 2);
         target_db.betterBox("你");
         assertTrue(target_db.getBoxForChar("你") == 1);
         target_db.betterBox("你");
@@ -468,7 +467,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
     }
     */
 
-    public void testBoxDistribution() {
+    /*public void testBoxDistribution() {
         target_db.addVocabulary("hello", "你好", "ni3hao3");
         target_db.addVocabulary("grow", "长", "zhang3");
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("bright", "next", "wise")),"明","ming2");
@@ -492,7 +491,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(target_db.getNumCharsExpiredInBoxOrAbove(0) == 4);
         assertTrue(target_db.getNumCharsExpiredInBoxOrAbove(1)==2);
         assertTrue(checkDB(target_db, false));
-    }
+    }*/
 
     public void testExportAllNoScores() {
         target_db.addVocabulary(new ArrayList<String>(Arrays.asList("good", "well", "perfect")), "好", "hao3");
@@ -518,7 +517,6 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         assertTrue(export_db.getLessons().size() == 2);
         assertTrue(export_db.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("lesson 1"))).size() == 2);
         assertTrue(export_db.getBoxForChar("你") == 0);
-        assertTrue(export_db.getNumCharsInBox(0) == 5);
         assertTrue(checkDB(export_db, false));
         assertTrue(checkDB(target_db, false));
         export_db.close();
@@ -556,7 +554,6 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
         }
         HanziDB export_db = new HanziDB(app, "exported_db");
         assertTrue(export_db.getBoxForChar("你")==3);
-        assertTrue(export_db.getNumCharsInBox(0)==3);
         assertTrue(checkDB(export_db, false));
         assertTrue(checkDB(target_db, false));
         export_db.close();

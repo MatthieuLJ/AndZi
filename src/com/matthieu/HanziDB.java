@@ -2862,120 +2862,120 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Get information
     ////////////////////////////////////////
-    public int getNumCharsInBox(int box) {
+    public int getNumInBox(int box) {
         int res;
-
-        if (box < 0)
-            return 0;
-
-        Cursor cur;
-        if (box == 0)
-            // add the characters that do not have any box...
-            cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box IS NULL) OR (box=0)", null);
-
-
-        else
-            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
-                    "WHERE (length(hanzi)==1) AND (box=?)", new String[] {Integer.toString(box)});
-
-        cur.moveToFirst();
-        res= cur.getInt(cur.getColumnIndex("count"));
-        cur.close();
-
-        return res;
-    }
-
-    public int getNumCharsInBoxOrAbove(int box) {
-        int res;
-
-        if (box < 0)
-            return 0;
-
-        if (box == 0)
-            return getNumChars();
-
-        Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
-                "WHERE (length(hanzi)==1) AND (box>=?)", new String[] {Integer.toString(box)});
-        cur.moveToFirst();
-        res= cur.getInt(cur.getColumnIndex("count"));
-
-        cur.close();
-
-        return res;
-    }
-
-    public int getNumCharsExpiredInBox(int box) {
-        int res;
-
-        if (box < 0)
-            return 0;
-
-        if (box == 0)
-            return getNumCharsInBox(0);
-        else {
-            Cursor cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
-                    "WHERE length(hanzi)==1 AND box=? AND exp_time<?",
-                    new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
-            cur.moveToFirst();
-            res= cur.getInt(cur.getColumnIndex("count"));
-
-            cur.close();
-        }
-        return res;
-    }
-
-    public int getNumCharsExpiredInBoxOrAbove(int box) {
-        int res;
-
-        if (box < 0)
-            return 0;
-
         Cursor cur;
 
-        if (box == 0)
-            cur = db.rawQuery("SELECT COUNT(chars.hanzi) AS count FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)",
-                    new String[] {Long.toString(System.currentTimeMillis())});
-        else
-            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
-                    "WHERE length(hanzi)==1 AND box>=? AND exp_time<?",
-                    new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
-
-        cur.moveToFirst();
-        res= cur.getInt(cur.getColumnIndex("count"));
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumWordsExpiredInBoxOrAbove(int box) {
-        int res;
-
-        if (box < 0)
-            return 0;
-
-        Cursor cur;
-
-        if (box == 0)
-            cur = db.rawQuery("SELECT COUNT(cword.chinese) AS count FROM cword " +
+        if (box == 0) {
+            cur = db.rawQuery("SELECT chinese FROM ( " +
+                    "SELECT cword.chinese AS chinese FROM cword " +
                     "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (exp_time<?) OR (box IS NULL) OR (box=0)",
-                    new String[] {Long.toString(System.currentTimeMillis())});
-        else
-            cur = db.rawQuery("SELECT COUNT(hanzi) AS count FROM leitner " +
-                    "WHERE length(hanzi)>1 AND box>=? AND exp_time<?",
-                    new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis())});
+                    "WHERE (box IS NULL) OR (box=0) " +
+                    "UNION " +
+                    "SELECT chars.hanzi AS chinese FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                    "WHERE (box IS NULL) OR (box=0) " +
+                    ") GROUP BY chinese",
+                    new String[] {});
+        } else {
+            cur = db.rawQuery("SELECT chinese FROM (" +
+                    "SELECT cword.chinese AS chinese FROM cword " +
+                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "WHERE (box=?) " +
+                    "UNION " +
+                    "SELECT chars.hanzi AS chinese FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                    "WHERE (box=?)" +
+                    ") GROUP BY chinese",
+                    new String[] {Integer.toString(box), Integer.toString(box)});
+        }
 
-        cur.moveToFirst();
-        res= cur.getInt(cur.getColumnIndex("count"));
+        res=cur.getCount();
 
         cur.close();
         return res;
+    }
+
+    public int getNumExpiredInBox(int box) {
+        if (box == 0)
+            return getNumInBox(0);
+
+        int res;
+        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
+                "SELECT cword.chinese AS chinese FROM cword " +
+                "JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (box=?) AND (exp_time<?) " +
+                "UNION " +
+                "SELECT chars.hanzi AS chinese FROM " +
+                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                "JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                "WHERE (box=?) AND (exp_time<?) " +
+                ") GROUP BY chinese",
+                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()),
+                        Integer.toString(box), Long.toString(System.currentTimeMillis())});
+
+        res=cur.getCount();
+
+        cur.close();
+        return res;
+    }
+
+    public int getNumInBoxOrAbove(int box) {
+        int res;
+        Cursor cur;
+
+        if (box == 0) {
+            cur = db.rawQuery("SELECT chinese FROM ( " +
+                    "SELECT cword.chinese AS chinese FROM cword " +
+                    "UNION " +
+                    "SELECT hanzi AS chinese FROM char_pinyin " +
+                    ") GROUP BY chinese",
+                    new String[] {});
+        } else {
+            cur = db.rawQuery("SELECT chinese FROM (" +
+                    "SELECT cword.chinese AS chinese FROM cword " +
+                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
+                    "WHERE (box>=?) " +
+                    "UNION " +
+                    "SELECT chars.hanzi AS chinese FROM " +
+                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                    "JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                    "WHERE (box>=?)" +
+                    ") GROUP BY chinese",
+                    new String[] {Integer.toString(box), Integer.toString(box)});
+        }
+
+        res=cur.getCount();
+
+        cur.close();
+        return res;
+    }
+
+    public int getNumExpiredInBoxOrAbove(int box) {
+        if (box <= 0)
+            return getNumExpired();
+
+        int res;
+        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
+                "SELECT cword.chinese AS chinese FROM cword " +
+                "JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "WHERE (box=?) AND (exp_time<?) " +
+                "UNION " +
+                "SELECT chars.hanzi AS chinese FROM " +
+                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                "JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                "WHERE (box=?) AND (exp_time<?) " +
+                ") GROUP BY chinese",
+                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()),
+                        Integer.toString(box), Long.toString(System.currentTimeMillis())});
+
+        res=cur.getCount();
+
+        cur.close();
+        return res;
+
     }
 
     public int getNumExpired() {

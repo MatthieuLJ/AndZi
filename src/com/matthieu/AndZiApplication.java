@@ -12,7 +12,6 @@ import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.ViewConfiguration;
 import com.matthieu.widget.FileMountPoint;
 import com.matthieu.widget.ObjectSerializer;
 import org.acra.ACRA;
@@ -20,7 +19,6 @@ import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.*;
 
 @ReportsCrashes(formKey = "", // will not be used
@@ -98,19 +96,19 @@ public class AndZiApplication extends Application {
             initialize_my_db();
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
         for (int i=0; i<4; i++) {
-            new_data.num_chars_in_box[i]=myDB.getNumCharsInBox(i);
-            new_data.num_chars_expired_in_box[i]=myDB.getNumCharsExpiredInBox(i);
+            new_data.num_in_box[i]=myDB.getNumInBox(i);
+            new_data.num_expired_in_box[i]=myDB.getNumExpiredInBox(i);
         }
-        new_data.num_chars_in_box[4]=myDB.getNumCharsInBoxOrAbove(4);
-        new_data.num_chars_expired_in_box[4]=myDB.getNumCharsExpiredInBoxOrAbove(4);
+        new_data.num_in_box[4]=myDB.getNumInBoxOrAbove(4);
+        new_data.num_expired_in_box[4]=myDB.getNumExpiredInBoxOrAbove(4);
         new_data.date = System.currentTimeMillis();
         /*
-        Log.w(TAG, "Current progress is "+new_data.num_chars_in_box[0]+" ("+new_data.num_chars_expired_in_box[0]+"), "
-                +new_data.num_chars_in_box[1]+" ("+new_data.num_chars_expired_in_box[1]+"), "
-                +new_data.num_chars_in_box[2]+" ("+new_data.num_chars_expired_in_box[2]+"), "
-                +new_data.num_chars_in_box[3]+" ("+new_data.num_chars_expired_in_box[3]+"), "
-                +new_data.num_chars_in_box[4]+" ("+new_data.num_chars_expired_in_box[4]+") => total of "+
-                (new_data.num_chars_in_box[0]+new_data.num_chars_in_box[1]+new_data.num_chars_in_box[2]+new_data.num_chars_in_box[3]+new_data.num_chars_in_box[4]));
+        Log.w(TAG, "Current progress is "+new_data.num_in_box[0]+" ("+new_data.num_expired_in_box[0]+"), "
+                +new_data.num_in_box[1]+" ("+new_data.num_expired_in_box[1]+"), "
+                +new_data.num_in_box[2]+" ("+new_data.num_expired_in_box[2]+"), "
+                +new_data.num_in_box[3]+" ("+new_data.num_expired_in_box[3]+"), "
+                +new_data.num_in_box[4]+" ("+new_data.num_expired_in_box[4]+") => total of "+
+                (new_data.num_in_box[0]+new_data.num_in_box[1]+new_data.num_in_box[2]+new_data.num_in_box[3]+new_data.num_in_box[4]));
                 */
         return new_data;
     }

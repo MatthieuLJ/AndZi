@@ -3,8 +3,10 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.*;
@@ -19,12 +21,6 @@ public class StatsFragment extends Fragment {
     Timer timer;
 
     private final String TAG="Stats";
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
-    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -82,6 +78,7 @@ public class StatsFragment extends Fragment {
         update_stats(getView());
     }
 
+    @SuppressLint({"NewApi"})
     public void update_stats(final View v) {
         if (v == null)
             return;
@@ -90,14 +87,12 @@ public class StatsFragment extends Fragment {
             int num_chars;
             int num_words;
             int expired;
-            int expired_words;
 
             @Override
             protected Void doInBackground(Void... voids) {
                 num_chars = myDB.getNumChars();
                 num_words = myDB.getNumWords();
-                expired = myDB.getNumCharsExpiredInBoxOrAbove(0);
-                expired_words = myDB.getNumWordsExpiredInBoxOrAbove(0);
+                expired = myDB.getNumExpired();
                 return null;
             }
 
@@ -106,7 +101,7 @@ public class StatsFragment extends Fragment {
                 final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
                 if (graph == null)
                     return;
-                graph.update_graph();
+                graph.update_graph(true);
 
                 TextView tv;
 
@@ -118,13 +113,13 @@ public class StatsFragment extends Fragment {
 
                 tv = (TextView) v.findViewById(R.id.stats_to_study);
                 tv.setText(""+expired);
-
-                tv = (TextView) v.findViewById(R.id.stats_to_study_words);
-                tv.setText(""+expired_words);
             }
         };
 
-        stats_updater.execute((Void[]) null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            stats_updater.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+        else
+            stats_updater.execute((Void[])null);
     }
 
     private void update_buttons(View v) {

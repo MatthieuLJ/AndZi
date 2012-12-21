@@ -283,7 +283,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
     @Override
     public void onBackPressed() {
         ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0))
+        if ((pager != null) && (pager.getCurrentItem() != 0) && (((DictionaryFragment)fragments[0]).has_search()))
             pager.setCurrentItem(0, true);
         else
             super.onBackPressed();

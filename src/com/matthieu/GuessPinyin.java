@@ -3,28 +3,32 @@
  */
 package com.matthieu;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
 
-public class GuessPinyin extends TestFragment implements TextWatcher {
+public class GuessPinyin extends Test implements TextWatcher {
+    private String current_test;
     private String pinyin;
     private ArrayList<Vocabulary> words;
     private boolean show_words=false;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private static final String TAG="GuessPinyin";
 
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
-        super.set_hanzi_to_test(hanzi);
-
         show_words=false;
 
         ArrayList<String> pinyins = myDB.getPinyinForChar(hanzi);
@@ -45,7 +49,7 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
                 for (Pinyin pin2:pins) {
                     if ((pin2.get_radical().equals(pin.get_radical())) && (pin2.get_tone() != 5)) {
                         pins.remove(i);
-                        i=0;
+                        i--;
                         break;
                     }
                 }
@@ -73,62 +77,62 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         }
 
         Log.d(TAG, "GuessPinyin OK");
+        current_test = hanzi;
 
         return true;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.guess_pinyin, container, false);
-    }
+    View get_view() {
+        if (master_view == null) {
+            master_view = new View[2];
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view[0] = inflater.inflate(R.layout.guess_pinyin, null);
+            master_view[1] = inflater.inflate(R.layout.guess_pinyin, null);
+        }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        update_test_view(getView());
-    }
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
-    @Override
-    public void onDestroyView() {
-        EditText guess = (EditText) getView().findViewById(R.id.test_guess);
-
-        guess.setOnEditorActionListener(null);
-        guess.removeTextChangedListener(this);
-        super.onDestroyView();
-    }
-
-    @Override
-    public void update_test_view(View v) {
-        if (v == null)
-            return;
-
-        EditText guess = (EditText) v.findViewById(R.id.test_guess);
+        EditText guess = (EditText) res.findViewById(R.id.pinyin_test_guess);
 
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
-                    handle_ok(textView);
+                    check_answer();
                 return true;
             }
         });
-        guess.removeTextChangedListener(this);
         guess.setText("");
         guess.addTextChangedListener(this);
-        guess.requestFocus();
+        guess.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInputFromInputMethod(view.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);
+                return false;
+            }
+        });
+        /*guess.requestFocus();
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        Log.d(TAG, "Testing for character " + hanzi + " got " + words.size() + " words");
+        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.pinyin_test_focusable_linear);
+        focusable.requestFocus();
 
-        TextView chinese_hint = (TextView) v.findViewById(R.id.guess_pinyin_chinese);
-        chinese_hint.setText(hanzi);
+        Log.d(TAG, "Testing for character " + current_test + " got " + words.size() + " words");
 
-        final TableLayout tl = (TableLayout) v.findViewById(R.id.guess_pinyin_word_grid);
+        TextView chinese_hint = (TextView) res.findViewById(R.id.guess_pinyin_chinese);
+        chinese_hint.setText(current_test);
+
+        final TableLayout tl = (TableLayout) res.findViewById(R.id.guess_pinyin_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
         for (Vocabulary w : words) {
-            TableRow tr = new TableRow(getActivity());
+            TableRow tr = new TableRow(activity);
 
-            TextView chinese = new TextView(getActivity());
-            chinese.setTextAppearance(getActivity(), android.R.style.TextAppearance_Medium_Inverse);
+            TextView chinese = new TextView(activity);
+            chinese.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
             chinese.setClickable(false);
             chinese.setText(w.chinese);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -136,8 +140,8 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
             chinese.setLayoutParams(trlp);
             tr.addView(chinese);
 
-            TextView trans = new TextView(getActivity());
-            trans.setTextAppearance(getActivity(), android.R.style.TextAppearance_Medium_Inverse);
+            TextView trans = new TextView(activity);
+            trans.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
@@ -153,7 +157,7 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
             tl.addView(tr);
         }
-        Button show_words_button = (Button) v.findViewById(R.id.guess_pinyin_show_words);
+        Button show_words_button = (Button) res.findViewById(R.id.guess_pinyin_show_words);
         show_words_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 tl.setVisibility(View.VISIBLE);
@@ -169,8 +173,26 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
             tl.setVisibility(View.GONE);
             show_words_button.setClickable(true);
         }
-        //tl.invalidate();
-        v.invalidate();
+
+        Button submit_answer = (Button) res.findViewById(R.id.guess_pinyin_ok);
+        submit_answer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                check_answer();
+            }
+        });
+
+        return res;
+    }
+
+    @Override
+    public void kill_view(View v) {
+        EditText guess = (EditText) v.findViewById(R.id.pinyin_test_guess);
+        guess.setOnEditorActionListener(null);
+        guess.removeTextChangedListener(this);
+        InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+        imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     protected int check_guess(String guess) {
@@ -188,8 +210,8 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         return INCORRECT;
     }
 
-    public void handle_ok(View v) {
-        EditText word_guess = (EditText) getView().findViewById(R.id.test_guess);
+    public void check_answer() {
+        EditText word_guess = (EditText) activity.findViewById(R.id.pinyin_test_guess);
         if (word_guess==null)
             return;
 
@@ -200,13 +222,13 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         Bundle bundle = new Bundle();
         bundle.putInt("good", correctness);
         bundle.putString("answer", guess);
-        bundle.putString("question", hanzi);
+        bundle.putString("question", current_test);
         bundle.putString("pinyin", pinyin);
         solution_fragment.setArguments(bundle);
-        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
     }
 
-    public static class GuessPinyinResultFragment extends SolutionFragment {
+    public static class GuessPinyinResultFragment extends Test.SolutionFragment {
         String pinyin;
 
         @Override
@@ -222,7 +244,14 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(this, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DetailsFragment.populate_details_view(GuessPinyinResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+                }
+            }, 500);
+
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());
@@ -231,9 +260,15 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                FrameLayout bad_guess_details = new FrameLayout(getActivity());
+                final FrameLayout bad_guess_details = new FrameLayout(getActivity());
                 bad_guess_details.setId(R.id.test_bad_guess);
-                DetailsFragment.populate_details_view(this, bad_guess_details, answer, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        DetailsFragment.populate_details_view(GuessPinyinResultFragment.this, bad_guess_details, answer, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+                    }
+                }, 500);
+
                 bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
@@ -268,9 +303,9 @@ public class GuessPinyin extends TestFragment implements TextWatcher {
 
     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
         if ((charSequence.toString().codePointCount(0, charSequence.toString().length()) > 0) && (!Pinyin.verify_pinyin(charSequence.toString()))) {
-            getView().findViewById(R.id.ok).setEnabled(false);
+            activity.findViewById(R.id.guess_pinyin_ok).setEnabled(false);
         } else {
-            getView().findViewById(R.id.ok).setEnabled(true);
+            activity.findViewById(R.id.guess_pinyin_ok).setEnabled(true);
         }
     }
 

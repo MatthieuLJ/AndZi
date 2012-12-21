@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -47,7 +46,7 @@ public class ProgressService extends Service {
         if (current_data == null)
             return;
 
-        if (current_data.num_chars_in_box[0] + current_data.num_chars_in_box[1] + current_data.num_chars_in_box[2] + current_data.num_chars_in_box[3] + current_data.num_chars_in_box[4] == 0)
+        if (current_data.num_in_box[0] + current_data.num_in_box[1] + current_data.num_in_box[2] + current_data.num_in_box[3] + current_data.num_in_box[4] == 0)
             return;
 
         db.add_data(current_data);

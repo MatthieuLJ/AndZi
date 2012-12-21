@@ -6,22 +6,27 @@ package com.matthieu;
 import android.gesture.*;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class GuessTone extends TestFragment implements GestureOverlayView.OnGesturePerformedListener {
+public class GuessTone extends Test implements GestureOverlayView.OnGesturePerformedListener {
+    private String current_test;
     private Pinyin pinyin;
     private ArrayList<Integer> tones=new ArrayList<Integer>();
+    private View master_view[]=null;
+    private int current_view=0;
 
     private final String TAG="GuessTone";
 
     @Override
     protected boolean set_hanzi_to_test(String hanzi) {
-        super.set_hanzi_to_test(hanzi);
         ArrayList<String> pinyins;
 
         pinyins = myDB.getPinyinForChar(hanzi);
@@ -39,33 +44,30 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
             return false;
         }
         Log.d(TAG, "GuessTone OK");
+        current_test = hanzi;
 
         return true;
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.guess_tone, container, false);
-    }
+    View get_view() {
+        if (master_view == null) {
+            master_view = new View[2];
+            LayoutInflater inflater = activity.getLayoutInflater();
+            master_view[0] = inflater.inflate(R.layout.guess_tone, null);
+            master_view[1] = inflater.inflate(R.layout.guess_tone, null);
+        }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        update_test_view(getView());
-    }
-
-    @Override
-    public void update_test_view(View v) {
-        if (v == null)
-            return;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         ArrayList<String> pinyins;
         String radical;
 
-        GestureOverlayView overlay = (GestureOverlayView) v.findViewById(R.id.guess_tone_gestureview);
+        GestureOverlayView overlay = (GestureOverlayView) res.findViewById(R.id.guess_tone_gestureview);
         overlay.addOnGesturePerformedListener(this);
 
-        pinyins = myDB.getPinyinForChar(hanzi);
+        pinyins = myDB.getPinyinForChar(current_test);
         radical = new Pinyin(pinyin.get_radical()+"5").get_pretty();
         tones.clear();
 
@@ -76,24 +78,33 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
             }
         }
 
-        TextView tv_hanzi = (TextView) v.findViewById(R.id.guess_tone_chinese);
-        TextView tv_pinyin = (TextView) v.findViewById(R.id.guess_tone_pinyin);
+        TextView tv_hanzi = (TextView) res.findViewById(R.id.guess_tone_chinese);
+        TextView tv_pinyin = (TextView) res.findViewById(R.id.guess_tone_pinyin);
 
-        tv_hanzi.setText(hanzi);
+        tv_hanzi.setText(current_test);
         tv_pinyin.setText(radical);
 
         CheckBox cb;
-        cb = (CheckBox) v.findViewById(R.id.guess_tone_first_tone);
+        cb = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
         cb.setChecked(false);
-        cb = (CheckBox) v.findViewById(R.id.guess_tone_second_tone);
+        cb = (CheckBox) res.findViewById(R.id.guess_tone_second_tone);
         cb.setChecked(false);
-        cb = (CheckBox) v.findViewById(R.id.guess_tone_third_tone);
+        cb = (CheckBox) res.findViewById(R.id.guess_tone_third_tone);
         cb.setChecked(false);
-        cb = (CheckBox) v.findViewById(R.id.guess_tone_fourth_tone);
+        cb = (CheckBox) res.findViewById(R.id.guess_tone_fourth_tone);
         cb.setChecked(false);
 
         Log.d(TAG, "Expects tones : "+tones.toString());
-        v.invalidate();
+
+        Button submit_answer = (Button) res.findViewById(R.id.guess_tone_ok);
+        submit_answer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                check_answer();
+            }
+        });
+
+        return res;
     }
 
     protected int check_guess(String guess) {
@@ -212,33 +223,33 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         CheckBox cb=null;
         switch (tone) {
             case 1:
-                cb = (CheckBox) getView().findViewById(R.id.guess_tone_first_tone);
+                cb = (CheckBox) activity.findViewById(R.id.guess_tone_first_tone);
                 break;
             case 2:
-                cb = (CheckBox) getView().findViewById(R.id.guess_tone_second_tone);
+                cb = (CheckBox) activity.findViewById(R.id.guess_tone_second_tone);
                 break;
             case 3:
-                cb = (CheckBox) getView().findViewById(R.id.guess_tone_third_tone);
+                cb = (CheckBox) activity.findViewById(R.id.guess_tone_third_tone);
                 break;
             case 4:
-                cb = (CheckBox) getView().findViewById(R.id.guess_tone_fourth_tone);
+                cb = (CheckBox) activity.findViewById(R.id.guess_tone_fourth_tone);
                 break;
         }
         if (cb != null)
             cb.setChecked(true);
     }
 
-    public void handle_ok(View v) {
+    public void check_answer() {
         String tones_checked="";
         CheckBox cb;
 
-        cb = (CheckBox) getView().findViewById(R.id.guess_tone_first_tone);
+        cb = (CheckBox) activity.findViewById(R.id.guess_tone_first_tone);
         if (cb.isChecked()) tones_checked+="1";
-        cb = (CheckBox) getView().findViewById(R.id.guess_tone_second_tone);
+        cb = (CheckBox) activity.findViewById(R.id.guess_tone_second_tone);
         if (cb.isChecked()) tones_checked+="2";
-        cb = (CheckBox) getView().findViewById(R.id.guess_tone_third_tone);
+        cb = (CheckBox) activity.findViewById(R.id.guess_tone_third_tone);
         if (cb.isChecked()) tones_checked+="3";
-        cb = (CheckBox) getView().findViewById(R.id.guess_tone_fourth_tone);
+        cb = (CheckBox) activity.findViewById(R.id.guess_tone_fourth_tone);
         if (cb.isChecked()) tones_checked+="4";
 
         int correctness = check_guess(tones_checked);
@@ -246,17 +257,24 @@ public class GuessTone extends TestFragment implements GestureOverlayView.OnGest
         Bundle bundle = new Bundle();
         bundle.putInt("good", correctness);
         bundle.putString("answer", tones_checked);
-        bundle.putString("question", hanzi);
+        bundle.putString("question", current_test);
         solution_fragment.setArguments(bundle);
-        ((TestActivity)getActivity()).new_solution_fragment(solution_fragment, correctness);
+        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
     }
 
-    public static class GuessToneResultFragment extends SolutionFragment {
+    public static class GuessToneResultFragment extends Test.SolutionFragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
-            DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+                }
+            }, 500);
+
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(getActivity());

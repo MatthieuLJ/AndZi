@@ -5,9 +5,6 @@ package com.matthieu.widget;
 
 import android.content.Context;
 import android.graphics.*;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -59,19 +56,22 @@ public class ProgressGraph extends View {
 
     private class update_delayer extends Thread {
         range query;
+        boolean force;
 
-        public update_delayer(range query) {
+        public update_delayer(range query, boolean force) {
             this.query = query;
+            this.force = force;
         }
         @Override
         public void run() {
-            if ((query.date_min != range_date_min) | (query.date_max != range_date_max) || (query.zoom != current_zoom))
+            if (!force && ((query.date_min != range_date_min) || (query.date_max != range_date_max) || (query.zoom != current_zoom)))
                 return;
 
             synchronized (ProgressGraph.this) {
                 if (((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) &&
-                    ((current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
+                    (force || (current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
                     ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
+                    recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
                         current_data.add(recent_data);
@@ -97,7 +97,7 @@ public class ProgressGraph extends View {
 
         ProgressDB.ProgressData new_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
         this.data0.add(new_data);
-        int current_char_count = new_data.num_chars_in_box[0] + new_data.num_chars_in_box[1] + new_data.num_chars_in_box[2] + new_data.num_chars_in_box[3] + new_data.num_chars_in_box[4];
+        int current_char_count = new_data.num_in_box[0] + new_data.num_in_box[1] + new_data.num_in_box[2] + new_data.num_in_box[3] + new_data.num_in_box[4];
 
         min_date=data0.get(0).date;
         max_date=data0.get(data0.size()-1).date;
@@ -129,7 +129,7 @@ public class ProgressGraph extends View {
             range_date_max=-1;
             range_date_min=-1;
         }
-        update_graph();
+        update_graph(false);
     }
 
     private int current_zoom=0; // the power of 2, so 0 is normal zoom (show everything), 1 is 2x, 2 is 4x...
@@ -148,7 +148,7 @@ public class ProgressGraph extends View {
             if (current_offset_x>0)
                 // stay centered
                 current_offset_x=2*current_offset_x+(getMeasuredWidth()-left_size)/2;
-            update_graph();
+            update_graph(false);
         }
     }
     public boolean can_zoom_out() {
@@ -160,7 +160,7 @@ public class ProgressGraph extends View {
             if (current_offset_x>0)
                 // stay centered
                 current_offset_x=Math.max(-right_size,current_offset_x/2-(getMeasuredWidth()-left_size)/4);
-            update_graph();
+            update_graph(false);
         }
     }
 
@@ -191,19 +191,19 @@ public class ProgressGraph extends View {
                 if (current_offset_x > max_offset_x)
                     current_offset_x = max_offset_x;
                 finger_down=true;
-                update_graph();
+                update_graph(false);
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 finger_down=false;
-                update_graph();
+                update_graph(false);
                 break;
 
         }
         return true;
     }
 
-    public void update_graph() {
+    public void update_graph(boolean force) {
         if (getMeasuredWidth()==0)
             return;
 
@@ -220,7 +220,7 @@ public class ProgressGraph extends View {
         new_query.date_max = range_date_max;
         new_query.zoom = current_zoom;
 
-        new update_delayer(new_query).start();
+        new update_delayer(new_query, force).start();
     }
 
     private double log_scale(double y, double max) {
@@ -354,12 +354,12 @@ public class ProgressGraph extends View {
                 data_at_origin = store_progress_at_origin;
                 data_at_origin.date = range_date_min;
                 for (int i=0; i<5; i++) {
-                    data_at_origin.num_chars_in_box[i] = (int) (data_to_use.get(first_date_index-1).num_chars_in_box[i] +
-                            (float)(data_to_use.get(first_date_index).num_chars_in_box[i] - data_to_use.get(first_date_index-1).num_chars_in_box[i]) *
+                    data_at_origin.num_in_box[i] = (int) (data_to_use.get(first_date_index-1).num_in_box[i] +
+                            (float)(data_to_use.get(first_date_index).num_in_box[i] - data_to_use.get(first_date_index-1).num_in_box[i]) *
                                     (range_date_min - data_to_use.get(first_date_index-1).date) / (data_to_use.get(first_date_index).date - data_to_use.get(first_date_index-1).date));
 
-                    data_at_origin.num_chars_expired_in_box[i] = (int) (data_to_use.get(first_date_index-1).num_chars_expired_in_box[i] +
-                            (float)(data_to_use.get(first_date_index).num_chars_expired_in_box[i] - data_to_use.get(first_date_index-1).num_chars_expired_in_box[i]) *
+                    data_at_origin.num_expired_in_box[i] = (int) (data_to_use.get(first_date_index-1).num_expired_in_box[i] +
+                            (float)(data_to_use.get(first_date_index).num_expired_in_box[i] - data_to_use.get(first_date_index-1).num_expired_in_box[i]) *
                                     (range_date_min - data_to_use.get(first_date_index-1).date) / (data_to_use.get(first_date_index).date - data_to_use.get(first_date_index-1).date));
                 }
             }
@@ -372,12 +372,12 @@ public class ProgressGraph extends View {
                 data_at_edge.date = range_date_max;
                 for (int i=0; i<5; i++) {
                     //Log.d(TAG, "last_date_index: "+last_date_index+", size of data_to_use: "+data_to_use.size());
-                    data_at_edge.num_chars_in_box[i] = (int) (data_to_use.get(last_date_index).num_chars_in_box[i] +
-                            (float)(data_to_use.get(last_date_index+1).num_chars_in_box[i] - data_to_use.get(last_date_index).num_chars_in_box[i]) *
+                    data_at_edge.num_in_box[i] = (int) (data_to_use.get(last_date_index).num_in_box[i] +
+                            (float)(data_to_use.get(last_date_index+1).num_in_box[i] - data_to_use.get(last_date_index).num_in_box[i]) *
                                     (range_date_max - data_to_use.get(last_date_index).date) / (data_to_use.get(last_date_index+1).date - data_to_use.get(last_date_index).date));
 
-                    data_at_edge.num_chars_expired_in_box[i] = (int) (data_to_use.get(last_date_index).num_chars_expired_in_box[i] +
-                            (float)(data_to_use.get(last_date_index+1).num_chars_expired_in_box[i] - data_to_use.get(last_date_index).num_chars_expired_in_box[i]) *
+                    data_at_edge.num_expired_in_box[i] = (int) (data_to_use.get(last_date_index).num_expired_in_box[i] +
+                            (float)(data_to_use.get(last_date_index+1).num_expired_in_box[i] - data_to_use.get(last_date_index).num_expired_in_box[i]) *
                                     (range_date_max - data_to_use.get(last_date_index).date) / (data_to_use.get(last_date_index+1).date - data_to_use.get(last_date_index).date));
                 }
             }
@@ -472,19 +472,19 @@ public class ProgressGraph extends View {
                     if (first_date_index>0) {
                         switch(graph_color) {
                             case 0:
-                                value[0] = data_at_origin.num_chars_in_box[0]+data_at_origin.num_chars_in_box[1]+data_at_origin.num_chars_in_box[2]+data_at_origin.num_chars_in_box[3]+data_at_origin.num_chars_in_box[4];
+                                value[0] = data_at_origin.num_in_box[0]+data_at_origin.num_in_box[1]+data_at_origin.num_in_box[2]+data_at_origin.num_in_box[3]+data_at_origin.num_in_box[4];
                                 break;
                             case 1:
-                                value[0] -= data_at_origin.num_chars_in_box[0];
+                                value[0] -= data_at_origin.num_in_box[0];
                                 break;
                             case 2:
-                                value[0] -= data_at_origin.num_chars_in_box[1];
+                                value[0] -= data_at_origin.num_in_box[1];
                                 break;
                             case 3:
-                                value[0] -= data_at_origin.num_chars_in_box[2];
+                                value[0] -= data_at_origin.num_in_box[2];
                                 break;
                             case 4:
-                                value[0] -= data_at_origin.num_chars_in_box[3];
+                                value[0] -= data_at_origin.num_in_box[3];
                                 break;
                         }
 
@@ -493,19 +493,19 @@ public class ProgressGraph extends View {
                     for (int i=first_date_index; i<data_to_use.size(); i++) {
                         switch(graph_color) {
                             case 0:
-                                value[i] = data_to_use.get(i).num_chars_in_box[0]+data_to_use.get(i).num_chars_in_box[1]+data_to_use.get(i).num_chars_in_box[2]+data_to_use.get(i).num_chars_in_box[3]+data_to_use.get(i).num_chars_in_box[4];
+                                value[i] = data_to_use.get(i).num_in_box[0]+data_to_use.get(i).num_in_box[1]+data_to_use.get(i).num_in_box[2]+data_to_use.get(i).num_in_box[3]+data_to_use.get(i).num_in_box[4];
                                 break;
                             case 1:
-                                value[i] -= data_to_use.get(i).num_chars_in_box[0];
+                                value[i] -= data_to_use.get(i).num_in_box[0];
                                 break;
                             case 2:
-                                value[i] -= data_to_use.get(i).num_chars_in_box[1];
+                                value[i] -= data_to_use.get(i).num_in_box[1];
                                 break;
                             case 3:
-                                value[i] -= data_to_use.get(i).num_chars_in_box[2];
+                                value[i] -= data_to_use.get(i).num_in_box[2];
                                 break;
                             case 4:
-                                value[i] -= data_to_use.get(i).num_chars_in_box[3];
+                                value[i] -= data_to_use.get(i).num_in_box[3];
                                 break;
                         }
                         float x= left_size + (getMeasuredWidth()+Math.min(0, current_offset_x)-left_size)*((float)data_to_use.get(i).date-range_date_min)/(range_date_max-range_date_min);
@@ -516,19 +516,19 @@ public class ProgressGraph extends View {
                     if (last_date_index<data_to_use.size()) {
                         switch(graph_color) {
                             case 0:
-                                value[data_to_use.size()] = data_at_edge.num_chars_in_box[0]+data_at_edge.num_chars_in_box[1]+data_at_edge.num_chars_in_box[2]+data_at_edge.num_chars_in_box[3]+data_at_edge.num_chars_in_box[4];
+                                value[data_to_use.size()] = data_at_edge.num_in_box[0]+data_at_edge.num_in_box[1]+data_at_edge.num_in_box[2]+data_at_edge.num_in_box[3]+data_at_edge.num_in_box[4];
                                 break;
                             case 1:
-                                value[data_to_use.size()] -= data_at_edge.num_chars_in_box[0];
+                                value[data_to_use.size()] -= data_at_edge.num_in_box[0];
                                 break;
                             case 2:
-                                value[data_to_use.size()] -= data_at_edge.num_chars_in_box[1];
+                                value[data_to_use.size()] -= data_at_edge.num_in_box[1];
                                 break;
                             case 3:
-                                value[data_to_use.size()] -= data_at_edge.num_chars_in_box[2];
+                                value[data_to_use.size()] -= data_at_edge.num_in_box[2];
                                 break;
                             case 4:
-                                value[data_to_use.size()] -= data_at_edge.num_chars_in_box[3];
+                                value[data_to_use.size()] -= data_at_edge.num_in_box[3];
                                 break;
                         }
 
@@ -560,21 +560,21 @@ public class ProgressGraph extends View {
 
                         switch(graph_color) {
                             case 0:
-                                total_now = data_to_use.get(data_to_use.size()-1).num_chars_in_box[0]+data_to_use.get(data_to_use.size()-1).num_chars_in_box[1]+
-                                        data_to_use.get(data_to_use.size()-1).num_chars_in_box[2]+data_to_use.get(data_to_use.size()-1).num_chars_in_box[3]+
-                                        data_to_use.get(data_to_use.size()-1).num_chars_in_box[4];
+                                total_now = data_to_use.get(data_to_use.size()-1).num_in_box[0]+data_to_use.get(data_to_use.size()-1).num_in_box[1]+
+                                        data_to_use.get(data_to_use.size()-1).num_in_box[2]+data_to_use.get(data_to_use.size()-1).num_in_box[3]+
+                                        data_to_use.get(data_to_use.size()-1).num_in_box[4];
                                 break;
                             case 1:
-                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[0];
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_in_box[0];
                                 break;
                             case 2:
-                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[1];
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_in_box[1];
                                 break;
                             case 3:
-                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[2];
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_in_box[2];
                                 break;
                             case 4:
-                                total_now -= data_to_use.get(data_to_use.size()-1).num_chars_in_box[3];
+                                total_now -= data_to_use.get(data_to_use.size()-1).num_in_box[3];
                                 break;
                         }
                         score_y = (float) ((1.0-log_scale(total_now, max_scale))*(getMeasuredHeight()-bottom_size));
