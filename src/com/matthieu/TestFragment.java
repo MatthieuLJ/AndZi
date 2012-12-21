@@ -13,9 +13,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +34,7 @@ public class TestFragment extends Fragment {
         ));
     }
     private static final int num_char_tests = 4;
+    private Animation animFlipIn,animFlipOut;
 
     private Test current_test_type;
     private String current_test_hanzi;
@@ -47,14 +52,10 @@ public class TestFragment extends Fragment {
     private static final String TAG = "TestFragment";
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //setRetainInstance(true);
-    }
-
-    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        animFlipIn = AnimationUtils.loadAnimation(activity, R.anim.flipin);
+        animFlipOut = AnimationUtils.loadAnimation(activity, R.anim.flipout);
         for (Test t:tests)
             t.attach(activity);
         myDB = ((AndZiApplication)activity.getApplication()).getMyDB();
@@ -62,7 +63,16 @@ public class TestFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return start_test(inflater, container, savedInstanceState);
+        View res = inflater.inflate(R.layout.test_flipper, container, false);
+        View test = start_test(inflater, container, savedInstanceState);
+        ViewFlipper flipper = (ViewFlipper) res.findViewById(R.id.test_flipper);
+        flipper.addView(test);
+
+        flipper.setInAnimation(animFlipIn);
+        flipper.setOutAnimation(animFlipOut);
+        return res;
+
+        //return start_test(inflater, container, savedInstanceState);
     }
 
     @Override
@@ -70,7 +80,8 @@ public class TestFragment extends Fragment {
         if (current_test_type != null) {
             ViewGroup container = (ViewGroup) getView();
             current_test_type.kill_view(container);
-            container.removeAllViews();
+            ((ViewFlipper)container.findViewById(R.id.test_flipper)).removeAllViews();
+            //container.removeAllViews();
         }
 
         super.onDestroyView();
@@ -83,7 +94,7 @@ public class TestFragment extends Fragment {
         outState.putString("test_hanzi", current_test_hanzi);
     }
 
-    public void new_test() {
+    /*public void new_test() {
         if (getView() == null)
             return;
         ViewGroup container = (ViewGroup) getView();
@@ -97,7 +108,32 @@ public class TestFragment extends Fragment {
         View new_test_view = start_test(inflater, container, null);
         container.removeAllViews();
         container.addView(new_test_view);
+    }*/
+
+
+    public void new_test() {
+        if (getView() == null)
+            return;
+        ViewFlipper flipper = (ViewFlipper) getView().findViewById(R.id.test_flipper);
+
+        if (getActivity() == null)
+            return;
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        Test old_test_type = current_test_type;
+        View new_test_view = start_test(inflater, flipper, null);
+
+        flipper.addView(new_test_view);
+
+        if (flipper.getChildCount() > 1) {
+            flipper.showNext();
+            if (old_test_type != null) {
+                old_test_type.kill_view(flipper.getChildAt(0));
+            }
+            flipper.removeViewAt(0);
+        }
     }
+
 
     private void fill_hanzis_to_test() {
         synchronized (TestFragment.this) {
@@ -147,7 +183,7 @@ public class TestFragment extends Fragment {
             new_test();
     }
 
-    public View start_test(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View start_test(LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null)
             set_next_char_to_study();
         else
@@ -211,7 +247,7 @@ public class TestFragment extends Fragment {
             public void onClick(View view) {
                 continue_with_more_chars = true;
                 table_filled = false;
-                start_test(inflater, container, null);
+                new_test();
             }
         });
 

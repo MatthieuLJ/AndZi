@@ -15,8 +15,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class GuessContaining extends Test {
     private String current_test;
@@ -24,7 +22,8 @@ public class GuessContaining extends Test {
     protected ArrayList<String> bad_answers=new ArrayList<String>();
     protected ArrayList<String> new_answers=new ArrayList<String>();
 
-    private View master_view=null;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private final String TAG="GuessContaining";
 
@@ -50,11 +49,14 @@ public class GuessContaining extends Test {
     @Override
     View get_view() {
         if (master_view == null) {
+            master_view = new View[2];
             LayoutInflater inflater = activity.getLayoutInflater();
-            master_view = inflater.inflate(R.layout.guess_containing, null);
+            master_view[0] = inflater.inflate(R.layout.guess_containing, null);
+            master_view[1] = inflater.inflate(R.layout.guess_containing, null);
         }
 
-        View res = master_view;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         EditText guess = (EditText) res.findViewById(R.id.containing_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -96,7 +98,7 @@ public class GuessContaining extends Test {
     }
 
     @Override
-    public void kill_view(ViewGroup v) {
+    public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.containing_test_guess);
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);

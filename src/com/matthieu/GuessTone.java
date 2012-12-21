@@ -20,7 +20,8 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
     private String current_test;
     private Pinyin pinyin;
     private ArrayList<Integer> tones=new ArrayList<Integer>();
-    private View master_view=null;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private final String TAG="GuessTone";
 
@@ -51,11 +52,14 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
     @Override
     View get_view() {
         if (master_view == null) {
+            master_view = new View[2];
             LayoutInflater inflater = activity.getLayoutInflater();
-            master_view = inflater.inflate(R.layout.guess_tone, null);
+            master_view[0] = inflater.inflate(R.layout.guess_tone, null);
+            master_view[1] = inflater.inflate(R.layout.guess_tone, null);
         }
 
-        View res = master_view;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         ArrayList<String> pinyins;
         String radical;

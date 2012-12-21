@@ -19,7 +19,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
     private String current_test;
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
     private ArrayList<String> previous_guess=new ArrayList<String>();
-    private View master_view=null;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private final String TAG="GuessMissingChar";
 
@@ -43,11 +44,14 @@ public class GuessMissingChar extends Test implements TextWatcher {
     @Override
     View get_view() {
         if (master_view == null) {
+            master_view = new View[2];
             LayoutInflater inflater = activity.getLayoutInflater();
-            master_view = inflater.inflate(R.layout.guess_missing_char, null);
+            master_view[0] = inflater.inflate(R.layout.guess_missing_char, null);
+            master_view[1] = inflater.inflate(R.layout.guess_missing_char, null);
         }
 
-        View res = master_view;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         EditText guess = (EditText) res.findViewById(R.id.missing_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -132,7 +136,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
     }
 
     @Override
-    public void kill_view(ViewGroup v) {
+    public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.missing_test_guess);
         guess.setOnEditorActionListener(null);
         guess.removeTextChangedListener(this);

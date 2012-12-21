@@ -18,7 +18,8 @@ import java.util.*;
 public class GuessEnglish extends Test {
     private String current_test;
     private Vocabulary solution=null;
-    private View master_view=null;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private final String TAG="GuessEnglish";
 
@@ -66,11 +67,14 @@ public class GuessEnglish extends Test {
     @Override
     View get_view() {
         if (master_view == null) {
+            master_view = new View[2];
             LayoutInflater inflater = activity.getLayoutInflater();
-            master_view = inflater.inflate(R.layout.guess_english, null);
+            master_view[0] = inflater.inflate(R.layout.guess_english, null);
+            master_view[1] = inflater.inflate(R.layout.guess_english, null);
         }
 
-        View res = master_view;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         EditText guess = (EditText) res.findViewById(R.id.english_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -111,7 +115,7 @@ public class GuessEnglish extends Test {
     }
 
     @Override
-    public void kill_view(ViewGroup v) {
+    public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.english_test_guess);
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);

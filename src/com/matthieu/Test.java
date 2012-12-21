@@ -33,7 +33,7 @@ public abstract class Test {
 
     abstract boolean set_hanzi_to_test(String s);
     abstract View get_view();
-    public void kill_view(ViewGroup v) {};
+    public void kill_view(View v) {};
 
     public abstract static class SolutionFragment extends Fragment {
         int good;

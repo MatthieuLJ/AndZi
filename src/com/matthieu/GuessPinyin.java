@@ -16,15 +16,14 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class GuessPinyin extends Test implements TextWatcher {
     private String current_test;
     private String pinyin;
     private ArrayList<Vocabulary> words;
     private boolean show_words=false;
-    private View master_view=null;
+    private View master_view[]=null;
+    private int current_view=0;
 
     private static final String TAG="GuessPinyin";
 
@@ -86,11 +85,14 @@ public class GuessPinyin extends Test implements TextWatcher {
     @Override
     View get_view() {
         if (master_view == null) {
+            master_view = new View[2];
             LayoutInflater inflater = activity.getLayoutInflater();
-            master_view = inflater.inflate(R.layout.guess_pinyin, null);
+            master_view[0] = inflater.inflate(R.layout.guess_pinyin, null);
+            master_view[1] = inflater.inflate(R.layout.guess_pinyin, null);
         }
 
-        View res = master_view;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         EditText guess = (EditText) res.findViewById(R.id.pinyin_test_guess);
 
@@ -183,10 +185,8 @@ public class GuessPinyin extends Test implements TextWatcher {
         return res;
     }
 
-
-
     @Override
-    public void kill_view(ViewGroup v) {
+    public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.pinyin_test_guess);
         guess.setOnEditorActionListener(null);
         guess.removeTextChangedListener(this);

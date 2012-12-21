@@ -20,7 +20,8 @@ public class GuessChineseWord extends Test {
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
     private boolean showing_more_voc;
-    private View master_view=null;
+    private View[] master_view=null;
+    private int current_view=0;
 
     private final String TAG="GuessChineseWord";
 
@@ -56,11 +57,14 @@ public class GuessChineseWord extends Test {
     @Override
     View get_view() {
         if (master_view == null) {
+            master_view = new View[2];
             LayoutInflater inflater = activity.getLayoutInflater();
-            master_view = inflater.inflate(R.layout.guess_chinese_word, null);
+            master_view[0] = inflater.inflate(R.layout.guess_chinese_word, null);
+            master_view[1] = inflater.inflate(R.layout.guess_chinese_word, null);
         }
 
-        View res = master_view;
+        current_view = 1-current_view;
+        View res = master_view[current_view];
 
         ArrayList<String> bare_translations = new ArrayList<String>();
 
@@ -153,7 +157,7 @@ public class GuessChineseWord extends Test {
     }
 
     @Override
-    public void kill_view(ViewGroup v) {
+    public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.chinese_word_test_guess);
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
