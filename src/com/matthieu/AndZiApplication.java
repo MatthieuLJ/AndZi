@@ -48,6 +48,10 @@ public class AndZiApplication extends Application {
         Pinyin.prepare_pinyin_process();
     }
 
+    private void update_dbs_in_details_populator() {
+        DetailsFragment.populate_dbs(myDB, ref_enabled?refDB:null);
+    }
+
     @Override
     public void onTerminate() {
         super.onTerminate();
@@ -60,21 +64,26 @@ public class AndZiApplication extends Application {
     public HanziDB getMyDB() {
         if (myDB==null) {
             initialize_my_db();
+            update_dbs_in_details_populator();
         }
         return myDB;
     }
     public HanziDB getRefDB() {
-        if (!ref_initialized)
+        if (!ref_initialized) {
             initialize_ref_db();
+        }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         ref_enabled=prefs.getBoolean("ref_enabled", true);
+        update_dbs_in_details_populator();
         //Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
         return (ref_enabled&&ref_present)?refDB:null;
     }
 
     public boolean getRefDBPresent() {
-        if (!ref_initialized)
+        if (!ref_initialized) {
             initialize_ref_db();
+            update_dbs_in_details_populator();
+        }
         return ref_present;
     }
 
@@ -132,19 +141,6 @@ public class AndZiApplication extends Application {
             ref_enabled=prefs.getBoolean("ref_enabled", true);
         }
         ref_initialized=true;
-    }
-
-    public void save_database_filter(boolean on, ArrayList<String> list) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putBoolean("Lesson_Filter_On", on);
-        try {
-            edit.putString("Lesson_Filter", (String) ObjectSerializer.serialize(list));
-        } catch (IOException e) {
-            edit.putBoolean("Lesson_Filter_On", false);
-            e.printStackTrace();
-        }
-        edit.commit();
     }
 
     public boolean check_exporting_space(String path) {
@@ -328,6 +324,7 @@ public class AndZiApplication extends Application {
             res = true;
         }
         Log.d(TAG, "Done installing reference db " + dest);
+        update_dbs_in_details_populator();
         return res;
     }
 
@@ -335,6 +332,7 @@ public class AndZiApplication extends Application {
         if (refDB != null) {
             refDB.close();
             refDB = null;
+            update_dbs_in_details_populator();
         }
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(REF_DB_NAME);

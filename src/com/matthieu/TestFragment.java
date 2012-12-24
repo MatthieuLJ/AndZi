@@ -6,9 +6,6 @@ package com.matthieu;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,14 +13,14 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class TestFragment extends Fragment {
     private static ArrayList<Test> tests;
@@ -71,8 +68,6 @@ public class TestFragment extends Fragment {
         flipper.setInAnimation(animFlipIn);
         flipper.setOutAnimation(animFlipOut);
         return res;
-
-        //return start_test(inflater, container, savedInstanceState);
     }
 
     @Override
@@ -81,7 +76,6 @@ public class TestFragment extends Fragment {
             ViewGroup container = (ViewGroup) getView();
             current_test_type.kill_view(container);
             ((ViewFlipper)container.findViewById(R.id.test_flipper)).removeAllViews();
-            //container.removeAllViews();
         }
 
         super.onDestroyView();
@@ -93,23 +87,6 @@ public class TestFragment extends Fragment {
         outState.putInt("test_index", test_index);
         outState.putString("test_hanzi", current_test_hanzi);
     }
-
-    /*public void new_test() {
-        if (getView() == null)
-            return;
-        ViewGroup container = (ViewGroup) getView();
-        if (current_test_type != null) {
-            current_test_type.kill_view(container);
-        }
-        if (getActivity() == null)
-            return;
-        LayoutInflater inflater = getActivity().getLayoutInflater();
-
-        View new_test_view = start_test(inflater, container, null);
-        container.removeAllViews();
-        container.addView(new_test_view);
-    }*/
-
 
     public void new_test() {
         if (getView() == null)
@@ -170,6 +147,8 @@ public class TestFragment extends Fragment {
         }
         else if (hanzis_to_test.size()==0) {
             fill_hanzis_to_test();
+            if (hanzis_to_test.size() < size_threshold)
+                hanzis_to_test.clear();
             set_next_char_to_study();
         }
         else {
@@ -219,13 +198,13 @@ public class TestFragment extends Fragment {
         current_test_type = tests.get(test_index);
 
         table_filled = false;
-        Thread filler = new Thread() {
+        TimerTask filler = new TimerTask() {
             @Override
             public void run() {
                 trim_hanzis_to_test(current_test_hanzi);
             }
         };
-        filler.start();
+        new Timer().schedule(filler, 100);
 
         return current_test_type.get_view();
     }
