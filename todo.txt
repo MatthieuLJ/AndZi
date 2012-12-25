@@ -15,8 +15,11 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
+BUGS (4):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
+* Sometimes Dictionary search gets overridden again and never finishes
+* Tests selection when list becomes smaller is a problem
+* Indicator of test success disappears too soon sometimes (when going too fast through tests)
 
 FUTURE (14):
 * Load results in dictionary progressively
