@@ -146,21 +146,9 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             View v = fragments[1].getView();
             if (v == null)
                 return;
-            /*View entry = v.findViewById(R.id.test_guess);
-            if (i==1) {
-                if (entry!=null) {
-                    entry.requestFocus();
-                }
-            } else*/ if (i==0) {
+            if (i==0) {
                 update_stats();
             }
-            /*else {
-                //TestActivity.this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-                if (entry!=null) {
-                    InputMethodManager imm = (InputMethodManager)TestActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(entry.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                }
-            }*/
         }
 
         @Override
@@ -221,6 +209,12 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         }
 
         ((TestFragment)fragments[1]).new_test();
+    }
+
+    public void score_changed() {
+        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        if ((pager == null) || (pager.getCurrentItem()==0))
+            update_stats();
     }
 
     public void update_stats() {

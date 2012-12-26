@@ -311,6 +311,7 @@ public class GuessContaining extends Test {
                     myDB.resetTime(question);
                     break;
             }
+            super.update_score();
         }
     }
 }

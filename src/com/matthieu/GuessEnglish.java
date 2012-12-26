@@ -259,6 +259,7 @@ public class GuessEnglish extends Test {
                 old_scores.put(question, new saved_score(myDB.getBoxForChar(question), myDB.getExpirationTimeForChar(question)));
                 myDB.worseBox(question);
             }
+            super.update_score();
         }
     }
 }

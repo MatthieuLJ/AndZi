@@ -278,6 +278,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                         myDB.worseBox(other_hanzi);
                 }
             }
+            super.update_score();
         }
     }
 

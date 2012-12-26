@@ -323,6 +323,7 @@ public class GuessChineseWord extends Test {
                     i+=Character.charCount(question.codePointAt(i));
                 }
             }
+            super.update_score();
         }
     }
 }
