@@ -1,4 +1,4 @@
-ONGOING (10):
+ONGOING (11):
 * Put back buttons for Reference Activity (for larger screens)
 * Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
@@ -8,6 +8,7 @@ ONGOING (10):
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
   - splash page + main menu layout
+* Make progress of downloading dic within the settings item
 * Update help
 * Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
@@ -15,9 +16,8 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (2):
+BUGS (1):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Notice to download dictionary disappears when rotating screen
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -35,7 +35,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (196):
+DONE (197):
+* Notice to download dictionary disappears when rotating screen
 * Indicator of test success disappears too soon sometimes (when going too fast through tests)
 * Sometimes Dictionary search gets overridden again and never finishes
 * Tests selection when list becomes smaller is a problem

@@ -19,6 +19,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     private final String TAG="MainMenuActivity";
     boolean showing_splash = false;
     boolean start_test;
+    static boolean showing_download_dictionary=false;
     Fragment splash_fragment=null;
 
     @Override
@@ -36,6 +37,9 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     }
 
     public void start_it() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
+        boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
+
         if (splash_fragment != null) {
             getSupportFragmentManager().beginTransaction().remove(splash_fragment).commitAllowingStateLoss();
             splash_fragment = null;
@@ -44,37 +48,37 @@ public class MainMenuActivity extends SherlockFragmentActivity {
             handle_test(null);
             start_test=false;
         }
-        else if (((AndZiApplication) getApplication()).isOnline() && showing_splash) {
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
-            boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
-            if ((offer_to_download_ref) && (!((AndZiApplication) getApplication()).getRefDBPresent())) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
-                alert.setMessage(R.string.download_dictionary);
-                alert.setNegativeButton(R.string.later, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        dialog.dismiss();
-                    }
-                });
-                alert.setNeutralButton(R.string.do_not_ask_again, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        SharedPreferences.Editor edit = prefs.edit();
-                        edit.putBoolean("first_time_ref", false);
-                        edit.commit();
-                        dialog.dismiss();
-                    }
-                });
-                alert.setPositiveButton(R.string.download, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        Intent in = new Intent(MainMenuActivity.this, Settings.class);
-                        in.putExtra("Settings_action", 0);
-                        startActivity(in);
-                        dialog.dismiss();
-                    }
-                });
-                alert.create();
-                alert.show();
-            }
+        else if (showing_download_dictionary ||
+                (((AndZiApplication) getApplication()).isOnline() && showing_splash &&
+                        offer_to_download_ref && (!((AndZiApplication) getApplication()).getRefDBPresent()))) {
+            showing_download_dictionary = true;
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
+            alert.setMessage(R.string.download_dictionary);
+            alert.setNegativeButton(R.string.later, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    dialog.dismiss();
+                }
+            });
+            alert.setNeutralButton(R.string.do_not_ask_again, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    SharedPreferences.Editor edit = prefs.edit();
+                    edit.putBoolean("first_time_ref", false);
+                    edit.commit();
+                    dialog.dismiss();
+                }
+            });
+            alert.setPositiveButton(R.string.download, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int i) {
+                    Intent in = new Intent(MainMenuActivity.this, Settings.class);
+                    in.putExtra("Settings_action", 0);
+                    startActivity(in);
+                    dialog.dismiss();
+                }
+            });
+            alert.create();
+            alert.show();
         }
+
         setContentView(R.layout.main_menu);
     }
 
