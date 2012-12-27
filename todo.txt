@@ -15,9 +15,8 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (4):
+BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Sometimes Dictionary search gets overridden again and never finishes
 * Indicator of test success disappears too soon sometimes (when going too fast through tests)
 * Notice to download dictionary disappears when rotating screen
 
@@ -37,7 +36,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (194):
+DONE (195):
+* Sometimes Dictionary search gets overridden again and never finishes
 * Tests selection when list becomes smaller is a problem
 * Change stats with whole Leitner DB
 * Change number of test remaining (instead of chars+words)

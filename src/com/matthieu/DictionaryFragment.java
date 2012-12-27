@@ -127,11 +127,17 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     return current_cursor;
                 }
 
+                EditText query = (EditText) getView().findViewById(R.id.dict_query);
+                if (query != null) {
+                    if ((mode!=msg_mode) || (!msg_query.trim().equals(query.getText().toString().trim()))) {
+                        return null;
+                    }
+                }
+
                 last_query = msg_query;
                 last_mode = msg_mode;
                 last_use_ref = msg_ref;
                 publishProgress(null);
-
 
                 if (msg_query.length()==0) {
                     result_cursor =null;
@@ -141,15 +147,15 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
 
                         if (elems == null) {
-                            return new MessageCursor("Cannot understand this query");
+                            current_cursor = new MessageCursor("Cannot understand this query");
+                            return current_cursor;
                         }
 
                         boolean all_chinese=true;
-                        if (elems != null)
-                            for (HanziDB.StringElement e : elems) {
-                                if (e.type != HanziDB.StringElement.type_t.CHINESE)
-                                    all_chinese=false;
-                            }
+                        for (HanziDB.StringElement e : elems) {
+                            if (e.type != HanziDB.StringElement.type_t.CHINESE)
+                                all_chinese=false;
+                        }
 
                         if (elems.size()==1) {
                             switch(elems.get(0).type) {
@@ -209,9 +215,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         result_cursor =null;
                 }
 
-                if (is_cancelled)
-                    return null;
-
                 // Just to make sure the query actually happens in this thread (and not the UI thread)
                 if ((result_cursor != null) && (!result_cursor.isClosed())) {
                     result_cursor.getCount();
@@ -220,23 +223,35 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 if (isCancelled() && result_cursor != null)
                     result_cursor.close();
-            }
 
-            return result_cursor;
+                current_cursor = result_cursor;
+                return result_cursor;
+            }
         }
 
         @Override
         protected void onProgressUpdate(Cursor... values) {
-            publish_cursor(values==null?null:values[0]);
+            if ((getActivity()!=null) && (getView() != null)) {
+                final ListView results = (ListView) getView().findViewById(R.id.dict_results);
+                Cursor current_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
+                if (current_cursor instanceof MessageCursor)
+                    ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(null);
+                ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(true);
+            }
         }
 
         @Override
         protected void onPostExecute(Cursor cursor) {
-            publish_cursor(cursor);
             if ((getActivity()!=null) && (getView() != null)) {
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
-                if ((mode == last_mode) && (last_query.trim().equals(query.getText().toString().trim())))
+                if ((msg_mode == mode) && (msg_query.trim().equals(query.getText().toString().trim()))) {
+                    publish_cursor(cursor);
                     ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
+                }
+                else {
+                    if (cursor!=null)
+                        cursor.close();
+                }
             }
         }
 
@@ -250,12 +265,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if (query == null)
                 return;
 
-            if ((cur != null) && ((mode!=last_mode) || (!last_query.trim().equals(query.getText().toString().trim()))))
+            if ((mode!=msg_mode) || (!msg_query.trim().equals(query.getText().toString().trim())))
                 return;
 
-            Log.d(TAG, "cursor is not null, last_query is "+last_query+", and current search is "+query.getText());
-
-            ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(cur==null && !query.getText().toString().equals(""));
+            Log.d(TAG, "msg_query is "+msg_query+", and current search is "+query.getText());
 
             final ListView results = (ListView) getView().findViewById(R.id.dict_results);
 
@@ -264,7 +277,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 return;
             }
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
-            current_cursor = cur;
         }
     }
 
