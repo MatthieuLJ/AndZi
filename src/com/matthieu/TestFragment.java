@@ -20,8 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class TestFragment extends Fragment {
     private ArrayList<Test> tests;
