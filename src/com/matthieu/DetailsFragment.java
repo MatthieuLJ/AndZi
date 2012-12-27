@@ -6,7 +6,6 @@
 package com.matthieu;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -15,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.TypedValue;
@@ -124,6 +122,12 @@ public class DetailsFragment extends Fragment {
         if (saved_data != null)
             kill_detail_view(saved_data);
         super.onDestroy();
+    }
+
+    static HanziDB myDB, refDB;
+    static void populate_dbs(HanziDB local, HanziDB ref) {
+        myDB = local;
+        refDB = ref;
     }
 
     static void populate_details_view(final Fragment fragment, ViewGroup section,
@@ -249,7 +253,6 @@ public class DetailsFragment extends Fragment {
         VocabularyCursorClickHandle clicker;
         boolean show_pinyin_color;
         handle_details_request new_request;
-
         CharSequence pinyin_info;
 
         public populator(Fragment f, String h, String p, boolean r_q, ViewGroup v, VocabularyCursorClickHandle c, handle_details_request n_r) {
@@ -258,10 +261,10 @@ public class DetailsFragment extends Fragment {
             pinyin = p;
             ref_query = r_q;
             if (ref_query) {
-                db = ((AndZiApplication)fragment.getActivity().getApplication()).getRefDB();
+                db = refDB;
             }
             if ((db == null) || (!ref_query)) {
-                db = ((AndZiApplication)fragment.getActivity().getApplication()).getMyDB();
+                db = myDB;
             }
             container = new WeakReference<ViewGroup>(v);
             elements = new ArrayList<HanziDB.StringElement>();

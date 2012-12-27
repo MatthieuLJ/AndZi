@@ -314,6 +314,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
                 myDB.betterBox(question);
             else
                 myDB.worseBox(question);
+            super.update_score();
         }
     }
 }

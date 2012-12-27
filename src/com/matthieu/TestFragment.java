@@ -5,10 +5,8 @@ package com.matthieu;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,29 +14,24 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 public class TestFragment extends Fragment {
-    private static ArrayList<Test> tests;
-    static {
-        tests = new ArrayList<Test>(Arrays.asList(
-                new GuessMissingChar(), new GuessContaining(), new GuessPinyin(), new GuessTone(), // characters
-                new GuessChineseWord(), new GuessEnglish() // words
-        ));
-    }
+    private ArrayList<Test> tests;
+
     private static final int num_char_tests = 4;
     private Animation animFlipIn,animFlipOut;
 
     private Test current_test_type;
     private String current_test_hanzi;
     private int test_index;
+
+    private Handler my_handler;
 
     private HanziDB myDB;
 
@@ -51,6 +44,13 @@ public class TestFragment extends Fragment {
 
     private static final String TAG = "TestFragment";
 
+    public TestFragment() {
+        tests = new ArrayList<Test>(Arrays.asList(
+                new GuessMissingChar(), new GuessContaining(), new GuessPinyin(), new GuessTone(), // characters
+                new GuessChineseWord(), new GuessEnglish() // words
+        ));
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -59,6 +59,7 @@ public class TestFragment extends Fragment {
         for (Test t:tests)
             t.attach(activity);
         myDB = ((AndZiApplication)activity.getApplication()).getMyDB();
+        my_handler = new Handler();
     }
 
     @Override
@@ -71,8 +72,6 @@ public class TestFragment extends Fragment {
         flipper.setInAnimation(animFlipIn);
         flipper.setOutAnimation(animFlipOut);
         return res;
-
-        //return start_test(inflater, container, savedInstanceState);
     }
 
     @Override
@@ -81,7 +80,6 @@ public class TestFragment extends Fragment {
             ViewGroup container = (ViewGroup) getView();
             current_test_type.kill_view(container);
             ((ViewFlipper)container.findViewById(R.id.test_flipper)).removeAllViews();
-            //container.removeAllViews();
         }
 
         super.onDestroyView();
@@ -93,23 +91,6 @@ public class TestFragment extends Fragment {
         outState.putInt("test_index", test_index);
         outState.putString("test_hanzi", current_test_hanzi);
     }
-
-    /*public void new_test() {
-        if (getView() == null)
-            return;
-        ViewGroup container = (ViewGroup) getView();
-        if (current_test_type != null) {
-            current_test_type.kill_view(container);
-        }
-        if (getActivity() == null)
-            return;
-        LayoutInflater inflater = getActivity().getLayoutInflater();
-
-        View new_test_view = start_test(inflater, container, null);
-        container.removeAllViews();
-        container.addView(new_test_view);
-    }*/
-
 
     public void new_test() {
         if (getView() == null)
@@ -136,6 +117,7 @@ public class TestFragment extends Fragment {
 
 
     private void fill_hanzis_to_test() {
+        Log.d(TAG, "fill_hanzis_to_test");
         synchronized (TestFragment.this) {
             hanzis_to_test = myDB.getAllToStudy(size_limit);
             if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
@@ -145,6 +127,7 @@ public class TestFragment extends Fragment {
     }
 
     private void trim_hanzis_to_test(String hanzi) {
+        Log.d(TAG, "trim_hanzis_to_test "+hanzi);
         synchronized (TestFragment.this) {
             for (int offset=0; offset<hanzi.length();) {
                 String c = hanzi.substring(offset, offset + Character.charCount(hanzi.codePointAt(offset)));
@@ -165,11 +148,14 @@ public class TestFragment extends Fragment {
     }
 
     private void set_next_char_to_study() {
+        Log.d(TAG, "set_next_char_to_study");
         if ((hanzis_to_test.size()==0) && (table_filled)) {
             current_test_hanzi =null;
         }
         else if (hanzis_to_test.size()==0) {
             fill_hanzis_to_test();
+            if (current_test_hanzi != null)
+                trim_hanzis_to_test(current_test_hanzi);
             set_next_char_to_study();
         }
         else {
@@ -219,13 +205,12 @@ public class TestFragment extends Fragment {
         current_test_type = tests.get(test_index);
 
         table_filled = false;
-        Thread filler = new Thread() {
+        my_handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 trim_hanzis_to_test(current_test_hanzi);
             }
-        };
-        filler.start();
+        }, 500);
 
         return current_test_type.get_view();
     }

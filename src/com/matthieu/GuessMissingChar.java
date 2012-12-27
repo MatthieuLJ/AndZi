@@ -138,6 +138,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
     @Override
     public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.missing_test_guess);
+        if (guess==null)
+            return;
         guess.setOnEditorActionListener(null);
         guess.removeTextChangedListener(this);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -276,6 +278,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                         myDB.worseBox(other_hanzi);
                 }
             }
+            super.update_score();
         }
     }
 

@@ -33,11 +33,13 @@ public class SplashFragment extends Fragment {
         progress.setIndeterminate(false);
         progress.setMax(100);
 
-        db_loader = new SplashLoader();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            db_loader.execute((Void[])null);
+        if (db_loader == null) {
+            db_loader = new SplashLoader();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                db_loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+            else
+                db_loader.execute((Void[])null);
+        }
 
         return res;
     }

@@ -21,6 +21,8 @@ public abstract class Test {
     protected static HanziDB myDB, refDB;
     protected Activity activity;
 
+    static private Timer timer = new Timer();
+
     final static public int CORRECT=1;
     final static public int INCORRECT=2;
     final static public int OTHER=3;
@@ -38,6 +40,7 @@ public abstract class Test {
     public abstract static class SolutionFragment extends Fragment {
         int good;
         String question, answer;
+
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -59,7 +62,7 @@ public abstract class Test {
                     });*/
                 }
             };
-            new Timer().schedule(updater, 500);
+            timer.schedule(updater, 500);
         }
 
 
@@ -72,7 +75,11 @@ public abstract class Test {
             }
         }
 
-        abstract public void update_score();
+        public void update_score() {
+            TestActivity my_activity = (TestActivity) getActivity();
+            if (my_activity != null)
+                my_activity.score_changed();
+        }
 
         protected View show_details(LayoutInflater inflater, ViewGroup container, boolean show_accept) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
@@ -146,7 +153,7 @@ public abstract class Test {
                     });*/
                 }
             };
-            new Timer().schedule(updater, 500);
+            timer.schedule(updater, 500);
         }
 
         protected class saved_score {

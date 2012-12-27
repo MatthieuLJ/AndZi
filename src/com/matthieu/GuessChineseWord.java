@@ -159,6 +159,8 @@ public class GuessChineseWord extends Test {
     @Override
     public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.chinese_word_test_guess);
+        if (guess==null)
+            return;
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -321,6 +323,7 @@ public class GuessChineseWord extends Test {
                     i+=Character.charCount(question.codePointAt(i));
                 }
             }
+            super.update_score();
         }
     }
 }

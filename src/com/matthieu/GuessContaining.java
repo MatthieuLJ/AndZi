@@ -100,6 +100,8 @@ public class GuessContaining extends Test {
     @Override
     public void kill_view(View v) {
         EditText guess = (EditText) v.findViewById(R.id.containing_test_guess);
+        if (guess==null)
+            return;
         guess.setOnEditorActionListener(null);
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         //imm.hideSoftInputFromWindow(guess.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -187,6 +189,7 @@ public class GuessContaining extends Test {
 
             if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                bad_guess.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 TableLayout tl = new TableLayout(getActivity());
                 //tl.setStretchAllColumns(true);
                 int table=0, offset_in_table=0, offset_in_column=0, table_size=bad_answers.size();
@@ -234,11 +237,13 @@ public class GuessContaining extends Test {
                     cell.setOrientation(LinearLayout.HORIZONTAL);
                     TextView label_box = new TextView(getActivity());
                     label_box.setText(label);
+                    label_box.setGravity(Gravity.LEFT);
                     label_box.setTextColor(Color.BLACK);
                     label_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
                     cell.addView(label_box);
                     TextView answer_box = new TextView(getActivity());
                     answer_box.setText(answer);
+                    answer_box.setGravity(Gravity.RIGHT);
                     answer_box.setTextColor(Color.BLACK);
                     answer_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2));
                     final String final_answer = answer;
@@ -306,6 +311,7 @@ public class GuessContaining extends Test {
                     myDB.resetTime(question);
                     break;
             }
+            super.update_score();
         }
     }
 }
