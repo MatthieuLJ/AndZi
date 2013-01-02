@@ -8,16 +8,11 @@ import android.os.Bundle;
 import android.support.v4.app.*;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
-
-import java.util.*;
 
 public class TestActivity extends SherlockFragmentActivity  implements handle_details_request {
     private Fragment fragments[];
@@ -61,11 +56,6 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             }
         }
 
-        if (linear != null) {
-            FrameLayout solution_frame = (FrameLayout) findViewById(R.id.test_fragment2);
-            solution_frame.setVisibility(fragments[2]==null ? View.GONE : View.VISIBLE);
-        }
-
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new test_pager(getSupportFragmentManager()));
@@ -74,12 +64,6 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             mIndicator.setViewPager(pager);
 
             mIndicator.setOnPageChangeListener(new keyboard_handle());
-        }
-
-        TextView result_overlay = (TextView) findViewById(R.id.test_result);
-        result_overlay.setVisibility(View.GONE);
-        if (pager != null) {
-            pager.setCurrentItem(1, false);
         }
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
