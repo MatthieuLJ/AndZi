@@ -34,7 +34,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
             fragments[1] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment1");
             if (pager != null) {
-                pager.setCurrentItem(savedInstanceState.getInt("position"));
+                pager.setCurrentItem(savedInstanceState.getInt("position"), false);
             }
         }
         if (fragments[0] == null) {
@@ -64,6 +64,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             mIndicator.setViewPager(pager);
 
             mIndicator.setOnPageChangeListener(new keyboard_handle());
+            if (savedInstanceState == null)
+                pager.setCurrentItem(1, false);
         }
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
