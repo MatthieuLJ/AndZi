@@ -209,7 +209,7 @@ public class TestFragment extends Fragment {
 
         if (current_test_hanzi == null) {
             current_test_type = null;
-            //
+            return;
         }
         int min_test, max_test;
         if (current_test_hanzi.length()==1) {
@@ -256,7 +256,7 @@ public class TestFragment extends Fragment {
     }
 
 
-    private View done_testing(boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
+    private View done_testing(final boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
         final View res = inflater.inflate(R.layout.test_done, container, false);
         TextView message = (TextView) res.findViewById(R.id.test_done_text);
         if (empty_db) {
@@ -270,9 +270,14 @@ public class TestFragment extends Fragment {
         OK_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                continue_with_more_chars = true;
-                table_filled = false;
-                new_test();
+                if (!empty_db) {
+                    continue_with_more_chars = true;
+                    table_filled = false;
+                    new_test();
+                } else {
+                    TestFragment.this.getActivity().finish();
+                }
+
             }
         });
 
