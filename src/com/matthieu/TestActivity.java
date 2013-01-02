@@ -58,14 +58,14 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         if (pager != null) {
             pager.setOffscreenPageLimit(2);
-            pager.setAdapter(new test_pager(getSupportFragmentManager()));
+            pager.setAdapter(new test_pager_adapter(getSupportFragmentManager()));
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
 
             mIndicator.setOnPageChangeListener(new keyboard_handle());
             if (savedInstanceState == null)
-                pager.setCurrentItem(1, false);
+                pager.setCurrentItem(0, false);
         }
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -117,7 +117,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         @Override
         public void onPageSelected(int i) {
-            if (i==0) {
+            if (i==1) {
                 update_stats();
             }
         }
@@ -133,7 +133,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     public void score_changed() {
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
-        if ((pager == null) || (pager.getCurrentItem()==0))
+        if ((pager == null) || (pager.getCurrentItem()==1))
             update_stats();
     }
 
@@ -144,8 +144,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     @Override
     public void onBackPressed() {
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 1))
-            pager.setCurrentItem(1, true);
+        if ((pager != null) && (pager.getCurrentItem() != 0))
+            pager.setCurrentItem(0, true);
         else
             super.onBackPressed();
     }
@@ -162,14 +162,14 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     // using a FragmentStatePagerAdapter here because some Fragments go away and come back (for the test)
     // The FragmentPagerAdapter does not resume well old fragments
-    private class test_pager extends FragmentStatePagerAdapter {
-        public test_pager(FragmentManager fm) {
+    private class test_pager_adapter extends FragmentStatePagerAdapter {
+        public test_pager_adapter(FragmentManager fm) {
             super(fm);
         }
 
         @Override
         public Fragment getItem(int i) {
-            return fragments[i];
+            return fragments[1-i];
         }
 
         @Override
