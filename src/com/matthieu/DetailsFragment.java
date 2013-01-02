@@ -6,6 +6,7 @@
 package com.matthieu;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -72,7 +73,7 @@ public class DetailsFragment extends Fragment {
         FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
 
         if (saved_data != null) {
-            populate_details_view(this, frame, saved_data, (ReferenceActivity) getActivity());
+            populate_details_view(this.getActivity(), frame, saved_data, (ReferenceActivity) getActivity());
         } else {
             Bundle bundle = getArguments();
             if (bundle != null) {
@@ -82,7 +83,7 @@ public class DetailsFragment extends Fragment {
             }
 
             if (!current_hanzi.equals(""))
-                populate_details_view(this, frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
+                populate_details_view(this.getActivity(), frame, current_hanzi, use_ref, (ReferenceActivity) getActivity());
 
             HanziDB db = ((AndZiApplication) getActivity().getApplication()).getMyDB();
             if (db == null)
@@ -130,13 +131,13 @@ public class DetailsFragment extends Fragment {
         refDB = ref;
     }
 
-    static void populate_details_view(final Fragment fragment, ViewGroup section,
+    static void populate_details_view(final Activity activity, ViewGroup section,
                                       final String hanzi, final boolean ref_query, final handle_details_request new_request) {
-        populate_details_view(fragment, section, hanzi, "", ref_query, new_request);
+        populate_details_view(activity, section, hanzi, "", ref_query, new_request);
     }
 
     @SuppressLint({"NewApi"})
-    static void populate_details_view(final Fragment fragment, ViewGroup section,
+    static void populate_details_view(final Activity activity, ViewGroup section,
                                       final String hanzi, final String pinyin,
                                       final boolean ref_query, final handle_details_request new_request) {
 
@@ -160,7 +161,7 @@ public class DetailsFragment extends Fragment {
             }
         }
 
-        populator populate = new populator(fragment, hanzi, pinyin, ref_query, section, new VocabularyCursorClickHandle() {
+        populator populate = new populator(activity, hanzi, pinyin, ref_query, section, new VocabularyCursorClickHandle() {
             @Override
             public void click(String item_clicked) {
                 if (new_request != null)
@@ -174,18 +175,18 @@ public class DetailsFragment extends Fragment {
             populate.execute((Void[])null);
     }
 
-    static void populate_details_view(final Fragment fragment, ViewGroup section, final saved_details saved,
+    static void populate_details_view(final Activity activity, ViewGroup section, final saved_details saved,
                                       final handle_details_request new_request) {
         section.removeAllViews();
-        View.inflate(fragment.getActivity(), R.layout.details, section);
+        View.inflate(activity, R.layout.details, section);
         synchronized (locker) {
             // first write the word at the top
             LinearLayout top_word = (LinearLayout) section.findViewById(R.id.details_title);
             top_word.removeAllViews();
             for (int i=0; i<saved.saved_hanzi.length(); ) {
-                TextView character = new TextView(fragment.getActivity());
+                TextView character = new TextView(activity);
                 final String character_label = saved.saved_hanzi.substring(i, i + Character.charCount(saved.saved_hanzi.codePointAt(i)));
-                character.setTextAppearance(fragment.getActivity(), android.R.style.TextAppearance_Large_Inverse);
+                character.setTextAppearance(activity, android.R.style.TextAppearance_Large_Inverse);
                 character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
                 character.setText(character_label);
                 if (saved.saved_hanzi.codePointCount(0, saved.saved_hanzi.length())!= 1)
@@ -223,7 +224,7 @@ public class DetailsFragment extends Fragment {
                                 new_request.new_details_request(item_clicked, saved.saved_use_ref);
                         }
                     };
-                    list.setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), saved.saved_cursor, clicker));
+                    list.setAdapter(new VocabularyCursorAdapter(activity, saved.saved_cursor, clicker));
                 } else
                     adapter.changeCursor(saved.saved_cursor);
                 list.setVisibility(View.VISIBLE);
@@ -243,7 +244,7 @@ public class DetailsFragment extends Fragment {
 
     static private class populator extends AsyncTask<Void,Void,Void> {
         Cursor cursor;
-        Fragment fragment;
+        Activity activity;
         ArrayList<HanziDB.StringElement> elements;
         HanziDB db;
         boolean ref_query;
@@ -255,8 +256,8 @@ public class DetailsFragment extends Fragment {
         handle_details_request new_request;
         CharSequence pinyin_info;
 
-        public populator(Fragment f, String h, String p, boolean r_q, ViewGroup v, VocabularyCursorClickHandle c, handle_details_request n_r) {
-            fragment = f;
+        public populator(Activity a, String h, String p, boolean r_q, ViewGroup v, VocabularyCursorClickHandle c, handle_details_request n_r) {
+            activity = a;
             hanzi = h;
             pinyin = p;
             ref_query = r_q;
@@ -304,7 +305,7 @@ public class DetailsFragment extends Fragment {
                 this.cancel(true);
                 return;
             }
-            View.inflate(fragment.getActivity(), R.layout.details, container.get());
+            View.inflate(activity, R.layout.details, container.get());
 
             ListView list = (ListView) container.get().findViewById(R.id.details_list);
             list.setVisibility(View.GONE);
@@ -314,7 +315,7 @@ public class DetailsFragment extends Fragment {
             list.setTag(R.id.detail_query_pinyin, pinyin);
             list.setTag(R.id.details_query_ref, ref_query);
 
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(fragment.getActivity());
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(activity);
             show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
             ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
@@ -403,14 +404,14 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             synchronized (locker) {
-                if ((container.get()!=null) && (fragment.getActivity()!=null)) {
+                if ((container.get()!=null) && (activity!=null)) {
                     // first write the word at the top
                     LinearLayout top_word = (LinearLayout) container.get().findViewById(R.id.details_title);
                     top_word.removeAllViews();
                     for (int i=0; i<hanzi.length(); ) {
-                        TextView character = new TextView(fragment.getActivity());
+                        TextView character = new TextView(activity);
                         final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
-                        character.setTextAppearance(fragment.getActivity(), android.R.style.TextAppearance_Large_Inverse);
+                        character.setTextAppearance(activity, android.R.style.TextAppearance_Large_Inverse);
                         character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
                         character.setText(character_label);
                         if (hanzi.codePointCount(0, hanzi.length())!= 1)
@@ -436,7 +437,7 @@ public class DetailsFragment extends Fragment {
                     ListView list = (ListView) container.get().findViewById(R.id.details_list);
                     VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
                     if (adapter == null)
-                        list.setAdapter(new VocabularyCursorAdapter(fragment.getActivity(), cursor, clicker));
+                        list.setAdapter(new VocabularyCursorAdapter(activity, cursor, clicker));
                     else
                         adapter.changeCursor(cursor);
                     list.setVisibility(View.VISIBLE);

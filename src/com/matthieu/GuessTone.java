@@ -13,8 +13,6 @@ import android.view.*;
 import android.widget.*;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class GuessTone extends Test implements GestureOverlayView.OnGesturePerformedListener {
     private String current_test;
@@ -253,31 +251,30 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         if (cb.isChecked()) tones_checked+="4";
 
         int correctness = check_guess(tones_checked);
-        GuessToneResultFragment solution_fragment = new GuessToneResultFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("good", correctness);
-        bundle.putString("answer", tones_checked);
-        bundle.putString("question", current_test);
-        solution_fragment.setArguments(bundle);
-        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+        GuessToneResultView solution_fragment = new GuessToneResultView(correctness, current_test, tones_checked, activity);
+        ((TestActivity)activity).new_solution_fragment(solution_fragment);
     }
 
-    public static class GuessToneResultFragment extends Test.SolutionFragment {
+    public static class GuessToneResultView extends SolutionView {
+        public GuessToneResultView(int good, String question, String answer, TestActivity parent) {
+            super(good, question, answer, parent);
+        }
+
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    DetailsFragment.populate_details_view(GuessToneResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) res.findViewById(R.id.test_results), question, false, parent_activity);
                 }
             }, 500);
 
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
-                TextView bad_guess_text = new TextView(getActivity());
+                TextView bad_guess_text = new TextView(parent_activity);
                 if (answer.length() == 0) {
                     bad_guess_text.setText("You did not guess anything");
                 }
@@ -303,9 +300,8 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         }
 
         @Override
-        public void onDestroyView() {
-            DetailsFragment.kill_detail_view((ViewGroup) getView().findViewById(R.id.test_results));
-            super.onDestroyView();
+        public void kill_view(View v) {
+            DetailsFragment.kill_detail_view((ViewGroup)v.findViewById(R.id.test_results));
         }
 
         @Override

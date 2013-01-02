@@ -220,54 +220,44 @@ public class GuessPinyin extends Test implements TextWatcher {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("good", correctness);
-        bundle.putString("answer", guess);
-        bundle.putString("question", current_test);
-        bundle.putString("pinyin", pinyin);
-        solution_fragment.setArguments(bundle);
-        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+        GuessPinyinResultView solution_fragment = new GuessPinyinResultView(correctness, current_test, guess, activity, pinyin);
+        ((TestActivity)activity).new_solution_fragment(solution_fragment);
     }
 
-    public static class GuessPinyinResultFragment extends Test.SolutionFragment {
+    public static class GuessPinyinResultView extends SolutionView {
         String pinyin;
 
-        @Override
-        protected void get_arguments() {
-            super.get_arguments();
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                pinyin = bundle.getString("pinyin");
-            }
+        public GuessPinyinResultView(int good, String question, String answer, TestActivity parent, String pinyin) {
+            super(good, question, answer, parent);
+            this.pinyin = pinyin;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    DetailsFragment.populate_details_view(GuessPinyinResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, parent_activity);
                 }
             }, 500);
 
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
-                TextView bad_guess_text = new TextView(getActivity());
+                TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                final FrameLayout bad_guess_details = new FrameLayout(getActivity());
+                final FrameLayout bad_guess_details = new FrameLayout(parent_activity);
                 bad_guess_details.setId(R.id.test_bad_guess);
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        DetailsFragment.populate_details_view(GuessPinyinResultFragment.this, bad_guess_details, answer, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
+                        DetailsFragment.populate_details_view(parent_activity, bad_guess_details, answer, false, parent_activity);
                     }
                 }, 500);
 
@@ -279,9 +269,8 @@ public class GuessPinyin extends Test implements TextWatcher {
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

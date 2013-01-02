@@ -167,33 +167,32 @@ public class GuessEnglish extends Test {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessEnglishResultFragment solution_fragment = new GuessEnglishResultFragment();
-                Bundle bundle = new Bundle();
-                bundle.putInt("good", correctness);
-                bundle.putString("answer", guess);
-                bundle.putString("question", current_test);
-                solution_fragment.setArguments(bundle);
-                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+                GuessEnglishResultView solution_fragment = new GuessEnglishResultView(correctness, current_test, guess, activity);
+                activity.new_solution_fragment(solution_fragment);
                 break;
         }
     }
 
-    public static class GuessEnglishResultFragment extends Test.SolutionFragment {
+    public static class GuessEnglishResultView extends SolutionView {
+        public GuessEnglishResultView(int good, String question, String answer, TestActivity parent) {
+            super(good, question, answer, parent);
+        }
+
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    DetailsFragment.populate_details_view(GuessEnglishResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
+                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) res.findViewById(R.id.test_results), question, false, parent_activity);
                 }
             }, 500);
 
             if ((good == Test.INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
-                TextView bad_guess_text = new TextView(getActivity());
+                TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
@@ -215,9 +214,8 @@ public class GuessEnglish extends Test {
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

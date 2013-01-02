@@ -238,39 +238,29 @@ public class GuessChineseWord extends Test {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessChineseWordResultFragment solution_fragment = new GuessChineseWordResultFragment();
-                Bundle bundle = new Bundle();
-                bundle.putInt("good", correctness);
-                bundle.putString("answer", guess);
-                bundle.putString("question", current_test);
-                bundle.putStringArrayList("previous_guess", previous_guess);
-                solution_fragment.setArguments(bundle);
-                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+                GuessChineseWordResultView solution_fragment = new GuessChineseWordResultView(correctness,
+                        current_test, guess, activity, previous_guess);
+                activity.new_solution_fragment(solution_fragment);
                 break;
         }
     }
 
-    public static class GuessChineseWordResultFragment extends Test.SolutionFragment {
+    public static class GuessChineseWordResultView extends SolutionView {
         ArrayList<String> previous_guess;
 
-        @Override
-        protected void get_arguments() {
-            super.get_arguments();
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                previous_guess = bundle.getStringArrayList("previous_guess");
-            }
+        public GuessChineseWordResultView(int good, String question, String answer, TestActivity parent, ArrayList<String> previous) {
+            super(good, question, answer, parent);
+            this.previous_guess = previous;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
             return show_details(inflater,container, true);
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

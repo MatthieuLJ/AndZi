@@ -33,12 +33,11 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
         LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
 
-        fragments = new Fragment[3];
+        fragments = new Fragment[2];
 
         if (savedInstanceState != null) {
             fragments[0] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment0");
             fragments[1] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment1");
-            fragments[2] = getSupportFragmentManager().getFragment(savedInstanceState, "fragment2");
             if (pager != null) {
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
             }
@@ -103,13 +102,6 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 Log.e(TAG, "Got an exception saving fragment 1 "+e);
             }
         }
-        if (fragments[2] != null) {
-            try {
-                getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
-            } catch (IllegalStateException e) {
-                Log.e(TAG, "Got an exception saving fragment 2 "+e);
-            }
-        }
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
@@ -139,11 +131,6 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         @Override
         public void onPageSelected(int i) {
-            if (fragments[1] == null)
-                return;
-            View v = fragments[1].getView();
-            if (v == null)
-                return;
             if (i==0) {
                 update_stats();
             }
@@ -154,61 +141,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         }
     }
 
-    public void new_solution_fragment(Fragment solution, int correctness) {
-        if (fragments[2] != null) {
-            FragmentManager fm = getSupportFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.remove(fragments[2]);
-            ft.commit();
-        }
-
-        LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
-        if (linear!= null) {
-            FragmentManager fm = getSupportFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.add(R.id.test_fragment2, solution);
-            ft.commit();
-        }
-
-        fragments[2] = solution;
-        FrameLayout solution_frame = (FrameLayout) findViewById(R.id.test_fragment2);
-        if (solution_frame != null)
-            solution_frame.setVisibility(View.VISIBLE);
-
-        final TextView result_overlay = (TextView) findViewById(R.id.test_result);
-        switch(correctness) {
-            case Test.INCORRECT:
-                result_overlay.setText("We'll have to study that again");
-                break;
-            case Test.CORRECT:
-                result_overlay.setText("Well Done!");
-                break;
-            case Test.OTHER:
-                result_overlay.setText("Almost");
-                break;
-        }
-        result_overlay.setTag(System.currentTimeMillis()+3500);
-        result_overlay.setVisibility(View.VISIBLE);
-        TimerTask hide_timer = new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if ((Long)result_overlay.getTag() < System.currentTimeMillis())
-                            result_overlay.setVisibility(View.GONE);
-                    }
-                });
-            }
-        };
-        new Timer().schedule(hide_timer, 4000);
-
-        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
-        if (pager != null) {
-            pager.getAdapter().notifyDataSetChanged();
-        }
-
-        ((TestFragment)fragments[1]).new_test();
+    public void new_solution_fragment(Test.SolutionView solution) {
+        ((TestFragment) fragments[1]).show_solution(solution);
     }
 
     public void score_changed() {
@@ -254,13 +188,13 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         @Override
         public int getCount() {
-            return fragments[2] == null ? 2 : 3;
+            return 2;
         }
 
         @Override
         public int getItemPosition(Object object) {
             Fragment fragment = (Fragment) object;
-            for (int i=0; i<3; i++)
+            for (int i=0; i<2; i++)
                 if (fragment.equals(fragments[i]))
                     return POSITION_UNCHANGED;
 

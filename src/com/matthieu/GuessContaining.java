@@ -149,48 +149,38 @@ public class GuessContaining extends Test {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessContainingResultFragment solution_fragment = new GuessContainingResultFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("good", correctness);
-        bundle.putString("answer", guess);
-        bundle.putString("question", current_test);
-        bundle.putStringArrayList("correct", correct_answers);
-        bundle.putStringArrayList("bad", bad_answers);
-        bundle.putStringArrayList("new", new_answers);
-        solution_fragment.setArguments(bundle);
-        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+        GuessContainingResultView solution_fragment = new GuessContainingResultView(correctness, current_test, guess,activity,
+                correct_answers, bad_answers, new_answers);
+        ((TestActivity)activity).new_solution_fragment(solution_fragment);
     }
 
-    public static class GuessContainingResultFragment extends Test.SolutionFragment {
+    public static class GuessContainingResultView extends SolutionView {
         ArrayList<String> correct_answers, bad_answers, new_answers;
 
-        @Override
-        protected void get_arguments() {
-            super.get_arguments();
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                correct_answers = bundle.getStringArrayList("correct");
-                bad_answers = bundle.getStringArrayList("bad");
-                new_answers = bundle.getStringArrayList("new");
-            }
+        public GuessContainingResultView(int good, String question, String answer, TestActivity parent,
+                                         ArrayList<String> correct_answers, ArrayList<String> bad_answers, ArrayList<String> new_answers) {
+            super(good, question, answer, parent);
+            this.correct_answers = correct_answers;
+            this.bad_answers = bad_answers;
+            this.new_answers = new_answers;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
             final View res = inflater.inflate(R.layout.test_result, container, false);
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    DetailsFragment.populate_details_view(GuessContainingResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) GuessContainingResultFragment.this.getActivity());
+                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) res.findViewById(R.id.test_results), question, false, parent_activity);
                 }
             }, 500);
 
             if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
                 LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
                 bad_guess.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                TableLayout tl = new TableLayout(getActivity());
+                TableLayout tl = new TableLayout(parent_activity);
                 //tl.setStretchAllColumns(true);
                 int table=0, offset_in_table=0, offset_in_column=0, table_size=bad_answers.size();
                 TableRow tr=null;
@@ -230,18 +220,18 @@ public class GuessContaining extends Test {
                     offset_in_table++;
 
                     if (offset_in_column == 0) {
-                        tr = new TableRow(getActivity());
+                        tr = new TableRow(parent_activity);
                         tr.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     }
-                    LinearLayout cell = new LinearLayout(getActivity());
+                    LinearLayout cell = new LinearLayout(parent_activity);
                     cell.setOrientation(LinearLayout.HORIZONTAL);
-                    TextView label_box = new TextView(getActivity());
+                    TextView label_box = new TextView(parent_activity);
                     label_box.setText(label);
                     label_box.setGravity(Gravity.LEFT);
                     label_box.setTextColor(Color.BLACK);
                     label_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
                     cell.addView(label_box);
-                    TextView answer_box = new TextView(getActivity());
+                    TextView answer_box = new TextView(parent_activity);
                     answer_box.setText(answer);
                     answer_box.setGravity(Gravity.RIGHT);
                     answer_box.setTextColor(Color.BLACK);
@@ -250,11 +240,11 @@ public class GuessContaining extends Test {
                     answer_box.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                            Intent i=new Intent(parent_activity, ReferenceActivity.class);
                             i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
                             i.putExtra("Hanzi", final_answer);
                             i.putExtra("use_ref", false);
-                            startActivity(i);
+                            parent_activity.startActivity(i);
                         }
                     });
                     cell.addView(answer_box);
@@ -280,9 +270,8 @@ public class GuessContaining extends Test {
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

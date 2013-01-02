@@ -1,10 +1,8 @@
 package com.matthieu;
 
-import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.test.ActivityInstrumentationTestCase2;
-import android.view.View;
 import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
 

@@ -29,6 +29,7 @@ public class TestFragment extends Fragment {
 
     private Test current_test_type;
     private String current_test_hanzi;
+    private Test.SolutionView current_solution;
     private int test_index;
 
     private Handler my_handler;
@@ -101,20 +102,49 @@ public class TestFragment extends Fragment {
             return;
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        Test old_test_type = current_test_type;
         View new_test_view = start_test(inflater, flipper, null);
 
         flipper.addView(new_test_view);
 
         if (flipper.getChildCount() > 1) {
             flipper.showNext();
-            if (old_test_type != null) {
-                old_test_type.kill_view(flipper.getChildAt(0));
+            if (current_solution != null) {
+                current_solution.kill_view(flipper.getChildAt(0));
             }
             flipper.removeViewAt(0);
         }
     }
 
+    public void show_solution(Test.SolutionView s) {
+        if (getView() == null)
+            return;
+        ViewFlipper flipper = (ViewFlipper) getView().findViewById(R.id.test_flipper);
+
+        if (getActivity() == null)
+            return;
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        current_solution = s;
+        View new_view = s.get_view(inflater, flipper);
+
+        Button next_test = (Button) new_view.findViewById(R.id.test_result_next);
+        next_test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new_test();
+            }
+        });
+
+        flipper.addView(new_view);
+
+        if (flipper.getChildCount() > 1) {
+            flipper.showNext();
+            if (current_test_type != null) {
+                current_test_type.kill_view(flipper.getChildAt(0));
+            }
+            flipper.removeViewAt(0);
+        }
+    }
 
     private void fill_hanzis_to_test() {
         Log.d(TAG, "fill_hanzis_to_test");

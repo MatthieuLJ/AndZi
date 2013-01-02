@@ -13,7 +13,6 @@ import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
-import com.matthieu.widget.ObjectSerializer;
 
 import java.io.*;
 import java.util.*;
