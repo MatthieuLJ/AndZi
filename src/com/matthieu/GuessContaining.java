@@ -173,8 +173,10 @@ public class GuessContaining extends Test {
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
             if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
+                LinearLayout bad_guess_container = (LinearLayout) result_view.findViewById(R.id.test_result_wrong);
+                bad_guess_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 0));
+
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
-                bad_guess.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 TableLayout tl = new TableLayout(parent_activity);
                 //tl.setStretchAllColumns(true);
                 int table=0, offset_in_table=0, offset_in_column=0, table_size=bad_answers.size();
