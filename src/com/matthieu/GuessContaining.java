@@ -6,8 +6,6 @@ package com.matthieu;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
@@ -24,6 +22,8 @@ public class GuessContaining extends Test {
 
     private View master_view[]=null;
     private int current_view=0;
+
+    private GuessContainingResultView solution_view;
 
     private final String TAG="GuessContaining";
 
@@ -42,6 +42,9 @@ public class GuessContaining extends Test {
         }
         current_test = hanzi;
         Log.d(TAG, "GuessContaining OK");
+
+        solution_view = new GuessContainingResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;
     }
@@ -149,17 +152,19 @@ public class GuessContaining extends Test {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessContainingResultView solution_fragment = new GuessContainingResultView(correctness, current_test, guess,activity,
-                correct_answers, bad_answers, new_answers);
-        ((TestActivity)activity).new_solution_fragment(solution_fragment);
+        solution_view.set_answer(correctness, current_test,correct_answers, bad_answers, new_answers);
+        activity.new_solution_fragment(solution_view);
     }
 
     public static class GuessContainingResultView extends SolutionView {
         ArrayList<String> correct_answers, bad_answers, new_answers;
 
-        public GuessContainingResultView(int good, String question, String answer, TestActivity parent,
-                                         ArrayList<String> correct_answers, ArrayList<String> bad_answers, ArrayList<String> new_answers) {
-            super(good, question, answer, parent);
+        public GuessContainingResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, ArrayList<String> correct_answers, ArrayList<String> bad_answers, ArrayList<String> new_answers) {
+            super.set_answer(good, answer);
             this.correct_answers = correct_answers;
             this.bad_answers = bad_answers;
             this.new_answers = new_answers;
@@ -167,18 +172,8 @@ public class GuessContaining extends Test {
 
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) res.findViewById(R.id.test_results), question, false, parent_activity);
-                }
-            }, 500);
-
             if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
-                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 bad_guess.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 TableLayout tl = new TableLayout(parent_activity);
                 //tl.setStretchAllColumns(true);
@@ -253,20 +248,23 @@ public class GuessContaining extends Test {
 
                     offset_in_column++;
                     if (offset_in_column == 2) {
-
                         tl.addView(tr);
                         offset_in_column = 0;
                     }
                 }
-                if (offset_in_column != 0)
+                if (offset_in_column != 0) {
+                    LinearLayout empty_cell = new LinearLayout(parent_activity);
+                    empty_cell.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+                    tr.addView(empty_cell);
                     tl.addView(tr);
+                }
 
                 tl.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 bad_guess.addView(tl);
-                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+                (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
 
-            return res;
+            return result_view;
         }
 
         @Override

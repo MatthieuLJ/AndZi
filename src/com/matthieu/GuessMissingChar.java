@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -21,6 +20,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
     private ArrayList<String> previous_guess=new ArrayList<String>();
     private View master_view[]=null;
     private int current_view=0;
+    private GuessMissinCharResultView solution_view;
 
     private final String TAG="GuessMissingChar";
 
@@ -37,6 +37,9 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
         current_test = hanzi;
         Log.d(TAG, "GuessMissingChar OK");
+
+        solution_view = new GuessMissinCharResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;
     }
@@ -220,8 +223,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessMissinCharResultView solution_fragment = new GuessMissinCharResultView(correctness, current_test, guess, activity, words);
-                ((TestActivity)activity).new_solution_fragment(solution_fragment);
+                solution_view.set_answer(correctness, guess, words);
+                activity.new_solution_fragment(solution_view);
                 break;
         }
     }
@@ -229,14 +232,18 @@ public class GuessMissingChar extends Test implements TextWatcher {
     public static class GuessMissinCharResultView extends SolutionView {
         ArrayList<Vocabulary> words;
 
-        public GuessMissinCharResultView(int good, String question, String answer, TestActivity parent, ArrayList<Vocabulary> words) {
-            super(good, question, answer, parent);
+        public GuessMissinCharResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, ArrayList<Vocabulary> words) {
+            super.set_answer(good, answer);
             this.words = words;
         }
 
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
-            return show_details(inflater, container, false);
+            return show_solution(false);
         }
 
         @Override

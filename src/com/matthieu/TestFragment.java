@@ -66,7 +66,8 @@ public class TestFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View res = inflater.inflate(R.layout.test_flipper, container, false);
-        View test = start_test(inflater, container, savedInstanceState);
+        start_test(savedInstanceState);
+        View test = get_test_view(inflater, container);
         ViewFlipper flipper = (ViewFlipper) res.findViewById(R.id.test_flipper);
         flipper.addView(test);
 
@@ -102,7 +103,7 @@ public class TestFragment extends Fragment {
             return;
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        View new_test_view = start_test(inflater, flipper, null);
+        View new_test_view = get_test_view(inflater, flipper);
 
         flipper.addView(new_test_view);
 
@@ -144,6 +145,7 @@ public class TestFragment extends Fragment {
             }
             flipper.removeViewAt(0);
         }
+        start_test(null);
     }
 
     private void fill_hanzis_to_test() {
@@ -199,14 +201,15 @@ public class TestFragment extends Fragment {
             new_test();
     }
 
-    public View start_test(LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public void start_test(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null)
             set_next_char_to_study();
         else
             current_test_hanzi = savedInstanceState.getString("test_hanzi");
 
         if (current_test_hanzi == null) {
-            return done_testing(myDB.getNumChars()==0, inflater, container);
+            current_test_type = null;
+            //
         }
         int min_test, max_test;
         if (current_test_hanzi.length()==1) {
@@ -241,8 +244,15 @@ public class TestFragment extends Fragment {
                 trim_hanzis_to_test(current_test_hanzi);
             }
         }, 500);
+    }
 
-        return current_test_type.get_view();
+    private View get_test_view(LayoutInflater inflater, ViewGroup container) {
+        if (current_test_type == null) {
+            return done_testing(myDB.getNumChars()==0, inflater, container);
+        }
+        else {
+            return current_test_type.get_view();
+        }
     }
 
 

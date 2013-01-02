@@ -4,8 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -24,6 +22,8 @@ public class GuessPinyin extends Test implements TextWatcher {
     private boolean show_words=false;
     private View master_view[]=null;
     private int current_view=0;
+
+    private GuessPinyinResultView solution_view;
 
     private static final String TAG="GuessPinyin";
 
@@ -78,6 +78,9 @@ public class GuessPinyin extends Test implements TextWatcher {
 
         Log.d(TAG, "GuessPinyin OK");
         current_test = hanzi;
+
+        solution_view = new GuessPinyinResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;
     }
@@ -220,52 +223,36 @@ public class GuessPinyin extends Test implements TextWatcher {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessPinyinResultView solution_fragment = new GuessPinyinResultView(correctness, current_test, guess, activity, pinyin);
-        ((TestActivity)activity).new_solution_fragment(solution_fragment);
+        solution_view.set_answer(correctness, guess, pinyin);
+        activity.new_solution_fragment(solution_view);
     }
 
     public static class GuessPinyinResultView extends SolutionView {
         String pinyin;
 
-        public GuessPinyinResultView(int good, String question, String answer, TestActivity parent, String pinyin) {
-            super(good, question, answer, parent);
+        public GuessPinyinResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, String pinyin) {
+            super.set_answer(good, answer);
             this.pinyin = pinyin;
         }
 
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, parent_activity);
-                }
-            }, 500);
-
             if ((good == INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
+                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                final FrameLayout bad_guess_details = new FrameLayout(parent_activity);
-                bad_guess_details.setId(R.id.test_bad_guess);
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        DetailsFragment.populate_details_view(parent_activity, bad_guess_details, answer, false, parent_activity);
-                    }
-                }, 500);
-
-                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+                (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
 
-            return res;
+            return result_view;
         }
 
         @Override

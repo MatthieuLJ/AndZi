@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
@@ -22,6 +21,7 @@ public class GuessChineseWord extends Test {
     private boolean showing_more_voc;
     private View[] master_view=null;
     private int current_view=0;
+    private GuessChineseWordResultView solution_view;
 
     private final String TAG="GuessChineseWord";
 
@@ -51,6 +51,9 @@ public class GuessChineseWord extends Test {
         showing_more_voc=false;
 
         Log.d(TAG, "GuessChineseWord OK");
+
+        solution_view = new GuessChineseWordResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
         return true;
     }
 
@@ -238,9 +241,8 @@ public class GuessChineseWord extends Test {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessChineseWordResultView solution_fragment = new GuessChineseWordResultView(correctness,
-                        current_test, guess, activity, previous_guess);
-                activity.new_solution_fragment(solution_fragment);
+                solution_view.set_answer(correctness, guess, previous_guess);
+                activity.new_solution_fragment(solution_view);
                 break;
         }
     }
@@ -248,14 +250,18 @@ public class GuessChineseWord extends Test {
     public static class GuessChineseWordResultView extends SolutionView {
         ArrayList<String> previous_guess;
 
-        public GuessChineseWordResultView(int good, String question, String answer, TestActivity parent, ArrayList<String> previous) {
-            super(good, question, answer, parent);
+        public GuessChineseWordResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, ArrayList<String> previous) {
+            super.set_answer(good, answer);
             this.previous_guess = previous;
         }
 
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
-            return show_details(inflater,container, true);
+            return show_solution(true);
         }
 
         @Override
