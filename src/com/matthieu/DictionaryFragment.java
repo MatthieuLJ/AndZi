@@ -6,6 +6,7 @@ package com.matthieu;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -214,12 +215,55 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     if ((mode == ENGLISH_TO_CHINESE_MODE) || (potential_english && (result_cursor==null || result_cursor.getCount()==0))) {
                         if (result_cursor != null)
                             result_cursor.close();
-                        if (msg_query.trim().length()<2)
-                            result_cursor=null;
-                        else if (msg_query.trim().length()<3)
-                            result_cursor = currentDB.getStartingCTranslations(msg_query.trim());
-                        else
-                            result_cursor = currentDB.getCTranslations(msg_query.trim());
+
+                        if (!msg_query.contains(" ") && !msg_query.contains(",")) {
+                            if (msg_query.trim().length()<2)
+                                result_cursor=null;
+                            else if (msg_query.trim().length()<3)
+                                result_cursor = currentDB.getStartingCTranslations(msg_query.trim());
+                            else
+                                result_cursor = currentDB.getCTranslations(msg_query.trim());
+                        } else { // some work to do to handle several words
+                            Cursor result1_cursor=null, result2_cursor=null, result3_cursor=null;
+                            if (msg_query.contains(",")) {
+                                String items[] = msg_query.split(",");
+                                ArrayList<String> prepared_items = new ArrayList<String>();
+                                for (String i : items) {
+                                    i = i.trim();
+                                    if (i.length() > 1)
+                                        prepared_items.add(i);
+                                }
+                                result1_cursor = currentDB.getCTranslations(prepared_items, true);
+                            }
+                            if (msg_query.contains(" ") && ((result1_cursor==null) || (result1_cursor.getCount()<10))) {
+                                String items[] = msg_query.split("[, ]");
+                                ArrayList<String> prepared_items = new ArrayList<String>();
+                                for (String i : items) {
+                                    i = i.trim();
+                                    if (i.length() > 2)
+                                        prepared_items.add(i);
+                                }
+                                result2_cursor = currentDB.getCTranslations(prepared_items, true);
+                            }
+                            if (((result1_cursor==null)?0:result1_cursor.getCount()) + ((result2_cursor==null)?0:result2_cursor.getCount()) < 20) {
+                                String items[] = msg_query.split("[, ]");
+                                ArrayList<String> prepared_items = new ArrayList<String>();
+                                for (String i : items) {
+                                    i = i.trim();
+                                    if (i.length() > 2)
+                                        prepared_items.add(i);
+                                }
+                                result3_cursor = currentDB.getCTranslations(prepared_items, false);
+                            }
+                            ArrayList<Cursor> all_cursors = new ArrayList<Cursor>();
+                            if (result1_cursor != null)
+                                all_cursors.add(result1_cursor);
+                            if (result2_cursor != null)
+                                all_cursors.add(result2_cursor);
+                            if (result3_cursor != null)
+                                all_cursors.add(result3_cursor);
+                            result_cursor = new MergeCursor(all_cursors.toArray(new Cursor[3]));
+                        }
                     }
                 }
 

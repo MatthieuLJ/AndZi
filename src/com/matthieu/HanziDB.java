@@ -748,6 +748,59 @@ public class HanziDB extends SQLiteOpenHelper {
         return db.rawQuery(query, query_arg.toArray(new String[query_arg.size()]));
     }
 
+    public Cursor getCTranslations(ArrayList<String> english, boolean intersection) {
+        ArrayList<String> query_arg=new ArrayList<String>();
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT selection0.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, GROUP_CONCAT(eword.translation,', ') AS english " +
+                "FROM ");
+        for (int i=0; i<english.size(); i++) {
+            if (i == 0)
+                query.append(" (");
+            else if (intersection)
+                query.append(" JOIN (");
+            else
+                query.append(" UNION ");
+
+            query.append(
+                    "    SELECT DISTINCT eword.cword_id AS cword_id, " +
+                    "    CASE WHEN eword.translation=? THEN 0 WHEN eword.translation LIKE ? THEN 1 " +
+                    "    WHEN eword.translation LIKE ? THEN 2 WHEN eword.translation LIKE ? THEN 3 ELSE 4 END AS sort " +
+                    "    FROM (SELECT * FROM eword WHERE eword.translation LIKE ?) AS eword");
+            if (intersection) {
+                query.append(") AS selection");
+                query.append(i);
+            }
+            query_arg.add(english.get(i));
+            query_arg.add(english.get(i)+" %");
+            query_arg.add("% "+english.get(i));
+            query_arg.add("% "+english.get(i)+" %");
+            if (english.get(i).length() > 2)
+                query_arg.add("%"+english.get(i)+"%");
+            else
+                query_arg.add(english.get(i)+"%");
+
+            if ((i>0) && (intersection)) {
+                query.append(" ON selection"+(i-1)+".cword_id=selection"+i+".cword_id ");
+            }
+        }
+        if (!intersection)
+            query.append(") AS selection0");
+        query.append(" JOIN cword AS c ON c.cword_id=selection0.cword_id " +
+                "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY ");
+        if (intersection) {
+            for (int i=0; i<english.size(); i++) {
+                query.append("selection"+i+".sort");
+                if (i<english.size()-1)
+                    query.append("+");
+            }
+        } else {
+            query.append("selection0.sort");
+        }
+        query.append(", c.length, eword.translation");
+
+        return db.rawQuery(query.toString(), query_arg.toArray(new String[query_arg.size()]));
+    }
+
     public Cursor getStartingCTranslations(String english) {
         ArrayList<String> query_arg=new ArrayList<String>();
         String query="SELECT selection.cword_id AS _id, c.chinese AS chinese,c.pinyin AS pinyin, MIN(selection.sort), GROUP_CONCAT(eword.translation,', ') AS english " +
