@@ -31,6 +31,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     static final int ENGLISH_TO_CHINESE_MODE=1;
 
     String last_query="";
+    int last_mode=-1;
     boolean last_use_ref=true;
 
     @Override
@@ -123,7 +124,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             }
 
             synchronized (DictionaryFragment.this) {
-                if ((msg_query.trim().equals(last_query.trim())) && (msg_ref == last_use_ref) &&
+                if ((mode == last_mode) && (msg_query.trim().equals(last_query.trim())) && (msg_ref == last_use_ref) &&
                         (current_cursor != null)) {
                     Log.d(TAG, "Already had the results");
                     // just to make sure it's loaded....
@@ -134,12 +135,13 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (query != null) {
-                    if ((!msg_query.trim().equals(query.getText().toString().trim()))) {
+                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != last_use_ref)) {
                         return null;
                     }
                 }
 
                 last_query = msg_query;
+                last_mode = mode;
                 last_use_ref = msg_ref;
                 publishProgress(null);
 
@@ -235,7 +237,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                 }
                                 result1_cursor = currentDB.getCTranslations(prepared_items, true);
                             }
-                            if (msg_query.contains(" ") && ((result1_cursor==null) || (result1_cursor.getCount()<10))) {
+                            if (msg_query.contains(" ") && ((result1_cursor==null) || (result1_cursor.getCount()<2))) {
                                 String items[] = msg_query.split("[, ]");
                                 ArrayList<String> prepared_items = new ArrayList<String>();
                                 for (String i : items) {
@@ -245,7 +247,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                 }
                                 result2_cursor = currentDB.getCTranslations(prepared_items, true);
                             }
-                            if (((result1_cursor==null)?0:result1_cursor.getCount()) + ((result2_cursor==null)?0:result2_cursor.getCount()) < 20) {
+                            if (((result1_cursor==null)?0:result1_cursor.getCount()) + ((result2_cursor==null)?0:result2_cursor.getCount()) < 5) {
                                 String items[] = msg_query.split("[, ]");
                                 ArrayList<String> prepared_items = new ArrayList<String>();
                                 for (String i : items) {
@@ -296,7 +298,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         protected void onPostExecute(Cursor cursor) {
             if ((getActivity()!=null) && (getView() != null)) {
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
-                if (msg_query.trim().equals(query.getText().toString().trim())) {
+                if (msg_query.trim().equals(query.getText().toString().trim()) && (msg_ref == use_ref)) {
                     publish_cursor(cursor);
                     ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
                 }
@@ -317,18 +319,20 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if (query == null)
                 return;
 
-            if (!msg_query.trim().equals(query.getText().toString().trim()))
+            if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref))
                 return;
 
             Log.d(TAG, "msg_query is "+msg_query+", and current search is "+query.getText());
 
             final ListView results = (ListView) getView().findViewById(R.id.dict_results);
 
-            if ((results == null) && (cur!=null)) {
-                cur.close();
+            if (results == null) {
+                if (cur!=null)
+                    cur.close();
                 return;
             }
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
+            results.smoothScrollToPosition(0);
         }
     }
 
