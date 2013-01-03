@@ -35,7 +35,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (197):
+DONE (198):
+* Automatically detect language in dictionary
 * Notice to download dictionary disappears when rotating screen
 * Indicator of test success disappears too soon sometimes (when going too fast through tests)
 * Sometimes Dictionary search gets overridden again and never finishes
