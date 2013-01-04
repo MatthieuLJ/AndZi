@@ -193,19 +193,6 @@ public class Settings extends PreferenceActivity {
             });
         }
 
-        int intent_action=getIntent().getIntExtra("Settings_action", -1);
-        if(intent_action == 0) {
-            final String params[]= {dictionaryURL};
-            ProgressDialog p_dialog = new ProgressDialog(Settings.this);
-            current_task = new ref_downloader(p_dialog);
-            current_task_type = 1;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
-            else
-                current_task.execute(params);
-            return;
-        }
-
         Object saved = getLastNonConfigurationInstance();
         if (saved instanceof to_save) {
             current_task = ((to_save) saved).current_task;
@@ -227,12 +214,24 @@ public class Settings extends PreferenceActivity {
                     break;
             }
         }
+
+        int intent_action=getIntent().getIntExtra("Settings_action", -1);
+        if((saved == null) && (intent_action == 0)) {
+            final String params[]= {dictionaryURL};
+            ProgressDialog p_dialog = new ProgressDialog(Settings.this);
+            current_task = new ref_downloader(p_dialog);
+            current_task_type = 1;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+            else
+                current_task.execute(params);
+            return;
+        }
     }
 
     private class to_save {
         int current_task_type;
         AsyncTask current_task;
-
     }
 
     @Override
