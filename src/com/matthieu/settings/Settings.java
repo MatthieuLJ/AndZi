@@ -9,12 +9,14 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.AndZiApplication;
@@ -138,6 +140,10 @@ public class Settings extends PreferenceActivity {
                         ((AndZiApplication) getApplication()).eraseRefDB();
                         enable_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
                         del_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
+                        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Settings.this);
+                        SharedPreferences.Editor edit = prefs.edit();
+                        edit.putBoolean("first_time_ref", true);
+                        edit.commit();
                         dialog.dismiss();
                     }
                 });
