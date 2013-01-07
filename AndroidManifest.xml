@@ -19,11 +19,22 @@
             android:largeScreens="true"
             android:anyDensity="true"/>
 
+    <!-- For doing JUnit test, Instrumentation Start (remove later) -->
+    <instrumentation android:name="android.test.InstrumentationTestRunner"
+                     android:targetPackage="com.matthieu"
+                     android:label="Tests for com.matthieu"/>
+    <!-- For doing JUnit test, Instrumentation End (remove later) -->
+
     <application
             android:label="@string/app_name"
             android:name="AndZiApplication"
             android:hardwareAccelerated="false"
             android:allowBackup="true">
+
+        <!-- For doing JUnit test, Instrumentation Start (remove later) -->
+        <uses-library android:name="android.test.runner"/>
+        <!-- For doing JUnit test, Instrumentation End (remove later) -->
+
         <activity
                 android:name=".MainMenuActivity">
             <intent-filter>

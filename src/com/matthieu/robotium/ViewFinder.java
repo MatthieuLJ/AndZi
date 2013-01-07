@@ -1,4 +1,4 @@
-package com.matthieu;
+package com.matthieu.robotium;
 
 import android.view.View;
 import android.widget.TextView;

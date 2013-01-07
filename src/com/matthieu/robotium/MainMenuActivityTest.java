@@ -1,4 +1,4 @@
-package com.matthieu;
+package com.matthieu.robotium;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -6,6 +6,9 @@ import android.support.v4.view.ViewPager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
+import com.matthieu.MainMenuActivity;
+import com.matthieu.AndZiApplication;
+import com.matthieu.R;
 
 import java.util.ArrayList;
 
@@ -67,6 +70,8 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         // quit it
         solo.finishOpenedActivities();
+
+        ((AndZiApplication)getActivity().getApplication()).showSplash(true);
 
         startIt();
         solo.setActivityOrientation(Solo.PORTRAIT);
