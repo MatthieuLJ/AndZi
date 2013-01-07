@@ -13,7 +13,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Add Vocabulary"
+                android:text="@string/main_menu_add_voc"
                 android:onClick="handle_add_vocabulary" />
     </TableRow>
 
@@ -26,7 +26,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Test me!"
+                android:text="@string/main_menu_test"
                 android:onClick="handle_test" />
     </TableRow>
     <TableRow
@@ -37,7 +37,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Dictionary"
+                android:text="@string/main_menu_dict"
                 android:onClick="handle_dictionary" />
     </TableRow>
     <TableRow
@@ -48,14 +48,14 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Help"
+                android:text="@string/main_menu_help"
                 android:onClick="handle_help" />
 
         <Button
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Settings"
+                android:text="@string/main_menu_settings"
                 android:onClick="handle_prefs" />
 
     </TableRow>

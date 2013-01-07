@@ -2,6 +2,7 @@ package com.matthieu;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.view.ViewPager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
@@ -22,7 +23,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     private Solo solo;
 
     public MainMenuActivityTest() {
-        super("com.matthieu", MainMenuActivity.class);
+        super(com.matthieu.MainMenuActivity.class);
     }
 
     public void setUp() {
@@ -68,6 +69,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.finishOpenedActivities();
 
         startIt();
+        solo.setActivityOrientation(Solo.PORTRAIT);
     }
 
     public void setupCedictDict() {
@@ -80,11 +82,75 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
     public void startIt() {
         // restart it
-        this.launchActivity("com.matthieu", MainMenuActivity.class, null);
+        launchActivity("com.matthieu", MainMenuActivity.class, null);
     }
 
+    public void testFirstTimeAppOpening() {
+        clearEverything(false);
+
+        // should offer to download the dictionary
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        solo.setActivityOrientation(Solo.LANDSCAPE);
+
+        // dialog should still be there after rotating the screen
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        solo.setActivityOrientation(Solo.PORTRAIT);
+
+        // come back up
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        solo.clickOnButton(getActivity().getResources().getString(R.string.later));
+        solo.waitForDialogToClose(5);
+
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
+
+        ViewPager pager = (ViewPager) getActivity().findViewById(R.id.test_pager);
+        if (pager != null)
+            pager.setCurrentItem(1); // go to the stats page
+
+        TextView tv = (TextView) getActivity().findViewById(R.id.stats_chars);
+        assertTrue(tv != null);
+        assertTrue(tv.getText().equals("0"));
+        tv = (TextView) getActivity().findViewById(R.id.stats_words);
+        assertTrue(tv != null);
+        assertTrue(tv.getText().equals("0"));
+        tv = (TextView) getActivity().findViewById(R.id.stats_to_study);
+        assertTrue(tv != null);
+        assertTrue(tv.getText().equals("0"));
+
+        solo.setActivityOrientation(Solo.LANDSCAPE);
+
+        tv = (TextView) getActivity().findViewById(R.id.stats_chars);
+        assertTrue(tv != null);
+        assertTrue(tv.getText().equals("0"));
+        tv = (TextView) getActivity().findViewById(R.id.stats_words);
+        assertTrue(tv != null);
+        assertTrue(tv.getText().equals("0"));
+        tv = (TextView) getActivity().findViewById(R.id.stats_to_study);
+        assertTrue(tv != null);
+        assertTrue(tv.getText().equals("0"));
+
+        if (pager != null)
+            pager.setCurrentItem(0); // go to the stats page
+
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
+
+        solo.setActivityOrientation(Solo.PORTRAIT);
+
+        solo.goBack();
+        solo.waitForActivity("MainMenuActivity");
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+
+        solo.finishOpenedActivities();
+        startIt();
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        solo.clickOnButton(getActivity().getResources().getString(R.string.later));
+        solo.waitForDialogToClose(5);
+    }
+
+    /*
     public void testAddVocabularyEmptyApp() {
-        /*
+
         // First wipe out everything...
         clearEverything(false);
 
@@ -187,11 +253,9 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.clickOnView(add_translation_ok);
         add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
         solo.clickOnView(add_ok);
-        */
     }
 
     public void testAddVocabularyWithDict() {
-        /*
         // First wipe out everything...
         //clearEverything(true);
 
@@ -264,6 +328,6 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
         assertTrue(myDB.getNumWords()==1);
         assertTrue(myDB.getNumChars()==1);
-        */
     }
+    */
 }

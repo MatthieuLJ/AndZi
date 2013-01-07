@@ -2,7 +2,6 @@ package com.matthieu;
 
 import android.view.View;
 import android.widget.TextView;
-import com.jayway.android.robotium.solo.Solo;
 
 import java.util.ArrayList;
 
