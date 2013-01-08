@@ -1,5 +1,7 @@
 package com.matthieu.robotium;
 
+import android.app.Activity;
+import android.app.Instrumentation;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
@@ -9,6 +11,7 @@ import com.jayway.android.robotium.solo.Solo;
 import com.matthieu.MainMenuActivity;
 import com.matthieu.AndZiApplication;
 import com.matthieu.R;
+import com.matthieu.TestActivity;
 
 import java.util.ArrayList;
 
@@ -57,8 +60,9 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.waitForDialogToClose(2000);
         if (!installCedict) {
             solo.clickOnText(getActivity().getResources().getString(R.string.settings_ref_db_erase), 0, true);
-            if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase))) {
+            if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase),1, 1000)) {
                 // TODO
+                assertTrue(false);
             }
         }
         else
@@ -107,36 +111,44 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.waitForDialogToClose(5);
 
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
+
+        Instrumentation instrumentation = getInstrumentation();
+
+        // Moving to another activity
+        Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor(TestActivity.class.getName(), null, false);
+        Activity currentActivity = getInstrumentation().waitForMonitorWithTimeout(monitor, 2000);
+        assertTrue(currentActivity!=null);
+
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
 
-        ViewPager pager = (ViewPager) getActivity().findViewById(R.id.test_pager);
+        ViewPager pager = (ViewPager) currentActivity.findViewById(R.id.test_pager);
         if (pager != null)
-            pager.setCurrentItem(1); // go to the stats page
+            solo.scrollToSide(Solo.RIGHT);
 
-        TextView tv = (TextView) getActivity().findViewById(R.id.stats_chars);
+        TextView tv = (TextView) currentActivity.findViewById(R.id.stats_chars);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) getActivity().findViewById(R.id.stats_words);
+        tv = (TextView) currentActivity.findViewById(R.id.stats_words);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) getActivity().findViewById(R.id.stats_to_study);
+        tv = (TextView) currentActivity.findViewById(R.id.stats_to_study);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
 
         solo.setActivityOrientation(Solo.LANDSCAPE);
 
-        tv = (TextView) getActivity().findViewById(R.id.stats_chars);
+        tv = (TextView) currentActivity.findViewById(R.id.stats_chars);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) getActivity().findViewById(R.id.stats_words);
+        tv = (TextView) currentActivity.findViewById(R.id.stats_words);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) getActivity().findViewById(R.id.stats_to_study);
+        tv = (TextView) currentActivity.findViewById(R.id.stats_to_study);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
 
         if (pager != null)
-            pager.setCurrentItem(0); // go to the stats page
+            solo.scrollToSide(Solo.LEFT);
 
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
 
@@ -147,6 +159,9 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
 
         solo.finishOpenedActivities();
+
+        ((AndZiApplication)getActivity().getApplication()).showSplash(true);
+        
         startIt();
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
         solo.clickOnButton(getActivity().getResources().getString(R.string.later));

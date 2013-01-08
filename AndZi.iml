@@ -41,7 +41,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="ActionBarSherlock-4.2.0-0" />
     <orderEntry type="module" module-name="ViewPagerIndicator-2.4.1-0" />
-    <orderEntry type="library" name="android-support-v4" level="application" />
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
@@ -51,8 +50,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="ActionBarSherlock-4.2.0-0" />
-    <orderEntry type="module" module-name="ViewPagerIndicator-2.4.1-0" />
+    <orderEntry type="library" name="robotium-solo-3.6" level="project" />
     <orderEntry type="library" name="android-support-v4" level="project" />
   </component>
 </module>
