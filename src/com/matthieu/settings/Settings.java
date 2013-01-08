@@ -9,12 +9,14 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.AndZiApplication;
@@ -138,6 +140,10 @@ public class Settings extends PreferenceActivity {
                         ((AndZiApplication) getApplication()).eraseRefDB();
                         enable_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
                         del_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
+                        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Settings.this);
+                        SharedPreferences.Editor edit = prefs.edit();
+                        edit.putBoolean("first_time_ref", true);
+                        edit.commit();
                         dialog.dismiss();
                     }
                 });
@@ -193,19 +199,6 @@ public class Settings extends PreferenceActivity {
             });
         }
 
-        int intent_action=getIntent().getIntExtra("Settings_action", -1);
-        if(intent_action == 0) {
-            final String params[]= {dictionaryURL};
-            ProgressDialog p_dialog = new ProgressDialog(Settings.this);
-            current_task = new ref_downloader(p_dialog);
-            current_task_type = 1;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
-            else
-                current_task.execute(params);
-            return;
-        }
-
         Object saved = getLastNonConfigurationInstance();
         if (saved instanceof to_save) {
             current_task = ((to_save) saved).current_task;
@@ -227,12 +220,24 @@ public class Settings extends PreferenceActivity {
                     break;
             }
         }
+
+        int intent_action=getIntent().getIntExtra("Settings_action", -1);
+        if((saved == null) && (intent_action == 0)) {
+            final String params[]= {dictionaryURL};
+            ProgressDialog p_dialog = new ProgressDialog(Settings.this);
+            current_task = new ref_downloader(p_dialog);
+            current_task_type = 1;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+            else
+                current_task.execute(params);
+            return;
+        }
     }
 
     private class to_save {
         int current_task_type;
         AsyncTask current_task;
-
     }
 
     @Override

@@ -29,6 +29,7 @@ public class TestFragment extends Fragment {
 
     private Test current_test_type;
     private String current_test_hanzi;
+    private Test.SolutionView current_solution;
     private int test_index;
 
     private Handler my_handler;
@@ -65,7 +66,8 @@ public class TestFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View res = inflater.inflate(R.layout.test_flipper, container, false);
-        View test = start_test(inflater, container, savedInstanceState);
+        start_test(savedInstanceState);
+        View test = get_test_view(inflater, container);
         ViewFlipper flipper = (ViewFlipper) res.findViewById(R.id.test_flipper);
         flipper.addView(test);
 
@@ -101,20 +103,50 @@ public class TestFragment extends Fragment {
             return;
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        Test old_test_type = current_test_type;
-        View new_test_view = start_test(inflater, flipper, null);
+        View new_test_view = get_test_view(inflater, flipper);
 
         flipper.addView(new_test_view);
 
         if (flipper.getChildCount() > 1) {
             flipper.showNext();
-            if (old_test_type != null) {
-                old_test_type.kill_view(flipper.getChildAt(0));
+            if (current_solution != null) {
+                current_solution.kill_view(flipper.getChildAt(0));
             }
             flipper.removeViewAt(0);
         }
     }
 
+    public void show_solution(Test.SolutionView s) {
+        if (getView() == null)
+            return;
+        ViewFlipper flipper = (ViewFlipper) getView().findViewById(R.id.test_flipper);
+
+        if (getActivity() == null)
+            return;
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        current_solution = s;
+        View new_view = s.get_view(inflater, flipper);
+
+        Button next_test = (Button) new_view.findViewById(R.id.test_result_next);
+        next_test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new_test();
+            }
+        });
+
+        flipper.addView(new_view);
+
+        if (flipper.getChildCount() > 1) {
+            flipper.showNext();
+            if (current_test_type != null) {
+                current_test_type.kill_view(flipper.getChildAt(0));
+            }
+            flipper.removeViewAt(0);
+        }
+        start_test(null);
+    }
 
     private void fill_hanzis_to_test() {
         Log.d(TAG, "fill_hanzis_to_test");
@@ -169,14 +201,15 @@ public class TestFragment extends Fragment {
             new_test();
     }
 
-    public View start_test(LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public void start_test(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null)
             set_next_char_to_study();
         else
             current_test_hanzi = savedInstanceState.getString("test_hanzi");
 
         if (current_test_hanzi == null) {
-            return done_testing(myDB.getNumChars()==0, inflater, container);
+            current_test_type = null;
+            return;
         }
         int min_test, max_test;
         if (current_test_hanzi.length()==1) {
@@ -211,12 +244,19 @@ public class TestFragment extends Fragment {
                 trim_hanzis_to_test(current_test_hanzi);
             }
         }, 500);
+    }
 
-        return current_test_type.get_view();
+    private View get_test_view(LayoutInflater inflater, ViewGroup container) {
+        if (current_test_type == null) {
+            return done_testing(myDB.getNumChars()==0, inflater, container);
+        }
+        else {
+            return current_test_type.get_view();
+        }
     }
 
 
-    private View done_testing(boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
+    private View done_testing(final boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
         final View res = inflater.inflate(R.layout.test_done, container, false);
         TextView message = (TextView) res.findViewById(R.id.test_done_text);
         if (empty_db) {
@@ -230,9 +270,14 @@ public class TestFragment extends Fragment {
         OK_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                continue_with_more_chars = true;
-                table_filled = false;
-                new_test();
+                if (!empty_db) {
+                    continue_with_more_chars = true;
+                    table_filled = false;
+                    new_test();
+                } else {
+                    TestFragment.this.getActivity().finish();
+                }
+
             }
         });
 

@@ -13,32 +13,9 @@
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="1"/>
-    <FrameLayout
-            android:layout_height="match_parent"
-            android:layout_width="0dp"
-            android:layout_weight="1">
-        <FrameLayout
-                android:id="@+id/test_fragment1"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                />
-        <RelativeLayout
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                >
-            <TextView
-                    android:id="@+id/test_result"
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
-                    />
-        </RelativeLayout>
-    </FrameLayout>
-
 
     <FrameLayout
-            android:id="@+id/test_fragment2"
+            android:id="@+id/test_fragment1"
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="1"/>

@@ -56,6 +56,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
             alert.setMessage(R.string.download_dictionary);
             alert.setNegativeButton(R.string.later, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int i) {
+                    showing_download_dictionary = false;
                     dialog.dismiss();
                 }
             });
@@ -64,6 +65,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
                     SharedPreferences.Editor edit = prefs.edit();
                     edit.putBoolean("first_time_ref", false);
                     edit.commit();
+                    showing_download_dictionary = false;
                     dialog.dismiss();
                 }
             });
@@ -72,6 +74,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
                     Intent in = new Intent(MainMenuActivity.this, Settings.class);
                     in.putExtra("Settings_action", 0);
                     startActivity(in);
+                    showing_download_dictionary = false;
                     dialog.dismiss();
                 }
             });

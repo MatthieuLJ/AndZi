@@ -11,6 +11,7 @@ import android.util.Log;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 
 public class PinyinParser {
@@ -207,12 +208,33 @@ public class PinyinParser {
         return null;
     }
 
-    static public ArrayList<HanziDB.StringElement> parse_string_to_elements(String pinyin_string)
-    {
+    static HashMap<String, ArrayList<HanziDB.StringElement>> cache;
+    static private void add_to_cache(String entry, ArrayList<HanziDB.StringElement> result) {
+        if (cache == null)
+            cache = new HashMap<String, ArrayList<HanziDB.StringElement>>();
+
+        cache.put(entry, result);
+    }
+    static private ArrayList<HanziDB.StringElement> query_cache(String entry) {
+        if (cache == null) {
+            cache = new HashMap<String, ArrayList<HanziDB.StringElement>>();
+            return null;
+        }
+        if (cache.containsKey(entry))
+            return cache.get(entry);
+        else
+            return null;
+    }
+
+    static public ArrayList<HanziDB.StringElement> parse_string_to_elements(String pinyin_string) {
         int split_index;
         ArrayList<HanziDB.StringElement> result;
         ArrayList<HanziDB.StringElement> temp;
         int i=0;
+
+        result = query_cache(pinyin_string);
+        if (result != null)
+            return result;
 
         if (!pinyin_string.matches(pinyin_chars))
             return null;
@@ -274,6 +296,7 @@ public class PinyinParser {
             }
             result.addAll(temp);
 
+            add_to_cache(pinyin_string, result);
             return result;
         }
 
@@ -303,6 +326,7 @@ public class PinyinParser {
                 else {
                     result.add(0, new HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, try_pinyin.get_radical()));
                 }
+                add_to_cache(pinyin_string, result);
                 return result;
             }
         }
@@ -311,6 +335,8 @@ public class PinyinParser {
             if (!incomplete_pinyin.get_lame().equals("")) {
                 result = new ArrayList<HanziDB.StringElement>();
                 result.add(new HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, incomplete_pinyin.get_lame()));
+
+                add_to_cache(pinyin_string, result);
                 return result;
             }
         }
@@ -320,7 +346,12 @@ public class PinyinParser {
 
     @Nullable
     static public ArrayList<HanziDB.StringElement> parse_mixed_string(String input) {
-        ArrayList<HanziDB.StringElement> res = new ArrayList<HanziDB.StringElement>();
+        ArrayList<HanziDB.StringElement> res = query_cache(input);
+        if (res == null)
+            res = new ArrayList<HanziDB.StringElement>();
+        else
+            return res;
+
         for (int i=0; i<input.length(); ) {
             int entry=input.codePointAt(i);
             if (((entry >= 0x4E00) && (entry <= 0x9fff)) // main CJK
@@ -351,8 +382,10 @@ public class PinyinParser {
         }
         if (res == null)
             Log.d(TAG, "Failed to parse string ["+input+"]");
-        else
+        else {
             Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
+            add_to_cache(input, res);
+        }
 
         return res;
     }

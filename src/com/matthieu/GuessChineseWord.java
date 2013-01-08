@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
@@ -22,6 +21,7 @@ public class GuessChineseWord extends Test {
     private boolean showing_more_voc;
     private View[] master_view=null;
     private int current_view=0;
+    private GuessChineseWordResultView solution_view;
 
     private final String TAG="GuessChineseWord";
 
@@ -51,6 +51,9 @@ public class GuessChineseWord extends Test {
         showing_more_voc=false;
 
         Log.d(TAG, "GuessChineseWord OK");
+
+        solution_view = new GuessChineseWordResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
         return true;
     }
 
@@ -238,39 +241,32 @@ public class GuessChineseWord extends Test {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessChineseWordResultFragment solution_fragment = new GuessChineseWordResultFragment();
-                Bundle bundle = new Bundle();
-                bundle.putInt("good", correctness);
-                bundle.putString("answer", guess);
-                bundle.putString("question", current_test);
-                bundle.putStringArrayList("previous_guess", previous_guess);
-                solution_fragment.setArguments(bundle);
-                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+                solution_view.set_answer(correctness, guess, previous_guess);
+                activity.new_solution_fragment(solution_view);
                 break;
         }
     }
 
-    public static class GuessChineseWordResultFragment extends Test.SolutionFragment {
+    public static class GuessChineseWordResultView extends SolutionView {
         ArrayList<String> previous_guess;
 
-        @Override
-        protected void get_arguments() {
-            super.get_arguments();
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                previous_guess = bundle.getStringArrayList("previous_guess");
-            }
+        public GuessChineseWordResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, ArrayList<String> previous) {
+            super.set_answer(good, answer);
+            this.previous_guess = previous;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return show_details(inflater,container, true);
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
+            return show_solution(true);
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

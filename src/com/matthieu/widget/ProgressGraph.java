@@ -71,12 +71,13 @@ public class ProgressGraph extends View {
                 if (((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) &&
                     (force || (current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
                     ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
-                    recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
+                    if (force)
+                        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
-                        current_data.add(recent_data);
+                        if (force)
+                            current_data.add(recent_data);
                         current_range = query;
-
                     }
                 }
             }

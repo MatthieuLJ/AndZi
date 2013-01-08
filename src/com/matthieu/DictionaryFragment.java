@@ -6,6 +6,7 @@ package com.matthieu;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.os.*;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -21,7 +22,6 @@ import com.matthieu.widget.VocabularyCursorClickHandle;
 import java.util.ArrayList;
 
 public class DictionaryFragment extends Fragment implements VocabularyCursorClickHandle {
-    int mode; // 0 for Chinese->English, 1 for Chinese<-English
     Cursor current_cursor =null;
     static update_delayer update_task =null;
     boolean use_ref=true;
@@ -31,14 +31,13 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     static final int ENGLISH_TO_CHINESE_MODE=1;
 
     String last_query="";
-    int last_mode=0;
+    int last_mode=-1;
     boolean last_use_ref=true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mode=CHINESE_TO_ENGLISH_MODE;
     }
 
     @Override
@@ -80,15 +79,13 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
     private class update_delayer extends AsyncTask<Void, Cursor, Cursor> {
         String msg_query;
-        int msg_mode;
         boolean msg_ref;
 
         boolean is_cancelled = false;
         HanziDB currentDB=null;
 
-        public update_delayer(String query, int mode, boolean ref) {
+        public update_delayer(String query, boolean ref) {
             msg_query = query;
-            msg_mode = mode;
             msg_ref = ref;
         }
 
@@ -111,14 +108,23 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
         @Override
         protected Cursor doInBackground(Void... voids) {
-            Cursor result_cursor;
+            Cursor result_cursor=null;
+            boolean potential_english=true;
             Log.d(TAG, "Starting a new query for "+msg_query);
 
             if (currentDB == null)
                 return null;
 
+            int mode = detect_mode(msg_query);
+
+            Log.d(TAG, "Detected mode "+mode);
+            if (mode == -1) {
+                current_cursor = new MessageCursor("Cannot understand this query");
+                return current_cursor;
+            }
+
             synchronized (DictionaryFragment.this) {
-                if ((msg_query.trim().equals(last_query.trim())) && (msg_mode == last_mode) && (msg_ref == last_use_ref) &&
+                if ((mode == last_mode) && (msg_query.trim().equals(last_query.trim())) && (msg_ref == last_use_ref) &&
                         (current_cursor != null)) {
                     Log.d(TAG, "Already had the results");
                     // just to make sure it's loaded....
@@ -129,13 +135,13 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (query != null) {
-                    if ((mode!=msg_mode) || (!msg_query.trim().equals(query.getText().toString().trim()))) {
+                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != last_use_ref)) {
                         return null;
                     }
                 }
 
                 last_query = msg_query;
-                last_mode = msg_mode;
+                last_mode = mode;
                 last_use_ref = msg_ref;
                 publishProgress(null);
 
@@ -143,12 +149,17 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     result_cursor =null;
                 }
                 else {
-                    if (msg_mode == CHINESE_TO_ENGLISH_MODE) {
+                    if (mode == CHINESE_TO_ENGLISH_MODE) {
                         ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
 
-                        if (elems == null) {
-                            current_cursor = new MessageCursor("Cannot understand this query");
-                            return current_cursor;
+                        if (elems.size() > 1) {
+                            for (int i=0; i<elems.size(); i++) {
+                                if ((elems.get(i).type != HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE) &&
+                                        (elems.get(i).type != HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)) {
+                                    potential_english = false;
+                                    break;
+                                }
+                            }
                         }
 
                         boolean all_chinese=true;
@@ -203,16 +214,59 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         else
                             result_cursor = currentDB.getWordsWithSequence(elems, true);
                     }
-                    else if (msg_mode == ENGLISH_TO_CHINESE_MODE) {
-                        if (msg_query.trim().length()<2)
-                            result_cursor=null;
-                        else if (msg_query.trim().length()<3)
-                            result_cursor = currentDB.getStartingCTranslations(msg_query.trim());
-                        else
-                            result_cursor = currentDB.getCTranslations(msg_query.trim());
+                    if ((mode == ENGLISH_TO_CHINESE_MODE) || (potential_english && (result_cursor==null || result_cursor.getCount()==0))) {
+                        if (result_cursor != null)
+                            result_cursor.close();
+
+                        if (!msg_query.contains(" ") && !msg_query.contains(",")) {
+                            if (msg_query.trim().length()<2)
+                                result_cursor=null;
+                            else if (msg_query.trim().length()<3)
+                                result_cursor = currentDB.getStartingCTranslations(msg_query.trim());
+                            else
+                                result_cursor = currentDB.getCTranslations(msg_query.trim());
+                        } else { // some work to do to handle several words
+                            Cursor result1_cursor=null, result2_cursor=null, result3_cursor=null;
+                            if (msg_query.contains(",")) {
+                                String items[] = msg_query.split(",");
+                                ArrayList<String> prepared_items = new ArrayList<String>();
+                                for (String i : items) {
+                                    i = i.trim();
+                                    if (i.length() > 1)
+                                        prepared_items.add(i);
+                                }
+                                result1_cursor = currentDB.getCTranslations(prepared_items, true);
+                            }
+                            if (msg_query.contains(" ") && ((result1_cursor==null) || (result1_cursor.getCount()<2))) {
+                                String items[] = msg_query.split("[, ]");
+                                ArrayList<String> prepared_items = new ArrayList<String>();
+                                for (String i : items) {
+                                    i = i.trim();
+                                    if (i.length() > 2)
+                                        prepared_items.add(i);
+                                }
+                                result2_cursor = currentDB.getCTranslations(prepared_items, true);
+                            }
+                            if (((result1_cursor==null)?0:result1_cursor.getCount()) + ((result2_cursor==null)?0:result2_cursor.getCount()) < 5) {
+                                String items[] = msg_query.split("[, ]");
+                                ArrayList<String> prepared_items = new ArrayList<String>();
+                                for (String i : items) {
+                                    i = i.trim();
+                                    if (i.length() > 2)
+                                        prepared_items.add(i);
+                                }
+                                result3_cursor = currentDB.getCTranslations(prepared_items, false);
+                            }
+                            ArrayList<Cursor> all_cursors = new ArrayList<Cursor>();
+                            if (result1_cursor != null)
+                                all_cursors.add(result1_cursor);
+                            if (result2_cursor != null)
+                                all_cursors.add(result2_cursor);
+                            if (result3_cursor != null)
+                                all_cursors.add(result3_cursor);
+                            result_cursor = new MergeCursor(all_cursors.toArray(new Cursor[3]));
+                        }
                     }
-                    else
-                        result_cursor =null;
                 }
 
                 // Just to make sure the query actually happens in this thread (and not the UI thread)
@@ -244,7 +298,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         protected void onPostExecute(Cursor cursor) {
             if ((getActivity()!=null) && (getView() != null)) {
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
-                if ((msg_mode == mode) && (msg_query.trim().equals(query.getText().toString().trim()))) {
+                if (msg_query.trim().equals(query.getText().toString().trim()) && (msg_ref == use_ref)) {
                     publish_cursor(cursor);
                     ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
                 }
@@ -265,28 +319,30 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if (query == null)
                 return;
 
-            if ((mode!=msg_mode) || (!msg_query.trim().equals(query.getText().toString().trim())))
+            if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref))
                 return;
 
             Log.d(TAG, "msg_query is "+msg_query+", and current search is "+query.getText());
 
             final ListView results = (ListView) getView().findViewById(R.id.dict_results);
 
-            if ((results == null) && (cur!=null)) {
-                cur.close();
+            if (results == null) {
+                if (cur!=null)
+                    cur.close();
                 return;
             }
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
+            results.smoothScrollToPosition(0);
         }
     }
 
     @SuppressLint({"NewApi"})
-    private void start_new_query(int mode, String query) {
+    private void start_new_query(String query) {
         if (update_task != null) {
             update_task.cancel();
         }
 
-        update_task = new update_delayer(query, mode, use_ref);
+        update_task = new update_delayer(query, use_ref);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             update_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
         else
@@ -298,28 +354,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         }
 
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            start_new_query(mode, charSequence.toString());
+            start_new_query(charSequence.toString());
         }
 
         public void afterTextChanged(Editable editable) {
-        }
-    }
-
-    public void change_direction() {
-        switch (mode) {
-            case CHINESE_TO_ENGLISH_MODE:
-                mode = ENGLISH_TO_CHINESE_MODE;
-                break;
-            case ENGLISH_TO_CHINESE_MODE:
-                mode = CHINESE_TO_ENGLISH_MODE;
-                break;
-        }
-        View v = getView();
-        if (v == null)
-            return;
-        EditText query= (EditText) v.findViewById(R.id.dict_query);
-        if (query!=null) {
-            start_new_query(mode, query.getText().toString());
         }
     }
 
@@ -330,7 +368,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             return;
         EditText query = (EditText) v.findViewById(R.id.dict_query);
         if (query!=null) {
-            start_new_query(mode, query.getText().toString());
+            start_new_query(query.getText().toString());
         }
     }
 
@@ -348,7 +386,36 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         return use_ref && (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
     }
 
-    public boolean is_chinese_to_english() {
-        return mode == CHINESE_TO_ENGLISH_MODE;
+    private int detect_mode(String entry) {
+        int len = entry.length();
+        int res=-1;
+
+        for (int i=0; i<len;) {
+            int character=entry.codePointAt(i);
+            if (((character >= 0x4E00) && (character <= 0x9fff)) // main CJK
+                    || ((character >= 0x2e00) && (character <= 0x31ff)) // additional punctuation
+                    || ((character >= 0x3400) && (character <= 0x4dbf)) // extension A
+                    )
+            {
+                if (res == ENGLISH_TO_CHINESE_MODE)
+                    return -1;
+                res = CHINESE_TO_ENGLISH_MODE;
+            }
+            if (entry.substring(i, i+1).matches("[, ]"))
+            {
+                if (res == CHINESE_TO_ENGLISH_MODE)
+                    return -1;
+                res= ENGLISH_TO_CHINESE_MODE;
+            }
+            i+=Character.charCount(character);
+        }
+        if (res != -1)
+            return res;
+
+        ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(entry);
+        if (elems == null)
+            return ENGLISH_TO_CHINESE_MODE;
+        else
+            return CHINESE_TO_ENGLISH_MODE;
     }
 }

@@ -45,5 +45,11 @@
             android:text="@string/accept"
             android:visibility="gone"
             />
+    <Button
+            android:id="@+id/test_result_next"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="@string/ok"
+            />
 
 </LinearLayout>

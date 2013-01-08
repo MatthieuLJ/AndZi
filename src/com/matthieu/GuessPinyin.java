@@ -4,8 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -24,6 +22,8 @@ public class GuessPinyin extends Test implements TextWatcher {
     private boolean show_words=false;
     private View master_view[]=null;
     private int current_view=0;
+
+    private GuessPinyinResultView solution_view;
 
     private static final String TAG="GuessPinyin";
 
@@ -78,6 +78,9 @@ public class GuessPinyin extends Test implements TextWatcher {
 
         Log.d(TAG, "GuessPinyin OK");
         current_test = hanzi;
+
+        solution_view = new GuessPinyinResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;
     }
@@ -220,68 +223,41 @@ public class GuessPinyin extends Test implements TextWatcher {
         String guess = word_guess.getText().toString();
 
         int correctness = check_guess(guess);
-        GuessPinyinResultFragment solution_fragment = new GuessPinyinResultFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("good", correctness);
-        bundle.putString("answer", guess);
-        bundle.putString("question", current_test);
-        bundle.putString("pinyin", pinyin);
-        solution_fragment.setArguments(bundle);
-        ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+        solution_view.set_answer(correctness, guess, pinyin);
+        activity.new_solution_fragment(solution_view);
     }
 
-    public static class GuessPinyinResultFragment extends Test.SolutionFragment {
+    public static class GuessPinyinResultView extends SolutionView {
         String pinyin;
 
-        @Override
-        protected void get_arguments() {
-            super.get_arguments();
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                pinyin = bundle.getString("pinyin");
-            }
+        public GuessPinyinResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, String pinyin) {
+            super.set_answer(good, answer);
+            this.pinyin = pinyin;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    DetailsFragment.populate_details_view(GuessPinyinResultFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, pinyin, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
-                }
-            }, 500);
-
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
             if ((good == INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
-                TextView bad_guess_text = new TextView(getActivity());
+                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
+                TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                final FrameLayout bad_guess_details = new FrameLayout(getActivity());
-                bad_guess_details.setId(R.id.test_bad_guess);
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        DetailsFragment.populate_details_view(GuessPinyinResultFragment.this, bad_guess_details, answer, false, (TestActivity) GuessPinyinResultFragment.this.getActivity());
-                    }
-                }, 500);
-
-                bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+                (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
             }
 
-            return res;
+            return result_view;
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

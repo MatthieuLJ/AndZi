@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -21,6 +20,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
     private ArrayList<String> previous_guess=new ArrayList<String>();
     private View master_view[]=null;
     private int current_view=0;
+    private GuessMissinCharResultView solution_view;
 
     private final String TAG="GuessMissingChar";
 
@@ -37,6 +37,9 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
         current_test = hanzi;
         Log.d(TAG, "GuessMissingChar OK");
+
+        solution_view = new GuessMissinCharResultView(current_test, activity);
+        solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;
     }
@@ -220,39 +223,32 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 break;
             case CORRECT:
             case INCORRECT:
-                GuessMissinCharResultFragment solution_fragment = new GuessMissinCharResultFragment();
-                Bundle bundle = new Bundle();
-                bundle.putInt("good", correctness);
-                bundle.putString("answer", guess);
-                bundle.putString("question", current_test);
-                bundle.putParcelableArrayList("words", words);
-                solution_fragment.setArguments(bundle);
-                ((TestActivity)activity).new_solution_fragment(solution_fragment, correctness);
+                solution_view.set_answer(correctness, guess, words);
+                activity.new_solution_fragment(solution_view);
                 break;
         }
     }
 
-    public static class GuessMissinCharResultFragment extends Test.SolutionFragment {
+    public static class GuessMissinCharResultView extends SolutionView {
         ArrayList<Vocabulary> words;
 
-        @Override
-        protected void get_arguments() {
-            super.get_arguments();
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                words = bundle.getParcelableArrayList("words");
-            }
+        public GuessMissinCharResultView(String question, TestActivity parent) {
+            super(question, parent);
+        }
+
+        public void set_answer(int good, String answer, ArrayList<Vocabulary> words) {
+            super.set_answer(good, answer);
+            this.words = words;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return show_details(inflater, container, false);
+        public View get_view(LayoutInflater inflater, ViewGroup container) {
+            return show_solution(false);
         }
 
         @Override
-        public void onDestroyView() {
-            hide_details((ViewGroup) getView());
-            super.onDestroyView();
+        public void kill_view(View v) {
+            hide_details((ViewGroup) v);
         }
 
         @Override

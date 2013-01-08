@@ -13,7 +13,6 @@ import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
-import com.matthieu.widget.ObjectSerializer;
 import org.acra.ACRA;
 import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;

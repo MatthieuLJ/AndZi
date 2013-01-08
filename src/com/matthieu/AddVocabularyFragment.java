@@ -102,7 +102,6 @@ public class AddVocabularyFragment extends Fragment
 
     // Handle when the content of the chinese word text field changes
     private class ChineseTextWatcher implements TextWatcher {
-
         private EditTextAutomaticSize tview;
         private int state; // 0 is empty, 1 is "normal", 2 is "wrong character in the string"
 
@@ -213,6 +212,8 @@ public class AddVocabularyFragment extends Fragment
 
     public void update_vocabulary() {
         process_handler.post(new UpdateVocabularyList());
+        if (current_word_selection != null)
+            current_word_selection.clear();
     }
 
     private class UpdateVocabularyList implements Runnable {
@@ -707,6 +708,8 @@ public class AddVocabularyFragment extends Fragment
             translations_displayed_from_ref.clear();
         if (translations_in_db != null)
             translations_in_db.clear();
+        if (current_word_selection != null)
+            current_word_selection.clear();
         current_chinese_word="";
         ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {

@@ -1,6 +1,5 @@
-ONGOING (11):
+ONGOING (10):
 * Put back buttons for Reference Activity (for larger screens)
-* Handle English dictionary searches with multiple words
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
 * Test performance with huge database
@@ -35,7 +34,9 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (197):
+DONE (199):
+* Handle English dictionary searches with multiple words
+* Automatically detect language in dictionary
 * Notice to download dictionary disappears when rotating screen
 * Indicator of test success disappears too soon sometimes (when going too fast through tests)
 * Sometimes Dictionary search gets overridden again and never finishes

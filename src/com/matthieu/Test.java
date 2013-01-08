@@ -1,9 +1,7 @@
 package com.matthieu;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -19,7 +17,7 @@ import java.util.TimerTask;
 
 public abstract class Test {
     protected static HanziDB myDB, refDB;
-    protected Activity activity;
+    protected TestActivity activity;
 
     static private Timer timer = new Timer();
 
@@ -30,90 +28,81 @@ public abstract class Test {
     public void attach(Activity a) {
         myDB = ((AndZiApplication) a.getApplicationContext()).getMyDB();
         refDB = ((AndZiApplication) a.getApplicationContext()).getRefDB();
-        activity = a;
+        activity = (TestActivity) a;
     }
 
     abstract boolean set_hanzi_to_test(String s);
     abstract View get_view();
     public void kill_view(View v) {};
 
-    public abstract static class SolutionFragment extends Fragment {
+    public abstract static class SolutionView {
         int good;
         String question, answer;
+        TestActivity parent_activity;
+        View result_view;
+        Handler handler;
 
+        abstract View get_view(LayoutInflater inflater, ViewGroup container);
+        public void kill_view(View v) {};
 
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            get_arguments();
+        public SolutionView(final String question, TestActivity parent) {
+            this.question = question;
+            this.parent_activity = parent;
+
+            handler = new Handler();
+        }
+
+        public View prepare_view(LayoutInflater inflater) {
+            result_view = inflater.inflate(R.layout.test_result, null);
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) result_view.findViewById(R.id.test_results), question, false, parent_activity);
+                }
+            }, 500);
+            return result_view;
+        }
+
+        public void set_answer(int good, String answer) {
+            this.good = good;
+            this.answer = answer;
             TimerTask updater = new TimerTask() {
                 @Override
                 public void run() {
-                    //Log.d(TAG, "Updating scores !");
                     update_score();
-                    /*final TestActivity act = (TestActivity) getActivity();
-                    if (act == null)
-                        return;
-                    act.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            act.update_stats();
-                        }
-                    });*/
                 }
             };
             timer.schedule(updater, 500);
         }
 
-
-        protected void get_arguments() {
-            Bundle bundle = getArguments();
-            if (bundle != null) {
-                good = bundle.getInt("good");
-                answer = bundle.getString("answer");
-                question = bundle.getString("question");
-            }
-        }
-
         public void update_score() {
-            TestActivity my_activity = (TestActivity) getActivity();
-            if (my_activity != null)
-                my_activity.score_changed();
+            if (parent_activity != null)
+                parent_activity.score_changed();
         }
 
-        protected View show_details(LayoutInflater inflater, ViewGroup container, boolean show_accept) {
-            final View res = inflater.inflate(R.layout.test_result, container, false);
-
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    DetailsFragment.populate_details_view(SolutionFragment.this, (ViewGroup) res.findViewById(R.id.test_results), question, false, (TestActivity) getActivity());
-                }
-            }, 500);
-
+        protected View show_solution(boolean show_accept) {
             if ((good == Test.INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) res.findViewById(R.id.test_result_wrong_guess);
-                TextView bad_guess_text = new TextView(getActivity());
+                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
+                TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
                 bad_guess_text.setTextColor(0xffdd0000);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                final FrameLayout bad_guess_details = new FrameLayout(getActivity());
+                final FrameLayout bad_guess_details = new FrameLayout(parent_activity);
                 bad_guess_details.setId(R.id.test_bad_guess);
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        DetailsFragment.populate_details_view(SolutionFragment.this, bad_guess_details, answer, false, (TestActivity) getActivity());
+                        DetailsFragment.populate_details_view(parent_activity, bad_guess_details, answer, false, parent_activity);
                     }
                 }, 500);
 
                 bad_guess.addView(bad_guess_details, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                (res.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
+                (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);
                 if (show_accept) {
-                    (res.findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
-                    (res.findViewById(R.id.test_result_accept)).setOnClickListener(new View.OnClickListener() {
+                    (result_view.findViewById(R.id.test_result_accept)).setVisibility(View.VISIBLE);
+                    (result_view.findViewById(R.id.test_result_accept)).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             handle_good(view);
@@ -122,7 +111,7 @@ public abstract class Test {
                 }
             }
 
-            return res;
+            return result_view;
         }
 
         protected void hide_details(ViewGroup container) {
@@ -142,15 +131,6 @@ public abstract class Test {
                     restore_score();
                     good = Test.CORRECT;
                     update_score();
-                    /*final TestActivity act = (TestActivity) getActivity();
-                    if (act == null)
-                        return;
-                    act.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            act.update_stats();
-                        }
-                    });*/
                 }
             };
             timer.schedule(updater, 500);

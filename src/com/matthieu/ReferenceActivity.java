@@ -352,11 +352,6 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             int page = pager.getCurrentItem();
             if (page == 0) {
                 inflater.inflate(R.menu.reference_dict, menu);
-                MenuItem direction = menu.findItem(R.id.reference_direction);
-                if (((DictionaryFragment)fragments[0]).is_chinese_to_english())
-                    direction.setTitle(R.string.dictionary_chinese_to_eng);
-                else
-                    direction.setTitle(R.string.dictionary_eng_to_chinese);
 
                 MenuItem source = menu.findItem(R.id.reference_source);
                 if (((DictionaryFragment)fragments[0]).is_dictionary_search())
@@ -408,10 +403,6 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                 return true;
             case R.id.reference_source:
                 ((DictionaryFragment)fragments[0]).change_source();
-                invalidateOptionsMenu();
-                break;
-            case R.id.reference_direction:
-                ((DictionaryFragment)fragments[0]).change_direction();
                 invalidateOptionsMenu();
                 break;
             case R.id.details_add_edit:
