@@ -9,6 +9,6 @@
           android:title="None"
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_lesson_select_done"
-          android:title="Done"
+          android:title="@string/add_voc_menu_done"
           android:showAsAction="always"/>
 </menu>

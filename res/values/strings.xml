@@ -119,6 +119,9 @@
     <string name="add_voc_edit_new_word">Please enter a new word:</string>
     <string name="add_voc_new_translation">New translation</string>
 
+    <string name="add_voc_menu_done">Done</string>
+    <string name="add_voc_menu_add_new_translation">New Translation</string>
+
     <string name="edit_lesson_new">New lesson name</string>
 
     <string name="review_list_nothing_to_study">Nothing to study</string>
