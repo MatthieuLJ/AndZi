@@ -6,7 +6,6 @@ gen/
 .idea/workspace.xml
 
 local.properties
-project.properties
 build.properties
 build.xml
 proguard.cfg

@@ -15,8 +15,9 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
+BUGS (2):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
+* Number of words in list of lessons does not get updated as vocabulary is being added
 
 FUTURE (14):
 * Load results in dictionary progressively
