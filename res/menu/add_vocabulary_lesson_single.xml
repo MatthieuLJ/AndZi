@@ -3,15 +3,15 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/add_vocabulary_lesson_clone"
-          android:title="Clone"
+          android:title="@string/add_voc_menu_clone_lesson"
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_lesson_rename"
-          android:title="Rename"
+          android:title="@string/add_voc_menu_rename_lesson"
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_lesson_delete"
-          android:title="Delete"
+          android:title="@string/add_voc_menu_delete_lesson"
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_lesson_set_default"
-          android:title="Default"
+          android:title="@string/add_voc_menu_set_default_lesson"
           android:showAsAction="always"/>
 </menu>

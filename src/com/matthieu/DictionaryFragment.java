@@ -309,6 +309,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             }
         }
 
+        @SuppressLint({"NewApi"})
         private void publish_cursor(Cursor cur) {
             if (getActivity()==null)
                 return;
@@ -332,7 +333,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 return;
             }
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
-            results.smoothScrollToPosition(0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                results.smoothScrollToPosition(0);
         }
     }
 

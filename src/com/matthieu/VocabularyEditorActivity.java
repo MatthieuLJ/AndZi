@@ -315,9 +315,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
                 if (fragments[2] != null)
                     ((LessonListFragment)fragments[2]).update_list();
                 return true;
-            case R.id.add_vocabulary_assign_lesson_done:
-                flush_lesson_assignment();
-                return true;
             case R.id.add_vocabulary_done:
                 ((AddVocabularyFragment)fragments[0]).done();
                 return true;

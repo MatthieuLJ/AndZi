@@ -36,11 +36,11 @@ public class AddVocabularyFragment extends Fragment
 {
     //private static final String TAG="AddVocabularyActivity";
 
-    ArrayList<VocabularyItem> translations_from_ref;
-    ArrayList<VocabularyItem> translations_displayed_from_ref;
-    ArrayList<VocabularyItem> translations_in_db;
-    protected HanziDB myDB=null;
-    protected HanziDB refDB=null;
+    private ArrayList<VocabularyItem> translations_from_ref;
+    private ArrayList<VocabularyItem> translations_displayed_from_ref;
+    private ArrayList<VocabularyItem> translations_in_db;
+    private HanziDB myDB=null;
+    private HanziDB refDB=null;
 
     private String default_lesson="";
     private String current_chinese_word="";
@@ -205,7 +205,7 @@ public class AddVocabularyFragment extends Fragment
         }
     }
 
-    public String get_current_pinyin() {
+    String get_current_pinyin() {
         PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
         return buttons.get_current_pinyin();
     }
@@ -564,7 +564,7 @@ public class AddVocabularyFragment extends Fragment
 
     private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
 
-    protected void update_state() {
+    void update_state() {
         VocabularyEditorActivity.activity_state state;
 
         if (current_chinese_word.equals("")) {
@@ -587,7 +587,7 @@ public class AddVocabularyFragment extends Fragment
         ((VocabularyEditorActivity)getActivity()).set_state(state);
     }
 
-    public void handle_word_click(View v) {
+    void handle_word_click(View v) {
         final VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
         VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
         if (voc == null)
@@ -781,7 +781,7 @@ public class AddVocabularyFragment extends Fragment
         alert.show();
     }
 
-    public HashMap<String, VocabularyEditorActivity.LessonAssignment> get_current_lesson_assignment() {
+    HashMap<String, VocabularyEditorActivity.LessonAssignment> get_current_lesson_assignment() {
         if (current_word_selection.size()==0) {
             update_state();
             return null;

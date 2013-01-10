@@ -18,7 +18,6 @@ import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class LessonListFragment extends Fragment {
@@ -46,7 +45,7 @@ public class LessonListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View res = inflater.inflate(R.layout.review_list, container, false);
+        View res = inflater.inflate(R.layout.lesson_list, container, false);
         return res;
     }
 
@@ -54,7 +53,7 @@ public class LessonListFragment extends Fragment {
         ListView list = (ListView) getView().findViewById(R.id.review_list);
         TextView header = (TextView) list.getTag(R.id.header_view);
         if (header == null) {
-            header = (TextView) getLayoutInflater(null).inflate(R.layout.review_list_header, list, false);
+            header = (TextView) getLayoutInflater(null).inflate(R.layout.lesson_list_header, list, false);
             list.setTag(R.id.header_view, header);
             list.addHeaderView(header, null, false);
         }
