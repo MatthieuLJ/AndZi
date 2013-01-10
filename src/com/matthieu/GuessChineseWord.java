@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GuessChineseWord extends Test {
-    private String current_test;
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
     private boolean showing_more_voc;
@@ -39,7 +38,7 @@ public class GuessChineseWord extends Test {
             return false;
         }
         solution = voc.get((int) (voc.size()*Math.random()));
-        current_test = hanzi;
+        String current_test = hanzi;
 
         translations = solution.english;
         if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {

@@ -108,8 +108,8 @@
 
     <string name="test_empty_db">Your database is empty, add some words before testing</string>
     <string name="test_mastering">You master everything, do you want to continue ?</string>
-    <string name="test_mastering_disable_filter">You master everything, do you want to disable the current lesson filter ?</string>
 
+    <string name="add_voc_enter_pinyin">Enter Pinyin</string>
     <string name="add_voc_enter_chinese">Enter a Chinese word</string>
     <string name="add_voc_only_chinese">Only enter chinese characters</string>
     <string name="add_voc_pick_pinyin">Pick a pinyin for </string>
@@ -121,22 +121,25 @@
 
     <string name="add_voc_menu_done">Done</string>
     <string name="add_voc_menu_add_new_translation">New Translation</string>
+    <string name="add_voc_menu_edit_translation">Edit</string>
+    <string name="add_voc_menu_delete_translation">Delete</string>
+    <string name="add_voc_menu_add_selection">Add</string>
+    <string name="add_voc_menu_select_lesson_none">None</string>
+    <string name="add_voc_menu_select_lesson_all">All</string>
+    <string name="add_voc_menu_add_new_lesson">New Lesson</string>
+    <string name="add_voc_menu_clone_lesson">Clone</string>
+    <string name="add_voc_menu_delete_lesson">Delete</string>
+    <string name="add_voc_menu_rename_lesson">Rename</string>
+    <string name="add_voc_menu_merge_lesson">Merge</string>
+    <string name="add_voc_menu_set_default_lesson">Default</string>
 
     <string name="edit_lesson_new">New lesson name</string>
-
-    <string name="review_list_nothing_to_study">Nothing to study</string>
-    <string name="review_list_num_chars_to_study_filtered">You have %1$d characters to study (%2$d total)</string>
-    <string name="review_list_num_words_to_study_filtered">You have %1$d words to study (%2$d total)</string>
-    <string name="review_list_num_chars_to_study">You have %1$d characters to study</string>
-    <string name="review_list_num_words_to_study">You have %1$d words to study</string>
 
     <string name="notification_ticker">More to study</string>
     <string name="notification_title">More Chinese to study</string>
     <string name="notification_content">You have %s tests waiting</string>
 
     <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
-    <string name="dictionary_eng_to_chinese">Eng\u2192中</string>
-    <string name="dictionary_chinese_to_eng">Eng\u2190中</string>
     <string name="details_pin">Pin</string>
     <string name="details_unpin">Unpin</string>
     <string name="details_dictionary">Dict</string>

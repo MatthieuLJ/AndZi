@@ -37,7 +37,7 @@ public class DetailsFragment extends Fragment {
     private String current_pinyin="";
     private boolean pinned=false;
 
-    static Object locker = new Object();
+    private static Object locker = new Object();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

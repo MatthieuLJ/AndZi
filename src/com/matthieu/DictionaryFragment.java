@@ -135,7 +135,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (query != null) {
-                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != last_use_ref)) {
+                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref)) {
                         return null;
                     }
                 }
@@ -309,6 +309,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             }
         }
 
+        @SuppressLint({"NewApi"})
         private void publish_cursor(Cursor cur) {
             if (getActivity()==null)
                 return;
@@ -332,7 +333,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 return;
             }
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
-            results.smoothScrollToPosition(0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                results.smoothScrollToPosition(0);
         }
     }
 

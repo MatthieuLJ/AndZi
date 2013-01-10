@@ -3,9 +3,9 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/add_vocabulary_lesson_merge"
-          android:title="Merge"
+          android:title="@string/add_voc_menu_merge_lesson"
           android:showAsAction="ifRoom"/>
     <item android:id="@+id/add_vocabulary_lesson_delete"
-          android:title="Delete"
+          android:title="@string/add_voc_menu_delete_lesson"
           android:showAsAction="always"/>
 </menu>

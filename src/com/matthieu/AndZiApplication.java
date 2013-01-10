@@ -33,10 +33,10 @@ public class AndZiApplication extends Application {
     private boolean ref_enabled=true;
     private boolean ref_present=false;
 
-    static final String TAG = "AndZiApplication";
-    static public final String REF_DB_NAME = "cedict_db";
-    static public final String DEFAULT_DATABASE_NAME = "HANZI_DB";
-    static public final String PROGRESS_DB_NAME = "progress_db";
+    private static final String TAG = "AndZiApplication";
+    private static final String REF_DB_NAME = "cedict_db";
+    private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
+    private static final String PROGRESS_DB_NAME = "progress_db";
 
     private static final String VERSION="0.3.0-acra";
 
@@ -157,7 +157,7 @@ public class AndZiApplication extends Application {
     public boolean check_exporting_progress_space(String path) {
         return check_exporting_space(path, getApplicationContext().getDatabasePath(PROGRESS_DB_NAME));
     }
-    public boolean check_exporting_space(String path, File source_path) {
+    boolean check_exporting_space(String path, File source_path) {
         // exporting is a several steps process:
         // create another temporary database with the data to export
         // copy the temporary file to the destination
@@ -366,7 +366,7 @@ public class AndZiApplication extends Application {
            cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
-    ActivityManager mActivityManager;
+    private ActivityManager mActivityManager;
     public boolean isApplicationForeground() {
         ActivityManager.RunningAppProcessInfo result=null, info=null;
 

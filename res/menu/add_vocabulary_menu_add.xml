@@ -3,7 +3,7 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/add_vocabulary_add_selection"
-          android:title="Add"
+          android:title="@string/add_voc_menu_add_selection"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_done"
           android:title="@string/add_voc_menu_done"

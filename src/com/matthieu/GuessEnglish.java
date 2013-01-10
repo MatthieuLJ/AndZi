@@ -14,7 +14,6 @@ import android.widget.*;
 import java.util.*;
 
 public class GuessEnglish extends Test {
-    private String current_test;
     private Vocabulary solution=null;
     private View master_view[]=null;
     private int current_view=0;
@@ -57,7 +56,7 @@ public class GuessEnglish extends Test {
         if (solution == null) {
             return false;
         }
-        current_test = hanzi;
+        String current_test = hanzi;
         Log.d(TAG, "GuessEnglish OK");
 
         solution_view = new GuessEnglishResultView(current_test, activity);
