@@ -6,12 +6,10 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
 import android.test.ActivityInstrumentationTestCase2;
+import android.view.View;
 import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
-import com.matthieu.MainMenuActivity;
-import com.matthieu.AndZiApplication;
-import com.matthieu.R;
-import com.matthieu.TestActivity;
+import com.matthieu.*;
 
 import java.util.ArrayList;
 
@@ -112,38 +110,40 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
 
+        /*
         Instrumentation instrumentation = getInstrumentation();
 
         // Moving to another activity
         Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor(TestActivity.class.getName(), null, false);
         Activity currentActivity = getInstrumentation().waitForMonitorWithTimeout(monitor, 2000);
-        assertTrue(currentActivity!=null);
+        assertTrue(currentActivity!=null);*/
 
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
 
-        ViewPager pager = (ViewPager) currentActivity.findViewById(R.id.test_pager);
+        ViewPager pager = (ViewPager) solo.getView(R.id.test_pager);
         if (pager != null)
             solo.scrollToSide(Solo.RIGHT);
 
-        TextView tv = (TextView) currentActivity.findViewById(R.id.stats_chars);
+        // All the scores should be at 0
+        TextView tv = (TextView) solo.getView(R.id.stats_chars);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) currentActivity.findViewById(R.id.stats_words);
+        tv = (TextView) solo.getView(R.id.stats_words);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) currentActivity.findViewById(R.id.stats_to_study);
+        tv = (TextView) solo.getView(R.id.stats_to_study);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
 
         solo.setActivityOrientation(Solo.LANDSCAPE);
 
-        tv = (TextView) currentActivity.findViewById(R.id.stats_chars);
+        tv = (TextView) solo.getView(R.id.stats_chars);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) currentActivity.findViewById(R.id.stats_words);
+        tv = (TextView) solo.getView(R.id.stats_words);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
-        tv = (TextView) currentActivity.findViewById(R.id.stats_to_study);
+        tv = (TextView) solo.getView(R.id.stats_to_study);
         assertTrue(tv != null);
         assertTrue(tv.getText().equals("0"));
 
@@ -168,9 +168,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.waitForDialogToClose(5);
     }
 
-    /*
     public void testAddVocabularyEmptyApp() {
-
         // First wipe out everything...
         clearEverything(false);
 
@@ -180,54 +178,60 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
             solo.waitForDialogToClose(2000);
         }
 
-        // there should not be anything to test on
-        solo.clickOnButton("Test me!");
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.review_list_nothing_to_study)));
-        solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForActivity("MainMenuActivity");
-        // Neither anything to review
-        solo.clickOnButton("Review list");
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.review_list_nothing_to_study)));
-        solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForActivity("MainMenuActivity");
+        // Let's go add some vocabulary
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
 
-        // Let's add some vocabulary
-        solo.clickOnButton("Add Vocabulary");
+        Instrumentation.ActivityMonitor monitor = getInstrumentation().addMonitor(VocabularyEditorActivity.class.getName(), null, false);
+        Activity currentActivity = getInstrumentation().waitForMonitorWithTimeout(monitor, 2000);
+        assertTrue(currentActivity!=null);
+
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
-        ArrayList<EditText> entries = solo.getCurrentEditTexts();
-        assertTrue(entries.size()==1);
-        solo.enterText(entries.get(0), "abc");
+        EditText master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+        solo.enterText(master_chinese, "abc");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_only_chinese)));
 
-        solo.clearEditText(entries.get(0));
-        solo.enterText(entries.get(0), "你");
+        solo.clearEditText(master_chinese);
+        solo.enterText(master_chinese, "你");
+
+        solo.setActivityOrientation(Solo.LANDSCAPE);
+
+        master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+        assertTrue(master_chinese.getText().toString().equals("你"));
+
+        solo.setActivityOrientation(Solo.PORTRAIT);
+
+        master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+
         assertTrue(solo.searchButton("-?-"));
         solo.clickOnText("-?-");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
-        ArrayList<EditText> pinyin_entries = solo.getCurrentEditTexts();
-        assertTrue(pinyin_entries.size()==1);
-        solo.enterText(pinyin_entries.get(0), "pyu3");
+        EditText pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
+        assertTrue(pinyin_entry!=null);
+        solo.enterText(pinyin_entry, "pyu3");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(2000);
 
         assertTrue(solo.searchButton("-?-"));
         solo.clickOnText("-?-");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
-        pinyin_entries = solo.getCurrentEditTexts();
-        assertTrue(pinyin_entries.size()==1);
-        solo.enterText(pinyin_entries.get(0), "ni2");
+        pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
+        assertTrue(pinyin_entry!=null);
+        solo.enterText(pinyin_entry, "ni2");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(2000);
         assertFalse(solo.searchButton("-?-"));
         assertTrue(solo.searchButton("ní"));
 
         solo.clickOnText("ní");
-        ArrayList<ListView> pinyin_lists = solo.getCurrentListViews();
-        assertTrue(pinyin_lists.size()==1);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
-        pinyin_entries = solo.getCurrentEditTexts();
-        assertTrue(pinyin_entries.size()==1);
-        solo.enterText(pinyin_entries.get(0), "ni3");
+        ListView pinyin_list = (ListView) solo.getView(R.id.pinyin_dialog_choices);
+        assertTrue(pinyin_list!= null);
+        pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
+        assertTrue(pinyin_entry!=null);
+        solo.enterText(pinyin_entry, "ni3");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(2000);
         assertTrue(solo.searchButton("nǐ"));
@@ -235,46 +239,68 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,2000));
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
 
-        ArrayList<EditText> all_entries = solo.getCurrentEditTexts();
-        assertTrue(all_entries.size()==2);
-        solo.enterText(all_entries.get(1), "You");
+        View add_new_translation_button = solo.getView(R.id.add_vocabulary_show_new_translation);
+        solo.clickOnView(add_new_translation_button);
+        
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_new_translation)));
+        EditText new_translation_edit_text = (EditText) solo.getView(R.id.add_new_translation);
+        assertTrue(new_translation_edit_text!=null);
+        assertTrue(new_translation_edit_text.getVisibility()== View.VISIBLE);
+        solo.enterText(new_translation_edit_text, "You");
         Button add_translation_ok = (Button) solo.getView(R.id.add_new_translation_ok);
+        assertTrue(add_translation_ok != null);
         solo.clickOnView(add_translation_ok);
-        ArrayList<ListView> translation_lists = solo.getCurrentListViews();
-        assertTrue(translation_lists.size()==1);
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db), 1, 2000));
+        assertTrue(solo.waitForText("You"));
+
+        solo.setActivityOrientation(Solo.LANDSCAPE);
+
+        master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+        assertTrue(master_chinese.getText().toString().equals("你"));
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
         assertTrue(solo.waitForText("You"));
 
-        Button add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
-        solo.clickOnView(add_ok);
+        solo.setActivityOrientation(Solo.PORTRAIT);
+        master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
+        assertTrue(solo.waitForText("You"));
 
-        solo.enterText(entries.get(0), "你");
+        //getInstrumentation().invokeMenuActionSync(solo.getActivityMonitor().getLastActivity(), R.id.add_vocabulary_done, 0);
+        View add_vocabulary_done_button = solo.getView(R.id.add_vocabulary_done);
+        solo.clickOnView(add_vocabulary_done_button);
+
+        solo.enterText(master_chinese, "你");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db), 1, 2000));
         assertTrue(solo.waitForText("You"));
         assertTrue(solo.searchButton("nǐ"));
 
-        solo.clearEditText(entries.get(0));
-        solo.enterText(entries.get(0), "你好");
+        solo.clearEditText(master_chinese);
+        solo.enterText(master_chinese, "你好");
         assertTrue(solo.searchButton("nǐ"));
         assertTrue(solo.searchButton("-?-"));
         solo.clickOnText("-?-");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "好"));
-        pinyin_entries = solo.getCurrentEditTexts();
-        assertTrue(pinyin_entries.size()==1);
-        solo.enterText(pinyin_entries.get(0), "hao3");
+        pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
+        assertTrue(pinyin_entry!=null);
+        solo.enterText(pinyin_entry, "hao3");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(2000);
         assertTrue(solo.searchButton("hǎo"));
-        all_entries = solo.getCurrentEditTexts();
-        assertTrue(all_entries.size()==2);
-        solo.enterText(all_entries.get(1), "Hello");
+        new_translation_edit_text = (EditText) solo.getView(R.id.add_new_translation);
+        assertTrue(new_translation_edit_text!=null);
+        solo.enterText(new_translation_edit_text, "Hello");
         add_translation_ok = (Button) solo.getView(R.id.add_new_translation_ok);
         solo.clickOnView(add_translation_ok);
-        add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
-        solo.clickOnView(add_ok);
+
+        //getInstrumentation().invokeMenuActionSync(solo.getActivityMonitor().getLastActivity(), R.id.add_vocabulary_done, 0);
+        add_vocabulary_done_button = solo.getView(R.id.add_vocabulary_done);
+        solo.clickOnView(add_vocabulary_done_button);
     }
 
+    /*
     public void testAddVocabularyWithDict() {
         // First wipe out everything...
         //clearEverything(true);
