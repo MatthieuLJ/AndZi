@@ -6,7 +6,7 @@
           android:title="Add"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_done"
-          android:title="Done"
+          android:title="@string/add_voc_menu_done"
           android:showAsAction="always"/>
 
 </menu>
