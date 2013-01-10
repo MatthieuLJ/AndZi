@@ -135,7 +135,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (query != null) {
-                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != last_use_ref)) {
+                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref)) {
                         return null;
                     }
                 }
