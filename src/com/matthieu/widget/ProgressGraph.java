@@ -75,8 +75,7 @@ public class ProgressGraph extends View {
                         recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
-                        if (force)
-                            current_data.add(recent_data);
+                        current_data.add(recent_data);
                         current_range = query;
                     }
                 }
