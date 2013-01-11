@@ -338,6 +338,7 @@ public class ProgressGraph extends View {
             }
             else {
                 data_to_use = data0;
+                data_to_use.add(recent_data);
             }
             int first_date_index=0, last_date_index=data_to_use.size()-1;
             for (int i=0; i<data_to_use.size(); i++) {

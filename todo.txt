@@ -1,4 +1,6 @@
-ONGOING (10):
+ONGOING (12):
+* Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)
+* When clicking 'add new lesson' it should move to the lesson list page if not there already
 * Put back buttons for Reference Activity (for larger screens)
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -15,9 +17,10 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (2):
+BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 * Number of words in list of lessons does not get updated as vocabulary is being added
+* Need to clear the backstack every time we go into the MainMenuActivity
 
 FUTURE (14):
 * Load results in dictionary progressively
