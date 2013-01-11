@@ -24,6 +24,8 @@
                 android:layout_weight="1"
                 android:hint="@string/add_voc_new_translation"
                 expandable:hidable="true"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 />
         <Button
                 android:id="@+id/add_new_translation_ok"
@@ -31,6 +33,7 @@
                 android:layout_width="wrap_content"
                 android:text="@string/ok"
                 expandable:hidable="true"
+                android:layout_marginRight="10dp"
                 />
     </com.matthieu.widget.ExtendingLinearLayout>
 </LinearLayout>

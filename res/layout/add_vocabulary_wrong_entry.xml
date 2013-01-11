@@ -11,5 +11,6 @@
             android:layout_width="match_parent"
             android:textColor="#555555"
             android:gravity="center_horizontal"
-            android:text="@string/add_voc_enter_chinese" />
+            android:text="@string/add_voc_enter_chinese"
+            android:layout_marginTop="50dp"/>
 </LinearLayout>
