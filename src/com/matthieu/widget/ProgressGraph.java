@@ -100,7 +100,7 @@ public class ProgressGraph extends View {
         int current_char_count = new_data.num_in_box[0] + new_data.num_in_box[1] + new_data.num_in_box[2] + new_data.num_in_box[3] + new_data.num_in_box[4];
 
         min_date=data0.get(0).date;
-        max_date=data0.get(data0.size()-1).date;
+        max_date=System.currentTimeMillis();
         max_zoom = getMax_zoom(min_date, max_date);
 
         int max_score = db.get_max_chars();
@@ -212,6 +212,7 @@ public class ProgressGraph extends View {
             current_offset_x = max_offset_x;
         }
 
+        max_date = System.currentTimeMillis();
         range_date_max = (long) Math.min(max_date, max_date-current_offset_x*(max_date-min_date)/((getMeasuredWidth()-left_size)*Math.pow(2,current_zoom)));
         range_date_min = (long) (max_date-(current_offset_x+(getMeasuredWidth()-left_size))*(max_date-min_date)/((getMeasuredWidth()-left_size)*Math.pow(2,current_zoom)));
 
@@ -338,7 +339,9 @@ public class ProgressGraph extends View {
             }
             else {
                 data_to_use = data0;
+                data_to_use.add(recent_data);
             }
+
             int first_date_index=0, last_date_index=data_to_use.size()-1;
             for (int i=0; i<data_to_use.size(); i++) {
                 if (data_to_use.get(i).date < range_date_min)

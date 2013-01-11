@@ -15,8 +15,10 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
+BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
+* Number of words in list of lessons does not get updated as vocabulary is being added
+* Need to clear the backstack every time we go into the MainMenuActivity
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -34,7 +36,9 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (199):
+DONE (201):
+* Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)
+* When clicking 'add new lesson' it should move to the lesson list page if not there already
 * Handle English dictionary searches with multiple words
 * Automatically detect language in dictionary
 * Notice to download dictionary disappears when rotating screen

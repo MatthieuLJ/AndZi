@@ -117,6 +117,10 @@ public class AddVocabularyFragment extends Fragment
             // change text size to fit in the box
             tview.adaptTextSize();
 
+            // if there was a word to edit, maybe we made some changes to the previous one...
+            if (state==1)
+                ((VocabularyEditorActivity)getActivity()).update_lesson_list();
+
             // check if we only have chinese characters (change layout if not)
             checkChineseChars();
 
@@ -410,6 +414,10 @@ public class AddVocabularyFragment extends Fragment
                     row = inflater.inflate(R.layout.add_vocabulary_list_new_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_new_item);
                 }
+
+                if ((getCount()==1) && (!get_current_pinyin().equals("")))
+                    new_collapsed=false;
+
                 ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.add_voc_new_container);
                 if (new_collapsed)
                     elv.collapse_immediate();
@@ -650,6 +658,13 @@ public class AddVocabularyFragment extends Fragment
             to_add.add(new Vocabulary(current_chinese_word, get_current_pinyin(), v.translation));
         }
 
+        current_word_selection.clear();
+        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        if (lv != null) {
+            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        }
+        update_state();
+
         new Thread(new Runnable() {
             public void run() {
                 myDB.addVocabulary(to_add);
@@ -659,13 +674,6 @@ public class AddVocabularyFragment extends Fragment
                 }
             }
         }).start();
-
-        current_word_selection.clear();
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
-        if (lv != null) {
-            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        }
-        update_state();
     }
 
     public void del_selection() {
@@ -682,6 +690,13 @@ public class AddVocabularyFragment extends Fragment
         }
         hide_duplicates_in_ref();
 
+        current_word_selection.clear();
+        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        if (lv != null) {
+            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        }
+        update_state();
+
         new Thread(new Runnable() {
             public void run() {
                 for (Vocabulary v : to_del)
@@ -689,12 +704,6 @@ public class AddVocabularyFragment extends Fragment
             }
         }).start();
 
-        current_word_selection.clear();
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
-        if (lv != null) {
-            ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
-        }
-        update_state();
     }
 
     public void done() {
@@ -759,6 +768,7 @@ public class AddVocabularyFragment extends Fragment
                         ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
                     update_state();
+
                     new Thread(new Runnable() {
                         public void run() {
                             myDB.addVocabulary(modified_voc);
