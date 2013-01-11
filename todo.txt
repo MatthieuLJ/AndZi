@@ -1,6 +1,4 @@
-ONGOING (12):
-* Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)
-* When clicking 'add new lesson' it should move to the lesson list page if not there already
+ONGOING (10):
 * Put back buttons for Reference Activity (for larger screens)
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -38,7 +36,9 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (199):
+DONE (201):
+* Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)
+* When clicking 'add new lesson' it should move to the lesson list page if not there already
 * Handle English dictionary searches with multiple words
 * Automatically detect language in dictionary
 * Notice to download dictionary disappears when rotating screen
