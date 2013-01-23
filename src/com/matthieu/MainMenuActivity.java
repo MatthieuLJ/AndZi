@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.view.View;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.settings.Settings;
+import com.matthieu.widget.LinearLayoutMovingBackground;
 import org.jetbrains.annotations.Nullable;
 
 public class MainMenuActivity extends SherlockFragmentActivity {
@@ -83,6 +84,8 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         }
 
         setContentView(R.layout.main_menu);
+        LinearLayoutMovingBackground background = (LinearLayoutMovingBackground) findViewById(R.id.main_menu_background);
+        background.setBackgroundAsset("qmsht.png");
     }
 
     @Override
