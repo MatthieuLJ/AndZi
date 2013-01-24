@@ -19,6 +19,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.matthieu.widget.ViewPagerParallax;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
@@ -36,7 +37,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
         setContentView(R.layout.reference);
 
-        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        ViewPagerParallax pager = (ViewPagerParallax) findViewById(R.id.reference_pager);
 
         fragments = new Fragment[max_details_fragments+1];
         ids = new int[max_details_fragments+1];
@@ -86,6 +87,8 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         }
 
         if (pager != null) {
+            pager.set_max_pages(max_details_fragments+1);
+            pager.setBackgroundAsset("calligraphy.png");
             pager.setOffscreenPageLimit(max_details_fragments+1);
             pager.setAdapter(new reference_pager(getSupportFragmentManager()));
 
