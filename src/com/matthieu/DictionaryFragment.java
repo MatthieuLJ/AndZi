@@ -143,7 +143,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 last_query = msg_query;
                 last_mode = mode;
                 last_use_ref = msg_ref;
-                publishProgress(null);
+                publishProgress((Cursor[])null);
 
                 if (msg_query.length()==0) {
                     result_cursor =null;
