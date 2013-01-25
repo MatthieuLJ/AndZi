@@ -83,6 +83,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
         TextView previous = (TextView) res.findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
+        previous.setVisibility(View.GONE);
         previous_guess.clear();
 
         if(words.size()>5) {
@@ -192,18 +193,19 @@ public class GuessMissingChar extends Test implements TextWatcher {
         }
 
         if (res == OTHER) {
-                if (!previous_guess.contains(guess))
-                    previous_guess.add(guess);
-                TextView previous = (TextView) activity.findViewById(R.id.char_finder_previous_guess);
-                EditText edit_guess = (EditText) activity.findViewById(R.id.missing_test_guess);
-                previous.setText("Previous try:\n");
-                for (int i=0; i<previous_guess.size(); i++) {
-                    previous.setText(previous.getText() + previous_guess.get(i));
-                    if (i<previous_guess.size()-1)
-                        previous.setText(previous.getText() + ",\n");
-                }
-                edit_guess.setText("");
-                previous.invalidate();
+            if (!previous_guess.contains(guess))
+                previous_guess.add(guess);
+            TextView previous = (TextView) activity.findViewById(R.id.char_finder_previous_guess);
+            EditText edit_guess = (EditText) activity.findViewById(R.id.missing_test_guess);
+            previous.setText("Previous try:\n");
+            for (int i=0; i<previous_guess.size(); i++) {
+                previous.setText(previous.getText() + previous_guess.get(i));
+                if (i<previous_guess.size()-1)
+                    previous.setText(previous.getText() + ",\n");
+            }
+            edit_guess.setText("");
+            previous.setVisibility(View.VISIBLE);
+            previous.invalidate();
         }
 
         return res;
