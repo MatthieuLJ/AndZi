@@ -3,6 +3,7 @@ package com.matthieu.widget;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.*;
+import android.os.Build;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -11,8 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class ViewPagerParallax extends ViewPager {
-    String background_path=null;
-    String background_saved_path;
+    int background_id =-1;
+    int background_saved_id =-1;
     int saved_width=-1, saved_height=-1, saved_max_num_pages =-1;
     Bitmap saved_bitmap;
 
@@ -33,7 +34,7 @@ public class ViewPagerParallax extends ViewPager {
 
     @SuppressLint({"NewApi"})
     private void set_new_background() {
-        if (background_path == null)
+        if (background_id == -1)
             return;
 
         if (max_num_pages == 0)
@@ -43,14 +44,14 @@ public class ViewPagerParallax extends ViewPager {
             return;
 
         if ((saved_height == getHeight()) && (saved_width == getWidth()) &&
-                (background_saved_path != null) && (background_saved_path.equals(background_path)) &&
+                (background_saved_id==background_id) &&
                 (saved_max_num_pages == max_num_pages))
             return;
 
         InputStream is;
 
         try {
-            is = getContext().getAssets().open(background_path);
+            is = getContext().getResources().openRawResource(background_id);
 
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
@@ -63,22 +64,27 @@ public class ViewPagerParallax extends ViewPager {
             int random_offset_max = (int) (imageWidth - (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level));
             int offset = (int) (Math.random() * random_offset_max);
             is.reset();
-            BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
 
-            options.inJustDecodeBounds = false;
-            saved_bitmap = brd.decodeRegion(new Rect(offset, 0, (int) (offset + (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level)), imageHeight), options);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD_MR1) {
+                BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
 
-            brd.recycle();
+                options.inJustDecodeBounds = false;
+                saved_bitmap = brd.decodeRegion(new Rect(offset, 0, (int) (offset + (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level)), imageHeight), options);
+                brd.recycle();
+            } else {
+                saved_bitmap = Bitmap.createBitmap(BitmapFactory.decodeStream(is), offset, 0, (int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageHeight);
+            }
+
             is.close();
         } catch (IOException e) {
             Log.e(TAG, "Cannot decode: " + e.getMessage());
-            background_path = null;
+            background_id = -1;
             return;
         }
 
         saved_height = getHeight();
         saved_width = getWidth();
-        background_saved_path = background_path;
+        background_saved_id = background_id;
         saved_max_num_pages = max_num_pages;
     }
 
@@ -116,8 +122,8 @@ public class ViewPagerParallax extends ViewPager {
         set_new_background();
     }
 
-    public void setBackgroundAsset(String asset_path) {
-        background_path = asset_path;
+    public void setBackgroundAsset(int res_id) {
+        background_id = res_id;
         set_new_background();
     }
 

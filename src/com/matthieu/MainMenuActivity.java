@@ -85,7 +85,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
 
         setContentView(R.layout.main_menu);
         LinearLayoutMovingBackground background = (LinearLayoutMovingBackground) findViewById(R.id.main_menu_background);
-        background.setBackgroundAsset("qmsht.png");
+        background.setBackgroundAsset(R.raw.qmsht);
     }
 
     @Override

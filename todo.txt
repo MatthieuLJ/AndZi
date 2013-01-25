@@ -15,7 +15,7 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
+BUGS (4):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 * Number of words in list of lessons does not get updated as vocabulary is being added
 * Need to clear the backstack every time we go into the MainMenuActivity

@@ -88,7 +88,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
         if (pager != null) {
             pager.set_max_pages(max_details_fragments+1);
-            pager.setBackgroundAsset("calligraphy.png");
+            pager.setBackgroundAsset(R.raw.calligraphy);
             pager.setOffscreenPageLimit(max_details_fragments+1);
             pager.setAdapter(new reference_pager(getSupportFragmentManager()));
 

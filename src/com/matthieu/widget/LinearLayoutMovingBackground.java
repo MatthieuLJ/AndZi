@@ -2,6 +2,7 @@ package com.matthieu.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Rect;
@@ -15,8 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class LinearLayoutMovingBackground extends LinearLayout {
-    String background_path;
-    String background_saved_path;
+    int background_id=-1;
+    int background_saved_id=-1;
     int saved_width=-1, saved_height=-1;
 
     private final static String TAG="LinearLayoutMovingBackground";
@@ -35,19 +36,19 @@ public class LinearLayoutMovingBackground extends LinearLayout {
 
     @SuppressLint({"NewApi"})
     private void set_new_background() {
-        if (background_path == null)
+        if (background_id == -1)
             return;
 
         if (getWidth()==0 || getHeight()==0)
             return;
 
-        if ((saved_height == getHeight()) && (saved_width == getWidth()) && (background_saved_path != null) && (background_path.equals(background_saved_path)))
+        if ((saved_height == getHeight()) && (saved_width == getWidth()) && (background_id==background_saved_id))
             return;
 
         InputStream is;
 
         try {
-            is = getContext().getAssets().open(background_path);
+            is = getContext().getResources().openRawResource(background_id);
 
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
@@ -59,30 +60,37 @@ public class LinearLayoutMovingBackground extends LinearLayout {
             int random_offset_max = (int) (imageWidth - (getWidth() * zoom_level));
             int offset = (int) (Math.random() * random_offset_max);
             is.reset();
-            BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
+            BitmapDrawable new_background;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD_MR1) {
+                BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
+                options.inJustDecodeBounds = false;
 
-            options.inJustDecodeBounds = false;
-            BitmapDrawable new_background = new BitmapDrawable(getResources(), brd.decodeRegion(new Rect(offset, 0, (int) (offset + (getWidth() * zoom_level)), imageHeight), options));
+                new_background = new BitmapDrawable(getResources(), brd.decodeRegion(new Rect(offset, 0, (int) (offset + (getWidth() * zoom_level)), imageHeight), options));
+                brd.recycle();
+            } else {
+                Bitmap image = Bitmap.createBitmap(BitmapFactory.decodeStream(is), offset, 0, (int) (getWidth() * zoom_level), imageHeight) ;
+                new_background = new BitmapDrawable(image);
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
                 this.setBackground(new_background);
             else
                 this.setBackgroundDrawable(new_background);
 
-            brd.recycle();
             is.close();
         } catch (IOException e) {
             Log.e(TAG, "Cannot decode: "+e.getMessage());
-            background_path = null;
+            background_id = -1;
             return;
         }
 
         saved_height = getHeight();
         saved_width = getWidth();
-        background_saved_path = background_path;
+        background_saved_id = background_id;
     }
 
-    public void setBackgroundAsset(String asset_path) {
-        background_path = asset_path;
+    public void setBackgroundAsset(int res_id) {
+        background_id = res_id;
         set_new_background();
     }
 
