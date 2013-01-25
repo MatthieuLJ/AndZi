@@ -52,7 +52,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
 
-        use_ref = (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
+        if (use_ref)
+            use_ref = (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
 
         return res;
     }
