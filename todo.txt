@@ -296,19 +296,12 @@ Code to waste time:
 
 
 Lint output:
-res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
-                android:layout_width="match_parent"
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout-xlarge-land/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
-                android:layout_width="match_parent"
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout-large/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"/>
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout-xlarge/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"/>
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout/details_landscape.xml: Warning: The resource R.layout.details_landscape appears to be unused [UnusedResources]
 res/drawable/expand_arrow_down.png: Warning: The resource R.drawable.expand_arrow_down appears to be unused [UnusedResources]
 res/drawable/expand_arrow_right.png: Warning: The resource R.drawable.expand_arrow_right appears to be unused [UnusedResources]
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
@@ -351,4 +344,4 @@ res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-0 errors, 29 warnings
+0 errors, 26 warnings

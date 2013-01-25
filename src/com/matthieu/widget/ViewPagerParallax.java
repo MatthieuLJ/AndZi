@@ -22,6 +22,8 @@ public class ViewPagerParallax extends ViewPager {
     int imageWidth;
     float zoom_level;
 
+    Rect r = new Rect();
+
     private final static String TAG="ViewPagerParallax";
 
     public ViewPagerParallax(Context context) {
@@ -69,7 +71,8 @@ public class ViewPagerParallax extends ViewPager {
                 BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
 
                 options.inJustDecodeBounds = false;
-                saved_bitmap = brd.decodeRegion(new Rect(offset, 0, (int) (offset + (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level)), imageHeight), options);
+                r.set(offset, 0, (int) (offset + (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level)), imageHeight);
+                saved_bitmap = brd.decodeRegion(r, options);
                 brd.recycle();
             } else {
                 saved_bitmap = Bitmap.createBitmap(BitmapFactory.decodeStream(is), offset, 0, (int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageHeight);
@@ -101,15 +104,17 @@ public class ViewPagerParallax extends ViewPager {
     int saved_position = -1;
     float saved_offset;
 
+    Rect src, dst;
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        Rect src = new Rect((int) (((current_position + current_offset) * getWidth() * zoom_level) / 5 ), 0,
+        src.set((int) (((current_position + current_offset) * getWidth() * zoom_level) / 5 ), 0,
                 (int) ((((current_position + current_offset) * getWidth() * zoom_level) / 5)  + (getWidth() * zoom_level)), imageHeight);
 
-        Rect dst = new Rect((int) ((current_position + current_offset) * getWidth()), 0, (int) ((current_position + current_offset) * getWidth()) + canvas.getWidth(), canvas.getHeight());
-                // still confused why we need to shift also in the destination canvas
+        dst.set((int) ((current_position + current_offset) * getWidth()), 0, (int) ((current_position + current_offset) * getWidth()) + canvas.getWidth(), canvas.getHeight());
+        // still confused why we need to shift also in the destination canvas
 
         canvas.drawBitmap(saved_bitmap, src, dst, null);
 

@@ -5,7 +5,6 @@
         android:id="@+id/guess_tone_gestureview"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:layout_weight="1"
         android:orientation="horizontal"
         android:gestureStrokeType="single"
         android:gestureStrokeLengthThreshold="200.0"

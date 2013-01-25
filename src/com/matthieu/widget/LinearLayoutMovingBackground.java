@@ -30,6 +30,7 @@ public class LinearLayoutMovingBackground extends LinearLayout {
         super(context, attrs);
     }
 
+    @SuppressLint({"NewApi"})
     public LinearLayoutMovingBackground(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
