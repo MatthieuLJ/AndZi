@@ -104,7 +104,7 @@ public class ViewPagerParallax extends ViewPager {
     int saved_position = -1;
     float saved_offset;
 
-    Rect src, dst;
+    Rect src = new Rect(), dst = new Rect();
 
     @Override
     protected void onDraw(Canvas canvas) {
