@@ -294,6 +294,11 @@ Code to waste time:
 
             Log.d(TAG, "Phi is "+phi);
 
+Notes:
+xlarge screens are at least 960dp x 720dp
+large screens are at least 640dp x 480dp
+normal screens are at least 470dp x 320dp
+small screens are at least 426dp x 320dp
 
 Lint output:
 res/layout-large/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
