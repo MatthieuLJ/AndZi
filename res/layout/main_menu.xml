@@ -1,63 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<TableLayout
+<com.matthieu.widget.LinearLayoutMovingBackground
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-    <TableRow
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            >
-        <Button
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/main_menu_background">
+    <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+        <TableRow
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="@string/main_menu_add_voc"
-                android:onClick="handle_add_vocabulary" />
-    </TableRow>
+                >
+            <Button
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp"
+                    android:text="@string/main_menu_add_voc"
+                    android:onClick="handle_add_vocabulary" />
+        </TableRow>
 
-    <TableRow
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            >
-
-        <Button
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
+        <TableRow
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="@string/main_menu_test"
-                android:onClick="handle_test" />
-    </TableRow>
-    <TableRow
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            >
-        <Button
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/main_menu_dict"
-                android:onClick="handle_dictionary" />
-    </TableRow>
-    <TableRow
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            >
-        <Button
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/main_menu_help"
-                android:onClick="handle_help" />
+                >
 
-        <Button
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
+            <Button
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp"
+                    android:text="@string/main_menu_test"
+                    android:onClick="handle_test" />
+        </TableRow>
+        <TableRow
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:text="@string/main_menu_settings"
-                android:onClick="handle_prefs" />
+                >
+            <Button
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp"
+                    android:text="@string/main_menu_dict"
+                    android:onClick="handle_dictionary" />
+        </TableRow>
+        <TableRow
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                >
+            <Button
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp"
+                    android:text="@string/main_menu_help"
+                    android:onClick="handle_help" />
 
-    </TableRow>
-
-</TableLayout>
+            <Button
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp"
+                    android:text="@string/main_menu_settings"
+                    android:onClick="handle_prefs" />
+        </TableRow>
+    </TableLayout>
+</com.matthieu.widget.LinearLayoutMovingBackground>

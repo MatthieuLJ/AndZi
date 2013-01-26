@@ -1,1 +1,4 @@
-../layout/reference.xml
+<?xml version="1.0" encoding="utf-8"?>
+<merge>
+    <include layout="@layout/reference_portrait"/>
+</merge>

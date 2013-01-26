@@ -15,10 +15,9 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
+BUGS (2):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 * Number of words in list of lessons does not get updated as vocabulary is being added
-* Need to clear the backstack every time we go into the MainMenuActivity
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -36,7 +35,9 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (201):
+DONE (203):
+* Rotating screen in ReferenceActivity reset search to dictionary
+* Need to clear the backstack every time we go into the MainMenuActivity
 * Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)
 * When clicking 'add new lesson' it should move to the lesson list page if not there already
 * Handle English dictionary searches with multiple words
@@ -293,21 +294,19 @@ Code to waste time:
 
             Log.d(TAG, "Phi is "+phi);
 
+Notes:
+xlarge screens are at least 960dp x 720dp
+large screens are at least 640dp x 480dp
+normal screens are at least 470dp x 320dp
+small screens are at least 426dp x 320dp
 
 Lint output:
-res/layout/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
-                android:layout_width="match_parent"
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout-xlarge-land/details.xml:18: Warning: This LinearLayout should use android:layout_width="wrap_content" [ScrollViewSize]
-                android:layout_width="match_parent"
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout-large/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"/>
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout-xlarge/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
                 android:layout_weight="1"/>
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout/details_landscape.xml: Warning: The resource R.layout.details_landscape appears to be unused [UnusedResources]
 res/drawable/expand_arrow_down.png: Warning: The resource R.drawable.expand_arrow_down appears to be unused [UnusedResources]
 res/drawable/expand_arrow_right.png: Warning: The resource R.drawable.expand_arrow_right appears to be unused [UnusedResources]
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
@@ -350,4 +349,4 @@ res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-0 errors, 29 warnings
+0 errors, 26 warnings

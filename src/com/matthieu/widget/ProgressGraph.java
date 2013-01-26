@@ -35,17 +35,14 @@ public class ProgressGraph extends View {
 
     public ProgressGraph(Context context) {
         super(context);
-        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
     }
 
     public ProgressGraph(Context context, AttributeSet attrs) {
         super(context, attrs);
-        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
     }
 
     public ProgressGraph(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
     }
 
     static private class range {
@@ -71,8 +68,10 @@ public class ProgressGraph extends View {
                 if (((query.date_min == range_date_min) && (query.date_max == range_date_max) && (query.zoom == current_zoom)) &&
                     (force || (current_range.date_min != query.date_min) || (current_range.date_max != query.date_max) || (current_range.zoom != query.zoom))) {
                     ArrayList<ProgressData> tmp_data = db.get_data(query.zoom, query.date_min, query.date_max);
-                    if (force)
+                    if (force) {
                         recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
+                        recent_data.date = max_date;
+                    }
                     if (tmp_data.size() > 2) {
                         current_data = tmp_data;
                         current_data.add(recent_data);
@@ -95,9 +94,9 @@ public class ProgressGraph extends View {
         this.db = db;
         this.data0=db.get_data(0);
 
-        ProgressDB.ProgressData new_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
-        this.data0.add(new_data);
-        int current_char_count = new_data.num_in_box[0] + new_data.num_in_box[1] + new_data.num_in_box[2] + new_data.num_in_box[3] + new_data.num_in_box[4];
+        recent_data = ((AndZiApplication) getContext().getApplicationContext()).getCurrentProgress();
+        this.data0.add(recent_data);
+        int current_char_count = recent_data.num_in_box[0] + recent_data.num_in_box[1] + recent_data.num_in_box[2] + recent_data.num_in_box[3] + recent_data.num_in_box[4];
 
         min_date=data0.get(0).date;
         max_date=System.currentTimeMillis();
@@ -167,9 +166,7 @@ public class ProgressGraph extends View {
     private boolean finger_down=false;
 
     public boolean canScrollHorizontally(int delta_x) {
-        if (((delta_x > 0) && (current_offset_x == -right_size)) || ((delta_x < 0) && (current_offset_x == max_offset_x)))
-            return false;
-        return true;
+        return !(((delta_x > 0) && (current_offset_x == -right_size)) || ((delta_x < 0) && (current_offset_x == max_offset_x)));
     }
 
     @Override
