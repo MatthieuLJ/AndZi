@@ -113,9 +113,8 @@ public class EditLessonsFragment extends Fragment {
                 if (isCancelled())
                     return null;
 
-                String lesson = existing_lesson;
-                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
-                Lesson new_lesson = new Lesson(lesson);
+                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(existing_lesson))).size();
+                Lesson new_lesson = new Lesson(existing_lesson);
                 new_lesson.state = Lesson.EXISTING;
                 new_lesson.num_items = num;
                 tmp_lessons.add(new_lesson);
