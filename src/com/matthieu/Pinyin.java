@@ -19,7 +19,7 @@ public class Pinyin {
 
     private static boolean map_initialized=false;
 
-    private static Map<String, ArrayList<String>> pinyin_by_first_letter=null;
+    private final static Map<String, ArrayList<String>> pinyin_by_first_letter = new HashMap<String, ArrayList<String>>();
     private static Map<String, Integer> vowels_to_tone=null;
     private static Map<String, String> lame_vowels=null;
 
@@ -143,8 +143,6 @@ public class Pinyin {
 
         if (map_initialized)
             return;
-
-        pinyin_by_first_letter = new HashMap<String, ArrayList<String>>();
 
         for (String pin:pinyin_list_notone) {
             first = pin.substring(0,1);
@@ -276,10 +274,7 @@ public class Pinyin {
         if (temp.equals(""))
             temp=entry.toLowerCase(Locale.ENGLISH);
 
-        if (!pinyin_by_first_letter.containsKey(temp.substring(0,1)))
-            return false;
-
-        return pinyin_by_first_letter.get(temp.substring(0, 1)).contains(temp);
+        return pinyin_by_first_letter.containsKey(temp.substring(0, 1)) && pinyin_by_first_letter.get(temp.substring(0, 1)).contains(temp);
 
     }
 

@@ -37,7 +37,7 @@ public class DetailsFragment extends Fragment {
     private String current_pinyin="";
     private boolean pinned=false;
 
-    private static Object locker = new Object();
+    private final static Object locker = new Object();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -95,7 +95,7 @@ public class DetailsFragment extends Fragment {
     }
 
     public void check_if_exists_in_db(final HanziDB db) {
-        AsyncTask<Void,Void,Void> checker = new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
                 exists_in_db = db.getTranslations(DetailsFragment.this.current_hanzi).size() > 0;
@@ -145,7 +145,7 @@ public class DetailsFragment extends Fragment {
         ListView old_list= (ListView) section.findViewById(R.id.details_list);
         if (old_list != null) {
             synchronized (locker) {
-                VocabularyCursorAdapter old_adapter=(VocabularyCursorAdapter) old_list.getAdapter();;
+                VocabularyCursorAdapter old_adapter=(VocabularyCursorAdapter) old_list.getAdapter();
                 WeakReference<populator> old_populate_task = (WeakReference<populator>) old_list.getTag(R.id.detail_populator);
                 String old_query = (String) old_list.getTag(R.id.detail_query_hanzi);
                 String old_pinyins = (String) old_list.getTag(R.id.detail_query_pinyin);

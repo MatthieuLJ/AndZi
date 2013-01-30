@@ -33,7 +33,7 @@ public abstract class Test {
 
     abstract boolean set_hanzi_to_test(String s);
     abstract View get_view();
-    public void kill_view(View v) {};
+    public void kill_view(View v) {}
 
     public abstract static class SolutionView {
         int good;
@@ -43,7 +43,7 @@ public abstract class Test {
         Handler handler;
 
         abstract View get_view(LayoutInflater inflater, ViewGroup container);
-        public void kill_view(View v) {};
+        public void kill_view(View v) {}
 
         public SolutionView(final String question, TestActivity parent) {
             this.question = question;

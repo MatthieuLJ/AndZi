@@ -45,8 +45,7 @@ public class LessonListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View res = inflater.inflate(R.layout.lesson_list, container, false);
-        return res;
+        return inflater.inflate(R.layout.lesson_list, container, false);
     }
 
     private void update_header_view() {
@@ -58,7 +57,7 @@ public class LessonListFragment extends Fragment {
             list.addHeaderView(header, null, false);
         }
 
-        if (lesson.equals(""))
+        if (lesson.size() == 0)
             header.setText("Words that are not assigned to any lesson");
         else {
             StringBuilder lessons = new StringBuilder();
@@ -67,7 +66,7 @@ public class LessonListFragment extends Fragment {
                 if (i<lesson.size()-1)
                     lessons.append(", ");
             }
-            header.setText("Words in lesson "+lesson);
+            header.setText("Words in lesson "+lessons.toString());
         }
     }
 

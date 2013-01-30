@@ -38,7 +38,6 @@ public class GuessChineseWord extends Test {
             return false;
         }
         solution = voc.get((int) (voc.size()*Math.random()));
-        String current_test = hanzi;
 
         translations = solution.english;
         if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
@@ -51,7 +50,7 @@ public class GuessChineseWord extends Test {
 
         Log.d(TAG, "GuessChineseWord OK");
 
-        solution_view = new GuessChineseWordResultView(current_test, activity);
+        solution_view = new GuessChineseWordResultView(hanzi, activity);
         solution_view.prepare_view(activity.getLayoutInflater());
         return true;
     }
@@ -141,7 +140,7 @@ public class GuessChineseWord extends Test {
         TextView previous = (TextView) res.findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
 
-        StringBuffer hint = new StringBuffer();
+        StringBuilder hint = new StringBuilder();
         for (int i=0; i<solution.chinese.codePointCount(0, solution.chinese.length()); i++) {
             hint.append("_ ");
         }

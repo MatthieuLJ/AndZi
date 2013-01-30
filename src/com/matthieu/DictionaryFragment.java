@@ -154,9 +154,9 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
 
                         if (elems.size() > 1) {
-                            for (int i=0; i<elems.size(); i++) {
-                                if ((elems.get(i).type != HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE) &&
-                                        (elems.get(i).type != HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)) {
+                            for (HanziDB.StringElement elem : elems) {
+                                if ((elem.type != HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE) &&
+                                        (elem.type != HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)) {
                                     potential_english = false;
                                     break;
                                 }
@@ -380,9 +380,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         if (v == null)
             return false;
         EditText query = (EditText) v.findViewById(R.id.dict_query);
-        if (query == null)
-            return false;
-        return !query.getText().toString().equals("");
+        return query != null && !query.getText().toString().equals("");
     }
 
     public boolean is_dictionary_search() {

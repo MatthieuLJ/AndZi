@@ -86,5 +86,5 @@ public class SplashFragment extends Fragment {
                     ((MainMenuActivity)getActivity()).start_it();
             }
         }
-    };
+    }
 }

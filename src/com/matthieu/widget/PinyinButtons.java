@@ -89,7 +89,7 @@ public class PinyinButtons extends LinearLayout {
                 b.setBackgroundColor(0x00000000);
                 b.setTextColor(0xff000000);
                 b.setBackgroundResource(0);
-                PinyinButton tmp = new PinyinButton(charSequence.toString().substring(i+j, i+j+1), b);
+                PinyinButton tmp = new PinyinButton(charSequence.substring(i + j, i + j + 1), b);
                 process_handler.post(new PinyinButtonFiller(tmp));
                 pinyin_choices.add(i + j, tmp);
                 this.addView(b, i + j,
