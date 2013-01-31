@@ -109,15 +109,14 @@ public class EditLessonsFragment extends Fragment {
             Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
 
-            for (int i=0; i<existing_lessons.size(); i++) {
+            for (String existing_lesson : existing_lessons) {
                 if (isCancelled())
                     return null;
 
-                String lesson = existing_lessons.get(i);
-                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
-                Lesson new_lesson = new Lesson(lesson);
+                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(existing_lesson))).size();
+                Lesson new_lesson = new Lesson(existing_lesson);
                 new_lesson.state = Lesson.EXISTING;
-                new_lesson.num_items=num;
+                new_lesson.num_items = num;
                 tmp_lessons.add(new_lesson);
             }
 
@@ -129,16 +128,18 @@ public class EditLessonsFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             synchronized (EditLessonsFragment.this) {
-                current_lessons = tmp_lessons;
-                loaded = true;
+                if (getView() != null) {
+                    current_lessons = tmp_lessons;
+                    loaded = true;
 
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                if (lv != null) {
-                    lv.setAdapter(new LessonArrayAdapter());
+                    TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                    if (lv != null) {
+                        lv.setAdapter(new LessonArrayAdapter());
+                    }
+
+                    ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+                    pb.setVisibility(View.GONE);
                 }
-
-                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
-                pb.setVisibility(View.GONE);
 
                 init_lessons_thread=null;
             }
@@ -151,8 +152,7 @@ public class EditLessonsFragment extends Fragment {
             do {
                 start_over=false;
                 for (Lesson l : current_lessons) {
-                    int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l.label))).size();
-                    l.num_items=num;
+                    l.num_items= myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l.label))).size();
                 }
             } while (start_over);
             return null;

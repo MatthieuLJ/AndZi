@@ -90,6 +90,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         }
 
         if (pager != null) {
+            pager.set_max_pages(3);
+            pager.setBackgroundAsset(R.raw.xishan);
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
 
@@ -116,7 +118,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (intent.getAction() == Intent.ACTION_EDIT) {
+        if (intent.getAction().equals(Intent.ACTION_EDIT)) {
             String hanzi = intent.getStringExtra("Hanzi");
             if ((hanzi != null) && (fragments[0] != null)) {
                 ((AddVocabularyFragment)fragments[0]).set_word_to_edit(hanzi);
@@ -306,8 +308,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
                 if (pager!=null)
                     pager.setCurrentItem(0);
                 ((AddVocabularyFragment)fragments[0]).add_selection();
-                if ((fragments[2] != null) && ((AddVocabularyFragment)fragments[0]).get_default_lesson().equals(
-                        ((LessonListFragment)fragments[2]).current_lessons())) {
+                if ((fragments[2] != null) && (((LessonListFragment)fragments[2]).current_lessons().contains(((AddVocabularyFragment)fragments[0]).get_default_lesson()))) {
                     ((LessonListFragment)fragments[2]).update_list();
                 }
 

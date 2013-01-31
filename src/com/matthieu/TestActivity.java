@@ -11,6 +11,7 @@ import android.util.Log;
 import android.widget.LinearLayout;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuItem;
+import com.matthieu.widget.InsideScrollPager;
 import com.matthieu.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
@@ -25,7 +26,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.test);
-        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        InsideScrollPager pager = (InsideScrollPager) findViewById(R.id.test_pager);
         LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
 
         fragments = new Fragment[2];
@@ -57,7 +58,10 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         }
 
         if (pager != null) {
+            pager.set_max_pages(2);
+            pager.setBackgroundAsset(R.raw.bamboo);
             pager.setOffscreenPageLimit(2);
+
             pager.setAdapter(new test_pager_adapter(getSupportFragmentManager()));
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);

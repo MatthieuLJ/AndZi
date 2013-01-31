@@ -15,9 +15,10 @@ ONGOING (10):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (2):
+BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Number of words in list of lessons does not get updated as vocabulary is being added
+* Show a lesson content in vocabulary editor and rotate the screen, the header disappears
+* Rotate the screen on x-large during test, fragments disappear
 
 FUTURE (14):
 * Load results in dictionary progressively

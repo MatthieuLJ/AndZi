@@ -231,7 +231,6 @@ public class Settings extends PreferenceActivity {
                 current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Object[])params);
             else
                 current_task.execute((Object[])params);
-            return;
         }
     }
 
@@ -285,9 +284,6 @@ public class Settings extends PreferenceActivity {
                     Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();
                 }
             }
-
-        } else if (resultCode == Activity.RESULT_CANCELED) {
-            return;
         }
     }
 

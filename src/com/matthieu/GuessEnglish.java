@@ -56,10 +56,9 @@ public class GuessEnglish extends Test {
         if (solution == null) {
             return false;
         }
-        String current_test = hanzi;
         Log.d(TAG, "GuessEnglish OK");
 
-        solution_view = new GuessEnglishResultView(current_test, activity);
+        solution_view = new GuessEnglishResultView(hanzi, activity);
         solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;

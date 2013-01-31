@@ -10,8 +10,7 @@
             android:id="@+id/voc_editor_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            style="@style/AndZiTheme">
+            android:layout_weight="1">
     </com.matthieu.widget.LockableViewPager>
 
     <com.viewpagerindicator.UnderlinePageIndicator

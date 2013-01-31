@@ -5,8 +5,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:baselineAligned="false"
-        style="@style/AndZiTheme">
+        android:baselineAligned="false">
     <LinearLayout
             android:id="@+id/test_results"
             android:layout_width="match_parent"

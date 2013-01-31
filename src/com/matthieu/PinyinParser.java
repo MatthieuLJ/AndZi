@@ -468,8 +468,8 @@ public class PinyinParser {
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         if (parsed == null)
             return input;
-        for (int i = 0; i < parsed.size(); i++) {
-            result.append(parsed.get(i).get_lame());
+        for (Pinyin aParsed : parsed) {
+            result.append(aParsed.get_lame());
         }
         return result.toString();
     }

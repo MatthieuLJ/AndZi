@@ -271,10 +271,6 @@ public class AndZiApplication extends Application {
             Log.d(TAG, "Could not open source");
             return false;
         }
-        if (input == null) {
-            Log.d(TAG, "Could not open file at "+source);
-            return false;
-        }
 
         OutputStream output;
         try {
@@ -364,16 +360,15 @@ public class AndZiApplication extends Application {
 
     private ActivityManager mActivityManager;
     public boolean isApplicationForeground() {
-        ActivityManager.RunningAppProcessInfo result=null, info=null;
+        ActivityManager.RunningAppProcessInfo info;
 
         if(mActivityManager==null)
             mActivityManager = (ActivityManager)this.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> l = mActivityManager.getRunningAppProcesses();
-        Iterator<ActivityManager.RunningAppProcessInfo> i = l.iterator();
-        while(i.hasNext()){
-            info = i.next();
+        for (ActivityManager.RunningAppProcessInfo aL : l) {
+            info = aL;
             if ((info.processName.equals(this.getPackageName())) &&
-                    (info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)){
+                    (info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND)) {
 //                Log.d(TAG, "We're in foreground!");
                 return true;
             }

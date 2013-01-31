@@ -63,19 +63,17 @@ public class ViewPagerParallax extends ViewPager {
             imageWidth = options.outWidth;
 
             zoom_level = ((float) imageHeight) / getHeight();  // we are always in 'fitY' mode
-            int random_offset_max = (int) (imageWidth - (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level));
-            int offset = (int) (Math.random() * random_offset_max);
             is.reset();
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD_MR1) {
                 BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
 
                 options.inJustDecodeBounds = false;
-                r.set(offset, 0, (int) (offset + (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level)), imageHeight);
+                r.set(0, 0, Math.min((int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageWidth), imageHeight);
                 saved_bitmap = brd.decodeRegion(r, options);
                 brd.recycle();
             } else {
-                saved_bitmap = Bitmap.createBitmap(BitmapFactory.decodeStream(is), offset, 0, (int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageHeight);
+                saved_bitmap = Bitmap.createBitmap(BitmapFactory.decodeStream(is), 0, 0, Math.min((int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageWidth), imageHeight);
             }
 
             is.close();
@@ -104,7 +102,7 @@ public class ViewPagerParallax extends ViewPager {
     int saved_position = -1;
     float saved_offset;
 
-    Rect src, dst;
+    Rect src = new Rect(), dst = new Rect();
 
     @Override
     protected void onDraw(Canvas canvas) {

@@ -91,9 +91,8 @@ public class ExportDB extends PreferenceActivity {
                 } else {
                     Toast.makeText(ExportDB.this, R.string.settings_error_not_enough_space_export, Toast.LENGTH_SHORT).show();
                 }
-
-                return;
             }
+
             public boolean onPreferenceClick(Preference preference) {
                 final boolean include_scores = sp.getBoolean("include_scores", false);
                 final boolean selected_lessons = sp.getBoolean("selected_lessons", false);

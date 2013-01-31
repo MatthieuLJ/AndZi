@@ -284,10 +284,16 @@ public class GuessMissingChar extends Test implements TextWatcher {
     }
 
     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        if (activity == null)
+            return;
+        View ok_button = activity.findViewById(R.id.guess_missing_char_ok);
+        if (ok_button == null)
+            return;
+
         if (charSequence.toString().codePointCount(0, charSequence.toString().length()) > 1) {
-            activity.findViewById(R.id.guess_missing_char_ok).setEnabled(false);
+            ok_button.setEnabled(false);
         } else {
-            activity.findViewById(R.id.guess_missing_char_ok).setEnabled(true);
+            ok_button.setEnabled(true);
         }
 
     }
