@@ -128,16 +128,18 @@ public class EditLessonsFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             synchronized (EditLessonsFragment.this) {
-                current_lessons = tmp_lessons;
-                loaded = true;
+                if (getView() != null) {
+                    current_lessons = tmp_lessons;
+                    loaded = true;
 
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-                if (lv != null) {
-                    lv.setAdapter(new LessonArrayAdapter());
+                    TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                    if (lv != null) {
+                        lv.setAdapter(new LessonArrayAdapter());
+                    }
+
+                    ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+                    pb.setVisibility(View.GONE);
                 }
-
-                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
-                pb.setVisibility(View.GONE);
 
                 init_lessons_thread=null;
             }
