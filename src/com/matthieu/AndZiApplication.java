@@ -14,16 +14,12 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 import org.acra.ACRA;
-import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 
 import java.io.*;
 import java.util.*;
 
-@ReportsCrashes(formKey = "", // will not be used
-                mailTo = "matthieu.jeanson@gmail.com",
-                mode = ReportingInteractionMode.TOAST,
-                resToastText = R.string.crash_toast_text)
+@ReportsCrashes(formUri = "http://www.bugsense.com/api/acra?api_key=9da47a87", formKey="")
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
