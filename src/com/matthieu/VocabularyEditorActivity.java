@@ -90,6 +90,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         }
 
         if (pager != null) {
+            pager.set_max_pages(3);
+            pager.setBackgroundAsset(R.raw.xishan);
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
 

@@ -6,8 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:orientation="horizontal"
-        style="@style/AndZiTheme">
+        android:orientation="horizontal">
 
     <com.matthieu.widget.ExtendingLinearLayout
             android:id="@+id/add_voc_new_container"
