@@ -132,7 +132,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if (getIntent().getAction().equals(Intent.ACTION_EDIT)) {
             if (pager != null) {
-                pager.setCurrentItem(0);
                 pager.setPagingEnabled(true);
             }
         } else if (getIntent().getAction().equals(Intent.ACTION_PICK)) {  // lesson selection mode
@@ -183,6 +182,11 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
                 ft.commit();
             }
         }
+
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        if (pager != null)
+            pager.setCurrentItem(2);
+
     }
 
     public void close_lesson_list() {
