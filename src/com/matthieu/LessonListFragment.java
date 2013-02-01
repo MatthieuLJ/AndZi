@@ -48,8 +48,7 @@ public class LessonListFragment extends Fragment {
         return inflater.inflate(R.layout.lesson_list, container, false);
     }
 
-    private void update_header_view() {
-        ListView list = (ListView) getView().findViewById(R.id.review_list);
+    private void update_header_view(ListView list) {
         TextView header = (TextView) list.getTag(R.id.header_view);
         if (header == null) {
             header = (TextView) getLayoutInflater(null).inflate(R.layout.lesson_list_header, list, false);
@@ -76,6 +75,7 @@ public class LessonListFragment extends Fragment {
         super.onResume();
         if (cur != null) {
             ListView list = (ListView) getView().findViewById(R.id.review_list);
+            update_header_view(list);
             list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
                 @Override
                 public void click(String item_clicked) {
@@ -133,7 +133,7 @@ public class LessonListFragment extends Fragment {
                 return;
             synchronized (LessonListFragment.this) {
                 ListView list = (ListView) getView().findViewById(R.id.review_list);
-                update_header_view();
+                update_header_view(list);
                 list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
                     @Override
                     public void click(String item_clicked) {

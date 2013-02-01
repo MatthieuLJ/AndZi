@@ -17,8 +17,8 @@ ONGOING (10):
 
 BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Show a lesson content in vocabulary editor and rotate the screen, the header disappears
 * Rotate the screen on x-large during test, fragments disappear
+* Rotate the screen in Vocabulary Editor does not stay on the same page in the ViewPager (need to check other activities too)
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -36,7 +36,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (203):
+DONE (204):
+* Show a lesson content in vocabulary editor and rotate the screen, the header disappears
 * Rotating screen in ReferenceActivity reset search to dictionary
 * Need to clear the backstack every time we go into the MainMenuActivity
 * Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)
