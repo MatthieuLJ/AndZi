@@ -17,8 +17,8 @@ ONGOING (10):
 
 BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Rotate the screen on x-large during test, fragments disappear
 * Sometimes the background from ViewPagerParallax disappears (becomes all black)
+* Distribution of progress data does not seem to work...
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -36,7 +36,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (205):
+DONE (206):
+* Rotate the screen on x-large during test, fragments disappear
 * Rotate the screen in Vocabulary Editor does not stay on the same page in the ViewPager (need to check other activities too)
 * Show a lesson content in vocabulary editor and rotate the screen, the header disappears
 * Rotating screen in ReferenceActivity reset search to dictionary
