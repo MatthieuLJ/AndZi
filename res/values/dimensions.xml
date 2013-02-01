@@ -1,4 +1,8 @@
 <resources>
     <dimen name="separation_line_margin">5sp</dimen>
     <dimen name="separation_line_thickness">1px</dimen>
+
+    <dimen name="xlarge_text">32sp</dimen>
+    <dimen name="large_text">26sp</dimen>
+    <dimen name="normal_text">20sp</dimen>
 </resources>

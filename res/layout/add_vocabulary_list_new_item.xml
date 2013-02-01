@@ -19,7 +19,8 @@
                 android:id="@+id/add_new_translation"
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
-                android:textColor="#000000"
+                android:textColor="@color/black"
+                android:textSize="@dimen/normal_text"
                 android:layout_weight="1"
                 android:hint="@string/add_voc_new_translation"
                 expandable:hidable="true"
@@ -31,6 +32,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:text="@string/ok"
+                android:textSize="@dimen/normal_text"
                 expandable:hidable="true"
                 android:layout_marginRight="10dp"
                 />

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.Html;
@@ -59,8 +60,8 @@ public class PinyinButtons extends LinearLayout {
         current_chinese_word = chinese_word;
         for (int j=0; j<chinese_word.length(); j++) {
             Button b = new Button(getContext());
-            b.setBackgroundColor(0x00000000);
-            b.setTextColor(0xff000000);
+            b.setBackgroundColor(Color.TRANSPARENT);
+            b.setTextColor(Color.BLACK);
             b.setBackgroundResource(0);
             PinyinButton tmp = new PinyinButton(chinese_word.substring(j, j+1), b);
             process_handler.post(new PinyinButtonFiller(tmp));

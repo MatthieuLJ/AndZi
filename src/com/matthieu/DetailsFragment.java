@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -214,8 +215,8 @@ public class DetailsFragment extends Fragment {
             for (int i=0; i<saved.saved_hanzi.length(); ) {
                 TextView character = new TextView(activity);
                 final String character_label = saved.saved_hanzi.substring(i, i + Character.charCount(saved.saved_hanzi.codePointAt(i)));
-                character.setTextAppearance(activity, android.R.style.TextAppearance_Large_Inverse);
-                character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
+                character.setTextColor(Color.BLACK);
+                character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xlarge_text));
                 character.setText(character_label);
                 if (saved.saved_hanzi.codePointCount(0, saved.saved_hanzi.length())!= 1)
                     character.setOnClickListener(new View.OnClickListener() {
@@ -439,8 +440,8 @@ public class DetailsFragment extends Fragment {
                     for (int i=0; i<hanzi.length(); ) {
                         TextView character = new TextView(activity);
                         final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
-                        character.setTextAppearance(activity, android.R.style.TextAppearance_Large_Inverse);
-                        character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
+                        character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xlarge_text));
+                        character.setTextColor(Color.BLACK);
                         character.setText(character_label);
                         if (hanzi.codePointCount(0, hanzi.length())!= 1)
                             character.setOnClickListener(new View.OnClickListener() {

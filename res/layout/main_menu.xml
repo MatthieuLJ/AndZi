@@ -15,11 +15,15 @@
                 android:layout_weight="2"
                 >
             <Button
+                    android:id="@+id/main_menu_add_voc"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:layout_margin="5dp"
+                    android:background="@color/transparent"
+                    android:textColor="@color/main_menu_text"
                     android:text="@string/main_menu_add_voc"
+                    android:textSize="@dimen/xlarge_text"
                     android:onClick="handle_add_vocabulary" />
         </TableRow>
 
@@ -27,13 +31,16 @@
                 android:layout_height="0dp"
                 android:layout_weight="2"
                 >
-
             <Button
+                    android:id="@+id/main_menu_test"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:layout_margin="5dp"
+                    android:background="@color/transparent"
+                    android:textColor="@color/main_menu_text"
                     android:text="@string/main_menu_test"
+                    android:textSize="@dimen/xlarge_text"
                     android:onClick="handle_test" />
         </TableRow>
         <TableRow
@@ -41,11 +48,15 @@
                 android:layout_weight="2"
                 >
             <Button
+                    android:id="@+id/main_menu_ref"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:layout_margin="5dp"
+                    android:background="@color/transparent"
+                    android:textColor="@color/main_menu_text"
                     android:text="@string/main_menu_dict"
+                    android:textSize="@dimen/xlarge_text"
                     android:onClick="handle_dictionary" />
         </TableRow>
         <TableRow
@@ -53,19 +64,27 @@
                 android:layout_weight="1"
                 >
             <Button
+                    android:id="@+id/main_menu_help"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:layout_margin="5dp"
+                    android:background="@color/transparent"
+                    android:textColor="@color/main_menu_text"
                     android:text="@string/main_menu_help"
+                    android:textSize="@dimen/large_text"
                     android:onClick="handle_help" />
 
             <Button
+                    android:id="@+id/main_menu_settings"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:layout_margin="5dp"
+                    android:background="@color/transparent"
+                    android:textColor="@color/main_menu_text"
                     android:text="@string/main_menu_settings"
+                    android:textSize="@dimen/large_text"
                     android:onClick="handle_prefs" />
         </TableRow>
     </TableLayout>

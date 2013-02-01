@@ -2537,7 +2537,7 @@ public class HanziDB extends SQLiteOpenHelper {
             super.onPreExecute();
             // create the progress dialog if needed
             if (mProgressDialog != null) {
-                mProgressDialog.setMessage("Clearing database");
+                mProgressDialog.setMessage(mProgressDialog.getContext().getResources().getString(R.string.settings_db_clear_progress));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
@@ -2557,7 +2557,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         public void change_dialog(ProgressDialog dialog) {
             mProgressDialog = dialog;
-            mProgressDialog.setMessage("Clearing database");
+            mProgressDialog.setMessage(mProgressDialog.getContext().getResources().getString(R.string.settings_db_clear_progress));
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
             mProgressDialog.show();
