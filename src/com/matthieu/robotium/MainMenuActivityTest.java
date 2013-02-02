@@ -26,6 +26,9 @@ import java.util.ArrayList;
 public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainMenuActivity> {
     private Solo solo;
 
+    private final static int very_long_delay=10000;
+    private final static int long_delay=5000;
+
     public MainMenuActivityTest() {
         super(com.matthieu.MainMenuActivity.class);
     }
@@ -35,19 +38,25 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     }
 
     private void clearEverything(boolean installCedict) {
-        if (solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000)) {
+        if (solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay)) {
             solo.clickOnButton(getActivity().getResources().getString(R.string.later));
             solo.waitForDialogToClose(5);
         }
         solo.clickOnButton("Settings");
+        solo.waitForText(getActivity().getResources().getString(R.string.settings_db_clear), 1, very_long_delay);
         solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_clear), 0, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_clear_db)));
         solo.clickOnButton(getActivity().getResources().getString(R.string.yes));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
+        if (solo.waitForText(getActivity().getResources().getString(R.string.settings_db_clear_progress), 1, long_delay)) {
+            solo.waitForDialogToClose(long_delay);
+        }
+        solo.waitForText(getActivity().getResources().getString(R.string.settings_db_reset_scores), 1, very_long_delay);
         solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_reset_scores), 0, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_reset_scores)));
         solo.clickOnButton(getActivity().getResources().getString(R.string.yes));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
+        solo.waitForText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, very_long_delay);
         solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 0, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_trim_progress)));
         ArrayList<ProgressBar> progress = solo.getCurrentProgressBars();
@@ -55,12 +64,14 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.setProgressBar(progress.get(0), progress.get(0).getMax());
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_trim_all)));
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
+        solo.waitForText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, very_long_delay);
+
         if (!installCedict) {
             solo.clickOnText(getActivity().getResources().getString(R.string.settings_ref_db_erase), 0, true);
-            if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase),1, 1000)) {
-                // TODO
-                assertTrue(false);
+            if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase),1, long_delay)) {
+                solo.clickOnButton(getActivity().getResources().getString(R.string.yes));
+                solo.waitForDialogToClose(long_delay);
             }
         }
         else
@@ -96,27 +107,19 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         clearEverything(false);
 
         // should offer to download the dictionary
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
         solo.setActivityOrientation(Solo.LANDSCAPE);
 
         // dialog should still be there after rotating the screen
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
         solo.setActivityOrientation(Solo.PORTRAIT);
 
         // come back up
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
         solo.clickOnButton(getActivity().getResources().getString(R.string.later));
         solo.waitForDialogToClose(5);
 
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
-
-        /*
-        Instrumentation instrumentation = getInstrumentation();
-
-        // Moving to another activity
-        Instrumentation.ActivityMonitor monitor = instrumentation.addMonitor(TestActivity.class.getName(), null, false);
-        Activity currentActivity = getInstrumentation().waitForMonitorWithTimeout(monitor, 2000);
-        assertTrue(currentActivity!=null);*/
 
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
 
@@ -156,14 +159,14 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.goBack();
         solo.waitForActivity("MainMenuActivity");
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
 
         solo.finishOpenedActivities();
 
         ((AndZiApplication)getActivity().getApplication()).showSplash(true);
         
         startIt();
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
         solo.clickOnButton(getActivity().getResources().getString(R.string.later));
         solo.waitForDialogToClose(5);
     }
@@ -173,17 +176,13 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         clearEverything(false);
 
         // Wait until the splash screen is gone
-        if(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 10000)) {
+        if(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay)) {
             solo.clickOnButton(getActivity().getResources().getString(R.string.later));
-            solo.waitForDialogToClose(2000);
+            solo.waitForDialogToClose(long_delay);
         }
 
         // Let's go add some vocabulary
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
-
-        Instrumentation.ActivityMonitor monitor = getInstrumentation().addMonitor(VocabularyEditorActivity.class.getName(), null, false);
-        Activity currentActivity = getInstrumentation().waitForMonitorWithTimeout(monitor, 2000);
-        assertTrue(currentActivity!=null);
 
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
         EditText master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
@@ -193,6 +192,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.clearEditText(master_chinese);
         solo.enterText(master_chinese, "你");
+// IntelliJ API Decompiler stub source generated from a class file
 
         solo.setActivityOrientation(Solo.LANDSCAPE);
 
@@ -212,7 +212,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(pinyin_entry!=null);
         solo.enterText(pinyin_entry, "pyu3");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
 
         assertTrue(solo.searchButton("-?-"));
         solo.clickOnText("-?-");
@@ -221,7 +221,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(pinyin_entry!=null);
         solo.enterText(pinyin_entry, "ni2");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
         assertFalse(solo.searchButton("-?-"));
         assertTrue(solo.searchButton("ní"));
 
@@ -233,11 +233,11 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(pinyin_entry!=null);
         solo.enterText(pinyin_entry, "ni3");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
         assertTrue(solo.searchButton("nǐ"));
 
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,2000));
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
 
         View add_new_translation_button = solo.getView(R.id.add_vocabulary_show_new_translation);
         solo.clickOnView(add_new_translation_button);
@@ -250,7 +250,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         Button add_translation_ok = (Button) solo.getView(R.id.add_new_translation_ok);
         assertTrue(add_translation_ok != null);
         solo.clickOnView(add_translation_ok);
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db), 1, 2000));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db), 1, long_delay));
         assertTrue(solo.waitForText("You"));
 
         solo.setActivityOrientation(Solo.LANDSCAPE);
@@ -273,7 +273,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.enterText(master_chinese, "你");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db), 1, 2000));
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db), 1, long_delay));
         assertTrue(solo.waitForText("You"));
         assertTrue(solo.searchButton("nǐ"));
 
@@ -287,7 +287,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(pinyin_entry!=null);
         solo.enterText(pinyin_entry, "hao3");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForDialogToClose(2000);
+        solo.waitForDialogToClose(long_delay);
         assertTrue(solo.searchButton("hǎo"));
         new_translation_edit_text = (EditText) solo.getView(R.id.add_new_translation);
         assertTrue(new_translation_edit_text!=null);
@@ -300,80 +300,23 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.clickOnView(add_vocabulary_done_button);
     }
 
-    /*
     public void testAddVocabularyWithDict() {
-        // First wipe out everything...
-        //clearEverything(true);
+        // First wipe out everything... and install cedict
+        clearEverything(true);
 
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, 2000));
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, long_delay));
+
         // Let's add some vocabulary
-        solo.clickOnButton("Add Vocabulary");
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
-        ArrayList<EditText> entries = solo.getCurrentEditTexts();
-        assertTrue(entries.size()==1);
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
 
-        // Add custom "you" translation for 你
-        solo.enterText(entries.get(0), "你");
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        EditText master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+        solo.enterText(master_chinese, "你");
+
         assertTrue(solo.searchButton("nǐ"));
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
-        assertTrue(solo.waitForText("you", 1, 2000, true));
-        ArrayList<EditText> all_entries = solo.getCurrentEditTexts();
-        assertTrue(all_entries.size()==2);
-        solo.enterText(all_entries.get(1), "you");
-        Button add_translation_ok = (Button) solo.getView(R.id.add_new_translation_ok);
-        solo.clickOnView(add_translation_ok);
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,2000));
-        Button add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
-        solo.clickOnView(add_ok);
 
-        // add dictionary translations for 你好 (Hello! and Hi!)
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
-        entries = solo.getCurrentEditTexts();
-        solo.enterText(entries.get(0), "你");
-        solo.enterText(entries.get(0), "好");
-        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
-        assertTrue(solo.waitForText("Hi!", 1, 1000, true));
-        ArrayList<android.widget.ListView> lists = solo.getCurrentListViews();
-        assertTrue(lists.size()==1);
-        ArrayList<View> views_in_list = solo.getViews(lists.get(0));
-        View line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hello!");
-        CheckBox cb = (CheckBox) line.findViewById(R.id.add_check);
-        solo.clickOnView(cb);
-        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
-        views_in_list = solo.getViews(lists.get(0));
-        line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hi!");
-        cb = (CheckBox) line.findViewById(R.id.add_check);
-        solo.clickOnView(cb);
-        add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
-        solo.clickOnView(add_ok);
-
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
-        HanziDB myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
-        assertTrue(myDB.getNumWords()==2);
-        assertTrue(myDB.getNumChars()==2);
-
-        // remove translations for 你好
-        solo.enterText(entries.get(0), "你");
-        solo.enterText(entries.get(0), "好");
-        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
-        assertTrue(solo.waitForText("Hi!", 1, 1000, true));
-        lists = solo.getCurrentListViews();
-        assertTrue(lists.size()==1);
-        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
-        views_in_list = solo.getViews(lists.get(0));
-        line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hello!");
-        cb = (CheckBox) line.findViewById(R.id.add_check);
-        solo.clickOnView(cb);
-        assertTrue(solo.waitForText("Hello!", 1, 5000, true));
-        views_in_list = solo.getViews(lists.get(0));
-        line = ViewFinder.find_view(views_in_list, R.id.add_line_item, R.id.add_word, "Hi!");
-        cb = (CheckBox) line.findViewById(R.id.add_check);
-        solo.clickOnView(cb);
-        add_ok = (Button) solo.getView(R.id.add_vocabulary_submit);
-        solo.clickOnView(add_ok);
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
-        assertTrue(myDB.getNumWords()==1);
-        assertTrue(myDB.getNumChars()==1);
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
     }
-    */
 }
