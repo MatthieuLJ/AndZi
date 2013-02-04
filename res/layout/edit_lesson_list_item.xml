@@ -27,7 +27,7 @@
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center_vertical"
                 android:paddingLeft="10dip"
-                android:textColor="@color/black"
+                android:textColor="@android:color/black"
                 android:textSize="@dimen/large_text"
                 />
     </LinearLayout>

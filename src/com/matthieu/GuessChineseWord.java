@@ -139,6 +139,7 @@ public class GuessChineseWord extends Test {
         previous_guess = new ArrayList<String>();
         TextView previous = (TextView) res.findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
+        previous.setVisibility(View.GONE);
 
         StringBuilder hint = new StringBuilder();
         for (int i=0; i<solution.chinese.codePointCount(0, solution.chinese.length()); i++) {
@@ -233,6 +234,7 @@ public class GuessChineseWord extends Test {
                         if (i<previous_guess.size()-1)
                             previous.setText(previous.getText() + ",\n");
                     }
+                    previous.setVisibility(View.VISIBLE);
                     previous.invalidate();
                 }
                 word_guess.setText("");

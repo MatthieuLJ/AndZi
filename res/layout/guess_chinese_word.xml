@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:textSize="@dimen/large_text"
             android:text="@string/guess_chinese" />
     <View
@@ -35,7 +35,7 @@
                 android:id="@+id/guess_chinese_word_voc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
+                android:textColor="@android:color/black"
                 android:textSize="@dimen/xlarge_text"
                 android:gravity="center_horizontal"
                 />
@@ -51,7 +51,7 @@
             android:gravity="center_horizontal"
             android:background="@color/transparent"
             android:text="@string/more_vocabulary"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:textSize="@dimen/normal_text"
             />
     <ScrollView
@@ -67,7 +67,7 @@
                 android:id="@+id/guess_chinese_word_more_voc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
+                android:textColor="@android:color/black"
                 android:textSize="@dimen/normal_text"/>
     </ScrollView>
     <View
@@ -88,9 +88,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:inputType="text"
-                android:singleLine="true"
-                android:textColor="@color/black"
+                style="@style/edit_text"
                 android:textSize="@dimen/large_text"
                 android:imeOptions="actionDone"
                 />
@@ -99,14 +97,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                style="@style/button"
                 android:text="@string/ok"/>
     </LinearLayout>
     <TextView
             android:id="@+id/guess_chinese_word_previous_guess"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:textSize="@dimen/normal_text"
+            android:visibility="gone"
             />
 
 </LinearLayout>

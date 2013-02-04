@@ -14,16 +14,15 @@
             <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    style="@style/button"
                     android:id="@+id/details_source_button"/>
         </LinearLayout>
     <EditText
             android:id="@+id/dict_query"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:singleLine="true"
-            android:textColor="@color/black"
+            style="@style/edit_text"
             android:textSize="@dimen/large_text"
-            android:inputType="text"
             android:layout_marginBottom="5dp"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"/>

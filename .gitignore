@@ -3,6 +3,7 @@ gen/
 /out/
 
 *.pyc
+*.swp
 .idea/workspace.xml
 
 local.properties

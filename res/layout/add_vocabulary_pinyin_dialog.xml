@@ -23,7 +23,7 @@
                 android:id="@+id/edit_new_pinyin"
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
-                android:textColor="@color/black"
+                style="@style/edit_text"
                 android:textSize="@dimen/normal_text"
                 android:layout_weight="1"
                 android:hint="@string/add_voc_enter_pinyin"
@@ -32,6 +32,7 @@
                 android:id="@+id/edit_new_pinyin_ok"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
+                style="@style/button"
                 android:text="@string/ok"
                 android:textSize="@dimen/normal_text"
                 />

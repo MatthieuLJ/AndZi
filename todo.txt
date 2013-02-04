@@ -1,4 +1,5 @@
-ONGOING (10):
+ONGOING (11):
+* Track memory allocation (unload DB when inactive?)
 * Put back buttons for Reference Activity (for larger screens)
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests

@@ -13,14 +13,17 @@
         <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                style="@style/button"
                 android:id="@+id/details_source_button"/>
         <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                style="@style/button"
                 android:id="@+id/details_add_edit_button"/>
         <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                style="@style/button"
                 android:id="@+id/details_pinned_button"/>
     </LinearLayout>
     <FrameLayout

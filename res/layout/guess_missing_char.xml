@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:textSize="@dimen/large_text"
             android:text="@string/guess_char" />
     <View
@@ -55,9 +55,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:inputType="text"
-                android:singleLine="true"
-                android:textColor="@color/black"
+                style="@style/edit_text"
                 android:textSize="@dimen/large_text"
                 android:imeOptions="actionDone"
                 />
@@ -66,13 +64,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                style="@style/button"
                 android:text="@string/ok"/>
     </LinearLayout>
     <TextView
             android:id="@+id/char_finder_previous_guess"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/black"
+            android:textColor="@android:color/black"
             android:textSize="@dimen/normal_text"
             android:visibility="gone"
             />
