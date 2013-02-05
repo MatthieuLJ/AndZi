@@ -16,9 +16,10 @@ ONGOING (11):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (2):
+BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
 * Distribution of progress data does not seem to work...
+* "Dictionary enabled" and "Erase Dictionary" do not get enabled after downloading the dictionary
 
 FUTURE (14):
 * Load results in dictionary progressively
