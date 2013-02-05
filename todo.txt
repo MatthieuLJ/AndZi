@@ -1,4 +1,5 @@
-ONGOING (10):
+ONGOING (11):
+* Track memory allocation (unload DB when inactive?)
 * Put back buttons for Reference Activity (for larger screens)
 * Change font for big Chinese stuff
 * Add more automatic (robotium) tests
@@ -17,8 +18,8 @@ ONGOING (10):
 
 BUGS (3):
 * Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Show a lesson content in vocabulary editor and rotate the screen, the header disappears
-* Rotate the screen on x-large during test, fragments disappear
+* Distribution of progress data does not seem to work...
+* "Dictionary enabled" and "Erase Dictionary" do not get enabled after downloading the dictionary
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -36,7 +37,11 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (203):
+DONE (207):
+* Sometimes the background from ViewPagerParallax disappears (becomes all black)
+* Rotate the screen on x-large during test, fragments disappear
+* Rotate the screen in Vocabulary Editor does not stay on the same page in the ViewPager (need to check other activities too)
+* Show a lesson content in vocabulary editor and rotate the screen, the header disappears
 * Rotating screen in ReferenceActivity reset search to dictionary
 * Need to clear the backstack every time we go into the MainMenuActivity
 * Field to enter new translation or new lesson should appear automatically if there is nothing in the list (and remove the item in the action bar)

@@ -69,6 +69,7 @@ public class ViewPagerParallax extends ViewPager {
                 BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
 
                 options.inJustDecodeBounds = false;
+                options.inInputShareable = true;
                 r.set(0, 0, Math.min((int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageWidth), imageHeight);
                 saved_bitmap = brd.decodeRegion(r, options);
                 brd.recycle();
@@ -89,7 +90,7 @@ public class ViewPagerParallax extends ViewPager {
         saved_max_num_pages = max_num_pages;
     }
 
-    int current_position;
+    int current_position, first_position=-1;
     float current_offset;
 
     @Override
@@ -99,25 +100,26 @@ public class ViewPagerParallax extends ViewPager {
         current_offset = offset;
     }
 
-    int saved_position = -1;
-    float saved_offset;
-
     Rect src = new Rect(), dst = new Rect();
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (first_position == -1) {
+            first_position = getCurrentItem();
+            current_position = first_position;
+            current_offset = 0.0f;
+        }
+
         src.set((int) (((current_position + current_offset) * getWidth() * zoom_level) / 5 ), 0,
                 (int) ((((current_position + current_offset) * getWidth() * zoom_level) / 5)  + (getWidth() * zoom_level)), imageHeight);
 
-        dst.set((int) ((current_position + current_offset) * getWidth()), 0, (int) ((current_position + current_offset) * getWidth()) + canvas.getWidth(), canvas.getHeight());
+        dst.set((int) ((current_position - first_position + current_offset) * getWidth()), 0,
+                (int) ((current_position - first_position + current_offset) * getWidth()) + canvas.getWidth(), canvas.getHeight());
         // still confused why we need to shift also in the destination canvas
 
         canvas.drawBitmap(saved_bitmap, src, dst, null);
-
-        saved_position = current_position;
-        saved_offset = current_offset;
     }
 
     public void set_max_pages(int num_max_pages) {

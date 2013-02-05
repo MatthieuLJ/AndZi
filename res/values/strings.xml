@@ -42,9 +42,9 @@
     <string name="zoom_in">Zoom-in</string>
     <string name="zoom_out">Zoom-out</string>
     <string name="more_vocabulary">Show more vocabulary</string>
-    <string name="num_words">Number of Chinese words:</string>
-    <string name="num_chars">Number of Chinese characters:</string>
-    <string name="num_to_study">Number of tests left:</string>
+    <string name="num_words">Chinese words</string>
+    <string name="num_chars">Chinese characters</string>
+    <string name="num_to_study">Tests left</string>
 
     <string name="description_splash">splash screen</string>
     <string name="description_1st_tone">first tone accent</string>
@@ -60,6 +60,7 @@
     <string name="settings_db_export">Export list to file…</string>
     <string name="settings_db_email">Email list…</string>
     <string name="settings_db_clear">Clear list</string>
+    <string name="settings_db_clear_progress">Clearing database</string>
     <string name="settings_db_reset_scores">Reset scores</string>
     <string name="settings_db_forget_progress">Forget old progress…</string>
     <string name="settings_db_import">Import list…</string>

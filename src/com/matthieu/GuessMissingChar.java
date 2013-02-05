@@ -4,9 +4,11 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -100,7 +102,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
             TableRow tr = new TableRow(activity);
 
             TextView chinese = new TextView(activity);
-            chinese.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
+            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
+            chinese.setTextColor(Color.BLACK);
             chinese.setClickable(false);
             chinese.setText(w.chinese.replaceAll(current_test, "\\?"));
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -109,8 +112,9 @@ public class GuessMissingChar extends Test implements TextWatcher {
             tr.addView(chinese);
 
             TextView trans = new TextView(activity);
-            trans.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
+            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_text));
+            trans.setTextColor(Color.BLACK);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
                 en += w.english.get(j);

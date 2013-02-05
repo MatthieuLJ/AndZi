@@ -4,6 +4,7 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -135,7 +136,8 @@ public class GuessPinyin extends Test implements TextWatcher {
             TableRow tr = new TableRow(activity);
 
             TextView chinese = new TextView(activity);
-            chinese.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
+            chinese.setTextColor(Color.BLACK);
+            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
             chinese.setClickable(false);
             chinese.setText(w.chinese);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -144,7 +146,8 @@ public class GuessPinyin extends Test implements TextWatcher {
             tr.addView(chinese);
 
             TextView trans = new TextView(activity);
-            trans.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
+            trans.setTextColor(Color.BLACK);
+            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_text));
             trans.setClickable(false);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
@@ -245,8 +248,8 @@ public class GuessPinyin extends Test implements TextWatcher {
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
-                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
+                bad_guess_text.setTextColor(Color.RED);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);

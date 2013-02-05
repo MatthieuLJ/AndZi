@@ -69,4 +69,15 @@ public class PinyinParserTest extends AndroidTestCase {
         assertTrue(res.get(11).type==HanziDB.StringElement.type_t.INCOMPLETE_PINYIN);
         assertTrue(res.get(11).content.equals("fe"));
     }
+
+    public void testCaching() {
+        ArrayList<HanziDB.StringElement> res;
+        PinyinParser.parse_mixed_string("ma");
+        PinyinParser.parse_mixed_string("mama");
+        PinyinParser.parse_mixed_string("mamah");
+        PinyinParser.parse_mixed_string("mamahuh");
+        res = PinyinParser.parse_mixed_string("mamahuhu");
+        assertTrue(res != null);
+        assertTrue(res.size()==4);
+    }
 }

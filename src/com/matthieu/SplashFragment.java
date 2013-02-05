@@ -72,6 +72,9 @@ public class SplashFragment extends Fragment {
         @Override
         protected void onProgressUpdate(Integer... i) {
             synchronized (SplashFragment.this) {
+                if (getView() == null)
+                    return;
+
                 ProgressBar progress = (ProgressBar) getView().findViewById(R.id.splash_progress);
                 if (progress != null)
                     progress.setProgress(i[0]);

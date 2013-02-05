@@ -305,9 +305,9 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
         @Override
         public float getPageWidth(int position) {
-            if ((getResources().getConfiguration().screenLayout &
+            if (((getResources().getConfiguration().screenLayout &
                     Configuration.SCREENLAYOUT_SIZE_MASK) ==
-                    Configuration.SCREENLAYOUT_SIZE_LARGE) {
+                    Configuration.SCREENLAYOUT_SIZE_LARGE) && (getCount() > 1)) {
                 return 0.5f;
             } else {
                 return 1.0f;

@@ -39,7 +39,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             }
         }
         if (fragments[0] == null) {
-            fragments[0] = new StatsFragment();
+            fragments[0] = new TestFragment();
             if (linear != null) {
                 FragmentManager fm = getSupportFragmentManager();
                 FragmentTransaction ft = fm.beginTransaction();
@@ -48,7 +48,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
             }
         }
         if (fragments[1] == null) {
-            fragments[1] = new TestFragment();
+            fragments[1] = new StatsFragment();
             if (linear != null) {
                 FragmentManager fm = getSupportFragmentManager();
                 FragmentTransaction ft = fm.beginTransaction();
@@ -95,6 +95,8 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
+        } else {
+            outState.putInt("position", 0);
         }
     }
 
@@ -110,7 +112,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     @Override
     protected void onStart() {
         super.onStart();
-        ((TestFragment)fragments[1]).resume_test();
+        ((TestFragment)fragments[0]).resume_test();
     }
 
     private class keyboard_handle implements ViewPager.OnPageChangeListener {
@@ -132,7 +134,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     }
 
     public void new_solution_fragment(Test.SolutionView solution) {
-        ((TestFragment) fragments[1]).show_solution(solution);
+        ((TestFragment) fragments[0]).show_solution(solution);
     }
 
     public void score_changed() {
@@ -142,7 +144,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     }
 
     public void update_stats() {
-        ((StatsFragment) fragments[0]).update_stats();
+        ((StatsFragment) fragments[1]).update_stats();
     }
 
     @Override
@@ -173,7 +175,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
         @Override
         public Fragment getItem(int i) {
-            return fragments[1-i];
+            return fragments[i];
         }
 
         @Override
