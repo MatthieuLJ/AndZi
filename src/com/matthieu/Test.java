@@ -1,6 +1,7 @@
 package com.matthieu;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Handler;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -33,7 +34,7 @@ public abstract class Test {
 
     abstract boolean set_hanzi_to_test(String s);
     abstract View get_view();
-    public void kill_view(View v) {};
+    public void kill_view(View v) {}
 
     public abstract static class SolutionView {
         int good;
@@ -43,7 +44,7 @@ public abstract class Test {
         Handler handler;
 
         abstract View get_view(LayoutInflater inflater, ViewGroup container);
-        public void kill_view(View v) {};
+        public void kill_view(View v) {}
 
         public SolutionView(final String question, TestActivity parent) {
             this.question = question;
@@ -85,8 +86,8 @@ public abstract class Test {
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
-                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
+                bad_guess_text.setTextColor(Color.RED);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 final FrameLayout bad_guess_details = new FrameLayout(parent_activity);

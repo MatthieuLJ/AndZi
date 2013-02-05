@@ -7,6 +7,7 @@
       <directory url="file://$PROJECT_DIR$/external/ActionBarSherlock-4.2.0-0/gen" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/external/ViewPagerIndicator-2.4.1-0/gen" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/test/AutomaticTest/gen" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/test/UnitTest/gen" includeSubdirectories="true" />
     </excludeFromCompile>
     <resourceExtensions />
     <wildcardResourcePatterns>

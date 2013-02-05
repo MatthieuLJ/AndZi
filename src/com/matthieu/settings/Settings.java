@@ -60,9 +60,9 @@ public class Settings extends PreferenceActivity {
                         current_task = new reset_score(p_dialog);
                         current_task_type=4;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                            current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                            current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Object[])null);
                         else
-                            current_task.execute((Void[])null);
+                            current_task.execute((Object[])null);
                     }
                 });
                 alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
@@ -124,9 +124,9 @@ public class Settings extends PreferenceActivity {
                 current_task = new ref_downloader(p_dialog);
                 current_task_type = 1;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                    current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+                    current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Object[])params);
                 else
-                    current_task.execute(params);
+                    current_task.execute((Object[])params);
                 return true;
             }
         });
@@ -228,10 +228,9 @@ public class Settings extends PreferenceActivity {
             current_task = new ref_downloader(p_dialog);
             current_task_type = 1;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, params);
+                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Object[])params);
             else
-                current_task.execute(params);
-            return;
+                current_task.execute((Object[])params);
         }
     }
 
@@ -285,9 +284,6 @@ public class Settings extends PreferenceActivity {
                     Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();
                 }
             }
-
-        } else if (resultCode == Activity.RESULT_CANCELED) {
-            return;
         }
     }
 

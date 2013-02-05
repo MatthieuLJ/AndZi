@@ -6,7 +6,7 @@
           android:title="@string/add_voc_menu_add_new_translation"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_delete_selection"
-          android:title="Delete"
+          android:title="@string/add_voc_menu_delete_translation"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_done"
           android:title="@string/add_voc_menu_done"

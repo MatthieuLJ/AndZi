@@ -7,10 +7,12 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.View;
+import android.widget.Button;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.settings.Settings;
 import org.jetbrains.annotations.Nullable;
@@ -83,6 +85,12 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         }
 
         setContentView(R.layout.main_menu);
+        Typeface main_menu_font = Typeface.createFromAsset(getAssets(), "fonts/Dunkin_Sans.ttf");
+        ((Button)findViewById(R.id.main_menu_add_voc)).setTypeface(main_menu_font);
+        ((Button)findViewById(R.id.main_menu_test)).setTypeface(main_menu_font);
+        ((Button)findViewById(R.id.main_menu_ref)).setTypeface(main_menu_font);
+        ((Button)findViewById(R.id.main_menu_help)).setTypeface(main_menu_font);
+        ((Button)findViewById(R.id.main_menu_settings)).setTypeface(main_menu_font);
     }
 
     @Override

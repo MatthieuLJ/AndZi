@@ -1,47 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/details_top_view"
+<FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        style="@style/AndZiTheme">
-    <HorizontalScrollView
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:fillViewport="true">
-        <LinearLayout
-                android:id="@+id/details_title"
-                android:orientation="horizontal"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:gravity="center_horizontal|top"
-                />
-    </HorizontalScrollView>
-    <TextView
-            android:id="@+id/details_info"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:gravity="center_horizontal"
-            android:textSize="24sp"
-            android:textColor="#000000"
-            />
-    <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        <ListView
-                android:id="@+id/details_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone"
-                android:cacheColorHint="#00000000"
-                />
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <include layout="@layout/details_portrait"/>
 
-        <ProgressBar
-                android:id="@+id/details_loading"
-                style="@style/GenericProgressIndicator"
-                android:layout_gravity="center"
-                />
-    </FrameLayout>
-</LinearLayout>
+</FrameLayout>

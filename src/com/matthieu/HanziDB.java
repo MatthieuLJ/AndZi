@@ -16,6 +16,7 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 import com.matthieu.widget.DBCheckProgressHandler;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -780,7 +781,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 query_arg.add(english.get(i)+"%");
 
             if ((i>0) && (intersection)) {
-                query.append(" ON selection"+(i-1)+".cword_id=selection"+i+".cword_id ");
+                query.append(" ON selection").append(i - 1).append(".cword_id=selection").append(i).append(".cword_id ");
             }
         }
         if (!intersection)
@@ -789,7 +790,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 "JOIN eword ON eword.cword_id=c.cword_id GROUP BY _id ORDER BY ");
         if (intersection) {
             for (int i=0; i<english.size(); i++) {
-                query.append("selection"+i+".sort");
+                query.append("selection").append(i).append(".sort");
                 if (i<english.size()-1)
                     query.append("+");
             }
@@ -1049,7 +1050,7 @@ public class HanziDB extends SQLiteOpenHelper {
             INCOMPLETE_PINYIN,
             CHINESE_WITH_PINYIN,
             CHINESE_WITH_PINYIN_NO_TONE
-        };
+        }
 
         protected String content;
         protected type_t type;
@@ -1672,6 +1673,9 @@ public class HanziDB extends SQLiteOpenHelper {
         ArrayList<String> pin_array = PinyinParser.parse_string(pinyin);
         ArrayList<String> ch_array = new ArrayList<String>();
 
+        if (pin_array == null)
+            return -1;
+
         int len = chinese.codePointCount(0, chinese.length());
         if (len != pin_array.size())
             return -1;
@@ -1685,7 +1689,7 @@ public class HanziDB extends SQLiteOpenHelper {
             pinyin_to_insert.append(pin_array.get(i));
         }
 
-        if ((pin_array == null) || (pin_array.size() != ch_array.size()))
+        if (pin_array.size() != ch_array.size())
             return -1;
 
         int cword_id, char_pinyin_id;
@@ -2517,7 +2521,7 @@ public class HanziDB extends SQLiteOpenHelper {
         ProgressDialog mProgressDialog;
         Runnable finishing;
 
-        public clear_task(ProgressDialog dialog, Runnable finishing) {
+        public clear_task(ProgressDialog dialog, @Nullable Runnable finishing) {
             mProgressDialog = dialog;
             this.finishing = finishing;
         }
@@ -2533,7 +2537,7 @@ public class HanziDB extends SQLiteOpenHelper {
             super.onPreExecute();
             // create the progress dialog if needed
             if (mProgressDialog != null) {
-                mProgressDialog.setMessage("Clearing database");
+                mProgressDialog.setMessage(mProgressDialog.getContext().getResources().getString(R.string.settings_db_clear_progress));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
@@ -2553,7 +2557,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         public void change_dialog(ProgressDialog dialog) {
             mProgressDialog = dialog;
-            mProgressDialog.setMessage("Clearing database");
+            mProgressDialog.setMessage(mProgressDialog.getContext().getResources().getString(R.string.settings_db_clear_progress));
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.setCancelable(false);
             mProgressDialog.show();
@@ -2562,7 +2566,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     @SuppressLint({"NewApi"})
-    public clear_task create_clear_task(ProgressDialog dialog, final Runnable finishing) {
+    public clear_task create_clear_task(ProgressDialog dialog, @Nullable final Runnable finishing) {
         clear_task res = new clear_task(dialog, finishing);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)

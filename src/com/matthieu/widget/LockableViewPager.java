@@ -5,7 +5,7 @@ import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
-public class LockableViewPager extends ViewPager {
+public class LockableViewPager extends ViewPagerParallax {
 
     private boolean enabled;
 
@@ -16,20 +16,13 @@ public class LockableViewPager extends ViewPager {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (this.enabled) {
-            return super.onTouchEvent(event);
-        }
-
-        return false;
+        return this.enabled && super.onTouchEvent(event);
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (this.enabled) {
-            return super.onInterceptTouchEvent(event);
-        }
+        return this.enabled && super.onInterceptTouchEvent(event);
 
-        return false;
     }
 
     public void setPagingEnabled(boolean enabled) {

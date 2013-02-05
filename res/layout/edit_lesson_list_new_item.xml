@@ -5,7 +5,6 @@
         xmlns:expandable="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/AndZiTheme"
         >
 
 <com.matthieu.widget.ExtendingLinearLayout
@@ -24,17 +23,22 @@
                 android:id="@+id/edit_new_lesson"
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
+                style="@style/edit_text"
                 android:hint="@string/edit_lesson_new"
-                android:textColor="#000000"
+                android:textSize="@dimen/large_text"
                 android:layout_weight="1"
                 expandable:hidable="true"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 />
         <Button
                 android:id="@+id/edit_new_lesson_ok"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
+                style="@style/button"
                 android:text="@string/ok"
                 expandable:hidable="true"
+                android:layout_marginRight="10dp"
                 />
     </com.matthieu.widget.ExtendingLinearLayout>
 </LinearLayout>

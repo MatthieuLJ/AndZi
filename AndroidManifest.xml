@@ -36,7 +36,9 @@
         <!-- For doing JUnit test, Instrumentation End (remove later) -->
 
         <activity
-                android:name=".MainMenuActivity">
+                android:name=".MainMenuActivity"
+                android:launchMode="singleTask"
+                android:clearTaskOnLaunch="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

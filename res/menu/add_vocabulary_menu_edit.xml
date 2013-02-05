@@ -6,10 +6,10 @@
           android:title="@string/add_voc_menu_add_new_translation"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_edit_translation"
-          android:title="Edit"
+          android:title="@string/add_voc_menu_edit_translation"
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/add_vocabulary_delete_selection"
-          android:title="Delete"
+          android:title="@string/add_voc_menu_delete_translation"
           android:showAsAction="always"/>
     <item android:id="@+id/add_vocabulary_done"
           android:title="@string/add_voc_menu_done"

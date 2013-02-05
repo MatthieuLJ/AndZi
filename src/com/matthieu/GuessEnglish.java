@@ -4,6 +4,7 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
@@ -14,7 +15,6 @@ import android.widget.*;
 import java.util.*;
 
 public class GuessEnglish extends Test {
-    private String current_test;
     private Vocabulary solution=null;
     private View master_view[]=null;
     private int current_view=0;
@@ -57,10 +57,9 @@ public class GuessEnglish extends Test {
         if (solution == null) {
             return false;
         }
-        current_test = hanzi;
         Log.d(TAG, "GuessEnglish OK");
 
-        solution_view = new GuessEnglishResultView(current_test, activity);
+        solution_view = new GuessEnglishResultView(hanzi, activity);
         solution_view.prepare_view(activity.getLayoutInflater());
 
         return true;
@@ -186,8 +185,8 @@ public class GuessEnglish extends Test {
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
-                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-                bad_guess_text.setTextColor(0xffdd0000);
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
+                bad_guess_text.setTextColor(Color.RED);
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);

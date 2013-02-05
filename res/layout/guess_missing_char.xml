@@ -4,8 +4,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        style="@style/AndZiTheme">
+        android:orientation="vertical">
 
     <View
             android:id="@+id/spacer"
@@ -17,14 +16,15 @@
             android:layout_width="match_parent"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
-            android:textColor="#000000"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/large_text"
             android:text="@string/guess_char" />
     <View
-                android:layout_height="0dp"
-                android:layout_width="match_parent"
-                android:layout_weight="1"
+            android:layout_height="0dp"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
             />
-    <com.matthieu.widget.ShrinkingScrollView
+    <ScrollView
             android:scrollbars="vertical"
             android:layout_height="0dp"
             android:layout_width="match_parent"
@@ -37,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:stretchColumns="1"
                 />
-    </com.matthieu.widget.ShrinkingScrollView>
+    </ScrollView>
     <View
             android:layout_height="0dp"
             android:layout_width="match_parent"
@@ -55,9 +55,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:inputType="text"
-                android:singleLine="true"
-                android:textColor="#000000"
+                style="@style/edit_text"
+                android:textSize="@dimen/large_text"
                 android:imeOptions="actionDone"
                 />
         <Button
@@ -65,18 +64,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                style="@style/button"
                 android:text="@string/ok"/>
     </LinearLayout>
     <TextView
             android:id="@+id/char_finder_previous_guess"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="#000000"
-            />
-    <View
-            android:layout_height="0dp"
-            android:layout_width="match_parent"
-            android:layout_weight="1"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/normal_text"
+            android:visibility="gone"
             />
 </LinearLayout>

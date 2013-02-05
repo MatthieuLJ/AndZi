@@ -18,7 +18,6 @@ import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class LessonListFragment extends Fragment {
@@ -46,20 +45,18 @@ public class LessonListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View res = inflater.inflate(R.layout.review_list, container, false);
-        return res;
+        return inflater.inflate(R.layout.lesson_list, container, false);
     }
 
-    private void update_header_view() {
-        ListView list = (ListView) getView().findViewById(R.id.review_list);
+    private void update_header_view(ListView list) {
         TextView header = (TextView) list.getTag(R.id.header_view);
         if (header == null) {
-            header = (TextView) getLayoutInflater(null).inflate(R.layout.review_list_header, list, false);
+            header = (TextView) getLayoutInflater(null).inflate(R.layout.lesson_list_header, list, false);
             list.setTag(R.id.header_view, header);
             list.addHeaderView(header, null, false);
         }
 
-        if (lesson.equals(""))
+        if (lesson.size() == 0)
             header.setText("Words that are not assigned to any lesson");
         else {
             StringBuilder lessons = new StringBuilder();
@@ -68,7 +65,7 @@ public class LessonListFragment extends Fragment {
                 if (i<lesson.size()-1)
                     lessons.append(", ");
             }
-            header.setText("Words in lesson "+lesson);
+            header.setText("Words in lesson "+lessons.toString());
         }
     }
 
@@ -78,6 +75,7 @@ public class LessonListFragment extends Fragment {
         super.onResume();
         if (cur != null) {
             ListView list = (ListView) getView().findViewById(R.id.review_list);
+            update_header_view(list);
             list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
                 @Override
                 public void click(String item_clicked) {
@@ -135,7 +133,7 @@ public class LessonListFragment extends Fragment {
                 return;
             synchronized (LessonListFragment.this) {
                 ListView list = (ListView) getView().findViewById(R.id.review_list);
-                update_header_view();
+                update_header_view(list);
                 list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
                     @Override
                     public void click(String item_clicked) {

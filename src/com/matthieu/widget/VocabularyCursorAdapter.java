@@ -11,6 +11,7 @@ import android.widget.CursorAdapter;
 import android.widget.TextView;
 import com.matthieu.PinyinParser;
 import com.matthieu.R;
+import org.jetbrains.annotations.Nullable;
 
 public class VocabularyCursorAdapter extends CursorAdapter {
     boolean show_pinyin_color;
@@ -34,7 +35,7 @@ public class VocabularyCursorAdapter extends CursorAdapter {
     private int english_column_index;
 
     @Override
-    public void changeCursor(Cursor cursor) {
+    public void changeCursor(@Nullable Cursor cursor) {
         super.changeCursor(cursor);
         if (cursor != null) {
             chinese_column_index = cursor.getColumnIndex("chinese");

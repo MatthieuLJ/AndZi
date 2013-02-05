@@ -30,6 +30,7 @@ public class EditLessonsFragment extends Fragment {
     protected ArrayList<Lesson> current_lessons= new ArrayList<Lesson>();
     protected Boolean loaded = false;
     private InitLessons init_lessons_thread=null;
+    private UpdateLessons update_lessons_thread=null;
 
     private static final String TAG = "EditLessonsFragment";
 
@@ -78,19 +79,21 @@ public class EditLessonsFragment extends Fragment {
         ProgressBar pb = (ProgressBar) res.findViewById(R.id.lessons_loading);
 
         Log.d(TAG, "Finishing onCreateView");
-        if (init_lessons_thread == null) {
-            if (!loaded) {
-                Log.d(TAG, "Finishing onCreateView");
-                init_lessons_thread = new InitLessons();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                    init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-                else
-                    init_lessons_thread.execute((Void[])null);
+        synchronized (this) {
+            if (init_lessons_thread == null) {
+                if (!loaded) {
+                    Log.d(TAG, "Finishing onCreateView");
+                    init_lessons_thread = new InitLessons();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                        init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                    else
+                        init_lessons_thread.execute((Void[])null);
 
-                pb.setVisibility(View.VISIBLE);
-            } else {
-                list.setAdapter(new LessonArrayAdapter());
-                pb.setVisibility(View.GONE);
+                    pb.setVisibility(View.VISIBLE);
+                } else {
+                    list.setAdapter(new LessonArrayAdapter());
+                    pb.setVisibility(View.GONE);
+                }
             }
         }
 
@@ -106,15 +109,14 @@ public class EditLessonsFragment extends Fragment {
             Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
 
-            for (int i=0; i<existing_lessons.size(); i++) {
+            for (String existing_lesson : existing_lessons) {
                 if (isCancelled())
                     return null;
 
-                String lesson = existing_lessons.get(i);
-                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson))).size();
-                Lesson new_lesson = new Lesson(lesson);
+                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(existing_lesson))).size();
+                Lesson new_lesson = new Lesson(existing_lesson);
                 new_lesson.state = Lesson.EXISTING;
-                new_lesson.num_items=num;
+                new_lesson.num_items = num;
                 tmp_lessons.add(new_lesson);
             }
 
@@ -125,19 +127,53 @@ public class EditLessonsFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+            synchronized (EditLessonsFragment.this) {
+                if (getView() != null) {
+                    current_lessons = tmp_lessons;
+                    loaded = true;
 
-            current_lessons = tmp_lessons;
-            loaded = true;
+                    TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                    if (lv != null) {
+                        lv.setAdapter(new LessonArrayAdapter());
+                    }
+
+                    ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+                    pb.setVisibility(View.GONE);
+                }
+
+                init_lessons_thread=null;
+            }
+        }
+    }
+
+    private class UpdateLessons extends AsyncTask<Void, Void, Void> {
+        boolean start_over;
+        protected Void doInBackground(Void... voids) {
+            do {
+                start_over=false;
+                for (Lesson l : current_lessons) {
+                    l.num_items= myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l.label))).size();
+                }
+            } while (start_over);
+            return null;
+        }
+
+        public void redo_update() {
+            start_over=true;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
 
             TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
             if (lv != null) {
-                lv.setAdapter(new LessonArrayAdapter());
+                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
 
-            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
-            pb.setVisibility(View.GONE);
-
-            init_lessons_thread=null;
+            synchronized (EditLessonsFragment.this) {
+                update_lessons_thread = null;
+            }
         }
     }
 
@@ -156,6 +192,25 @@ public class EditLessonsFragment extends Fragment {
             label = l;
             num_items = 0;
             state = 0;
+        }
+    }
+
+    @SuppressLint({"NewApi"})
+    public void update_lesson_list() {
+        if (current_lessons.size() == 0)
+            return;
+
+        synchronized (this) {
+            if (update_lessons_thread== null) {
+                update_lessons_thread = new UpdateLessons();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                    update_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
+                else
+                    update_lessons_thread.execute((Void[])null);
+            }
+            else {
+                update_lessons_thread.redo_update();
+            }
         }
     }
 
@@ -189,6 +244,9 @@ public class EditLessonsFragment extends Fragment {
                     row = inflater.inflate(R.layout.edit_lesson_list_new_item, parent, false);
                     row.setTag(R.id.lesson_list_view_inflated, R.layout.edit_lesson_list_new_item);
                 }
+                if (getCount()==1)
+                    new_collapsed = false;
+
                 ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.edit_lesson_new_container);
                 if (new_collapsed)
                     elv.collapse_immediate();
@@ -688,6 +746,8 @@ public class EditLessonsFragment extends Fragment {
         if (getView() == null)
             return;
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-        ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+        LessonArrayAdapter adapter = (LessonArrayAdapter) lv.getAdapter();
+        if (adapter != null)
+            adapter.notifyDataSetChanged();
     }
 }

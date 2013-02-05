@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GuessChineseWord extends Test {
-    private String current_test;
     private Vocabulary solution;
     public ArrayList<String> translations, more_translations,previous_guess;
     private boolean showing_more_voc;
@@ -39,7 +38,6 @@ public class GuessChineseWord extends Test {
             return false;
         }
         solution = voc.get((int) (voc.size()*Math.random()));
-        current_test = hanzi;
 
         translations = solution.english;
         if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
@@ -52,7 +50,7 @@ public class GuessChineseWord extends Test {
 
         Log.d(TAG, "GuessChineseWord OK");
 
-        solution_view = new GuessChineseWordResultView(current_test, activity);
+        solution_view = new GuessChineseWordResultView(hanzi, activity);
         solution_view.prepare_view(activity.getLayoutInflater());
         return true;
     }
@@ -141,8 +139,9 @@ public class GuessChineseWord extends Test {
         previous_guess = new ArrayList<String>();
         TextView previous = (TextView) res.findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
+        previous.setVisibility(View.GONE);
 
-        StringBuffer hint = new StringBuffer();
+        StringBuilder hint = new StringBuilder();
         for (int i=0; i<solution.chinese.codePointCount(0, solution.chinese.length()); i++) {
             hint.append("_ ");
         }
@@ -235,6 +234,7 @@ public class GuessChineseWord extends Test {
                         if (i<previous_guess.size()-1)
                             previous.setText(previous.getText() + ",\n");
                     }
+                    previous.setVisibility(View.VISIBLE);
                     previous.invalidate();
                 }
                 word_guess.setText("");

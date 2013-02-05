@@ -52,7 +52,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
 
-        use_ref = (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
+        if (use_ref)
+            use_ref = (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
 
         return res;
     }
@@ -135,7 +136,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (query != null) {
-                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != last_use_ref)) {
+                    if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref)) {
                         return null;
                     }
                 }
@@ -143,7 +144,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 last_query = msg_query;
                 last_mode = mode;
                 last_use_ref = msg_ref;
-                publishProgress(null);
+                publishProgress((Cursor[])null);
 
                 if (msg_query.length()==0) {
                     result_cursor =null;
@@ -153,9 +154,9 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                         ArrayList<HanziDB.StringElement> elems = PinyinParser.parse_mixed_string(msg_query);
 
                         if (elems.size() > 1) {
-                            for (int i=0; i<elems.size(); i++) {
-                                if ((elems.get(i).type != HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE) &&
-                                        (elems.get(i).type != HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)) {
+                            for (HanziDB.StringElement elem : elems) {
+                                if ((elem.type != HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE) &&
+                                        (elem.type != HanziDB.StringElement.type_t.INCOMPLETE_PINYIN)) {
                                     potential_english = false;
                                     break;
                                 }
@@ -309,6 +310,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             }
         }
 
+        @SuppressLint({"NewApi"})
         private void publish_cursor(Cursor cur) {
             if (getActivity()==null)
                 return;
@@ -332,7 +334,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 return;
             }
             ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(cur);
-            results.smoothScrollToPosition(0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                results.smoothScrollToPosition(0);
         }
     }
 
@@ -377,9 +380,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         if (v == null)
             return false;
         EditText query = (EditText) v.findViewById(R.id.dict_query);
-        if (query == null)
-            return false;
-        return !query.getText().toString().equals("");
+        return query != null && !query.getText().toString().equals("");
     }
 
     public boolean is_dictionary_search() {

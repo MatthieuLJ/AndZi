@@ -5,13 +5,11 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         xmlns:android="http://schemas.android.com/apk/res/android">
-    >
     <com.matthieu.widget.InsideScrollPager
             android:id="@+id/test_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            style="@style/AndZiTheme">
+            android:layout_weight="1">
     </com.matthieu.widget.InsideScrollPager>
 
     <com.viewpagerindicator.UnderlinePageIndicator

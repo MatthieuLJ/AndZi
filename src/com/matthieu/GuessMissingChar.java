@@ -4,9 +4,11 @@
 package com.matthieu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -83,6 +85,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
         TextView previous = (TextView) res.findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
+        previous.setVisibility(View.GONE);
         previous_guess.clear();
 
         if(words.size()>5) {
@@ -99,7 +102,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
             TableRow tr = new TableRow(activity);
 
             TextView chinese = new TextView(activity);
-            chinese.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
+            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
+            chinese.setTextColor(Color.BLACK);
             chinese.setClickable(false);
             chinese.setText(w.chinese.replaceAll(current_test, "\\?"));
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -108,8 +112,9 @@ public class GuessMissingChar extends Test implements TextWatcher {
             tr.addView(chinese);
 
             TextView trans = new TextView(activity);
-            trans.setTextAppearance(activity, android.R.style.TextAppearance_Medium_Inverse);
             trans.setClickable(false);
+            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_text));
+            trans.setTextColor(Color.BLACK);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
                 en += w.english.get(j);
@@ -192,18 +197,19 @@ public class GuessMissingChar extends Test implements TextWatcher {
         }
 
         if (res == OTHER) {
-                if (!previous_guess.contains(guess))
-                    previous_guess.add(guess);
-                TextView previous = (TextView) activity.findViewById(R.id.char_finder_previous_guess);
-                EditText edit_guess = (EditText) activity.findViewById(R.id.missing_test_guess);
-                previous.setText("Previous try:\n");
-                for (int i=0; i<previous_guess.size(); i++) {
-                    previous.setText(previous.getText() + previous_guess.get(i));
-                    if (i<previous_guess.size()-1)
-                        previous.setText(previous.getText() + ",\n");
-                }
-                edit_guess.setText("");
-                previous.invalidate();
+            if (!previous_guess.contains(guess))
+                previous_guess.add(guess);
+            TextView previous = (TextView) activity.findViewById(R.id.char_finder_previous_guess);
+            EditText edit_guess = (EditText) activity.findViewById(R.id.missing_test_guess);
+            previous.setText("Previous try:\n");
+            for (int i=0; i<previous_guess.size(); i++) {
+                previous.setText(previous.getText() + previous_guess.get(i));
+                if (i<previous_guess.size()-1)
+                    previous.setText(previous.getText() + ",\n");
+            }
+            edit_guess.setText("");
+            previous.setVisibility(View.VISIBLE);
+            previous.invalidate();
         }
 
         return res;
@@ -282,10 +288,16 @@ public class GuessMissingChar extends Test implements TextWatcher {
     }
 
     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        if (activity == null)
+            return;
+        View ok_button = activity.findViewById(R.id.guess_missing_char_ok);
+        if (ok_button == null)
+            return;
+
         if (charSequence.toString().codePointCount(0, charSequence.toString().length()) > 1) {
-            activity.findViewById(R.id.guess_missing_char_ok).setEnabled(false);
+            ok_button.setEnabled(false);
         } else {
-            activity.findViewById(R.id.guess_missing_char_ok).setEnabled(true);
+            ok_button.setEnabled(true);
         }
 
     }

@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -37,7 +38,7 @@ public class DetailsFragment extends Fragment {
     private String current_pinyin="";
     private boolean pinned=false;
 
-    static Object locker = new Object();
+    private final static Object locker = new Object();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -72,6 +73,34 @@ public class DetailsFragment extends Fragment {
         final View res = inflater.inflate(R.layout.details_fragment, container, false);
         FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
 
+        Button source_button = (Button) res.findViewById(R.id.details_source_button);
+        if (source_button != null) {
+            source_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    change_source();
+                }
+            });
+        }
+        Button add_edit_button = (Button) res.findViewById(R.id.details_add_edit_button);
+        if (add_edit_button != null) {
+            add_edit_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    edit_add_word();
+                }
+            });
+        }
+        Button pin_button = (Button) res.findViewById(R.id.details_pinned_button);
+        if (pin_button != null) {
+            pin_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    pin_unpin();
+                }
+            });
+        }
+
         if (saved_data != null) {
             populate_details_view(this.getActivity(), frame, saved_data, (ReferenceActivity) getActivity());
         } else {
@@ -95,7 +124,7 @@ public class DetailsFragment extends Fragment {
     }
 
     public void check_if_exists_in_db(final HanziDB db) {
-        AsyncTask<Void,Void,Void> checker = new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
                 exists_in_db = db.getTranslations(DetailsFragment.this.current_hanzi).size() > 0;
@@ -145,7 +174,7 @@ public class DetailsFragment extends Fragment {
         ListView old_list= (ListView) section.findViewById(R.id.details_list);
         if (old_list != null) {
             synchronized (locker) {
-                VocabularyCursorAdapter old_adapter=(VocabularyCursorAdapter) old_list.getAdapter();;
+                VocabularyCursorAdapter old_adapter=(VocabularyCursorAdapter) old_list.getAdapter();
                 WeakReference<populator> old_populate_task = (WeakReference<populator>) old_list.getTag(R.id.detail_populator);
                 String old_query = (String) old_list.getTag(R.id.detail_query_hanzi);
                 String old_pinyins = (String) old_list.getTag(R.id.detail_query_pinyin);
@@ -186,8 +215,8 @@ public class DetailsFragment extends Fragment {
             for (int i=0; i<saved.saved_hanzi.length(); ) {
                 TextView character = new TextView(activity);
                 final String character_label = saved.saved_hanzi.substring(i, i + Character.charCount(saved.saved_hanzi.codePointAt(i)));
-                character.setTextAppearance(activity, android.R.style.TextAppearance_Large_Inverse);
-                character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
+                character.setTextColor(Color.BLACK);
+                character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xlarge_text));
                 character.setText(character_label);
                 if (saved.saved_hanzi.codePointCount(0, saved.saved_hanzi.length())!= 1)
                     character.setOnClickListener(new View.OnClickListener() {
@@ -411,8 +440,8 @@ public class DetailsFragment extends Fragment {
                     for (int i=0; i<hanzi.length(); ) {
                         TextView character = new TextView(activity);
                         final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
-                        character.setTextAppearance(activity, android.R.style.TextAppearance_Large_Inverse);
-                        character.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40);
+                        character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xlarge_text));
+                        character.setTextColor(Color.BLACK);
                         character.setText(character_label);
                         if (hanzi.codePointCount(0, hanzi.length())!= 1)
                             character.setOnClickListener(new View.OnClickListener() {

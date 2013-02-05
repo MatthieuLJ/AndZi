@@ -4,15 +4,14 @@
 package com.matthieu;
 
 import android.graphics.Color;
-import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
+import java.util.WeakHashMap;
 
 public class PinyinParser {
     private final static String TAG = "PinyinParser";
@@ -208,16 +207,19 @@ public class PinyinParser {
         return null;
     }
 
-    static HashMap<String, ArrayList<HanziDB.StringElement>> cache;
+    static WeakHashMap<String, ArrayList<HanziDB.StringElement>> cache;
     static private void add_to_cache(String entry, ArrayList<HanziDB.StringElement> result) {
         if (cache == null)
-            cache = new HashMap<String, ArrayList<HanziDB.StringElement>>();
+            cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
 
-        cache.put(entry, result);
+        if (!cache.containsKey(entry)) {
+            ArrayList<HanziDB.StringElement> to_save = new ArrayList<HanziDB.StringElement>(result);
+            cache.put(entry, to_save);
+        }
     }
     static private ArrayList<HanziDB.StringElement> query_cache(String entry) {
         if (cache == null) {
-            cache = new HashMap<String, ArrayList<HanziDB.StringElement>>();
+            cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
             return null;
         }
         if (cache.containsKey(entry))
@@ -468,8 +470,8 @@ public class PinyinParser {
         ArrayList<Pinyin> parsed = parse_string_to_pinyin(input);
         if (parsed == null)
             return input;
-        for (int i = 0; i < parsed.size(); i++) {
-            result.append(parsed.get(i).get_lame());
+        for (Pinyin aParsed : parsed) {
+            result.append(aParsed.get_lame());
         }
         return result.toString();
     }

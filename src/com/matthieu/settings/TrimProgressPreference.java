@@ -31,7 +31,7 @@ import com.matthieu.R;
 public class TrimProgressPreference extends DialogPreference implements SeekBar.OnSeekBarChangeListener
 {
     private SeekBar mSeekBar;
-    private TextView mSplashText,mValueText;
+    private TextView mValueText;
     private Context mContext;
     private ProgressDB progress_db;
 
@@ -86,7 +86,7 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(6,6,6,6);
 
-        mSplashText = new TextView(mContext);
+        TextView mSplashText = new TextView(mContext);
         mSplashText.setText(R.string.settings_trim_progress);
         layout.addView(mSplashText);
 
