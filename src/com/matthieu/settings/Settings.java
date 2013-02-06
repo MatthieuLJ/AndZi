@@ -314,8 +314,6 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
-
             mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_download_progress));
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(100);
@@ -358,7 +356,6 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
             last_progress = values[0];
             mProgressDialog.setProgress(values[0]);
         }
@@ -450,7 +447,6 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             mProgressDialog.setTitle(getResources().getString(R.string.settings_reset_db_progress));
             mProgressDialog.setMessage("");
             mProgressDialog.setIndeterminate(true);
@@ -459,7 +455,6 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
             mProgressDialog.dismiss();
         }
 

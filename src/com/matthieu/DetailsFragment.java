@@ -328,8 +328,6 @@ public class DetailsFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
-
             if (container.get() == null) {
                 this.cancel(true);
                 return;

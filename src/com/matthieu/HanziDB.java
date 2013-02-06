@@ -2193,8 +2193,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
-
             // create the progress dialog if needed
             if (dialog!=null) {
                 if (getAllChars().size()==0) {
@@ -2223,7 +2221,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
             last_progress = values[0];
             if (dialog!=null)
                 dialog.setProgress(values[0]);
@@ -2231,8 +2228,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             // Dismiss progress dialog
             if (dialog!=null)
                 dialog.dismiss();
@@ -2243,8 +2238,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onCancelled() {
-            super.onCancelled();
-
             if (dialog!=null)
                 dialog.dismiss();
         }
@@ -2428,7 +2421,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             // create the progress dialog if needed
             if (mProgressDialog != null) {
                 if (selected_lessons == null) {
@@ -2455,7 +2447,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
             last_progress = values[0];
             if (mProgressDialog != null)
                 mProgressDialog.setProgress(values[0]);
@@ -2463,8 +2454,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             if (mProgressDialog != null)
                 mProgressDialog.dismiss();
 
@@ -2555,7 +2544,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             // create the progress dialog if needed
             if (mProgressDialog != null) {
                 mProgressDialog.setMessage(mProgressDialog.getContext().getResources().getString(R.string.settings_db_clear_progress));
@@ -2567,8 +2555,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             if (mProgressDialog != null)
                 mProgressDialog.dismiss();
 
