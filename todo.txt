@@ -308,22 +308,38 @@ normal screens are at least 470dp x 320dp
 small screens are at least 426dp x 320dp
 
 Lint output:
-res/layout-large/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
-                android:layout_weight="1"/>
-                ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout-xlarge/vocabulary_editor.xml:19: Warning: Nested weights are bad for performance [NestedWeights]
-                android:layout_weight="1"/>
-                ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout-xlarge/reference.xml:29: Warning: Nested weights are bad for performance [NestedWeights]
+                    android:layout_weight="1"/>
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout-xlarge/reference.xml:49: Warning: Nested weights are bad for performance [NestedWeights]
+                    android:layout_weight="1"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout/vocabulary_editor_large.xml:27: Warning: Nested weights are bad for performance [NestedWeights]
+                    android:layout_weight="1"/>
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout/main_menu.xml:8: Warning: Possible overdraw: Root element paints background @drawable/mountaintop with a theme that also paints a background (inferred theme is @style/Theme_Sherlock) [Overdraw]
+        android:background="@drawable/mountaintop">
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/colors.xml:9: Warning: The resource R.color.whitish appears to be unused [UnusedResources]
+    <color name="whitish">#bbffffff</color>
+           ~~~~~~~~~~~~~~
 res/drawable/expand_arrow_down.png: Warning: The resource R.drawable.expand_arrow_down appears to be unused [UnusedResources]
 res/drawable/expand_arrow_right.png: Warning: The resource R.drawable.expand_arrow_right appears to be unused [UnusedResources]
 res/drawable/no_tone.png: Warning: The resource R.drawable.no_tone appears to be unused [UnusedResources]
-res/values/strings.xml:87: Warning: The resource R.string.settings_import_progress_success appears to be unused [UnusedResources]
+res/values/strings.xml:88: Warning: The resource R.string.settings_import_progress_success appears to be unused [UnusedResources]
     <string name="settings_import_progress_success">Successfully imported progress</string>
             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
+res/layout/main_menu.xml:9: Warning: This TableLayout layout or its LinearLayout parent is useless; transfer the background attribute to the other view [UselessParent]
+    <TableLayout
+    ^
 res/drawable/drag_me.png: Warning: Found bitmap drawable res/drawable/drag_me.png in densityless folder [IconLocation]
+res/drawable/edit_text_default.9.png: Warning: Found bitmap drawable res/drawable/edit_text_default.9.png in densityless folder [IconLocation]
+res/drawable/edit_text_disabled.9.png: Warning: Found bitmap drawable res/drawable/edit_text_disabled.9.png in densityless folder [IconLocation]
+res/drawable/edit_text_focused.9.png: Warning: Found bitmap drawable res/drawable/edit_text_focused.9.png in densityless folder [IconLocation]
+res/drawable/edit_text_pressed.9.png: Warning: Found bitmap drawable res/drawable/edit_text_pressed.9.png in densityless folder [IconLocation]
 res/drawable/expand_arrow_down.png: Warning: Found bitmap drawable res/drawable/expand_arrow_down.png in densityless folder [IconLocation]
 res/drawable/expand_arrow_right.png: Warning: Found bitmap drawable res/drawable/expand_arrow_right.png in densityless folder [IconLocation]
 res/drawable/file.png: Warning: Found bitmap drawable res/drawable/file.png in densityless folder [IconLocation]
@@ -335,6 +351,7 @@ res/drawable/no_tone.png: Warning: Found bitmap drawable res/drawable/no_tone.pn
 res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second_tone.png in densityless folder [IconLocation]
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
 res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
+res/drawable/treatise.png: Warning: Found bitmap drawable res/drawable/treatise.png in densityless folder [IconLocation]
 res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
@@ -356,4 +373,22 @@ res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-0 errors, 26 warnings
+res/layout-xlarge/reference.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+    <ImageView
+    ^
+res/layout-xlarge-land/reference.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+    <ImageView
+    ^
+res/layout-xlarge/test.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+    <ImageView
+    ^
+res/layout-xlarge-land/test.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+    <ImageView
+    ^
+res/layout-xlarge-land/vocabulary_editor.xml:8: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+    <ImageView
+    ^
+res/layout/vocabulary_editor_large.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+    <ImageView
+    ^
+0 errors, 41 warnings
