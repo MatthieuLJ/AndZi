@@ -150,16 +150,28 @@ public class ProgressDB extends SQLiteOpenHelper {
     }
 
     private void check_to_distribute(final SQLiteDatabase db) {
-        // check how many at level 0 towards the end
-        Cursor c = db.rawQuery("SELECT COUNT(date) AS count FROM progress WHERE date > (SELECT MAX(date) FROM progress WHERE zoom!=0)", new String[] {});
-        if (!c.moveToFirst()) {
-            c.close();
+        Cursor non_zero = db.rawQuery("SELECT COUNT(date) AS count FROM progress WHERE zoom!=0", new String[] {});
+        if (!non_zero.moveToFirst()) {
+            non_zero.close();
             return;
         }
-        int count = c.getInt(c.getColumnIndex("count"));
-        c.close();
-        if (count >= 10)
-            distribute(db);
+        int count_non_zero = non_zero.getInt(non_zero.getColumnIndex("count"));
+        non_zero.close();
+
+        if (count_non_zero != 0) {
+            // check how many at level 0 towards the end
+            Cursor c = db.rawQuery("SELECT COUNT(date) AS count FROM progress WHERE date > (SELECT MAX(date) FROM progress WHERE zoom!=0)", new String[] {});
+            if (!c.moveToFirst()) {
+                c.close();
+                return;
+            }
+            int count = c.getInt(c.getColumnIndex("count"));
+            c.close();
+            if (count <10)
+                return;
+        }
+
+        distribute(db);
     }
 
     @Override

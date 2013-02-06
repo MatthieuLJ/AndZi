@@ -241,23 +241,23 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             ids[1] = id_removed;
         }
 
-        TableLayout master_table = (TableLayout) findViewById(R.id.ref_table);
+        LinearLayout master_table = (LinearLayout) findViewById(R.id.ref_table);
         if (master_table != null) {
             int row = max / 2;
-            TableRow tr = (TableRow) master_table.getChildAt(row);
+            LinearLayout tr = (LinearLayout) master_table.getChildAt(row);
             int id_removed = tr.getChildAt(max % 2).getId();
             tr.removeViewAt(max%2);
             // shift
             for (int r=max/2; r>0; r--) {
-                FrameLayout moving_fl = (FrameLayout) ((TableRow) master_table.getChildAt(r-1)).getChildAt(1);
-                ((TableRow) master_table.getChildAt(r-1)).removeViewAt(1);
-                ((TableRow) master_table.getChildAt(r)).addView(moving_fl, 0);
-                ((TableRow) master_table.getChildAt(r)).setVisibility(View.VISIBLE);
+                FrameLayout moving_fl = (FrameLayout) ((LinearLayout) master_table.getChildAt(r-1)).getChildAt(1);
+                ((LinearLayout) master_table.getChildAt(r-1)).removeViewAt(1);
+                ((LinearLayout) master_table.getChildAt(r)).addView(moving_fl, 0);
+                ((LinearLayout) master_table.getChildAt(r)).setVisibility(View.VISIBLE);
             }
             FrameLayout fl = new FrameLayout(this);
             fl.setId(id_removed);
             fl.setVisibility(View.VISIBLE);
-            ((TableRow) master_table.getChildAt(0)).addView(fl, 1, new TableRow.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
+            ((LinearLayout) master_table.getChildAt(0)).addView(fl, 1, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
             ft.add(id_removed, fragments[1]);
             ids[1] = id_removed;
         }

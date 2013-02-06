@@ -9,14 +9,18 @@
             android:layout_height="match_parent"
             android:src="@drawable/treatise"
             android:scaleType="centerCrop" />
-    <TableLayout
+    <LinearLayout
             android:id="@+id/ref_table"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:orientation="vertical"
             >
-        <TableRow
+        <LinearLayout
                 android:layout_height="0dp"
                 android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
                 >
             <FrameLayout
                     android:id="@+id/ref_fragment0"
@@ -29,11 +33,14 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:visibility="gone"/>
-        </TableRow>
-        <TableRow
+        </LinearLayout>
+        <LinearLayout
                 android:layout_height="0dp"
                 android:layout_weight="1"
+                android:layout_width="match_parent"
                 android:visibility="gone"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
                 >
             <FrameLayout
                     android:id="@+id/ref_fragment2"
@@ -47,7 +54,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:visibility="gone"/>
-        </TableRow>
+        </LinearLayout>
 
-    </TableLayout>
+    </LinearLayout>
 </FrameLayout>
