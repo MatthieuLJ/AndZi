@@ -109,6 +109,10 @@
     <string name="test_empty_db">Your database is empty, add some words before testing</string>
     <string name="test_mastering">You master everything, do you want to continue ?</string>
 
+    <string name="add_voc_title_editor">New Vocabulary</string>
+    <string name="add_voc_title_lesson_list">Lessons list</string>
+    <string name="add_voc_title_lesson_content">Lesson content</string>
+
     <string name="add_voc_enter_pinyin">Enter Pinyin</string>
     <string name="add_voc_enter_chinese">Enter a Chinese word</string>
     <string name="add_voc_only_chinese">Only enter chinese characters</string>
