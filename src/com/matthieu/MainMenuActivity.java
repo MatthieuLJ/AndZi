@@ -41,6 +41,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     public void start_it() {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
         boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
+        HanziDB myDB = ((AndZiApplication)getApplication()).getMyDB();
 
         if (splash_fragment != null) {
             getSupportFragmentManager().beginTransaction().remove(splash_fragment).commitAllowingStateLoss();
@@ -91,6 +92,16 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         ((Button)findViewById(R.id.main_menu_ref)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_help)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_settings)).setTypeface(main_menu_font);
+
+        int num_words_in_myDB = myDB.getNumWords();
+        int num_expired = myDB.getNumExpired();
+
+        if (num_expired == 0)
+            ((Button)findViewById(R.id.main_menu_test)).setEnabled(false);
+
+        if ((num_words_in_myDB == 0) && (!((AndZiApplication) getApplication()).getRefDBPresent()))
+            ((Button)findViewById(R.id.main_menu_ref)).setEnabled(false);
+
     }
 
     @Override
