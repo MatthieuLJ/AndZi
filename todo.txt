@@ -19,10 +19,7 @@ ONGOING (14):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (3):
-* Fix graph vertical scale (hint, it's not only based on the maximum, but also the size)
-* Distribution of progress data does not seem to work...
-* "Dictionary enabled" and "Erase Dictionary" do not get enabled after downloading the dictionary
+BUGS (00):
 
 FUTURE (14):
 * Load results in dictionary progressively
@@ -40,7 +37,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (207):
+DONE (208):
+* Distribution of progress data does not seem to work...
 * Sometimes the background from ViewPagerParallax disappears (becomes all black)
 * Rotate the screen on x-large during test, fragments disappear
 * Rotate the screen in Vocabulary Editor does not stay on the same page in the ViewPager (need to check other activities too)
