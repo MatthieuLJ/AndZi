@@ -52,9 +52,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
 
-        if (use_ref)
-            use_ref = (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
-
         return res;
     }
 
@@ -102,7 +99,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if (msg_ref) {
                 currentDB = ((AndZiApplication)getActivity().getApplication()).getRefDB();
             }
-            if ((currentDB == null) || (!msg_ref)) {
+            else {
                 currentDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
             }
         }
@@ -236,7 +233,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                     if (i.length() > 1)
                                         prepared_items.add(i);
                                 }
-                                result1_cursor = currentDB.getCTranslations(prepared_items, true);
+                                if (prepared_items.size() > 0)
+                                    result1_cursor = currentDB.getCTranslations(prepared_items, true);
+                                else
+                                    result1_cursor = null;
                             }
                             if (msg_query.contains(" ") && ((result1_cursor==null) || (result1_cursor.getCount()<2))) {
                                 String items[] = msg_query.split("[, ]");
@@ -246,7 +246,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                     if (i.length() > 2)
                                         prepared_items.add(i);
                                 }
-                                result2_cursor = currentDB.getCTranslations(prepared_items, true);
+                                if (prepared_items.size() > 0)
+                                    result2_cursor = currentDB.getCTranslations(prepared_items, true);
+                                else
+                                    result2_cursor = null;
                             }
                             if (((result1_cursor==null)?0:result1_cursor.getCount()) + ((result2_cursor==null)?0:result2_cursor.getCount()) < 5) {
                                 String items[] = msg_query.split("[, ]");
@@ -256,7 +259,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                     if (i.length() > 2)
                                         prepared_items.add(i);
                                 }
-                                result3_cursor = currentDB.getCTranslations(prepared_items, false);
+                                if (prepared_items.size() > 0)
+                                    result3_cursor = currentDB.getCTranslations(prepared_items, false);
+                                else
+                                    result3_cursor = null;
                             }
                             ArrayList<Cursor> all_cursors = new ArrayList<Cursor>();
                             if (result1_cursor != null)
@@ -265,7 +271,11 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                                 all_cursors.add(result2_cursor);
                             if (result3_cursor != null)
                                 all_cursors.add(result3_cursor);
-                            result_cursor = new MergeCursor(all_cursors.toArray(new Cursor[3]));
+
+                            if (all_cursors.size() != 0)
+                                result_cursor = new MergeCursor(all_cursors.toArray(new Cursor[3]));
+                            else
+                                result_cursor = null;
                         }
                     }
                 }
@@ -384,7 +394,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     }
 
     public boolean is_dictionary_search() {
-        return use_ref && (((AndZiApplication)getActivity().getApplication()).getRefDB() != null);
+        return use_ref;
     }
 
     private int detect_mode(String entry) {

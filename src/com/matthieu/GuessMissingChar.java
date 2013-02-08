@@ -174,10 +174,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
                     for (Vocabulary tmp_v:myDB.getTranslations(tmp_word)) {
                         tmp_translations.addAll(tmp_v.english);
                     }
-                    if (refDB != null) {
-                        for (Vocabulary tmp_v:refDB.getTranslations(tmp_word)) {
-                            tmp_translations.addAll(tmp_v.english);
-                        }
+                    for (Vocabulary tmp_v:refDB.getTranslations(tmp_word)) {
+                        tmp_translations.addAll(tmp_v.english);
                     }
                     boolean found = false;
                     if (tmp_translations.size()>0) {

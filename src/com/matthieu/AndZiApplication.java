@@ -10,7 +10,6 @@ import android.app.Application;
 import android.content.*;
 import android.net.ConnectivityManager;
 import android.os.StatFs;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 import org.acra.ACRA;
@@ -26,8 +25,6 @@ public class AndZiApplication extends Application {
     private ProgressDB prog=null;
     private ScreenBroadcastReceiver screenReceiver;
     private boolean ref_initialized=false;
-    private boolean ref_enabled=true;
-    private boolean ref_present=false;
 
     private static final String TAG = "AndZiApplication";
     private static final String REF_DB_NAME = "cedict_db";
@@ -53,7 +50,7 @@ public class AndZiApplication extends Application {
     }
 
     private void update_dbs_in_details_populator() {
-        DetailsFragment.populate_dbs(myDB, ref_enabled?refDB:null);
+        DetailsFragment.populate_dbs(myDB, refDB);
     }
 
     @Override
@@ -61,13 +58,13 @@ public class AndZiApplication extends Application {
         super.onTerminate();
         prog.close();
         myDB.close();
-        if (ref_present)
-            refDB.close();
+        refDB.close();
     }
 
     public HanziDB getMyDB() {
         if (myDB==null) {
-            initialize_my_db();
+            if (!initialize_my_db())
+                return null;
             update_dbs_in_details_populator();
         }
         return myDB;
@@ -76,19 +73,8 @@ public class AndZiApplication extends Application {
         if (!ref_initialized) {
             initialize_ref_db();
         }
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        ref_enabled=prefs.getBoolean("ref_enabled", true);
         update_dbs_in_details_populator();
-        //Log.d(TAG, "Reference db is "+(ref_enabled?"enabled":"disabled"));
-        return (ref_enabled&&ref_present)?refDB:null;
-    }
-
-    public boolean getRefDBPresent() {
-        if (!ref_initialized) {
-            initialize_ref_db();
-            update_dbs_in_details_populator();
-        }
-        return ref_present;
+        return refDB;
     }
 
     public ProgressDB getProgress() {
@@ -96,8 +82,10 @@ public class AndZiApplication extends Application {
     }
 
     public ProgressDB.ProgressData getCurrentProgress() {
-        if (myDB == null)
-            initialize_my_db();
+        if (myDB == null) {
+            if (!initialize_my_db())
+                return null;
+        }
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
         for (int i=0; i<4; i++) {
             new_data.num_in_box[i]=myDB.getNumInBox(i);
@@ -121,30 +109,40 @@ public class AndZiApplication extends Application {
         return VERSION;
     }
 
-    public void initialize_my_db() {
+    public boolean initialize_my_db() {
         if (myDB != null)
             myDB.close();
-        myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
+        try {
+            myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
     
-    public void initialize_ref_db() {
+    public boolean initialize_ref_db() {
         if (ref_initialized)
-            return;
+            return true;
 
-        refDB = new HanziDB(this, REF_DB_NAME);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (refDB.getNumChars()==0) {
-            refDB.close();
-            ContextWrapper cw = new ContextWrapper(getApplicationContext());
-            cw.deleteDatabase(REF_DB_NAME);
-            refDB=null;
-            ref_present=false;
+        try {
+            refDB = new HanziDB(this, REF_DB_NAME);
         }
-        else {
-            ref_present=true;
-            ref_enabled=prefs.getBoolean("ref_enabled", true);
+        catch (Exception e) {
+            return false;
+        }
+
+        if (refDB.getNumChars()==0)  {
+            refDB.close();
+
+            if (!installRefDB(R.raw.cedict_db))
+                return false;
+
+            refDB = new HanziDB(this, REF_DB_NAME);
+            if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
+                return false;
         }
         ref_initialized=true;
+        return true;
     }
 
     public boolean check_exporting_space(String path) {
@@ -201,7 +199,6 @@ public class AndZiApplication extends Application {
 
         return available_space-current_size/stats.getBlockSize() >= dbSize/stats.getBlockSize();
     }
-
 
     public boolean check_merging_space(String path) {
         // merging is a several steps process:
@@ -271,7 +268,10 @@ public class AndZiApplication extends Application {
             Log.d(TAG, "Could not open source");
             return false;
         }
+        return copyFile(input, destination);
+    }
 
+    public boolean copyFile(InputStream input, String destination) {
         OutputStream output;
         try {
             output = new FileOutputStream(destination);
@@ -305,38 +305,20 @@ public class AndZiApplication extends Application {
         initialize_my_db();
     }
 
-    public boolean installRefDB(String path, boolean erase_source) {
-        boolean res=false;
-        eraseRefDB();
-        String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
-        if (!copyFile(path, dest)) {
-            new File(dest).delete();
-            return res;
-        }
-        if (erase_source) {
-            File to_delete= new File(path);
-            to_delete.delete();
-        }
-
-        refDB = new HanziDB(this, REF_DB_NAME);
-        if (refDB.getNumWords() > 0) {
-            ref_present=true;
-            res = true;
-        }
-        Log.d(TAG, "Done installing reference db " + dest);
-        update_dbs_in_details_populator();
-        return res;
-    }
-
-    public void eraseRefDB() {
-        if (refDB != null) {
-            refDB.close();
-            refDB = null;
-            update_dbs_in_details_populator();
-        }
+    public boolean installRefDB(int res_id) {
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(REF_DB_NAME);
-        ref_present=false;
+        String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
+        InputStream is = getResources().openRawResource(res_id);
+
+        if (!copyFile(is, dest)) {
+            new File(dest).delete();
+            return false;
+        }
+
+        Log.d(TAG, "Done installing reference db " + dest);
+        update_dbs_in_details_populator();
+        return true;
     }
 
     public void replaceProgressDataBase(String source) {

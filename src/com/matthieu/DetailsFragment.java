@@ -293,7 +293,7 @@ public class DetailsFragment extends Fragment {
             if (ref_query) {
                 db = refDB;
             }
-            if ((db == null) || (!ref_query)) {
+            else {
                 db = myDB;
             }
             container = new WeakReference<ViewGroup>(v);
@@ -328,8 +328,6 @@ public class DetailsFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
-
             if (container.get() == null) {
                 this.cancel(true);
                 return;

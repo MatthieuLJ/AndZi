@@ -110,55 +110,6 @@ public class Settings extends PreferenceActivity {
             }
         });
 
-        final Preference enable_ref = findPreference("ref_enabled");
-        final Preference del_ref = findPreference("ClearRef");
-
-        enable_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
-        del_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
-
-        Preference download_ref = findPreference("DownloadRef");
-        download_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            public boolean onPreferenceClick(Preference preference) {
-                final String params[]= {dictionaryURL};
-                ProgressDialog p_dialog = new ProgressDialog(Settings.this);
-                current_task = new ref_downloader(p_dialog);
-                current_task_type = 1;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                    current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Object[])params);
-                else
-                    current_task.execute((Object[])params);
-                return true;
-            }
-        });
-
-        del_ref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            public boolean onPreferenceClick(Preference preference) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(Settings.this);
-                alert.setMessage(R.string.settings_confirm_ref_db_erase);
-                alert.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        ((AndZiApplication) getApplication()).eraseRefDB();
-                        enable_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
-                        del_ref.setEnabled(((AndZiApplication) getApplication()).getRefDBPresent());
-                        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Settings.this);
-                        SharedPreferences.Editor edit = prefs.edit();
-                        edit.putBoolean("first_time_ref", true);
-                        edit.commit();
-                        dialog.dismiss();
-                    }
-                });
-                alert.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int i) {
-                        dialog.dismiss();
-                    }
-                });
-
-                alert.create();
-                alert.show();
-                return true;
-            }
-        });
-
         Preference export_progress = findPreference("ExportProgress");
         if (export_progress != null) {
             export_progress.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -205,9 +156,6 @@ public class Settings extends PreferenceActivity {
             current_task_type = ((to_save) saved).current_task_type;
             ProgressDialog dialog = new ProgressDialog(this);
             switch (current_task_type) {
-                case 1:
-                    ((ref_downloader) current_task).change_dialog(dialog);
-                    break;
                 case 2:
                     ((HanziDB.merge_task) current_task).change_context(this);
                     ((HanziDB.merge_task) current_task).change_progress_dialog(dialog);
@@ -219,18 +167,6 @@ public class Settings extends PreferenceActivity {
                     ((reset_score) current_task).change_dialog(dialog);
                     break;
             }
-        }
-
-        int intent_action=getIntent().getIntExtra("Settings_action", -1);
-        if((saved == null) && (intent_action == 0)) {
-            final String params[]= {dictionaryURL};
-            ProgressDialog p_dialog = new ProgressDialog(Settings.this);
-            current_task = new ref_downloader(p_dialog);
-            current_task_type = 1;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-                current_task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Object[])params);
-            else
-                current_task.execute((Object[])params);
         }
     }
 
@@ -287,160 +223,6 @@ public class Settings extends PreferenceActivity {
         }
     }
 
-    private class ref_downloader extends AsyncTask<String,Integer,Void> {
-        ProgressDialog mProgressDialog;
-        String PATH, URL;
-        boolean enough_space=true, connection_success=true, download_success=true;
-        private final String TAG="ref_downloader";
-        int last_progress=0;
-
-        public ref_downloader(ProgressDialog dialog) {
-            mProgressDialog = dialog;
-        }
-
-        @Override
-        protected Void doInBackground(String... strings) {
-            try {
-                PATH= File.createTempFile("ref", "db").getPath();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-            URL=strings[0];
-
-            download_success = DownloadFromUrl(URL, PATH);
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_download_progress));
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMax(100);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                public void onCancel(DialogInterface dialogInterface) {
-                    cancel(false);
-                }
-            });
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            mProgressDialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            if (download_success) {
-                mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_install_progress));
-                if (!((AndZiApplication) getApplication()).installRefDB(PATH, true)) {
-                    Toast.makeText(Settings.this, R.string.settings_error_install_ref, Toast.LENGTH_SHORT).show();
-                }
-                mProgressDialog.dismiss();
-            }
-            else {
-                mProgressDialog.dismiss();
-                if (!enough_space) {
-                    Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_install_ref, Toast.LENGTH_SHORT).show();
-                } else if (!connection_success) {
-                    Toast.makeText(Settings.this, R.string.settings_error_cannot_connect, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(Settings.this, R.string.settings_error_install_ref, Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            final Preference enable_ref = findPreference("ref_enabled");
-            final Preference del_ref = findPreference("ClearRef");
-
-            if (enable_ref != null) enable_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
-            if (del_ref != null) del_ref.setEnabled(((AndZiApplication)getApplication()).getRefDBPresent());
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            last_progress = values[0];
-            mProgressDialog.setProgress(values[0]);
-        }
-
-        public void change_dialog(ProgressDialog dialog) {
-            mProgressDialog = dialog;
-            mProgressDialog.setMessage(getResources().getString(R.string.settings_ref_db_download_progress));
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMax(100);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                public void onCancel(DialogInterface dialogInterface) {
-                    cancel(false);
-                }
-            });
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            mProgressDialog.show();
-            mProgressDialog.setProgress(last_progress);
-        }
-
-        private boolean DownloadFromUrl(String download_URL, String fileName) {
-            int count;
-            HttpURLConnection connection=null;
-
-            try {
-                URL url = new URL(download_URL);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-                int respCode = connection.getResponseCode();
-                if (respCode / 100 >=4) {
-                    return false;
-                }
-
-                connection_success=true;
-                int lengthOfFile = connection.getContentLength();
-
-                enough_space = ((AndZiApplication) getApplication()).check_ref_download_space(PATH, lengthOfFile);
-                if (!enough_space) {
-                    return false;
-                }
-
-                // download the file
-                InputStream input = new BufferedInputStream(url.openStream());
-                OutputStream output = new FileOutputStream(fileName);
-
-                byte data[] = new byte[1024];
-
-                long total = 0;
-
-                while ((count = input.read(data)) != -1) {
-                    if (isCancelled()) {
-                        output.flush();
-                        output.close();
-                        input.close();
-                        new File(fileName).delete();
-                        return false;
-                    }
-                    total += count;
-                    // publishing the progress....
-                    publishProgress((int) (total * 100 / lengthOfFile));
-                    output.write(data, 0, count);
-                }
-
-                output.flush();
-                output.close();
-                input.close();
-
-                return true;
-            } catch (SocketException e) {
-                Log.e(TAG, "Cannot connect");
-                connection_success = false;
-            } catch (IOException e) {
-                Log.e(TAG, "Error: " + e);
-            }
-            finally {
-                if (connection!=null)
-                    connection.disconnect();
-            }
-            return false;
-        }
-    }
-
     private class reset_score extends AsyncTask<Void,Void,Void> {
         ProgressDialog mProgressDialog;
 
@@ -450,7 +232,6 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             mProgressDialog.setTitle(getResources().getString(R.string.settings_reset_db_progress));
             mProgressDialog.setMessage("");
             mProgressDialog.setIndeterminate(true);
@@ -459,7 +240,6 @@ public class Settings extends PreferenceActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
             mProgressDialog.dismiss();
         }
 

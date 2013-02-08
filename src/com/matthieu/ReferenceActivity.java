@@ -59,13 +59,13 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                     }
                 }
 
-                TableLayout master_table = (TableLayout) findViewById(R.id.ref_table);
+                LinearLayout master_table = (LinearLayout) findViewById(R.id.ref_table);
                 if (master_table != null) {
                     for (int i=1; i<=max_details_fragments; i++) {
-                        ((TableRow)master_table.getChildAt(i/2)).getChildAt(i%2).setId(ids[i]);
+                        ((LinearLayout)master_table.getChildAt(i/2)).getChildAt(i%2).setId(ids[i]);
                         if (fragments[i]!=null) {
-                            ((TableRow)master_table.getChildAt(i/2)).setVisibility(View.VISIBLE);
-                            ((TableRow)master_table.getChildAt(i/2)).getChildAt(i%2).setVisibility(View.VISIBLE);
+                            ((LinearLayout)master_table.getChildAt(i/2)).setVisibility(View.VISIBLE);
+                            ((LinearLayout)master_table.getChildAt(i/2)).getChildAt(i%2).setVisibility(View.VISIBLE);
                         }
                     }
                 }
