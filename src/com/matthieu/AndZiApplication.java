@@ -10,7 +10,6 @@ import android.app.Application;
 import android.content.*;
 import android.net.ConnectivityManager;
 import android.os.StatFs;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 
@@ -59,7 +58,8 @@ public class AndZiApplication extends Application {
 
     public HanziDB getMyDB() {
         if (myDB==null) {
-            initialize_my_db();
+            if (!initialize_my_db())
+                return null;
             update_dbs_in_details_populator();
         }
         return myDB;
@@ -77,8 +77,10 @@ public class AndZiApplication extends Application {
     }
 
     public ProgressDB.ProgressData getCurrentProgress() {
-        if (myDB == null)
-            initialize_my_db();
+        if (myDB == null) {
+            if (!initialize_my_db())
+                return null;
+        }
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
         for (int i=0; i<4; i++) {
             new_data.num_in_box[i]=myDB.getNumInBox(i);
@@ -102,24 +104,37 @@ public class AndZiApplication extends Application {
         return VERSION;
     }
 
-    public void initialize_my_db() {
+    public boolean initialize_my_db() {
         if (myDB != null)
             myDB.close();
-        myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
+        try {
+            myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
     
     public boolean initialize_ref_db() {
         if (ref_initialized)
             return true;
 
-        refDB = new HanziDB(this, REF_DB_NAME);
-        if (refDB.getNumChars()==0) {
+        try {
+            refDB = new HanziDB(this, REF_DB_NAME);
+        }
+        catch (Exception e) {
+            return false;
+        }
+
+        if (refDB.getNumChars()==0)  {
             refDB.close();
 
             if (!installRefDB(R.raw.cedict_db))
                 return false;
 
             refDB = new HanziDB(this, REF_DB_NAME);
+            if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
+                return false;
         }
         ref_initialized=true;
         return true;
@@ -286,7 +301,6 @@ public class AndZiApplication extends Application {
     }
 
     public boolean installRefDB(int res_id) {
-        boolean res=false;
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         cw.deleteDatabase(REF_DB_NAME);
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
@@ -294,16 +308,12 @@ public class AndZiApplication extends Application {
 
         if (!copyFile(is, dest)) {
             new File(dest).delete();
-            return res;
+            return false;
         }
 
-        refDB = new HanziDB(this, REF_DB_NAME);
-        if (refDB.getNumWords() > 0) {
-            res = true;
-        }
         Log.d(TAG, "Done installing reference db " + dest);
         update_dbs_in_details_populator();
-        return res;
+        return true;
     }
 
     public void replaceProgressDataBase(String source) {

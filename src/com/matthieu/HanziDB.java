@@ -239,8 +239,10 @@ public class HanziDB extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
-        db.releaseReference();
-        db.close();
+        if (db != null) {
+            db.releaseReference();
+            db.close();
+        }
         super.close();
     }
 
@@ -2094,7 +2096,11 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
 
                 // copy a backup
-                other_db = new HanziDB(app, to_merge_name);
+                try {
+                    other_db = new HanziDB(app, to_merge_name);
+                } catch (Exception e) {
+                    return null;
+                }
                 publishProgress(10);
 
                 if (other_db.getNumChars() < getNumChars()) {
@@ -2111,7 +2117,11 @@ public class HanziDB extends SQLiteOpenHelper {
                         return null;
                     }
                 }
-                merge_to = new HanziDB(app, new_db_name);
+                try {
+                    merge_to = new HanziDB(app, new_db_name);
+                } catch (Exception e) {
+                    return null;
+                }
 
                 // merge it
                 ArrayList<String> original_lessons = merge_to.getLessons();
@@ -2334,7 +2344,11 @@ public class HanziDB extends SQLiteOpenHelper {
                     clean_up_on_cancel(true);
                     return null;
                 }
-                new_db = new HanziDB(app, new_db_name);
+                try {
+                    new_db = new HanziDB(app, new_db_name);
+                } catch (Exception e) {
+                    return null;
+                }
                 new_db.resetAllScores();
                 new_db.close();
 
@@ -2345,7 +2359,11 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 HanziDB.this.app.deleteDatabase(new_db_name);
             } else {
-                new_db = new HanziDB(app, new_db_name);
+                try {
+                    new_db = new HanziDB(app, new_db_name);
+                } catch (Exception e) {
+                    return null;
+                }
                 publishProgress(10);
 
                 for (int i=0; i<selected_lessons.size(); i++) {
