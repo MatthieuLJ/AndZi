@@ -114,11 +114,9 @@ public class PinyinButtons extends LinearLayout {
             if (myDB != null)
                 res.addAll(myDB.getPinyinForChar(hanzi));
 
-            if (refDB != null) {
-                for (String pin : refDB.getPinyinForChar(hanzi)) {
-                    if (!res.contains(pin))
-                        res.add(pin);
-                }
+            for (String pin : refDB.getPinyinForChar(hanzi)) {
+                if (!res.contains(pin))
+                    res.add(pin);
             }
             button.set_db_pinyins(res);
         }
@@ -279,7 +277,7 @@ public class PinyinButtons extends LinearLayout {
 
             // figure out the default pinyin buttons
             ArrayList<Vocabulary> vocs = myDB.getTranslations(current_chinese_word);
-            if ((refDB != null) && (vocs.size() == 0)){
+            if (vocs.size() == 0){
                 vocs= refDB.getTranslations(current_chinese_word);
             }
             if (vocs.size() == 0)

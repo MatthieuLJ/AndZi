@@ -3,7 +3,6 @@ package com.matthieu.widget;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.*;
-import android.os.Build;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -21,6 +20,8 @@ public class ViewPagerParallax extends ViewPager {
     int imageHeight;
     int imageWidth;
     float zoom_level;
+
+    float overlap_level;
 
     Rect r = new Rect();
 
@@ -65,17 +66,8 @@ public class ViewPagerParallax extends ViewPager {
             zoom_level = ((float) imageHeight) / getHeight();  // we are always in 'fitY' mode
             is.reset();
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD_MR1) {
-                BitmapRegionDecoder brd = BitmapRegionDecoder.newInstance(is, true);
-
-                options.inJustDecodeBounds = false;
-                options.inInputShareable = true;
-                r.set(0, 0, Math.min((int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageWidth), imageHeight);
-                saved_bitmap = brd.decodeRegion(r, options);
-                brd.recycle();
-            } else {
-                saved_bitmap = Bitmap.createBitmap(BitmapFactory.decodeStream(is), 0, 0, Math.min((int) (getWidth() * ((max_num_pages + 4.0) / 5) * zoom_level), imageWidth), imageHeight);
-            }
+            overlap_level = (imageWidth / zoom_level - getWidth() * max_num_pages) / (max_num_pages - 1);
+            saved_bitmap = BitmapFactory.decodeStream(is);
 
             is.close();
         } catch (IOException e) {
@@ -89,9 +81,8 @@ public class ViewPagerParallax extends ViewPager {
         background_saved_id = background_id;
         saved_max_num_pages = max_num_pages;
     }
-
-    int current_position, first_position=-1;
-    float current_offset;
+    int current_position=0;
+    float current_offset=0.0f;
 
     @Override
     protected void onPageScrolled(int position, float offset, int offsetPixels) {
@@ -106,18 +97,11 @@ public class ViewPagerParallax extends ViewPager {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (first_position == -1) {
-            first_position = getCurrentItem();
-            current_position = first_position;
-            current_offset = 0.0f;
-        }
+        src.set((int) (((current_position + current_offset) * getWidth() + overlap_level * (current_position + current_offset)) * zoom_level), 0,
+                (int) (((current_position + current_offset + 1) * getWidth() + overlap_level * current_position) * zoom_level), imageHeight);
 
-        src.set((int) (((current_position + current_offset) * getWidth() * zoom_level) / 5 ), 0,
-                (int) ((((current_position + current_offset) * getWidth() * zoom_level) / 5)  + (getWidth() * zoom_level)), imageHeight);
-
-        dst.set((int) ((current_position - first_position + current_offset) * getWidth()), 0,
-                (int) ((current_position - first_position + current_offset) * getWidth()) + canvas.getWidth(), canvas.getHeight());
-        // still confused why we need to shift also in the destination canvas
+        dst.set(getScrollX(), 0,
+                (int) (getScrollX() + canvas.getWidth() - overlap_level * current_offset), canvas.getHeight());
 
         canvas.drawBitmap(saved_bitmap, src, dst, null);
     }

@@ -190,7 +190,9 @@ public class HanziDB extends SQLiteOpenHelper {
             db.execSQL("INSERT INTO leitner SELECT hanzi,box,exp_time,num_tested,num_wrong, streak, date_added FROM old_leitner");
             db.execSQL("DROP TABLE old_leitner");
 
-            if (i>=3) {
+            // check if the score column exists
+            Cursor test_cur = db.rawQuery("SELECT * FROM cword", null);
+            if ((i>=3) && (test_cur.getColumnIndex("score") != -1)) {
                 Cursor cur = db.rawQuery("SELECT chinese, score FROM cword WHERE (score>0) AND (length(chinese)>1)", null);
                 if (cur.moveToFirst()) {
                     int score_column_index = cur.getColumnIndex("score");
@@ -231,13 +233,16 @@ public class HanziDB extends SQLiteOpenHelper {
                     db.endTransaction();
                 }
             }
+            test_cur.close();
         }
     }
 
     @Override
     public synchronized void close() {
-        db.releaseReference();
-        db.close();
+        if (db != null) {
+            db.releaseReference();
+            db.close();
+        }
         super.close();
     }
 
@@ -1784,97 +1789,115 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         ArrayList<bridge_input> to_add = new ArrayList<bridge_input>();
 
-        DatabaseUtils.InsertHelper cword_ih = new DatabaseUtils.InsertHelper(db, "cword");
-        final int cword_chinese_column = cword_ih.getColumnIndex("chinese");
-        final int cword_pinyin_column = cword_ih.getColumnIndex("pinyin");
-        final int cword_length_column = cword_ih.getColumnIndex("length");
-        String pinyin_to_insert;
-        ArrayList<String> pin_array;
-        for (Vocabulary v:voc) {
-            pinyin_to_insert = PinyinParser.convert_to_lame_version(v.pinyin);
-            pin_array  = PinyinParser.parse_string(pinyin_to_insert);
-            int pin_count=0;
-            int len = v.chinese.codePointCount(0, v.chinese.length());
-            for (int i = 0; i< len; i++) {
-                int from = v.chinese.offsetByCodePoints(0, i);
-                int to = v.chinese.offsetByCodePoints(0, i + 1);
+        final String insert_cword = "INSERT OR IGNORE INTO cword (chinese, pinyin, length) VALUES(?, ?, ?)";
+        final SQLiteStatement insert_cword_statement = db.compileStatement(insert_cword);
+        db.beginTransaction();
+        try {
+            String pinyin_to_insert;
+            ArrayList<String> pin_array;
+            for (Vocabulary v:voc) {
+                pinyin_to_insert = PinyinParser.convert_to_lame_version(v.pinyin);
+                pin_array  = PinyinParser.parse_string(pinyin_to_insert);
+                int pin_count=0;
+                int len = v.chinese.codePointCount(0, v.chinese.length());
+                for (int i = 0; i< len; i++) {
+                    int from = v.chinese.offsetByCodePoints(0, i);
+                    int to = v.chinese.offsetByCodePoints(0, i + 1);
 
-                if (pin_count==0) {
-                    to_add.add(new bridge_input(v.chinese, pinyin_to_insert, v.chinese.substring(from, to), pin_array.get(pin_count), pin_count, v.english));
-                } else {
-                    to_add.add(new bridge_input(v.chinese, pinyin_to_insert, v.chinese.substring(from, to), pin_array.get(pin_count), pin_count));
+                    if (pin_count==0) {
+                        to_add.add(new bridge_input(v.chinese, pinyin_to_insert, v.chinese.substring(from, to), pin_array.get(pin_count), pin_count, v.english));
+                    } else {
+                        to_add.add(new bridge_input(v.chinese, pinyin_to_insert, v.chinese.substring(from, to), pin_array.get(pin_count), pin_count));
+                    }
+                    pin_count++;
                 }
-                pin_count++;
+                insert_cword_statement.clearBindings();
+                insert_cword_statement.bindString(1, v.chinese);
+                insert_cword_statement.bindString(2, pinyin_to_insert);
+                insert_cword_statement.bindLong(3, len);
+                insert_cword_statement.execute();
             }
-            cword_ih.prepareForInsert();
-            cword_ih.bind(cword_chinese_column, v.chinese);
-            cword_ih.bind(cword_pinyin_column, pinyin_to_insert);
-            cword_ih.bind(cword_length_column, len);
-            cword_ih.execute();
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
-        cword_ih.close();
 
-        DatabaseUtils.InsertHelper char_pinyin_ih = new DatabaseUtils.InsertHelper(db, "char_pinyin");
-        final int char_pinyin_hanzi_column = char_pinyin_ih.getColumnIndex("hanzi");
-        final int char_pinyin_pinyin_column = char_pinyin_ih.getColumnIndex("pinyin");
-        String cached_chinese=null;
-        String cached_pinyin=null;
-        int cached_cword_id=-1;
-        for (bridge_input br:to_add) {
-            if ((cached_cword_id==-1) || (!cached_chinese.equals(br.word_chinese) || (!cached_pinyin.equals(br.word_pinyin)))) {
-                cached_chinese=br.word_chinese;
-                cached_pinyin=br.word_pinyin;
-                cached_cword_id = getWordId(cached_chinese, PinyinParser.convert_to_lame_version(cached_pinyin));
+        final String insert_char_pinyin = "INSERT OR IGNORE INTO char_pinyin (hanzi, pinyin) VALUES(?, ?)";
+        final SQLiteStatement insert_char_pinyin_statement = db.compileStatement(insert_char_pinyin);
+        db.beginTransaction();
+        try {
+            String cached_chinese=null;
+            String cached_pinyin=null;
+            int cached_cword_id=-1;
+            for (bridge_input br:to_add) {
+                if ((cached_cword_id==-1) || (!cached_chinese.equals(br.word_chinese) || (!cached_pinyin.equals(br.word_pinyin)))) {
+                    cached_chinese=br.word_chinese;
+                    cached_pinyin=br.word_pinyin;
+                    cached_cword_id = getWordId(cached_chinese, PinyinParser.convert_to_lame_version(cached_pinyin));
+                }
+                br.cword_id = cached_cword_id;
+                insert_char_pinyin_statement.clearBindings();
+                insert_char_pinyin_statement.bindString(1, br.chinese);
+                insert_char_pinyin_statement.bindString(2, br.pinyin);
+                insert_char_pinyin_statement.execute();
             }
-            br.cword_id = cached_cword_id;
-            char_pinyin_ih.prepareForInsert();
-            char_pinyin_ih.bind(char_pinyin_hanzi_column, br.chinese);
-            char_pinyin_ih.bind(char_pinyin_pinyin_column, br.pinyin);
-            char_pinyin_ih.execute();
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
-        char_pinyin_ih.close();
 
-        DatabaseUtils.InsertHelper cword_segment_ih = new DatabaseUtils.InsertHelper(db, "cword_segment");
-        final int cword_segment_cword_id_column = cword_segment_ih.getColumnIndex("cword_id");
-        final int cword_segment_char_pinyin_id_column = cword_segment_ih.getColumnIndex("char_pinyin_id");
-        final int cword_segment_pos_column = cword_segment_ih.getColumnIndex("pos");
-        for (bridge_input br:to_add) {
-            br.char_pinyin_id=getCharPinyinId(br.chinese, br.pinyin);
-            cword_segment_ih.prepareForInsert();
-            cword_segment_ih.bind(cword_segment_cword_id_column, br.cword_id);
-            cword_segment_ih.bind(cword_segment_char_pinyin_id_column, br.char_pinyin_id);
-            cword_segment_ih.bind(cword_segment_pos_column, br.position);
-            cword_segment_ih.execute();
+        final String insert_cword_segment = "INSERT OR IGNORE INTO cword_segment (cword_id, char_pinyin_id, pos) VALUES (?, ?, ?)";
+        final SQLiteStatement insert_cword_segment_statement = db.compileStatement(insert_cword_segment);
+        db.beginTransaction();
+        try {
+            for (bridge_input br:to_add) {
+                br.char_pinyin_id=getCharPinyinId(br.chinese, br.pinyin);
+                insert_cword_segment_statement.clearBindings();
+                insert_cword_segment_statement.bindLong(1, br.cword_id);
+                insert_cword_segment_statement.bindLong(2, br.char_pinyin_id);
+                insert_cword_segment_statement.bindLong(3, br.position);
+                insert_cword_segment_statement.execute();
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
-        cword_segment_ih.close();
 
-        DatabaseUtils.InsertHelper eword_ih = new DatabaseUtils.InsertHelper(db, "eword");
-        final int eword_cword_id_column = eword_ih.getColumnIndex("cword_id");
-        final int eword_translation_column = eword_ih.getColumnIndex("translation");
-        for (bridge_input br:to_add) {
-            if (br.position==0) {
-                for (String en:br.english) {
-                    eword_ih.prepareForInsert();
-                    eword_ih.bind(eword_cword_id_column, br.cword_id);
-                    eword_ih.bind(eword_translation_column, en);
-                    eword_ih.execute();
+        final String insert_eword = "INSERT OR IGNORE INTO eword (cword_id, translation) VALUES(?, ?)";
+        final SQLiteStatement insert_eword_statement = db.compileStatement(insert_eword);
+        db.beginTransaction();
+        try {
+            for (bridge_input br:to_add) {
+                if (br.position==0) {
+                    for (String en:br.english) {
+                        insert_eword_statement.clearBindings();
+                        insert_eword_statement.bindLong(1, br.cword_id);
+                        insert_eword_statement.bindString(2, en);
+                        insert_eword_statement.execute();
+                    }
                 }
             }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
-        eword_ih.close();
     }
 
     protected void addVocabulary(ArrayList<String> english, int cword_id) {
-        DatabaseUtils.InsertHelper ih = new DatabaseUtils.InsertHelper(db, "eword");
-        final int cword_id_column = ih.getColumnIndex("cword_id");
-        final int translation_column = ih.getColumnIndex("translation");
-        for (String en:english) {
-            ih.prepareForInsert();
-            ih.bind(cword_id_column, cword_id);
-            ih.bind(translation_column, en);
-            ih.execute();
+        final String insert_eword = "INSERT OR IGNORE INTO eword (cword_id, translation) VALUES(?, ?)";
+        final SQLiteStatement insert_eword_statement = db.compileStatement(insert_eword);
+        db.beginTransaction();
+        try {
+            for (String en:english) {
+                insert_eword_statement.clearBindings();
+                insert_eword_statement.bindLong(1, cword_id);
+                insert_eword_statement.bindString(2, en);
+                insert_eword_statement.execute();
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
-        ih.close();
     }
 
     ////////////////////////////////////////
@@ -2073,7 +2096,11 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
 
                 // copy a backup
-                other_db = new HanziDB(app, to_merge_name);
+                try {
+                    other_db = new HanziDB(app, to_merge_name);
+                } catch (Exception e) {
+                    return null;
+                }
                 publishProgress(10);
 
                 if (other_db.getNumChars() < getNumChars()) {
@@ -2090,7 +2117,11 @@ public class HanziDB extends SQLiteOpenHelper {
                         return null;
                     }
                 }
-                merge_to = new HanziDB(app, new_db_name);
+                try {
+                    merge_to = new HanziDB(app, new_db_name);
+                } catch (Exception e) {
+                    return null;
+                }
 
                 // merge it
                 ArrayList<String> original_lessons = merge_to.getLessons();
@@ -2172,8 +2203,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
-
             // create the progress dialog if needed
             if (dialog!=null) {
                 if (getAllChars().size()==0) {
@@ -2202,7 +2231,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
             last_progress = values[0];
             if (dialog!=null)
                 dialog.setProgress(values[0]);
@@ -2210,8 +2238,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             // Dismiss progress dialog
             if (dialog!=null)
                 dialog.dismiss();
@@ -2222,8 +2248,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onCancelled() {
-            super.onCancelled();
-
             if (dialog!=null)
                 dialog.dismiss();
         }
@@ -2320,7 +2344,11 @@ public class HanziDB extends SQLiteOpenHelper {
                     clean_up_on_cancel(true);
                     return null;
                 }
-                new_db = new HanziDB(app, new_db_name);
+                try {
+                    new_db = new HanziDB(app, new_db_name);
+                } catch (Exception e) {
+                    return null;
+                }
                 new_db.resetAllScores();
                 new_db.close();
 
@@ -2331,7 +2359,11 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 HanziDB.this.app.deleteDatabase(new_db_name);
             } else {
-                new_db = new HanziDB(app, new_db_name);
+                try {
+                    new_db = new HanziDB(app, new_db_name);
+                } catch (Exception e) {
+                    return null;
+                }
                 publishProgress(10);
 
                 for (int i=0; i<selected_lessons.size(); i++) {
@@ -2407,7 +2439,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             // create the progress dialog if needed
             if (mProgressDialog != null) {
                 if (selected_lessons == null) {
@@ -2434,7 +2465,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
             last_progress = values[0];
             if (mProgressDialog != null)
                 mProgressDialog.setProgress(values[0]);
@@ -2442,8 +2472,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             if (mProgressDialog != null)
                 mProgressDialog.dismiss();
 
@@ -2534,7 +2562,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
             // create the progress dialog if needed
             if (mProgressDialog != null) {
                 mProgressDialog.setMessage(mProgressDialog.getContext().getResources().getString(R.string.settings_db_clear_progress));
@@ -2546,8 +2573,6 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             if (mProgressDialog != null)
                 mProgressDialog.dismiss();
 

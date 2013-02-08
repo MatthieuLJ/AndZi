@@ -244,6 +244,19 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
             return fragments[2]==null?2:3;
         }
 
+        public CharSequence getPageTitle(int position) {
+            switch(position) {
+                case 0:
+                    return getResources().getString(R.string.add_voc_title_editor);
+                case 1:
+                    return getResources().getString(R.string.add_voc_title_lesson_list);
+                case 2:
+                    return getResources().getString(R.string.add_voc_title_lesson_content);
+                default:
+                    return "";
+            }
+        }
+
         @Override
         public int getItemPosition(Object object) {
             Fragment fragment = (Fragment) object;

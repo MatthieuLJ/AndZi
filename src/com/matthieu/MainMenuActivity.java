@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.settings.Settings;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,6 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     private final String TAG="MainMenuActivity";
     boolean showing_splash = false;
     boolean start_test;
-    static boolean showing_download_dictionary=false;
     Fragment splash_fragment=null;
 
     @Override
@@ -39,8 +39,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     }
 
     public void start_it() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainMenuActivity.this);
-        boolean offer_to_download_ref = prefs.getBoolean("first_time_ref", true);
+        HanziDB myDB = ((AndZiApplication)getApplication()).getMyDB();
 
         if (splash_fragment != null) {
             getSupportFragmentManager().beginTransaction().remove(splash_fragment).commitAllowingStateLoss();
@@ -50,39 +49,6 @@ public class MainMenuActivity extends SherlockFragmentActivity {
             handle_test(null);
             start_test=false;
         }
-        else if (showing_download_dictionary ||
-                (((AndZiApplication) getApplication()).isOnline() && showing_splash &&
-                        offer_to_download_ref && (!((AndZiApplication) getApplication()).getRefDBPresent()))) {
-            showing_download_dictionary = true;
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainMenuActivity.this);
-            alert.setMessage(R.string.download_dictionary);
-            alert.setNegativeButton(R.string.later, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int i) {
-                    showing_download_dictionary = false;
-                    dialog.dismiss();
-                }
-            });
-            alert.setNeutralButton(R.string.do_not_ask_again, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int i) {
-                    SharedPreferences.Editor edit = prefs.edit();
-                    edit.putBoolean("first_time_ref", false);
-                    edit.commit();
-                    showing_download_dictionary = false;
-                    dialog.dismiss();
-                }
-            });
-            alert.setPositiveButton(R.string.download, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int i) {
-                    Intent in = new Intent(MainMenuActivity.this, Settings.class);
-                    in.putExtra("Settings_action", 0);
-                    startActivity(in);
-                    showing_download_dictionary = false;
-                    dialog.dismiss();
-                }
-            });
-            alert.create();
-            alert.show();
-        }
 
         setContentView(R.layout.main_menu);
         Typeface main_menu_font = Typeface.createFromAsset(getAssets(), "fonts/Dunkin_Sans.ttf");
@@ -91,6 +57,16 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         ((Button)findViewById(R.id.main_menu_ref)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_help)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_settings)).setTypeface(main_menu_font);
+
+        int num_expired = myDB.getNumExpired();
+
+        if (num_expired == 0)
+            findViewById(R.id.main_menu_test).setEnabled(false);
+    }
+
+    public void fail_it() {
+        Toast.makeText(this, "Fail to load dictionary", Toast.LENGTH_LONG).show();
+        finish();
     }
 
     @Override
@@ -106,8 +82,10 @@ public class MainMenuActivity extends SherlockFragmentActivity {
             getSupportFragmentManager().beginTransaction().add(android.R.id.content, splash_fragment).commit();
         }
         else {
-            ((AndZiApplication)getApplication()).initialize_ref_db();
-            start_it();
+            if (!((AndZiApplication)getApplication()).initialize_ref_db())
+                fail_it();
+            else
+                start_it();
         }
     }
 

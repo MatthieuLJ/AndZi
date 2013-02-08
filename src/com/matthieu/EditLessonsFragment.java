@@ -126,7 +126,6 @@ public class EditLessonsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
             synchronized (EditLessonsFragment.this) {
                 if (getView() != null) {
                     current_lessons = tmp_lessons;
@@ -164,8 +163,6 @@ public class EditLessonsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
             TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
             if (lv != null) {
                 ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();

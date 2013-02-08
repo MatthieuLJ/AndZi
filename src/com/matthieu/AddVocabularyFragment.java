@@ -241,14 +241,12 @@ public class AddVocabularyFragment extends Fragment
                         tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
                     }
 
-                if (refDB != null) {
-                    tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
+                tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
 
-                    if (tr != null)
-                        for (String e : tr.english) {
-                            tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
-                        }
-                }
+                if (tr != null)
+                    for (String e : tr.english) {
+                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
+                    }
 
                 ArrayList<String> bare_translations = new ArrayList<String>();
                 for (VocabularyItem v : tmp_translations_in_db) {

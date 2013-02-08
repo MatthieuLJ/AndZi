@@ -6,6 +6,10 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"
         >
+    <com.viewpagerindicator.TitlePageIndicator
+                android:id="@+id/pager_indicator"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent" />
     <com.matthieu.widget.LockableViewPager
             android:id="@+id/voc_editor_pager"
             android:layout_width="match_parent"
@@ -13,8 +17,5 @@
             android:layout_weight="1">
     </com.matthieu.widget.LockableViewPager>
 
-    <com.viewpagerindicator.UnderlinePageIndicator
-            android:id="@+id/pager_indicator"
-            android:layout_height="2dp"
-            android:layout_width="match_parent" />
+
 </LinearLayout>
