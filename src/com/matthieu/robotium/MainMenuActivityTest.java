@@ -1,17 +1,16 @@
 package com.matthieu.robotium;
 
-import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
 import android.test.ActivityInstrumentationTestCase2;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
 import com.matthieu.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * This is a simple framework for a test of an Application.  See
@@ -26,6 +25,8 @@ import java.util.ArrayList;
 public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainMenuActivity> {
     private Solo solo;
 
+    private final static String TAG="Robotium";
+
     private final static int very_long_delay=10000;
     private final static int long_delay=5000;
 
@@ -37,12 +38,10 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo = new Solo(getInstrumentation(), getActivity());
     }
 
-    private void clearEverything(boolean installCedict) {
-        if (solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay)) {
-            solo.clickOnButton(getActivity().getResources().getString(R.string.later));
-            solo.waitForDialogToClose(5);
-        }
-        solo.clickOnButton("Settings");
+    private void clearEverything() {
+        solo.waitForActivity("MainMenuActivity", 60000);
+
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_settings));
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_clear), 1, very_long_delay);
         solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_clear), 0, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_clear_db)));
@@ -67,119 +66,36 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.waitForDialogToClose(long_delay);
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, very_long_delay);
 
-        if (!installCedict) {
-            solo.clickOnText(getActivity().getResources().getString(R.string.settings_ref_db_erase), 0, true);
-            if (solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_ref_db_erase),1, long_delay)) {
-                solo.clickOnButton(getActivity().getResources().getString(R.string.yes));
-                solo.waitForDialogToClose(long_delay);
-            }
-        }
-        else
-            setupCedictDict();
-
         solo.goBack();
         solo.waitForActivity("MainMenuActivity");
-        solo.getCurrentActivity().finish();
+        /*solo.getCurrentActivity().finish();
 
         // quit it
         solo.finishOpenedActivities();
 
         ((AndZiApplication)getActivity().getApplication()).showSplash(true);
 
-        startIt();
+        startIt();*/
         solo.setActivityOrientation(Solo.PORTRAIT);
     }
 
-    public void setupCedictDict() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplication());
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("ref_enabled", true);
-        if (((AndZiApplication)getActivity().getApplication()).getRefDB()==null)
-            ((AndZiApplication)getActivity().getApplication()).installRefDB("/mnt/sdcard/cedict_db", false);
-    }
 
-    public void startIt() {
+    private void startIt() {
         // restart it
         launchActivity("com.matthieu", MainMenuActivity.class, null);
     }
 
     public void testFirstTimeAppOpening() {
-        clearEverything(false);
+        Log.d(TAG, "testFirstTimeAppOpening");
 
-        // should offer to download the dictionary
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
-        solo.setActivityOrientation(Solo.LANDSCAPE);
+        clearEverything();
 
-        // dialog should still be there after rotating the screen
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
-        solo.setActivityOrientation(Solo.PORTRAIT);
-
-        // come back up
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
-        solo.clickOnButton(getActivity().getResources().getString(R.string.later));
-        solo.waitForDialogToClose(5);
-
-        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
-
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
-
-        ViewPager pager = (ViewPager) solo.getView(R.id.test_pager);
-        if (pager != null)
-            solo.scrollToSide(Solo.RIGHT);
-
-        // All the scores should be at 0
-        TextView tv = (TextView) solo.getView(R.id.stats_chars);
-        assertTrue(tv != null);
-        assertTrue(tv.getText().equals("0"));
-        tv = (TextView) solo.getView(R.id.stats_words);
-        assertTrue(tv != null);
-        assertTrue(tv.getText().equals("0"));
-        tv = (TextView) solo.getView(R.id.stats_to_study);
-        assertTrue(tv != null);
-        assertTrue(tv.getText().equals("0"));
-
-        solo.setActivityOrientation(Solo.LANDSCAPE);
-
-        tv = (TextView) solo.getView(R.id.stats_chars);
-        assertTrue(tv != null);
-        assertTrue(tv.getText().equals("0"));
-        tv = (TextView) solo.getView(R.id.stats_words);
-        assertTrue(tv != null);
-        assertTrue(tv.getText().equals("0"));
-        tv = (TextView) solo.getView(R.id.stats_to_study);
-        assertTrue(tv != null);
-        assertTrue(tv.getText().equals("0"));
-
-        if (pager != null)
-            solo.scrollToSide(Solo.LEFT);
-
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.test_empty_db)));
-
-        solo.setActivityOrientation(Solo.PORTRAIT);
-
-        solo.goBack();
-        solo.waitForActivity("MainMenuActivity");
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
-
-        solo.finishOpenedActivities();
-
-        ((AndZiApplication)getActivity().getApplication()).showSplash(true);
-        
-        startIt();
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay));
-        solo.clickOnButton(getActivity().getResources().getString(R.string.later));
-        solo.waitForDialogToClose(5);
+        assertFalse(solo.getView(R.id.main_menu_test).isEnabled());
     }
 
     public void testAddVocabularyEmptyApp() {
         // First wipe out everything...
-        clearEverything(false);
-
-        // Wait until the splash screen is gone
-        if(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, very_long_delay)) {
-            solo.clickOnButton(getActivity().getResources().getString(R.string.later));
-            solo.waitForDialogToClose(long_delay);
-        }
+        clearEverything();
 
         // Let's go add some vocabulary
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
@@ -205,8 +121,8 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
         assertTrue(master_chinese!=null);
 
-        assertTrue(solo.searchButton("-?-"));
-        solo.clickOnText("-?-");
+        assertTrue(solo.searchButton("nǐ"));
+        solo.clickOnText("nǐ");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
         EditText pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
         assertTrue(pinyin_entry!=null);
@@ -214,16 +130,18 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(long_delay);
 
-        assertTrue(solo.searchButton("-?-"));
-        solo.clickOnText("-?-");
+        assertTrue(solo.searchButton("nǐ"));
+        solo.clickOnText("nǐ");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
         pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
         assertTrue(pinyin_entry!=null);
         solo.enterText(pinyin_entry, "ni2");
         solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
         solo.waitForDialogToClose(long_delay);
-        assertFalse(solo.searchButton("-?-"));
+        assertFalse(solo.searchButton("nǐ"));
         assertTrue(solo.searchButton("ní"));
+
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
 
         solo.clickOnText("ní");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
@@ -237,7 +155,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(solo.searchButton("nǐ"));
 
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
 
         View add_new_translation_button = solo.getView(R.id.add_vocabulary_show_new_translation);
         solo.clickOnView(add_new_translation_button);
@@ -273,21 +191,12 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.enterText(master_chinese, "你");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db), 1, long_delay));
         assertTrue(solo.waitForText("You"));
         assertTrue(solo.searchButton("nǐ"));
 
         solo.clearEditText(master_chinese);
         solo.enterText(master_chinese, "你好");
         assertTrue(solo.searchButton("nǐ"));
-        assertTrue(solo.searchButton("-?-"));
-        solo.clickOnText("-?-");
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "好"));
-        pinyin_entry = (EditText) solo.getView(R.id.edit_new_pinyin);
-        assertTrue(pinyin_entry!=null);
-        solo.enterText(pinyin_entry, "hao3");
-        solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
-        solo.waitForDialogToClose(long_delay);
         assertTrue(solo.searchButton("hǎo"));
         new_translation_edit_text = (EditText) solo.getView(R.id.add_new_translation);
         assertTrue(new_translation_edit_text!=null);
@@ -302,7 +211,33 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
     public void testAddVocabularyWithDict() {
         // First wipe out everything... and install cedict
-        clearEverything(true);
+        clearEverything();
+
+        // Let's add some vocabulary
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
+
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
+        EditText master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        assertTrue(master_chinese!=null);
+        solo.enterText(master_chinese, "你");
+
+        assertTrue(solo.searchButton("nǐ"));
+
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
+    }
+
+    /* test with small DB
+    DB:
+    你好 ni3hao3  Hello!, Hi!
+    很好 hen3hao3 very good
+    好 hao3 good
+    我 wo3  I, me
+    public void testAddVocabularyWithDict() {
+        Log.d(TAG, "testAddVocabularyWithDict");
+
+        // First wipe out everything... and install cedict
+        clearEverything();
 
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, long_delay));
 
@@ -318,5 +253,475 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
+    }
+    吗 ma5  question tag
+    也 ye3  also
+    他 ta1  he
+    他们 ta1men5 they
+    我们 wo3men5 we, us
+    朋友 peng2you5 friend
+
+
+    Possible questions
+       tone pinyin english          containing
+    你  3   ni3     X               你好
+    好  3   hao3    good            你好，很好
+    我  3   wo3     I, me           我们
+    很  3   hen3    X               很好
+    吗  X   ma      question tag   X
+    他  1   ta1     he              他们
+    们  X   men     X               他们，我们
+    朋  2   peng2   X               朋友
+    友  X   you     X               朋友
+
+    Hello!, Hi!
+    very good
+    good
+    I, me
+    question tag
+    also
+    he
+    they
+    we, us
+    friend
+
+    你好 Hello!, Hi!
+    很好 very good
+    他们 they
+    我们 we, us
+    朋友 friend
+
+    你？ / 很？
+    ？好
+    ？好
+    他？
+    我？
+    ？们
+    ？们
+    朋？
+    ？友
+     */
+
+    public void testKeepGettingItWrong() {
+        final int num_tests = 30;
+
+        Log.d(TAG, "testKeepGettingItWrong");
+
+        // First wipe out everything... and install cedict
+        clearEverything();
+
+        HanziDB myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
+        final CountDownLatch latch = new CountDownLatch(1);
+        myDB.create_merge_task("/mnt/sdcard/my-test-db.azdb", null, getActivity(), new Runnable() {
+            @Override
+            public void run() {
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            assertFalse(true);
+            return;
+        }
+        solo.getCurrentActivity().finish();
+
+        // quit it
+        solo.finishOpenedActivities();
+
+        startIt();
+
+        assertTrue(solo.getView(R.id.main_menu_test).isEnabled());
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
+
+        test_chinese_orientation = true;
+        test_containing_orientation = true;
+        test_english_orientation = true;
+        test_missing_orientation = true;
+        test_pinyin_orientation = true;
+        test_tone_orientation = true;
+
+        ViewPager pager = (ViewPager) solo.getView(R.id.test_pager);
+        if (pager != null)
+            solo.scrollToSide(Solo.RIGHT);
+        TextView to_study = (TextView) solo.getView(R.id.stats_to_study);
+        int current_to_study = Integer.valueOf(to_study.getText().toString());
+
+
+        for (int i=0; i<num_tests; i++) {
+            if (pager != null)
+                solo.scrollToSide(Solo.LEFT);
+
+            // check what test we're in
+            if (solo.getView(R.id.chinese_word_test_guess) != null) {
+                handle_chinese_test(false);
+            } else if (solo.getView(R.id.containing_test_guess) != null) {
+                handle_containing_test(false);
+            } else if (solo.getView(R.id.english_test_guess) != null) {
+                handle_english_test(false);
+            } else if (solo.getView(R.id.missing_test_guess) != null) {
+                handle_missing_test(false);
+            } else if (solo.getView(R.id.pinyin_test_guess) != null) {
+                handle_pinyin_test(false);
+            } else if (solo.getView(R.id.guess_tone_ok) != null) {
+                handle_tone_test(false);
+            }
+
+            if (pager != null)
+                solo.scrollToSide(Solo.RIGHT);
+            int new_to_study = Integer.valueOf(to_study.getText().toString());
+            assertTrue(new_to_study >= current_to_study);
+            current_to_study = new_to_study;
+        }
+    }
+
+    public void testKeepGettingItRight() {
+        Log.d(TAG, "testKeepGettingItWrong");
+
+        // First wipe out everything... and install cedict
+        clearEverything();
+
+        HanziDB myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
+        final CountDownLatch latch = new CountDownLatch(1);
+        myDB.create_merge_task("/mnt/sdcard/my-test-db.azdb", null, getActivity(), new Runnable() {
+            @Override
+            public void run() {
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            assertFalse(true);
+            return;
+        }
+        solo.getCurrentActivity().finish();
+
+        // quit it
+        solo.finishOpenedActivities();
+
+        startIt();
+
+        assertTrue(solo.getView(R.id.main_menu_test).isEnabled());
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
+
+        test_chinese_orientation = true;
+        test_containing_orientation = true;
+        test_english_orientation = true;
+        test_missing_orientation = true;
+        test_pinyin_orientation = true;
+        test_tone_orientation = true;
+
+        ViewPager pager = (ViewPager) solo.getView(R.id.test_pager);
+        if (pager != null)
+            solo.scrollToSide(Solo.RIGHT);
+        solo.waitForText(getActivity().getResources().getString(R.string.num_to_study), 1, 500);
+        TextView to_study = (TextView) solo.getView(R.id.stats_to_study);
+        int current_to_study = Integer.valueOf(to_study.getText().toString());
+        int total_tests = current_to_study;
+
+        while(true) {
+            total_tests--;
+            assertFalse("Did more tests than we should have", total_tests < 0);
+
+            if (pager != null)
+                solo.scrollToSide(Solo.LEFT);
+
+            if (solo.searchText(getActivity().getResources().getString(R.string.test_mastering)))
+                break;
+
+            // check what test we're in
+            if (solo.getView(R.id.chinese_word_test_guess) != null) {
+                handle_chinese_test(true);
+            } else if (solo.getView(R.id.containing_test_guess) != null) {
+                handle_containing_test(true);
+            } else if (solo.getView(R.id.english_test_guess) != null) {
+                handle_english_test(true);
+            } else if (solo.getView(R.id.missing_test_guess) != null) {
+                handle_missing_test(true);
+            } else if (solo.getView(R.id.pinyin_test_guess) != null) {
+                handle_pinyin_test(true);
+            } else if (solo.getView(R.id.guess_tone_ok) != null) {
+                handle_tone_test(true);
+            }
+
+            if (pager != null)
+                solo.scrollToSide(Solo.RIGHT);
+            solo.sleep(2000);
+
+            int new_to_study = Integer.valueOf(to_study.getText().toString());
+            assertTrue("Score is not getting better("+new_to_study+" / "+current_to_study+")", new_to_study <= current_to_study);
+            current_to_study = new_to_study;
+        }
+    }
+
+    boolean test_chinese_orientation = true;
+    boolean test_containing_orientation = true;
+    boolean test_english_orientation = true;
+    boolean test_missing_orientation = true;
+    boolean test_pinyin_orientation = true;
+    boolean test_tone_orientation = true;
+
+    HashMap<String, String> chinese_solutions = new HashMap<String, String>() {{
+        put("Hello!", "你好");
+        put("Hi!", "你好");
+        put("very", "很好");
+        put("good", "好");
+        put("I", "我");
+        put("me", "我");
+        put("question", "吗");
+        put("also", "也");
+        put("he", "他");
+        put("they", "他们");
+        put("we", "我们");
+        put("us", "我们");
+        put("friend", "朋友");
+    }};
+    private void handle_chinese_test(boolean good) {
+        TextView question = (TextView) solo.getView(R.id.guess_chinese_word_voc);
+        assertTrue(question!=null);
+        String hint = question.getText().toString().split("[ ,\n]")[0];
+        assertTrue("Cannot find solution for ["+hint+"]", chinese_solutions.containsKey(hint));
+
+        EditText entry = (EditText) solo.getView(R.id.chinese_word_test_guess);
+        assertTrue(entry.getText().toString().equals(""));
+        if (good) {
+            solo.enterText(entry, chinese_solutions.get(hint));
+            solo.sleep(100);
+        }
+
+        // when testing orientation, check for deployment for extra vocabulary if it is there
+
+        Button ok_button = (Button) solo.getView(R.id.guess_chinese_word_ok);
+        solo.clickOnView(ok_button);
+
+        while (solo.getView(R.id.test_result_next) == null)
+            solo.sleep(500);
+
+        solo.clickOnView(solo.getView(R.id.test_result_next));
+
+        solo.sleep(500);
+    }
+
+    HashMap<String, String> containing_solutions = new HashMap<String, String>() {{
+        put("你","你好");
+        put("好","你好");
+        put("我","我们");
+        put("很","很好");
+        put("他","他们");
+        put("们","他们");
+        put("朋","朋友");
+        put("友","朋友");
+    }};
+    private void handle_containing_test(boolean good) {
+        TextView question = (TextView) solo.getView(R.id.guess_containing_chinese);
+        assertTrue(question!=null);
+        String hint = question.getText().toString();
+        assertTrue("Cannot find solution for "+hint, containing_solutions.containsKey(hint));
+
+        EditText entry = (EditText) solo.getView(R.id.containing_test_guess);
+        assertTrue(entry.getText().toString().equals(""));
+        if (good) {
+            solo.enterText(entry, containing_solutions.get(hint));
+            solo.sleep(500);
+        }
+
+        Button ok_button = (Button) solo.getView(R.id.guess_containing_ok);
+        solo.clickOnView(ok_button);
+
+        while (solo.getView(R.id.test_result_next) == null)
+            solo.sleep(500);
+
+        solo.clickOnView(solo.getView(R.id.test_result_next));
+
+        solo.sleep(500);
+    }
+
+    HashMap<String, String> english_solutions = new HashMap<String, String>() {{
+        put("你好", "Hello!");
+        put("很好", "very good");
+        put("好", "good");
+        put("我", "I");
+        put("吗", "question");
+        put("也", "also");
+        put("他", "he");
+        put("他们", "they");
+        put("我们", "we,us");
+        put("朋友", "friend");
+    }};
+    private void handle_english_test(boolean good) {
+        TextView question = (TextView) solo.getView(R.id.guess_english_word_voc);
+        assertTrue(question!=null);
+        String hint = question.getText().toString();
+        assertTrue("Cannot find solution for "+hint, english_solutions.containsKey(hint));
+
+        EditText entry = (EditText) solo.getView(R.id.english_test_guess);
+        assertTrue(entry.getText().toString().equals(""));
+        if (good) {
+            solo.enterText(entry, english_solutions.get(hint));
+            solo.sleep(500);
+        }
+
+        Button ok_button = (Button) solo.getView(R.id.guess_english_ok);
+        solo.clickOnView(ok_button);
+
+        while (solo.getView(R.id.test_result_next) == null)
+            solo.sleep(500);
+
+        solo.clickOnView(solo.getView(R.id.test_result_next));
+
+        solo.sleep(500);
+    }
+
+    HashMap<String[], String> missing_solutions = new HashMap<String[], String>() {{
+        put(new String[]{"?好", "Hello!"}, "你");
+        put(new String[]{"?好", "Hi!"}, "你");
+        put(new String[]{"很?", "very"}, "好");
+        put(new String[]{"?好", "very"}, "很");
+        put(new String[]{"他?", "they"}, "们");
+        put(new String[]{"?们", "they"}, "他");
+        put(new String[]{"?们", "we"}, "我");
+        put(new String[]{"?们", "us"}, "我");
+        put(new String[]{"朋?", "friend"}, "友");
+        put(new String[]{"?友", "friend"}, "朋");
+    }};
+    private void handle_missing_test(boolean good) {
+        TableLayout question = (TableLayout) solo.getView(R.id.char_finder_word_grid);
+        assertTrue(question!=null);
+        String solution="";
+        boolean found_solution=false;
+
+        for (int i=0; i<question.getChildCount(); i++) {
+            TableRow tr = (TableRow) question.getChildAt(i);
+
+            String chinese_part = ((TextView)tr.getChildAt(0)).getText().toString();
+            String english_part = ((TextView)tr.getChildAt(1)).getText().toString().split("[, ]")[0];
+            Log.d(TAG, "Looking for "+chinese_part+" / "+english_part);
+        }
+        Log.d(TAG, "That's all");
+
+        for (int i=0; i<question.getChildCount(); i++) {
+            TableRow tr = (TableRow) question.getChildAt(i);
+            for (String[] k : missing_solutions.keySet()) {
+                String chinese_part = ((TextView)tr.getChildAt(0)).getText().toString();
+                if (!k[0].equals(chinese_part))
+                    continue;
+                String english_part = ((TextView)tr.getChildAt(1)).getText().toString().split("[, ]")[0];
+                if (!k[1].equals(english_part))
+                    continue;
+                found_solution = true;
+                solution = missing_solutions.get(k);
+                break;
+            }
+            if (found_solution)
+                break;
+        }
+
+        assertTrue("Cannot find solution for missing char test", found_solution);
+        EditText entry = (EditText) solo.getView(R.id.missing_test_guess);
+        assertTrue(entry.getText().toString().equals(""));
+        if (good) {
+            solo.enterText(entry, solution);
+            solo.sleep(500);
+        }
+
+        Button ok_button = (Button) solo.getView(R.id.guess_missing_char_ok);
+        solo.clickOnView(ok_button);
+
+        while (solo.getView(R.id.test_result_next) == null)
+            solo.sleep(500);
+
+        solo.clickOnView(solo.getView(R.id.test_result_next));
+
+        solo.sleep(500);
+    }
+
+    HashMap<String, String> pinyin_solutions = new HashMap<String, String>() {{
+        put("你", "ni3");
+        put("好", "hao3");
+        put("很", "hen3");
+        put("我", "wo3");
+        put("吗", "ma");
+        put("也", "ye3");
+        put("他", "ta1");
+        put("们", "men");
+        put("朋", "peng2");
+        put("友", "you");
+    }};
+    private void handle_pinyin_test(boolean good) {
+        TextView question = (TextView) solo.getView(R.id.guess_pinyin_chinese);
+        assertTrue(question!=null);
+        String hint = question.getText().toString();
+        assertTrue("Cannot find solution for "+hint, pinyin_solutions.containsKey(hint));
+
+        EditText entry = (EditText) solo.getView(R.id.pinyin_test_guess);
+        assertTrue(entry.getText().toString().equals(""));
+        if (good)                                     {
+            solo.enterText(entry, pinyin_solutions.get(hint));
+            solo.sleep(500);
+        }
+
+        // when testing orientation, check for "as in..."
+
+        Button ok_button = (Button) solo.getView(R.id.guess_pinyin_ok);
+        solo.clickOnView(ok_button);
+
+        while (solo.getView(R.id.test_result_next) == null)
+            solo.sleep(500);
+
+        solo.clickOnView(solo.getView(R.id.test_result_next));
+
+        solo.sleep(500);
+    }
+
+    HashMap<String, Integer> tone_solutions = new HashMap<String, Integer>() {{
+        put("你", 3);
+        put("好", 3);
+        put("很", 3);
+        put("我", 3);
+        put("也", 3);
+        put("他", 1);
+        put("朋", 2);
+    }};
+    private void handle_tone_test(boolean good) {
+        TextView question = (TextView) solo.getView(R.id.guess_tone_chinese);
+        assertTrue(question!=null);
+        String hint = question.getText().toString();
+        assertTrue("Cannot find solution for "+hint, tone_solutions.containsKey(hint));
+
+        if (good) {
+            CheckBox cb=null;
+            switch(tone_solutions.get(hint)) {
+                case 1:
+                    cb = (CheckBox) solo.getView(R.id.guess_tone_first_tone);
+                    break;
+                case 2:
+                    cb = (CheckBox) solo.getView(R.id.guess_tone_second_tone);
+                    break;
+                case 3:
+                    cb = (CheckBox) solo.getView(R.id.guess_tone_third_tone);
+                    break;
+                case 4:
+                    cb = (CheckBox) solo.getView(R.id.guess_tone_fourth_tone);
+                    break;
+                default:
+                    assertTrue(false);
+            }
+            solo.clickOnView(cb);
+            solo.sleep(500);
+            assertTrue(cb.isChecked());
+        }
+
+        // when testing orientation, check for "box is still checked"
+
+        Button ok_button = (Button) solo.getView(R.id.guess_tone_ok);
+        solo.clickOnView(ok_button);
+
+        while (solo.getView(R.id.test_result_next) == null)
+            solo.sleep(500);
+
+        solo.clickOnView(solo.getView(R.id.test_result_next));
+
+        solo.sleep(500);
     }
 }
