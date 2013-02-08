@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.matthieu.widget.DBCheckProgressHandler;
 
 public class SplashFragment extends Fragment {
-    private AsyncTask<Void,Integer,Void> db_loader=null;
+    private SplashLoader db_loader=null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,7 +44,7 @@ public class SplashFragment extends Fragment {
         return res;
     }
 
-    private class SplashLoader extends AsyncTask<Void,Integer,Void> {
+    private class SplashLoader extends AsyncTask<Void,Integer,Boolean> {
         AndZiApplication application;
 
         @Override
@@ -53,20 +53,24 @@ public class SplashFragment extends Fragment {
         }
 
         @Override
-        protected Void doInBackground(Void... voids) {
-            application.initialize_ref_db();
-
+        protected Boolean doInBackground(Void... voids) {
             publishProgress(5);
-            HanziDB myDB = application.getMyDB();
+
+            if (!application.initialize_ref_db()) {
+                return false;
+            }
 
             publishProgress(10);
+            HanziDB myDB = application.getMyDB();
+
+            publishProgress(15);
             myDB.checkDatabase(true, new DBCheckProgressHandler() {
                 @Override
                 public void progress(int i) {
-                    publishProgress(10+(i*90)/100);
+                    publishProgress(15+(i*85)/100);
                 }
             });
-            return null;
+            return true;
         }
 
         @Override
@@ -82,11 +86,15 @@ public class SplashFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(Boolean aBool) {
             synchronized (SplashFragment.this) {
                 db_loader=null;
-                if (getActivity()!=null)
-                    ((MainMenuActivity)getActivity()).start_it();
+                if (getActivity()!=null) {
+                    if (aBool)
+                        ((MainMenuActivity)getActivity()).start_it();
+                    else
+                        ((MainMenuActivity)getActivity()).fail_it();
+                }
             }
         }
     }

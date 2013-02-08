@@ -56,21 +56,4 @@
                 />
     </PreferenceCategory>
 
-    <PreferenceCategory
-            android:title="@string/settings_ref_db">
-        <CheckBoxPreference
-                android:title="@string/settings_ref_db_enable"
-                android:defaultValue="true"
-                android:summary="@string/settings_ref_db_enable_summary"
-                android:key="ref_enabled"
-                />
-        <Preference
-                android:title="@string/settings_ref_db_download"
-                android:key="DownloadRef"
-                />
-        <Preference
-                android:title="@string/settings_ref_db_erase"
-                android:key="ClearRef"
-                />
-    </PreferenceCategory>
 </PreferenceScreen>

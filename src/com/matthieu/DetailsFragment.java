@@ -293,7 +293,7 @@ public class DetailsFragment extends Fragment {
             if (ref_query) {
                 db = refDB;
             }
-            if ((db == null) || (!ref_query)) {
+            else {
                 db = myDB;
             }
             container = new WeakReference<ViewGroup>(v);

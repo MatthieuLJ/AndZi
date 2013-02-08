@@ -40,7 +40,7 @@ public class GuessChineseWord extends Test {
         solution = voc.get((int) (voc.size()*Math.random()));
 
         translations = solution.english;
-        if ((refDB != null) && (refDB.getTranslations(hanzi, solution.pinyin) != null)) {
+        if (refDB.getTranslations(hanzi, solution.pinyin) != null) {
             more_translations = refDB.getTranslations(hanzi, solution.pinyin).english;
         } else {
             more_translations = new ArrayList<String>();
@@ -182,9 +182,7 @@ public class GuessChineseWord extends Test {
 
         // check if the word guessed is in the database and relates somewhat...
         ArrayList<Vocabulary> guess_translations = myDB.getTranslations(guess);
-        if (refDB != null) {
-            guess_translations.addAll(refDB.getTranslations(guess));
-        }
+        guess_translations.addAll(refDB.getTranslations(guess));
 
         for (String hint:solution.english) {
             for(Vocabulary voc : guess_translations) {

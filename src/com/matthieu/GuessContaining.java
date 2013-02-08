@@ -127,7 +127,7 @@ public class GuessContaining extends Test {
             if (guesses[i].codePointCount(0, guesses[i].length())==1)
                 continue;
             if (myDB.getTranslations(guesses[i]).size()==0) {
-                if ((refDB != null) && (refDB.getTranslations(guesses[i]).size() != 0)) {
+                if (refDB.getTranslations(guesses[i]).size() != 0) {
                     new_answers.add(guesses[i]);
                     if (res != CORRECT)
                         res=OTHER;

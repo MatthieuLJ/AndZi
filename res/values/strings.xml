@@ -16,11 +16,6 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
-    <string name="download_dictionary">Do you want to downloaded the dictionary…</string>
-    <string name="later">Later</string>
-    <string name="do_not_ask_again">No!</string>
-    <string name="download">Sure</string>
-
     <string name="main_menu_add_voc">Add vocabulary</string>
     <string name="main_menu_test">Test me!</string>
     <string name="main_menu_dict">Dictionary</string>
@@ -63,11 +58,6 @@
     <string name="settings_db_reset_scores">Reset scores</string>
     <string name="settings_db_forget_progress">Forget old progress…</string>
     <string name="settings_db_import">Import list…</string>
-    <string name="settings_ref_db">Dictionary</string>
-    <string name="settings_ref_db_enable">Dictionary enabled</string>
-    <string name="settings_ref_db_enable_summary">Use the dictionary</string>
-    <string name="settings_ref_db_download">Download Dictionary</string>
-    <string name="settings_ref_db_erase">Erase Dictionary</string>
     <string name="settings_export_progress">Export Progress</string>
     <string name="settings_import_progress">Import Progress</string>
 
@@ -82,14 +72,11 @@
     <string name="settings_confirm_reset_scores">Are you sure you want to restart the study for everything?</string>
     <string name="settings_reset_db_progress">Reset progress</string>
     <string name="settings_confirm_clear_db">Are you sure you want to clear all your list?</string>
-    <string name="settings_confirm_ref_db_erase">Are you sure you want to delete the dictionary?</string>
     <string name="settings_error_create_file">There was an error creating the file</string>
     <string name="settings_export_progress_success">Successfully copied progress to\n%s</string>
     <string name="settings_import_progress_success">Successfully imported progress</string>
     <string name="settings_error_not_enough_space_export">Not enough space on device to copy list</string>
     <string name="settings_error_not_enough_space_import">Not enough space on device to import list</string>
-    <string name="settings_ref_db_download_progress">Downloading Dictionary</string>
-    <string name="settings_ref_db_install_progress">Installing…</string>
     <string name="settings_error_not_enough_space_install_ref">Not enough space on device to download and install Dictionary</string>
     <string name="settings_error_cannot_connect">Cannot connect</string>
     <string name="settings_error_install_ref">An error occurred while installing the dictionary</string>
