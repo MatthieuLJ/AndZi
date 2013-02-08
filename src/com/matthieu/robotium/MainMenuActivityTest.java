@@ -39,11 +39,11 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     }
 
     private void clearEverything() {
-        solo.waitForActivity("MainMenuActivity", 60000);
+        solo.waitForActivity("MainMenuActivity", 60000); // it takes a while if we are installing Cedict
 
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_settings));
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_clear), 1, very_long_delay);
-        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_clear), 0, true);
+        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_clear), 1, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_clear_db)));
         solo.clickOnButton(getActivity().getResources().getString(R.string.yes));
         solo.waitForDialogToClose(long_delay);
@@ -51,12 +51,12 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
             solo.waitForDialogToClose(long_delay);
         }
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_reset_scores), 1, very_long_delay);
-        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_reset_scores), 0, true);
+        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_reset_scores), 1, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_confirm_reset_scores)));
         solo.clickOnButton(getActivity().getResources().getString(R.string.yes));
         solo.waitForDialogToClose(long_delay);
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, very_long_delay);
-        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 0, true);
+        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_trim_progress)));
         ArrayList<ProgressBar> progress = solo.getCurrentProgressBars();
         assertTrue(progress.size()==1);
@@ -68,6 +68,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.goBack();
         solo.waitForActivity("MainMenuActivity");
+
         /*solo.getCurrentActivity().finish();
 
         // quit it
@@ -76,6 +77,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         ((AndZiApplication)getActivity().getApplication()).showSplash(true);
 
         startIt();*/
+
         solo.setActivityOrientation(Solo.PORTRAIT);
     }
 
