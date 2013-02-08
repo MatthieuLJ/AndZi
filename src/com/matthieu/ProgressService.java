@@ -59,7 +59,7 @@ public class ProgressService extends Service {
         int expired = myDB.getNumExpired();
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean notification_enabled = sp.getBoolean("settings_notification", true);
+        boolean notification_enabled = sp.getBoolean("notification_enabled", true);
         if ((notification_enabled) && (expired > 25)) {
             Notification notification = new Notification(R.drawable.icon, getResources().getString(R.string.notification_ticker), System.currentTimeMillis());
             notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;

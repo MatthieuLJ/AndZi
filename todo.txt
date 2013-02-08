@@ -34,7 +34,8 @@ FUTURE (14):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (211):
+DONE (212):
+* Disable notification would not work
 * Change ViewPagerIndicator to show titles in Vocabulary Editor
 * Disable test button in main menu if there is nothing to test
 * Disable Dictionary button in main menu if there is no cedict and nothing in list
