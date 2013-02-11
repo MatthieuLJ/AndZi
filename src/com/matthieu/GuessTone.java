@@ -3,9 +3,11 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.gesture.*;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
@@ -52,6 +54,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
     }
 
     @Override
+    @SuppressLint({"NewApi"})
     View get_view() {
         if (master_view == null) {
             master_view = new View[2];
@@ -86,15 +89,49 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         tv_hanzi.setText(current_test);
         tv_pinyin.setText(radical);
 
-        CheckBox cb;
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
-        cb.setChecked(false);
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_second_tone);
-        cb.setChecked(false);
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_third_tone);
-        cb.setChecked(false);
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_fourth_tone);
-        cb.setChecked(false);
+        CheckBox cb1 = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
+        cb1.setChecked(false);
+        CheckBox cb2 = (CheckBox) res.findViewById(R.id.guess_tone_second_tone);
+        cb2.setChecked(false);
+        CheckBox cb3 = (CheckBox) res.findViewById(R.id.guess_tone_third_tone);
+        cb3.setChecked(false);
+        CheckBox cb4 = (CheckBox) res.findViewById(R.id.guess_tone_fourth_tone);
+        cb4.setChecked(false);
+
+        int view_ids[] = { R.id.guess_tone_first_tone_image,
+                R.id.guess_tone_second_tone_image,
+                R.id.guess_tone_third_tone_image,
+                R.id.guess_tone_fourth_tone_image,
+                R.id.guess_tone_first_tone_text,
+                R.id.guess_tone_second_tone_text,
+                R.id.guess_tone_third_tone_text,
+                R.id.guess_tone_fourth_tone_text
+        };
+        for (int i=0; i<view_ids.length; i++) {
+            int id = view_ids[i];
+            View v = res.findViewById(id);
+            final CheckBox cb;
+            switch (i % 4) {
+                case 0:
+                default:
+                    cb = cb1; break;
+                case 1:
+                    cb = cb2; break;
+                case 2:
+                    cb = cb3; break;
+                case 3:
+                    cb = cb4; break;
+            }
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
+                        cb.callOnClick();
+                    else
+                        cb.performClick();
+                }
+            });
+        }
 
         Log.d(TAG, "Expects tones : "+tones.toString());
 

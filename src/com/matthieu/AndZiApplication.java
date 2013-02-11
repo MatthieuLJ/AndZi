@@ -8,6 +8,8 @@ package com.matthieu;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.*;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.util.Log;
@@ -30,8 +32,6 @@ public class AndZiApplication extends Application {
     private static final String REF_DB_NAME = "cedict_db";
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     private static final String PROGRESS_DB_NAME = "progress_db";
-
-    private static final String VERSION="0.3.0-acra";
 
     public void onCreate() {
         ACRA.init(this);
@@ -106,7 +106,14 @@ public class AndZiApplication extends Application {
     }
 
     public String get_version() {
-        return VERSION;
+        PackageManager manager = this.getPackageManager();
+        PackageInfo info = null;
+        try {
+            info = manager.getPackageInfo(this.getPackageName(), 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return "";
+        }
+        return info.versionName;
     }
 
     public boolean initialize_my_db() {
