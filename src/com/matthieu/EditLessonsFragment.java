@@ -525,9 +525,13 @@ public class EditLessonsFragment extends Fragment {
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         if (lv == null)
             return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
-            lv.smoothScrollToPosition(0);
-        ((LessonArrayAdapter)lv.getAdapter()).expand_new_field(true);
+        LessonArrayAdapter adapter = (LessonArrayAdapter)lv.getAdapter();
+        if (adapter != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                lv.smoothScrollToPosition(0);
+
+            adapter.expand_new_field(true);
+        }
     }
 
     public void clone_selection() {
