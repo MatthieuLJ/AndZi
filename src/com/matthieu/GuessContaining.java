@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -199,19 +200,19 @@ public class GuessContaining extends Test {
                         break;
 
                     String answer=null;
-                    String label=null;
+                    int color=0;
                     switch(table) {
                         case 0:
                             answer = bad_answers.get(offset_in_table);
-                            label = "Wrong";
+                            color = Color.RED;
                             break;
                         case 1:
                             answer = new_answers.get(offset_in_table);
-                            label = "New";
+                            color = Color.BLACK;
                             break;
                         case 2:
                             answer = correct_answers.get(offset_in_table);
-                            label = "Correct";
+                            color = Color.GREEN;
                             break;
                     }
                     offset_in_table++;
@@ -220,33 +221,27 @@ public class GuessContaining extends Test {
                         tr = new TableRow(parent_activity);
                         tr.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     }
-                    LinearLayout cell = new LinearLayout(parent_activity);
-                    cell.setOrientation(LinearLayout.HORIZONTAL);
-                    TextView label_box = new TextView(parent_activity);
-                    label_box.setText(label);
-                    label_box.setGravity(Gravity.LEFT);
-                    label_box.setTextColor(Color.BLACK);
-                    label_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-                    cell.addView(label_box);
+
                     TextView answer_box = new TextView(parent_activity);
                     answer_box.setText(answer);
-                    answer_box.setGravity(Gravity.RIGHT);
-                    answer_box.setTextColor(Color.BLACK);
-                    answer_box.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2));
+                    answer_box.setGravity(Gravity.CENTER);
+                    answer_box.setTextColor(color);
+                    answer_box.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
+                    answer_box.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+                    answer_box.setPadding(4, 0, 4, 4);
                     final String final_answer = answer;
+                    final boolean use_ref = (table != 2);
                     answer_box.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             Intent i=new Intent(parent_activity, ReferenceActivity.class);
                             i.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
                             i.putExtra("Hanzi", final_answer);
-                            i.putExtra("use_ref", false);
+                            i.putExtra("use_ref", use_ref);
                             parent_activity.startActivity(i);
                         }
                     });
-                    cell.addView(answer_box);
-                    cell.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-                    tr.addView(cell);
+                    tr.addView(answer_box);
 
                     offset_in_column++;
                     if (offset_in_column == 2) {
