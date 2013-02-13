@@ -826,10 +826,6 @@ public class AddVocabularyFragment extends Fragment
     }
 
     public void set_new_lesson_assignment(HashMap<String, VocabularyEditorActivity.LessonAssignment> assignment) {
-        if (current_word_selection.size()==0) {
-            update_state();
-            return;
-        }
         for (final String l : assignment.keySet()) {
             VocabularyEditorActivity.LessonAssignment this_lesson = assignment.get(l);
             final String current_pinyin = get_current_pinyin();
