@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
@@ -418,7 +419,7 @@ public class PinyinParser {
         return result.toString();
     }
 
-    public static SpannableStringBuilder convert_to_spannable_version(String input) {
+    public static SpannableStringBuilder convert_to_spannable_version(String input, Context context) {
         int i;
         if (input.equals(""))
             return new SpannableStringBuilder("");
@@ -438,16 +439,16 @@ public class PinyinParser {
             ForegroundColorSpan color;
             switch (parsed.get(i).get_tone()) {
                 case 1:
-                    color = new ForegroundColorSpan(Color.parseColor("#FF0000"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.first_tone));
                     break;
                 case 2:
-                    color = new ForegroundColorSpan(Color.parseColor("#FF8000"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.second_tone));
                     break;
                 case 3:
-                    color = new ForegroundColorSpan(Color.parseColor("#00AA00"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.third_tone));
                     break;
                 case 4:
-                    color = new ForegroundColorSpan(Color.parseColor("#0000FF"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.fourth_tone));
                     break;
                 case 0:
                 case 5:

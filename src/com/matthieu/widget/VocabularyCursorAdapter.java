@@ -60,7 +60,7 @@ public class VocabularyCursorAdapter extends CursorAdapter {
         details_chinese.setText(cursor.getString(chinese_column_index));
         final TextView details_pinyin = (TextView) view.findViewById(R.id.details_pinyin_word);
         if (show_pinyin_color)
-            details_pinyin.setText(PinyinParser.convert_to_spannable_version(cursor.getString(pinyin_column_index)));
+            details_pinyin.setText(PinyinParser.convert_to_spannable_version(cursor.getString(pinyin_column_index), context));
         else
             details_pinyin.setText(PinyinParser.convert_to_pretty_version(cursor.getString(pinyin_column_index)));
         TextView details_translations = (TextView) view.findViewById(R.id.details_translations);
