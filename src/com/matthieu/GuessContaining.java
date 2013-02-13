@@ -204,7 +204,7 @@ public class GuessContaining extends Test {
                     switch(table) {
                         case 0:
                             answer = bad_answers.get(offset_in_table);
-                            color = Color.RED;
+                            color = parent_activity.getResources().getColor(R.color.test_failure);
                             break;
                         case 1:
                             answer = new_answers.get(offset_in_table);
@@ -212,7 +212,7 @@ public class GuessContaining extends Test {
                             break;
                         case 2:
                             answer = correct_answers.get(offset_in_table);
-                            color = Color.GREEN;
+                            color = parent_activity.getResources().getColor(R.color.test_success);
                             break;
                     }
                     offset_in_table++;

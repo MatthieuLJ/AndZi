@@ -17,4 +17,7 @@
     <color name="half_transparent">#66aaaaaa</color>
     <color name="main_menu_text">#dd000263</color>
 
+    <color name="test_success">#009922</color>
+    <color name="test_failure">#CC1111</color>
+
 </resources>

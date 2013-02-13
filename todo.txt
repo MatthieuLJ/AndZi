@@ -1,4 +1,8 @@
-ONGOING (12):
+ONGOING (15):
+* Get the progress in one-shot from the database
+* Continue testing until the number of tests is really 0
+* Lock into progress when there is no test left
+* Update regularly in test activity or main menu when tests become available
 * Track memory allocation (unload DB when inactive?)
 * Put back buttons for Reference Activity (for larger screens)
 * Change font for big Chinese stuff
