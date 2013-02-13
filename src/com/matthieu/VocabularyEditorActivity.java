@@ -182,11 +182,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
                 ft.commit();
             }
         }
-
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-        if (pager != null)
-            pager.setCurrentItem(2);
-
     }
 
     public void close_lesson_list() {

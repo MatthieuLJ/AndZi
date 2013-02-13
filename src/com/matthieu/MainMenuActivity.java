@@ -26,7 +26,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.Theme_Sherlock);
+        setTheme(R.style.mainmenu_theme);
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         start_test=false;

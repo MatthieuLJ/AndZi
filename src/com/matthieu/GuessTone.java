@@ -54,7 +54,6 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
     }
 
     @Override
-    @SuppressLint({"NewApi"})
     View get_view() {
         if (master_view == null) {
             master_view = new View[2];
@@ -125,10 +124,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-                        cb.callOnClick();
-                    else
-                        cb.performClick();
+                    cb.performClick();
                 }
             });
         }
@@ -322,7 +318,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
                     bad_guess_text.setText(label);
                 }
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
-                bad_guess_text.setTextColor(Color.RED);
+                bad_guess_text.setTextColor(parent_activity.getResources().getColor(R.color.test_failure));
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);

@@ -29,4 +29,8 @@
         <item name="android:gravity">center</item>
         <item name="android:textAllCaps">true</item>
     </style>
+
+    <style name="mainmenu_theme" parent="Theme.Sherlock">
+        <item name="android:windowBackground">@drawable/mountaintop</item>
+    </style>
 </resources>

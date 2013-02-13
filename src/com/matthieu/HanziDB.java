@@ -3080,6 +3080,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
         return res;
     }
+
     public int getBoxForChar(String hanzi) {
         int res;
 
