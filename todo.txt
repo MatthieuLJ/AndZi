@@ -19,7 +19,7 @@ ONGOING (12):
 BUGS (00):
 
 FUTURE (15):
-* Use share intent to send db around
+* Use share intent to send db around (http://developer.android.com/training/sharing/shareaction.html)
 * Load results in dictionary progressively
 * Can reset score per lesson
 * Find a way to hilight the character sequence in Details list
