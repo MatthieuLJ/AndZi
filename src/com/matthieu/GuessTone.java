@@ -54,7 +54,6 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
     }
 
     @Override
-    @SuppressLint({"NewApi"})
     View get_view() {
         if (master_view == null) {
             master_view = new View[2];
@@ -125,10 +124,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-                        cb.callOnClick();
-                    else
-                        cb.performClick();
+                    cb.performClick();
                 }
             });
         }
