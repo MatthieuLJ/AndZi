@@ -133,20 +133,23 @@ public class LessonListFragment extends Fragment {
                 return;
             synchronized (LessonListFragment.this) {
                 ListView list = (ListView) getView().findViewById(R.id.review_list);
-                update_header_view(list);
-                list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
-                    @Override
-                    public void click(String item_clicked) {
-                        Intent i=new Intent(getActivity(), ReferenceActivity.class);
-                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        i.putExtra("Hanzi", item_clicked);
-                        i.putExtra("use_ref", false);
-                        startActivity(i);
-                    }
-                }));
+                if (list != null) {
+                    update_header_view(list);
+                    list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
+                        @Override
+                        public void click(String item_clicked) {
+                            Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            i.putExtra("Hanzi", item_clicked);
+                            i.putExtra("use_ref", false);
+                            startActivity(i);
+                        }
+                    }));
+                }
 
                 ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
-                pb.setVisibility(View.GONE);
+                if (pb != null)
+                    pb.setVisibility(View.GONE);
                 loader=null;
             }
         }
