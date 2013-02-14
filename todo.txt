@@ -1,18 +1,15 @@
-ONGOING (13):
+ONGOING (10):
+* Change add translation and new lesson with bars at the top of the list
 * Lock into progress when there is no test left
 * Update regularly in test activity or main menu when tests become available
-* Track memory allocation (unload DB when inactive?)
+* Show time until next test when applicable
 * Put back buttons for Reference Activity (for larger screens)
 * Change font for big Chinese stuff
-* Add more automatic (robotium) tests
-* Test performance with huge database
 * Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
   - splash page + main menu layout
-* Make progress of downloading dic within the settings item
 * Update help
-* Check everything can be done without a touch screen (wheel or arrow buttons)
 * Check different screen sizes
   - getWindow().setSoftInputMode(); to change the way the soft keyboard affects the activity
 
@@ -20,7 +17,11 @@ ONGOING (13):
 
 BUGS (00):
 
-FUTURE (15):
+FUTURE (19):
+* Add more automatic (robotium) tests
+* Test performance with huge database
+* Track memory allocation (unload DB when inactive?)
+* Check everything can be done without a touch screen (wheel or arrow buttons)
 * Use share intent to send db around (http://developer.android.com/training/sharing/shareaction.html)
 * Load results in dictionary progressively
 * Can reset score per lesson
