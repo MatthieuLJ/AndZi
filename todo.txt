@@ -1,6 +1,5 @@
-ONGOING (15):
+ONGOING (14):
 * Get the progress in one-shot from the database
-* Continue testing until the number of tests is really 0
 * Lock into progress when there is no test left
 * Update regularly in test activity or main menu when tests become available
 * Track memory allocation (unload DB when inactive?)
@@ -39,7 +38,8 @@ FUTURE (15):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (212):
+DONE (211):
+* Continue testing until the number of tests is really 0
 * Disable notification would not work
 * Change ViewPagerIndicator to show titles in Vocabulary Editor
 * Disable test button in main menu if there is nothing to test
