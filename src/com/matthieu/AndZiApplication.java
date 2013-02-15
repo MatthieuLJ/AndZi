@@ -10,7 +10,6 @@ import android.app.Application;
 import android.content.*;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
 import android.os.StatFs;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
@@ -317,14 +316,6 @@ public class AndZiApplication extends Application {
         cw.deleteDatabase(PROGRESS_DB_NAME);
         copyFile(source, getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath());
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
-    }
-
-    public boolean isOnline() {
-        ConnectivityManager cm =
-            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null &&
-           cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     private ActivityManager mActivityManager;
