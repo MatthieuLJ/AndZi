@@ -128,6 +128,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
         TextView chinese_hint = (TextView) res.findViewById(R.id.guess_pinyin_chinese);
         chinese_hint.setText(current_test);
+        chinese_hint.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
         final TableLayout tl = (TableLayout) res.findViewById(R.id.guess_pinyin_word_grid);
         tl.removeAllViews();
@@ -138,6 +139,7 @@ public class GuessPinyin extends Test implements TextWatcher {
             TextView chinese = new TextView(activity);
             chinese.setTextColor(Color.BLACK);
             chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
+            chinese.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
             chinese.setClickable(false);
             chinese.setText(w.chinese);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);

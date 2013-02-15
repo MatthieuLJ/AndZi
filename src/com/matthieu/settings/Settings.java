@@ -43,7 +43,7 @@ public class Settings extends PreferenceActivity {
     @SuppressLint({"NewApi"})
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (true)
+        if (false)
             addPreferencesFromResource(R.xml.settings_main);
         else
             addPreferencesFromResource(R.xml.settings_main_extra);

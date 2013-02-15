@@ -89,6 +89,7 @@ public class GuessContaining extends Test {
 
         TextView clue= (TextView) res.findViewById(R.id.guess_containing_chinese);
         clue.setText(current_test);
+        clue.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
         Button submit_answer = (Button) res.findViewById(R.id.guess_containing_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
@@ -224,6 +225,7 @@ public class GuessContaining extends Test {
 
                     TextView answer_box = new TextView(parent_activity);
                     answer_box.setText(answer);
+                    answer_box.setTypeface(((AndZiApplication) parent_activity.getApplication()).get_chinese_font());
                     answer_box.setGravity(Gravity.CENTER);
                     answer_box.setTextColor(color);
                     answer_box.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));

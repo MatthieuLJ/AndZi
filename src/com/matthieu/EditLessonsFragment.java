@@ -163,9 +163,11 @@ public class EditLessonsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-            if (lv != null) {
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            if (getView() != null) {
+                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                if ((lv != null) && (lv.getAdapter() != null)) {
+                    ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                }
             }
 
             synchronized (EditLessonsFragment.this) {

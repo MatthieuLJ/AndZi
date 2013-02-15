@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
+import com.matthieu.AndZiApplication;
 import com.matthieu.PinyinParser;
 import com.matthieu.R;
 import org.jetbrains.annotations.Nullable;
@@ -58,6 +59,7 @@ public class VocabularyCursorAdapter extends CursorAdapter {
     public void bindView(final View view, final Context context, final Cursor cursor) {
         final TextView details_chinese = (TextView) view.findViewById(R.id.details_chinese_word);
         details_chinese.setText(cursor.getString(chinese_column_index));
+        details_chinese.setTypeface(((AndZiApplication) context.getApplicationContext()).get_chinese_font());
         final TextView details_pinyin = (TextView) view.findViewById(R.id.details_pinyin_word);
         if (show_pinyin_color)
             details_pinyin.setText(PinyinParser.convert_to_spannable_version(cursor.getString(pinyin_column_index), context));

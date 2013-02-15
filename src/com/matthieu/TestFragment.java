@@ -160,6 +160,8 @@ public class TestFragment extends Fragment {
 
     private void trim_hanzis_to_test(String hanzi) {
         Log.d(TAG, "trim_hanzis_to_test "+hanzi);
+        ArrayList<String> copy_hanzis_to_test = new ArrayList<String>(hanzis_to_test);
+        copy_hanzis_to_test.remove(hanzi); // remove the exact same test
         synchronized (TestFragment.this) {
             for (int offset=0; offset<hanzi.length();) {
                 String c = hanzi.substring(offset, offset + Character.charCount(hanzi.codePointAt(offset)));
@@ -171,6 +173,10 @@ public class TestFragment extends Fragment {
                     }
                 }
                 offset += Character.charCount(hanzi.codePointAt(offset));
+            }
+            if (hanzis_to_test.size() == 0) {
+                hanzis_to_test = copy_hanzis_to_test;
+                myDB.resetTime(hanzi); // even if we got it wrong last time, we'll wait until next time to test again
             }
         }
         if ((hanzis_to_test.size() < size_threshold) && (!table_filled)) {

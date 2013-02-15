@@ -229,6 +229,7 @@ public class GuessChineseWord extends Test {
                         if (i<previous_guess.size()-1)
                             previous.setText(previous.getText() + ",\n");
                     }
+                    previous.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
                     previous.setVisibility(View.VISIBLE);
                     previous.invalidate();
                 }

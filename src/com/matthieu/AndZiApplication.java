@@ -10,7 +10,7 @@ import android.app.Application;
 import android.content.*;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
+import android.graphics.Typeface;
 import android.os.StatFs;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
@@ -86,23 +86,8 @@ public class AndZiApplication extends Application {
             if (!initialize_my_db())
                 return null;
         }
-        ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
-        for (int i=0; i<4; i++) {
-            new_data.num_in_box[i]=myDB.getNumInBox(i);
-            new_data.num_expired_in_box[i]=myDB.getNumExpiredInBox(i);
-        }
-        new_data.num_in_box[4]=myDB.getNumInBoxOrAbove(4);
-        new_data.num_expired_in_box[4]=myDB.getNumExpiredInBoxOrAbove(4);
-        new_data.date = System.currentTimeMillis();
-        /*
-        Log.w(TAG, "Current progress is "+new_data.num_in_box[0]+" ("+new_data.num_expired_in_box[0]+"), "
-                +new_data.num_in_box[1]+" ("+new_data.num_expired_in_box[1]+"), "
-                +new_data.num_in_box[2]+" ("+new_data.num_expired_in_box[2]+"), "
-                +new_data.num_in_box[3]+" ("+new_data.num_expired_in_box[3]+"), "
-                +new_data.num_in_box[4]+" ("+new_data.num_expired_in_box[4]+") => total of "+
-                (new_data.num_in_box[0]+new_data.num_in_box[1]+new_data.num_in_box[2]+new_data.num_in_box[3]+new_data.num_in_box[4]));
-                */
-        return new_data;
+
+        return myDB.getProgress();
     }
 
     public String get_version() {
@@ -339,14 +324,6 @@ public class AndZiApplication extends Application {
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
     }
 
-    public boolean isOnline() {
-        ConnectivityManager cm =
-            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null &&
-           cm.getActiveNetworkInfo().isConnectedOrConnecting();
-    }
-
     private ActivityManager mActivityManager;
     public boolean isApplicationForeground() {
         ActivityManager.RunningAppProcessInfo info;
@@ -376,5 +353,12 @@ public class AndZiApplication extends Application {
 
     public boolean is_screen_on() {
         return screenReceiver.wasScreenOn;
+    }
+
+    Typeface chinese_font = null;
+    public Typeface get_chinese_font() {
+        if (chinese_font == null)
+            chinese_font = Typeface.createFromAsset(getAssets(), "fonts/HDZB_simp.png");
+        return chinese_font;
     }
 }

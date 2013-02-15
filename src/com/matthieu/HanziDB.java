@@ -2944,121 +2944,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Get information
     ////////////////////////////////////////
-    public int getNumInBox(int box) {
-        int res;
-        Cursor cur;
 
-        if (box == 0) {
-            cur = db.rawQuery("SELECT chinese FROM ( " +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) " +
-                    "UNION " +
-                    "SELECT chars.hanzi AS chinese FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box IS NULL) OR (box=0) " +
-                    ") GROUP BY chinese",
-                    new String[] {});
-        } else {
-            cur = db.rawQuery("SELECT chinese FROM (" +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box=?) " +
-                    "UNION " +
-                    "SELECT chars.hanzi AS chinese FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box=?)" +
-                    ") GROUP BY chinese",
-                    new String[] {Integer.toString(box), Integer.toString(box)});
-        }
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumExpiredInBox(int box) {
-        if (box == 0)
-            return getNumInBox(0);
-
-        int res;
-        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
-                "SELECT cword.chinese AS chinese FROM cword " +
-                "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                "UNION " +
-                "SELECT chars.hanzi AS chinese FROM " +
-                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                ") GROUP BY chinese",
-                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()),
-                        Integer.toString(box), Long.toString(System.currentTimeMillis())});
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumInBoxOrAbove(int box) {
-        int res;
-        Cursor cur;
-
-        if (box == 0) {
-            cur = db.rawQuery("SELECT chinese FROM ( " +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "UNION " +
-                    "SELECT hanzi AS chinese FROM char_pinyin " +
-                    ") GROUP BY chinese",
-                    new String[] {});
-        } else {
-            cur = db.rawQuery("SELECT chinese FROM (" +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box>=?) " +
-                    "UNION " +
-                    "SELECT chars.hanzi AS chinese FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box>=?)" +
-                    ") GROUP BY chinese",
-                    new String[] {Integer.toString(box), Integer.toString(box)});
-        }
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumExpiredInBoxOrAbove(int box) {
-        if (box <= 0)
-            return getNumExpired();
-
-        int res;
-        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
-                "SELECT cword.chinese AS chinese FROM cword " +
-                "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                "UNION " +
-                "SELECT chars.hanzi AS chinese FROM " +
-                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                ") GROUP BY chinese",
-                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()),
-                        Integer.toString(box), Long.toString(System.currentTimeMillis())});
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-
-    }
 
     public int getNumExpired() {
         int res;
@@ -3079,6 +2965,33 @@ public class HanziDB extends SQLiteOpenHelper {
 
         cur.close();
         return res;
+    }
+
+    public ProgressDB.ProgressData getProgress() {
+        ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
+
+        Cursor cur = db.rawQuery("SELECT COUNT(chinese) AS total, SUM(expired) AS expired, new_box AS box FROM ( " +
+                "SELECT chinese, new_box, exp_time, " +
+                "CASE WHEN (new_box==0) OR (exp_time<?) THEN 1 ELSE 0 END AS expired FROM ( " +
+                "SELECT cword.chinese AS chinese, MIN(IFNULL(box,0), 4) AS new_box , leitner.exp_time AS exp_time " +
+                "FROM cword " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "UNION " +
+                "SELECT chars.hanzi AS chinese, MIN(IFNULL(box,0), 4) AS new_box , leitner.exp_time AS exp_time " +
+                "FROM (SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                ") GROUP BY chinese " +
+                ") GROUP BY box;",
+                new String[] {Long.toString(System.currentTimeMillis())});
+        if (cur.moveToFirst()) {
+            do{
+                int box = cur.getInt(cur.getColumnIndex("box"));
+                new_data.num_in_box[box]=cur.getInt(cur.getColumnIndex("total"));
+                new_data.num_expired_in_box[box]=cur.getInt(cur.getColumnIndex("expired"));
+            }while(cur.moveToNext());
+        }
+        new_data.date = System.currentTimeMillis();
+        return new_data;
     }
 
     public int getBoxForChar(String hanzi) {
@@ -3335,32 +3248,6 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         cur.close();
         return res;
-    }
-
-    public Cursor getCursorCharsToStudy() {
-        return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
-                "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                "FROM char_pinyin " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE ((box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2)) OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi,SUBSTR(pinyin,1, LENGTH(pinyin)-1) HAVING COUNT(*) <> 2))) " +
-                "ORDER BY forced_box DESC, exp_time ASC",
-                new String[] {Long.toString(System.currentTimeMillis())});
-    }
-
-    public Cursor getCursorWordsToStudy() {
-        return db.rawQuery("SELECT cword.cword_id AS _id, cword.chinese AS chinese, " +
-                "cword.pinyin AS pinyin, " +
-                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
-                "GROUP_CONCAT(eword.translation,', ') AS english " +
-                "FROM cword " +
-                "JOIN eword ON eword.cword_id=cword.cword_id " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
-                new String[] {Long.toString(System.currentTimeMillis())});
     }
 
     public Cursor getCursorToStudy() {

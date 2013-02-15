@@ -438,9 +438,10 @@ public class DetailsFragment extends Fragment {
                     for (int i=0; i<hanzi.length(); ) {
                         TextView character = new TextView(activity);
                         final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
-                        character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xlarge_text));
+                        character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xxlarge_text));
                         character.setTextColor(Color.BLACK);
                         character.setText(character_label);
+                        character.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
                         if (hanzi.codePointCount(0, hanzi.length())!= 1)
                             character.setOnClickListener(new View.OnClickListener() {
                                 public void onClick(View view) {
