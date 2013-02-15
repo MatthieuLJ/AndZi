@@ -103,6 +103,7 @@ public class GuessEnglish extends Test {
 
         TextView text = (TextView) res.findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
+        text.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
         Button submit_answer = (Button) res.findViewById(R.id.guess_english_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {

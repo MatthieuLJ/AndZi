@@ -1,10 +1,9 @@
-ONGOING (10):
+ONGOING (9):
 * Change add translation and new lesson with bars at the top of the list
 * Lock into progress when there is no test left
 * Update regularly in test activity or main menu when tests become available
 * Show time until next test when applicable
 * Put back buttons for Reference Activity (for larger screens)
-* Change font for big Chinese stuff
 * Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
@@ -17,7 +16,9 @@ ONGOING (10):
 
 BUGS (00):
 
-FUTURE (19):
+FUTURE (21):
+* The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
+* Need to make sure the dictionary gets reinstalled when we upgrade the app
 * Add more automatic (robotium) tests
 * Test performance with huge database
 * Track memory allocation (unload DB when inactive?)
@@ -38,7 +39,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (212):
+DONE (213):
+* Change font for big Chinese stuff
 * Get the progress in one-shot from the database
 * Continue testing until the number of tests is really 0
 * Disable notification would not work

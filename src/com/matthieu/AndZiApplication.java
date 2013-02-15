@@ -10,6 +10,7 @@ import android.app.Application;
 import android.content.*;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.StatFs;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
@@ -347,5 +348,12 @@ public class AndZiApplication extends Application {
 
     public boolean is_screen_on() {
         return screenReceiver.wasScreenOn;
+    }
+
+    Typeface chinese_font = null;
+    public Typeface get_chinese_font() {
+        if (chinese_font == null)
+            chinese_font = Typeface.createFromAsset(getAssets(), "fonts/HDZB_simp.png");
+        return chinese_font;
     }
 }

@@ -1,4 +1,5 @@
 <resources>
+    <dimen name="xxlarge_text">48sp</dimen>
     <dimen name="xlarge_text">44sp</dimen>
     <dimen name="large_text">36sp</dimen>
     <dimen name="normal_text">30sp</dimen>

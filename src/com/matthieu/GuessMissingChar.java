@@ -6,6 +6,8 @@ package com.matthieu;
 import android.content.Context;
 import android.graphics.Color;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
@@ -13,6 +15,8 @@ import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.matthieu.widget.CustomTypefaceSpan;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -105,7 +109,29 @@ public class GuessMissingChar extends Test implements TextWatcher {
             chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
             chinese.setTextColor(Color.BLACK);
             chinese.setClickable(false);
-            chinese.setText(w.chinese.replaceAll(current_test, "\\?"));
+            String chinese_string = w.chinese.replaceAll(current_test, "\\?");
+            Log.d(TAG, "String is "+chinese_string);
+            SpannableString chinese_text = new SpannableString(chinese_string);
+            int processing=0;
+            int next_index=chinese_string.indexOf("?");
+            while (processing < chinese_string.length()) {
+                Log.d(TAG, "processing at "+processing+", next index at "+next_index);
+                if (processing < next_index) {
+                    chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), processing, next_index, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                    Log.d(TAG, "Painting...");
+                }
+
+                while (chinese_string.indexOf("?", next_index+1) == next_index+1)
+                    next_index++;
+                Log.d(TAG, "Moved to "+next_index+", next one at "+chinese_string.indexOf("?", next_index+1));
+                if (chinese_string.indexOf("?", next_index+1) == -1) {
+                    chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), next_index+1, chinese_string.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                    Log.d(TAG, "Paint from "+(next_index+1)+" to the end");
+                    break;
+                }
+                processing = next_index+1;
+            }
+            chinese.setText(chinese_text);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             trlp.setMargins(5,5,5,5);
             chinese.setLayoutParams(trlp);
@@ -205,6 +231,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 if (i<previous_guess.size()-1)
                     previous.setText(previous.getText() + ",\n");
             }
+            previous.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
             edit_guess.setText("");
             previous.setVisibility(View.VISIBLE);
             previous.invalidate();

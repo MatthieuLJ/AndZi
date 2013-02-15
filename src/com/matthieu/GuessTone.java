@@ -86,6 +86,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         TextView tv_pinyin = (TextView) res.findViewById(R.id.guess_tone_pinyin);
 
         tv_hanzi.setText(current_test);
+        tv_hanzi.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
         tv_pinyin.setText(radical);
 
         CheckBox cb1 = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
