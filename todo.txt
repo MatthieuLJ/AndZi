@@ -1,7 +1,8 @@
-ONGOING (9):
+ONGOING (10):
+* Also use 2-letter words for GuessEnglish
+* Trim when entering a new translation or new lesson
 * Change add translation and new lesson with bars at the top of the list
-* Lock into progress when there is no test left
-* Update regularly in test activity or main menu when tests become available
+* Update regularly in test activity on when tests become available
 * Show time until next test when applicable
 * Put back buttons for Reference Activity (for larger screens)
 * Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
@@ -39,7 +40,8 @@ FUTURE (21):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (213):
+DONE (214):
+* Lock into progress when there is no test left
 * Change font for big Chinese stuff
 * Get the progress in one-shot from the database
 * Continue testing until the number of tests is really 0

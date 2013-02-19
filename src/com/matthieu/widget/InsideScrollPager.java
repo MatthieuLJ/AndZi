@@ -6,7 +6,7 @@ import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
 
-public class InsideScrollPager extends ViewPagerParallax {
+public class InsideScrollPager extends LockableViewPager {
     public InsideScrollPager(Context context, AttributeSet attrs) {
         super(context, attrs);
     }

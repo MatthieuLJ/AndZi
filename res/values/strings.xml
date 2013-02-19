@@ -90,7 +90,7 @@
     <string name="settings_trim_progress">Deleting recent progress data…</string>
 
     <string name="test_empty_db">Your database is empty, add some words before testing</string>
-    <string name="test_mastering">You master everything, do you want to continue ?</string>
+    <string name="test_mastering">You master everything!</string>
 
     <string name="add_voc_title_editor">New Vocabulary</string>
     <string name="add_voc_title_lesson_list">Lessons list</string>
