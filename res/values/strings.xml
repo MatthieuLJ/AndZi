@@ -40,6 +40,7 @@
     <string name="num_words">Chinese words</string>
     <string name="num_chars">Chinese characters</string>
     <string name="num_to_study">Tests left</string>
+    <string name="time_to_study">until next test</string>
 
     <string name="description_splash">splash screen</string>
     <string name="description_1st_tone">first tone accent</string>
@@ -91,14 +92,15 @@
     <string name="settings_trim_progress">Deleting recent progress data…</string>
 
     <string name="test_empty_db">Your database is empty, add some words before testing</string>
-    <string name="test_mastering">You master everything, do you want to continue ?</string>
+    <string name="test_mastering">You master everything!</string>
+    <string name="test_your_answer">…?</string>
 
     <string name="add_voc_title_editor">New Vocabulary</string>
     <string name="add_voc_title_lesson_list">Lessons list</string>
     <string name="add_voc_title_lesson_content">Lesson content</string>
 
     <string name="add_voc_enter_pinyin">Enter Pinyin</string>
-    <string name="add_voc_enter_chinese">Enter a Chinese word</string>
+    <string name="add_voc_enter_chinese">New word</string>
     <string name="add_voc_only_chinese">Only enter chinese characters</string>
     <string name="add_voc_pick_pinyin">Pick a pinyin for </string>
     <string name="add_voc_local_db">Vocabulary from your list</string>
@@ -108,13 +110,11 @@
     <string name="add_voc_new_translation">New translation</string>
 
     <string name="add_voc_menu_done">Done</string>
-    <string name="add_voc_menu_add_new_translation">New Translation</string>
     <string name="add_voc_menu_edit_translation">Edit</string>
     <string name="add_voc_menu_delete_translation">Delete</string>
     <string name="add_voc_menu_add_selection">Add</string>
     <string name="add_voc_menu_select_lesson_none">None</string>
     <string name="add_voc_menu_select_lesson_all">All</string>
-    <string name="add_voc_menu_add_new_lesson">New Lesson</string>
     <string name="add_voc_menu_clone_lesson">Clone</string>
     <string name="add_voc_menu_delete_lesson">Delete</string>
     <string name="add_voc_menu_rename_lesson">Rename</string>
@@ -128,6 +128,9 @@
     <string name="notification_content">You have %s tests waiting</string>
 
     <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
+    <string name="reference_query">Query</string>
+    <string name="reference_cannot_understand">Cannot understand this query</string>
+
     <string name="details_pin">Pin</string>
     <string name="details_unpin">Unpin</string>
     <string name="details_dictionary">Dict</string>

@@ -223,6 +223,8 @@ public class EditLessonsFragment extends Fragment {
         public void expand_new_field(boolean expand) {
             if (first_row != null && expand && new_collapsed) {
                 new_collapsed = !expand;
+                ImageView plus = (ImageView) first_row.findViewById(R.id.add_new_lesson_plus);
+                plus.setVisibility(View.GONE);
                 first_row.expand();
                 EditText field = (EditText) first_row.findViewById(R.id.edit_new_lesson);
                 field.requestFocus();
@@ -247,11 +249,23 @@ public class EditLessonsFragment extends Fragment {
                     new_collapsed = false;
 
                 ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.edit_lesson_new_container);
-                if (new_collapsed)
+                ImageView plus = (ImageView) row.findViewById(R.id.add_new_lesson_plus);
+                if (new_collapsed) {
+                    plus.setVisibility(View.VISIBLE);
                     elv.collapse_immediate();
-                else
+                }
+                else {
+                    plus.setVisibility(View.GONE);
                     elv.expand_immediate();
+                }
                 first_row = elv;
+
+                plus.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        expand_new_field(true);
+                    }
+                });
 
                 Button new_lesson_ok = (Button) row.findViewById(R.id.edit_new_lesson_ok);
                 EditText new_lesson_field = (EditText) row.findViewById(R.id.edit_new_lesson);
@@ -261,7 +275,7 @@ public class EditLessonsFragment extends Fragment {
                         if (init_lessons_thread!=null)
                             return;
                         EditText new_lesson_field = (EditText)view.getTag(R.id.edit_new_lesson);
-                        final String new_lesson_label = new_lesson_field.getText().toString();
+                        final String new_lesson_label = new_lesson_field.getText().toString().trim();
                         new_lesson_field.setText("");
                         if (new_lesson_label.equals(""))
                             return;

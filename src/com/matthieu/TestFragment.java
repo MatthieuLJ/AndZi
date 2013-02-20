@@ -38,7 +38,6 @@ public class TestFragment extends Fragment {
 
     ArrayList<String> hanzis_to_test = new ArrayList<String>();
     boolean table_filled=false;
-    private boolean continue_with_more_chars=false;
 
     final static int size_limit = 30;
     final static int size_threshold = 5;
@@ -152,8 +151,6 @@ public class TestFragment extends Fragment {
         Log.d(TAG, "fill_hanzis_to_test");
         synchronized (TestFragment.this) {
             hanzis_to_test = myDB.getAllToStudy(size_limit);
-            if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
-                hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
             table_filled=true;
         }
     }
@@ -261,7 +258,6 @@ public class TestFragment extends Fragment {
         }
     }
 
-
     private View done_testing(final boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
         final View res = inflater.inflate(R.layout.test_done, container, false);
         TextView message = (TextView) res.findViewById(R.id.test_done_text);
@@ -272,30 +268,7 @@ public class TestFragment extends Fragment {
             message.setText(R.string.test_mastering);
         }
 
-        Button OK_button = (Button) res.findViewById(R.id.ok);
-        OK_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!empty_db) {
-                    continue_with_more_chars = true;
-                    table_filled = false;
-                    new_test();
-                } else {
-                    TestFragment.this.getActivity().finish();
-                }
-
-            }
-        });
-
-        Button Cancel_button = (Button) res.findViewById(R.id.cancel);
-        if (empty_db)
-            Cancel_button.setVisibility(View.GONE);
-        Cancel_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getActivity().finish();
-            }
-        });
+        ((TestActivity) getActivity()).test_done(true);
 
         return res;
     }

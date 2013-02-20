@@ -9,8 +9,10 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.*;
 import android.widget.Button;
+import android.widget.TableRow;
 import android.widget.TextView;
 import com.matthieu.widget.ProgressGraph;
 
@@ -50,9 +52,6 @@ public class StatsFragment extends Fragment {
             }
         });
 
-        update_stats(res);
-        update_buttons(res);
-
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -65,6 +64,10 @@ public class StatsFragment extends Fragment {
             }
         }, 10*60*1000, 10*60*1000);
 
+        update_stats(res);
+        update_time_to_study(res);
+        update_buttons(res);
+
         return res;
     }
 
@@ -75,7 +78,10 @@ public class StatsFragment extends Fragment {
     }
 
     public void update_stats() {
+        if (getView()==null)
+            return;
         update_stats(getView());
+        update_time_to_study(getView());
     }
 
     @SuppressLint({"NewApi"})
@@ -138,5 +144,67 @@ public class StatsFragment extends Fragment {
         else {
             zoomout.setEnabled(false);
         }
+    }
+
+    private void update_time_to_study(final View v) {
+        int expired = myDB.getNumExpired();
+        long delay = myDB.getMostAdvancedExpiringTime();
+        Log.d(TAG, "delay is " + delay);
+        TableRow row = (TableRow) v.findViewById(R.id.db_stats_time_to_study_row);
+        if ((expired == 0) && (delay >0)) {
+            long update_time;
+            StringBuilder time_to_display = new StringBuilder();
+            row.setVisibility(View.VISIBLE);
+            if (delay / (1000*60*60*24) >= 2) {
+                time_to_display.append((long)(delay / (1000*60*60*24))).append(" days");
+                update_time = 1000*60*60*24;
+            } else if (delay / (1000*60*60*24) >= 1) {
+                long hours = (delay / (1000*60*60)) - 24;
+                time_to_display.append("1 day ").append(hours).append(" hours");
+                update_time = 1000*60*60;
+            } else if (delay / (1000*60*60) >= 2) {
+                time_to_display.append((long)(delay / (1000*60*60))).append(" hours");
+                update_time = 1000*60*60;
+            } else if (delay / (1000*60*60) >= 1) {
+                long minutes = (delay / (1000*60)) - 60;
+                time_to_display.append("1 hour ").append(minutes).append(" minutes");
+                update_time = 1000*60;
+            } else if (delay / (1000*60) >= 2) {
+                time_to_display.append((long)(delay / (1000*60))).append(" minutes");
+                update_time = 1000*60;
+            } else if (delay / (1000*60) >= 1) {
+                long seconds = (delay / 1000) - 60;
+                time_to_display.append("1 minute ").append(seconds).append(" seconds");
+                update_time = 1000;
+            } else {
+                time_to_display.append((long)(delay / 1000)).append(" seconds");
+                update_time = 1000;
+            }
+            TextView time_field = (TextView) v.findViewById(R.id.stats_time_to_study);
+            time_field.setText(time_to_display.toString());
+
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    Activity a = getActivity();
+                    if (a!=null)
+                    a.runOnUiThread(new Runnable() {
+                        public void run() {
+                            update_time_to_study(v);
+                        }
+                    });
+                }
+            };
+
+            timer.schedule(task, update_time);
+        } else {
+            row.setVisibility(View.GONE);
+            if (expired>0) {
+                TestActivity a = (TestActivity) getActivity();
+                if (a!=null)
+                    a.test_done(false);
+            }
+        }
+
     }
 }

@@ -78,6 +78,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     private class update_delayer extends AsyncTask<Void, Cursor, Cursor> {
         String msg_query;
         boolean msg_ref;
+        String cannot_understand_query;
 
         boolean is_cancelled = false;
         HanziDB currentDB=null;
@@ -102,6 +103,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             else {
                 currentDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
             }
+            cannot_understand_query = getResources().getString(R.string.reference_cannot_understand);
         }
 
         @Override
@@ -117,7 +119,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
             Log.d(TAG, "Detected mode "+mode);
             if (mode == -1) {
-                current_cursor = new MessageCursor("Cannot understand this query");
+                current_cursor = new MessageCursor(cannot_understand_query);
                 return current_cursor;
             }
 

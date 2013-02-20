@@ -68,6 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 style="@style/edit_text"
+                android:hint="@string/test_your_answer"
                 android:imeOptions="actionDone"
                 />
         <Button

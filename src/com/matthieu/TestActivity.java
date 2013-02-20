@@ -150,7 +150,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     @Override
     public void onBackPressed() {
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0))
+        if ((pager != null) && (pager.getCurrentItem() != 0) && (test_ready))
             pager.setCurrentItem(0, true);
         else
             super.onBackPressed();
@@ -164,6 +164,17 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 return true;
         }
         return false;
+    }
+
+    boolean test_ready=true;
+    public void test_done(boolean done) {
+        InsideScrollPager pager = (InsideScrollPager) findViewById(R.id.test_pager);
+        if (pager != null) {
+            if (done)
+                pager.setCurrentItem(1, true);
+            pager.setPagingEnabled(!done);
+        }
+        test_ready =!done;
     }
 
     // using a FragmentStatePagerAdapter here because some Fragments go away and come back (for the test)
