@@ -311,11 +311,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
             case android.R.id.home:
                 finish();
                 return true;
-            case R.id.add_vocabulary_show_new_translation:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).add_new();
-                break;
             case R.id.add_vocabulary_add_selection:
                 if (pager!=null)
                     pager.setCurrentItem(0);
@@ -359,13 +354,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
                 resultIntent.putExtras(b);
                 setResult(RESULT_OK, resultIntent);
                 finish();
-                break;
-
-            case R.id.add_vocabulary_lesson_show_new_lesson:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                ((EditLessonsFragment)fragments[1]).add_new();
-                // TODO: move to lesson list fragment if we have a ViewPager
                 break;
             case R.id.add_vocabulary_lesson_clone:
                 if (pager!=null)
