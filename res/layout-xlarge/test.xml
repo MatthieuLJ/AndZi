@@ -8,7 +8,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/bamboo"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/description_background" />
     <LinearLayout
             android:id="@+id/test_linear"
             android:layout_width="match_parent"

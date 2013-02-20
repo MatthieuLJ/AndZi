@@ -16,7 +16,8 @@
         <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+                android:id="@+id/empty_view1"/>
         <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -93,7 +94,8 @@
         <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+                android:id="@+id/empty_view2"/>
     </TableLayout>
     <com.matthieu.widget.ProgressGraph
             android:id="@+id/graph"
