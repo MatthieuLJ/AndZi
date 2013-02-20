@@ -182,7 +182,7 @@ public class AddVocabularyFragment extends Fragment
                             main_content.removeAllViews();
                             View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_enter_chinese);
+                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText("");
                         break;
                     case 1:
                         // all chinese characters

@@ -1,11 +1,8 @@
-ONGOING (7):
-* Update regularly in test activity on when tests become available
-* Show time until next test when applicable
+ONGOING (4):
 * Put back buttons for Reference Activity (for larger screens)
-* Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
-  - splash page + main menu layout
+  V splash page + main menu layout
 * Update help
 * Check different screen sizes
   - getWindow().setSoftInputMode(); to change the way the soft keyboard affects the activity
@@ -37,8 +34,11 @@ FUTURE (21):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (217):
+DONE (220):
+* Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Also use 2-letter words for GuessEnglish
+* Update regularly in test activity on when tests become available
+* Show time until next test when applicable
 * Trim when entering a new translation or new lesson
 * Change add translation and new lesson with bars at the top of the list
 * Lock into progress when there is no test left
@@ -328,9 +328,12 @@ res/layout-xlarge/reference.xml:49: Warning: Nested weights are bad for performa
 res/layout/vocabulary_editor_large.xml:27: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"/>
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/values/colors.xml:9: Warning: The resource R.color.whitish appears to be unused [UnusedResources]
-    <color name="whitish">#bbffffff</color>
-           ~~~~~~~~~~~~~~
+res/layout/db.xml:16: Warning: This TableRow view is useless (no children, no background, no id, no style) [UselessLeaf]
+        <TableRow
+        ^
+res/layout/db.xml:93: Warning: This TableRow view is useless (no children, no background, no id, no style) [UselessLeaf]
+        <TableRow
+        ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -344,6 +347,7 @@ res/drawable/first_tone.png: Warning: Found bitmap drawable res/drawable/first_t
 res/drawable/folder.png: Warning: Found bitmap drawable res/drawable/folder.png in densityless folder [IconLocation]
 res/drawable/fourth_tone.png: Warning: Found bitmap drawable res/drawable/fourth_tone.png in densityless folder [IconLocation]
 res/drawable/icon.png: Warning: Found bitmap drawable res/drawable/icon.png in densityless folder [IconLocation]
+res/drawable/plus.png: Warning: Found bitmap drawable res/drawable/plus.png in densityless folder [IconLocation]
 res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second_tone.png in densityless folder [IconLocation]
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
 res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
@@ -354,18 +358,18 @@ res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an
 res/menu/add_vocabulary_menu_add.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/menu/add_vocabulary_menu_edit.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
-          android:showAsAction="always"/>
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/menu/add_vocabulary_menu_edit_multiple.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
-          android:showAsAction="always"/>
-          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/menu/add_vocabulary_menu_ready.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout/add_vocabulary_list_new_item.xml:17: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+        <ImageView
+        ^
+res/layout/edit_lesson_list_new_item.xml:16: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
+        <ImageView
+        ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
@@ -387,4 +391,4 @@ res/layout-xlarge-land/vocabulary_editor.xml:8: Warning: [Accessibility] Missing
 res/layout/vocabulary_editor_large.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
     <ImageView
     ^
-0 errors, 32 warnings
+0 errors, 34 warnings
