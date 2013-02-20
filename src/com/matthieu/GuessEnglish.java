@@ -128,7 +128,7 @@ public class GuessEnglish extends Test {
     }
 
     protected int check_guess(String guess) {
-        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase(Locale.ENGLISH).split("[, -]");
+        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase(Locale.ENGLISH).split("[, -']");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
                 continue;
@@ -142,10 +142,10 @@ public class GuessEnglish extends Test {
                     return CORRECT;
                 }
 
-                String[] ens=HanziDB.bare_translation(en).split("[ -]");
+                String[] ens=HanziDB.bare_translation(en).split("[ -']");
                 for (String item:ens) {
                     String tmp=item.replaceAll("[^A-Za-z]", "");
-                    if ((tmp.length()>2) && (tmp.equals(guesses[i].trim()))) {
+                    if ((tmp.length()>=2) && (tmp.equals(guesses[i].trim()))) {
                         Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
                         return CORRECT;
                     }
