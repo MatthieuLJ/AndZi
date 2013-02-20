@@ -2990,6 +2990,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 new_data.num_expired_in_box[box]=cur.getInt(cur.getColumnIndex("expired"));
             }while(cur.moveToNext());
         }
+        cur.close();
         new_data.date = System.currentTimeMillis();
         return new_data;
     }
@@ -3034,7 +3035,7 @@ public class HanziDB extends SQLiteOpenHelper {
         long box_delay = (long) 6 * 60 * 60 * 1000; // 6 hours is basic
 
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        return (long) (box_delay * Math.pow(2, box + 1));
+        return (long) (box_delay * Math.pow(2, box));
 
         //System.out.println("With "+getNumChars()+" characters, mult is "+multiplicator+", so delay is "+(res/(1000*60*60)+" hours for box "+box));
     }
@@ -3049,30 +3050,22 @@ public class HanziDB extends SQLiteOpenHelper {
             extra_delay = (System.currentTimeMillis() - last_expiration)/2;
 
         double multiplicand=2;
-        if (num_tested > 3) {
-            multiplicand += (0.5-(num_wrong/num_tested))*8/5; // multiplicand becomes between 1.2 and 2.8 depending on results so far
+        if (num_tested-box > 3) {
+            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/5; // multiplicand becomes between 1.2 and 2.8 depending on results so far
         }
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        return (long) (box_delay * Math.pow(multiplicand, box + 1) + extra_delay);
+        return (long) (box_delay * Math.pow(multiplicand, box) + extra_delay);
     }
 
-    protected ArrayList<String> getMostAdvancedExpiring(int num, boolean only_chars) {
+    public long getMostAdvancedExpiringTime() {
         Cursor cur;
-        ArrayList<String> res=new ArrayList<String>();
+        long res=-1;
 
-        if (only_chars)
-            cur = db.rawQuery("SELECT hanzi FROM leitner " +
-                    "WHERE length(hanzi)==1 AND exp_time>? ORDER BY exp_time ASC LIMIT ?",
-                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
-        else
-            cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time ASC LIMIT ?",
-                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
+        cur = db.rawQuery("SELECT MIN(exp_time) AS exp FROM leitner WHERE exp_time>?",
+                new String[] {Long.toString(System.currentTimeMillis())});
 
         if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do {
-                res.add(cur.getString(cur.getColumnIndex("hanzi")));
-            } while (cur.moveToNext());
+            res = cur.getLong(cur.getColumnIndex("exp")) - System.currentTimeMillis();
         }
         cur.close();
         return res;

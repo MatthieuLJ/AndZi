@@ -39,6 +39,7 @@
     <string name="num_words">Chinese words</string>
     <string name="num_chars">Chinese characters</string>
     <string name="num_to_study">Tests left</string>
+    <string name="time_to_study">until next test</string>
 
     <string name="description_splash">splash screen</string>
     <string name="description_1st_tone">first tone accent</string>

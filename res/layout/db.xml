@@ -72,6 +72,25 @@
                     />
         </TableRow>
         <TableRow
+                android:id="@+id/db_stats_time_to_study_row"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+            <TextView
+                    android:layout_marginLeft="10sp"
+                    android:layout_marginRight="4sp"
+                    android:id="@+id/stats_time_to_study"
+                    android:gravity="right"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/normal_text"
+                    />
+            <TextView
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/normal_text"
+                    android:text="@string/time_to_study"
+                    />
+        </TableRow>
+        <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"/>
