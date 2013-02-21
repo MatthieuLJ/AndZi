@@ -174,6 +174,9 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 pager.setCurrentItem(1, true);
             pager.setPagingEnabled(!done);
         }
+        Log.d(TAG, "test_ready is "+test_ready+" and done is "+done);
+        if ((!test_ready) && (!done))
+            ((TestFragment) fragments[0]).new_test();
         test_ready =!done;
     }
 

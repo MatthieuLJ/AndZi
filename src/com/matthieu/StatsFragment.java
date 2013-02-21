@@ -199,6 +199,7 @@ public class StatsFragment extends Fragment {
             timer.schedule(task, update_time);
         } else {
             row.setVisibility(View.GONE);
+            update_stats(v);
             if (expired>0) {
                 TestActivity a = (TestActivity) getActivity();
                 if (a!=null)
