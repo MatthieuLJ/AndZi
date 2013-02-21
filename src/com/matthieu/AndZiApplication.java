@@ -12,6 +12,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.StatFs;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 
@@ -29,6 +30,8 @@ public class AndZiApplication extends Application {
     private static final String REF_DB_NAME = "cedict_db";
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     private static final String PROGRESS_DB_NAME = "progress_db";
+
+    private static final int this_ref_version = 1;
 
     public void onCreate() {
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
@@ -66,7 +69,8 @@ public class AndZiApplication extends Application {
     }
     public HanziDB getRefDB() {
         if (!ref_initialized) {
-            initialize_ref_db();
+            if (!initialize_ref_db())
+                return null;
         }
         update_dbs_in_details_populator();
         return refDB;
@@ -108,28 +112,43 @@ public class AndZiApplication extends Application {
     }
     
     public boolean initialize_ref_db() {
-        if (ref_initialized)
+        synchronized(this) {
+            if (ref_initialized)
+                return true;
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            int ref_version = prefs.getInt("cedict_version", 0);
+            int num_chars;
+
+            if (ref_version == this_ref_version)
+                try {
+                    refDB = new HanziDB(this, REF_DB_NAME);
+                    num_chars = refDB.getNumChars();
+                }
+                catch (Exception e) {
+                    num_chars=0;
+                }
+            else
+                num_chars=0;
+
+            if (num_chars==0)  {
+                Log.d(TAG, "Install new dictionary");
+                if (refDB!= null)
+                    refDB.close();
+
+                if (!installRefDB(R.raw.cedict_db))
+                    return false;
+
+                refDB = new HanziDB(this, REF_DB_NAME);
+                if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
+                    return false;
+            }
+            ref_initialized=true;
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("cedict_version", this_ref_version);
+            editor.commit();
             return true;
-
-        try {
-            refDB = new HanziDB(this, REF_DB_NAME);
         }
-        catch (Exception e) {
-            return false;
-        }
-
-        if (refDB.getNumChars()==0)  {
-            refDB.close();
-
-            if (!installRefDB(R.raw.cedict_db))
-                return false;
-
-            refDB = new HanziDB(this, REF_DB_NAME);
-            if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
-                return false;
-        }
-        ref_initialized=true;
-        return true;
     }
 
     public boolean check_exporting_space(String path) {

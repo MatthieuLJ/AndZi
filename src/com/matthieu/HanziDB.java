@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 public class HanziDB extends SQLiteOpenHelper {
     private static final String TAG = "HanziDB";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     protected AndZiApplication app;
     private SQLiteDatabase db;
@@ -87,8 +87,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "FOREIGN KEY (char_pinyin_id) REFERENCES char_pinyin(char_pinyin_id)," +
                 "UNIQUE(cword_id, pos))");
-        database.execSQL("CREATE INDEX cword_segment_cword_id ON cword_segment(cword_id)");
-        database.execSQL("CREATE INDEX cword_segment_char_pinyin_id ON cword_segment(char_pinyin_id)");
         database.execSQL("CREATE INDEX cword_segment_pos ON cword_segment(pos)");
         database.execSQL("CREATE TABLE eword (" +
                 "eng_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
@@ -96,22 +94,18 @@ public class HanziDB extends SQLiteOpenHelper {
                 "translation VARCHAR(250) NOT NULL," +
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "UNIQUE(cword_id, translation))");
-        database.execSQL("CREATE INDEX eword_translation ON eword(translation)");
 
         // lesson stuff
         database.execSQL("CREATE TABLE lessons (" +
                 "lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "list_order INTEGER DEFAULT 0," +
                 "name VARCHAR(64) NOT NULL UNIQUE)");
-        database.execSQL("CREATE INDEX lessons_name ON lessons(name)");
         database.execSQL("CREATE TABLE lesson_word (" +
                 "eng_id INTEGER NOT NULL," +
                 "lesson_id INTEGER NOT NULL," +
                 "FOREIGN KEY (eng_id) REFERENCES eword(eng_id)," +
                 "FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id)," +
                 "UNIQUE(eng_id,lesson_id))");
-        database.execSQL("CREATE INDEX lesson_word_eng_id ON lesson_word(eng_id)");
-        database.execSQL("CREATE INDEX lesson_word_lesson_id ON lesson_word(lesson_id)");
 
         // leitner stuff
         database.execSQL("CREATE TABLE leitner (" +
@@ -122,16 +116,15 @@ public class HanziDB extends SQLiteOpenHelper {
                 "num_wrong INTEGER DEFAULT 0," +
                 "streak INTEGER DEFAULT 0," +
                 "date_added INTEGER)");
-        database.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
 
         cached_num_chars=0;
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, final int i, final int i1) {
-        Log.v(TAG, "onUpgrade ("+i+","+i1+")");
+    public void onUpgrade(SQLiteDatabase db, final int oldVersion, final int newVersion) {
+        Log.v(TAG, "onUpgrade ("+oldVersion+","+newVersion+")");
 
-        if (i<2) {
+        if (oldVersion<2) {
             // first have to manually calculate expiration time
             Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin GROUP BY hanzi", null);
             int num_chars= cur.getCount();
@@ -154,7 +147,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "hanzi VARCHAR(2) PRIMARY KEY NOT NULL," +
                     "box INTEGER NOT NULL," +
                     "exp_time INTEGER NOT NULL)");
-            db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
+            //db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
             db.execSQL("INSERT INTO leitner SELECT hanzi,box,mod_time FROM old_leitner");
             db.execSQL("UPDATE leitner SET exp_time=exp_time + (CASE box WHEN 1 THEN ? WHEN 2 THEN ? WHEN 3 THEN ? WHEN 4 THEN ? ELSE 0 END)",
                     new String[] {
@@ -165,17 +158,17 @@ public class HanziDB extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE old_leitner");
         }
 
-        if (i<3) {
+        if (oldVersion<3) {
             //db.execSQL("ALTER TABLE cword ADD COLUMN score INTEGER DEFAULT 0");
         }
 
-        if (i<4) {
+        if (oldVersion<4) {
             db.execSQL("ALTER TABLE leitner ADD COLUMN num_tested INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN num_wrong INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN streak INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN date_added INTEGER");
         }
-        if (i<5) {
+        if (oldVersion<5) {
             db.execSQL("DROP INDEX IF EXISTS leitner_hanzi");
             db.execSQL("ALTER TABLE leitner RENAME TO old_leitner");
             db.execSQL("CREATE TABLE leitner (" +
@@ -186,13 +179,13 @@ public class HanziDB extends SQLiteOpenHelper {
                     "num_wrong INTEGER DEFAULT 0," +
                     "streak INTEGER DEFAULT 0," +
                     "date_added INTEGER)");
-            db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
+            //db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
             db.execSQL("INSERT INTO leitner SELECT hanzi,box,exp_time,num_tested,num_wrong, streak, date_added FROM old_leitner");
             db.execSQL("DROP TABLE old_leitner");
 
             // check if the score column exists
             Cursor test_cur = db.rawQuery("SELECT * FROM cword", null);
-            if ((i>=3) && (test_cur.getColumnIndex("score") != -1)) {
+            if ((oldVersion>=3) && (test_cur.getColumnIndex("score") != -1)) {
                 Cursor cur = db.rawQuery("SELECT chinese, score FROM cword WHERE (score>0) AND (length(chinese)>1)", null);
                 if (cur.moveToFirst()) {
                     int score_column_index = cur.getColumnIndex("score");
@@ -234,6 +227,15 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
             }
             test_cur.close();
+        }
+        if (oldVersion<6) {
+            db.execSQL("DROP INDEX IF EXISTS cword_segment_cword_id");
+            db.execSQL("DROP INDEX IF EXISTS cword_segment_char_pinyin_id");
+            db.execSQL("DROP INDEX IF EXISTS lessons_name");
+            db.execSQL("DROP INDEX IF EXISTS lesson_word_eng_id");
+            db.execSQL("DROP INDEX IF EXISTS lesson_word_lesson_id");
+            db.execSQL("DROP INDEX IF EXISTS leitner_hanzi");
+            db.execSQL("DROP INDEX IF EXISTS eword_translation");
         }
     }
 

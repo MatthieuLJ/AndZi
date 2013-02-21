@@ -73,6 +73,9 @@ def check_pinyins(pinyin):
             pinyin[i] = p+"5"
     return True
 
+def replace_chinese_in_translation(matchobj):
+    return matchobj.group(1)[:-len(matchobj.group(2))]+matchobj.group(2)+matchobj.group(3)
+
 def check_translations(translations):
     """remove some stuff we do not need"""
     new_t=[]
@@ -88,15 +91,15 @@ def check_translations(translations):
             continue
         if re.match("trad.", t) is not None:
             continue
-        if re.match("variant of", t) is not None:
+        if re.match("variant of ", t) is not None:
             continue
-        if re.match("archaic variant of", t) is not None:
+        if re.match("archaic variant of ", t) is not None:
             continue
-        if re.match("Japanese variant", t) is not None:
+        if re.match("Japanese variant ", t) is not None:
             continue
-        if re.match("abbr. of", t) is not None:
+        if re.match("abbr. of ", t) is not None:
             continue
-        if re.match("abbr. for", t) is not None:
+        if re.match("abbr. for ", t) is not None:
             continue
         if re.match("also written", t) is not None:
             continue
@@ -111,8 +114,9 @@ def check_translations(translations):
         m = re.match("see also (.).+", t)
         if (m is not None) and check_chinese_character(m.groups()[0]):
             continue
-        # TODO :replace "traditional|simplified[pinyins]" with "simplified" or "chinese[pinyins]" with "chinese"
-
+        RE=re.compile(u'(.*)\|([⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]+)([^⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎].*)', re.UNICODE) # matches Chinese|Chinese
+        while RE.match(t) is not None:
+            t=RE.sub(replace_chinese_in_translation, t,re.UNICODE)
         new_t.append(t)
     return new_t
 
@@ -160,7 +164,7 @@ class CedictParser:
         # match a line
         while True:
             while True:
-                m=re.match(r".+ (.+) \[(.+)\] (.+)", self.file.next())
+                m=re.match(r".+ (.+) \[([^\[\]]+)\] (.+)", self.file.next())
                 self.current_line += 1
                 if m is not None:
                      break

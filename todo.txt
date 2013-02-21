@@ -12,9 +12,7 @@ ONGOING (4):
 
 BUGS (00):
 
-FUTURE (21):
-* The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
-* Need to make sure the dictionary gets reinstalled when we upgrade the app
+FUTURE (19):
 * Add more automatic (robotium) tests
 * Test performance with huge database
 * Track memory allocation (unload DB when inactive?)
@@ -30,12 +28,14 @@ FUTURE (21):
 * Find characters based on the composition
 * Can find similar characters based on composition (and test with MCQ)
 * Suggest vocabulary based on what is already known, frequency list
-* Push database from one phone to another (ICS)
+* Push / sync database from one phone to another (ICS)
 * Teach to write characters
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (220):
+DONE (222):
+* The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
+* Need to make sure the dictionary gets reinstalled when we upgrade the app
 * Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Also use 2-letter words for GuessEnglish
 * Update regularly in test activity on when tests become available
