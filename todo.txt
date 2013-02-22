@@ -10,7 +10,9 @@ ONGOING (4):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (00):
+BUGS (2):
+* If lesson was selected before, it is not possible to add an existing word to that lesson
+* Selecting lessons fast to check the content leads to permanent loading
 
 FUTURE (19):
 * Add more automatic (robotium) tests
