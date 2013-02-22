@@ -10,8 +10,7 @@ ONGOING (4):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
-* If lesson was selected before, it is not possible to add an existing word to that lesson
+BUGS (00):
 
 FUTURE (19):
 * Add more automatic (robotium) tests
@@ -34,7 +33,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (223):
+DONE (224):
+* If lesson was selected before, it is not possible to add an existing word to that lesson
 * Selecting lessons fast to check the content leads to permanent loading
 * The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
 * Need to make sure the dictionary gets reinstalled when we upgrade the app

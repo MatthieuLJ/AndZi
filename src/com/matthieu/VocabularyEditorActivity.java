@@ -410,6 +410,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         if (lesson != null) {
             ((AddVocabularyFragment)fragments[0]).set_default_lesson(lesson);
         }
+        ((EditLessonsFragment)fragments[1]).clear_selection();
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             pager.setCurrentItem(0, true);
