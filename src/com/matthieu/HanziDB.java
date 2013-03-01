@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -2864,6 +2865,24 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public HashMap<String, Integer> getLessonSizes() {
+        Cursor cur;
+        HashMap<String, Integer> res = new HashMap<String, Integer>();
+
+        cur = db.rawQuery("SELECT couples.lesson_id, lessons.name AS name, COUNT(couples.cword_id) AS count " +
+                "FROM (SELECT DISTINCT lesson_id , eword.cword_id FROM lesson_word " +
+                "JOIN eword ON lesson_word.eng_id=eword.eng_id) AS couples " +
+                "JOIN lessons ON lessons.lesson_id=couples.lesson_id GROUP BY couples.lesson_id", new String[]{});
+        if (cur.moveToFirst()) {
+            do{
+                String lesson_name = cur.getString(cur.getColumnIndex("name"));
+                int count = cur.getInt(cur.getColumnIndex("count"));
+                res.put(lesson_name, count);
+            }while(cur.moveToNext());
+        }
+        return res;
+    }
+
     public Cursor getVocabularyCursorInLessons(ArrayList<String> lessons, boolean group) {
         StringBuilder query=new StringBuilder();
 
@@ -3081,6 +3100,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void resetTime(String hanzi) {
+        Log.d(TAG, "resetTime for "+hanzi);
         if (getBoxForChar(hanzi)==0) {
             betterBox(hanzi);
             return;
@@ -3100,6 +3120,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void betterBox(String hanzi) {
+        Log.d(TAG, "betterBox for "+hanzi);
         Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
 
@@ -3134,6 +3155,8 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void worseBox(String hanzi) {
+        Log.d(TAG, "worseBox for "+hanzi);
+
         ContentValues cv = new ContentValues();
 
         Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
@@ -3168,6 +3191,8 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void restartStudy(String hanzi) {
+        Log.d(TAG, "worseBox for "+hanzi);
+
         ContentValues cv = new ContentValues();
         cv.put("box", 0);
         cv.put("exp_time", System.currentTimeMillis());

@@ -108,15 +108,18 @@ public class EditLessonsFragment extends Fragment {
             tmp_lessons = new ArrayList<Lesson>();
             Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
+            HashMap<String, Integer> stats = myDB.getLessonSizes();
 
             for (String existing_lesson : existing_lessons) {
                 if (isCancelled())
                     return null;
 
-                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(existing_lesson))).size();
                 Lesson new_lesson = new Lesson(existing_lesson);
                 new_lesson.state = Lesson.EXISTING;
-                new_lesson.num_items = num;
+                if (stats.containsKey(existing_lesson))
+                    new_lesson.num_items = stats.get(existing_lesson);
+                else
+                    new_lesson.num_items=0;
                 tmp_lessons.add(new_lesson);
             }
 
@@ -150,8 +153,12 @@ public class EditLessonsFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             do {
                 start_over=false;
+                HashMap<String, Integer> stats = myDB.getLessonSizes();
                 for (Lesson l : current_lessons) {
-                    l.num_items= myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l.label))).size();
+                    if (stats.containsKey(l.label))
+                        l.num_items= stats.get(l.label);
+                    else
+                        l.num_items=0;
                 }
             } while (start_over);
             return null;
