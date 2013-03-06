@@ -2,14 +2,15 @@
 
 <TableLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res/com.matthieu"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
+
     <TableRow
             android:layout_height="0dp"
             android:layout_weight="2"
             >
-        <Button
+        <com.matthieu.widget.ButtonAutomaticSize
                 android:id="@+id/main_menu_add_voc"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -19,14 +20,15 @@
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_add_voc"
                 android:textSize="@dimen/xlarge_text"
-                android:onClick="handle_add_vocabulary" />
+                android:onClick="handle_add_vocabulary"
+                app:max_size="@dimen/xlarge_text"/>
     </TableRow>
 
     <TableRow
             android:layout_height="0dp"
             android:layout_weight="2"
             >
-        <Button
+        <com.matthieu.widget.ButtonAutomaticSize
                 android:id="@+id/main_menu_test"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -36,13 +38,14 @@
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_test"
                 android:textSize="@dimen/xlarge_text"
-                android:onClick="handle_test" />
+                android:onClick="handle_test"
+                app:max_size="@dimen/xlarge_text"/>
     </TableRow>
     <TableRow
             android:layout_height="0dp"
             android:layout_weight="2"
             >
-        <Button
+        <com.matthieu.widget.ButtonAutomaticSize
                 android:id="@+id/main_menu_ref"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -52,13 +55,14 @@
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_dict"
                 android:textSize="@dimen/xlarge_text"
-                android:onClick="handle_dictionary" />
+                android:onClick="handle_dictionary"
+                app:max_size="@dimen/xlarge_text"/>
     </TableRow>
     <TableRow
             android:layout_height="0dp"
             android:layout_weight="1"
             >
-        <Button
+        <com.matthieu.widget.ButtonAutomaticSize
                 android:id="@+id/main_menu_help"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -68,9 +72,10 @@
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_help"
                 android:textSize="@dimen/large_text"
-                android:onClick="handle_help" />
+                android:onClick="handle_help"
+                app:max_size="@dimen/large_text"/>
 
-        <Button
+        <com.matthieu.widget.ButtonAutomaticSize
                 android:id="@+id/main_menu_settings"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -80,6 +85,7 @@
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_settings"
                 android:textSize="@dimen/large_text"
-                android:onClick="handle_prefs" />
+                android:onClick="handle_prefs"
+                app:max_size="@dimen/large_text"/>
     </TableRow>
 </TableLayout>
