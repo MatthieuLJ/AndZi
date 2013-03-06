@@ -247,7 +247,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 break;
             case CORRECT:
             case INCORRECT:
-                solution_view.set_answer(correctness, guess, words);
+                solution_view.set_answer(correctness, guess, words, previous_guess);
                 activity.new_solution_fragment(solution_view);
                 break;
         }
@@ -255,14 +255,16 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
     public static class GuessMissinCharResultView extends SolutionView {
         ArrayList<Vocabulary> words;
+        private ArrayList<String> previous_guess;
 
         public GuessMissinCharResultView(String question, TestActivity parent) {
             super(question, parent);
         }
 
-        public void set_answer(int good, String answer, ArrayList<Vocabulary> words) {
+        public void set_answer(int good, String answer, ArrayList<Vocabulary> words, ArrayList<String> previous_guess) {
             super.set_answer(good, answer);
             this.words = words;
+            this.previous_guess = previous_guess;
         }
 
         @Override
@@ -285,19 +287,20 @@ public class GuessMissingChar extends Test implements TextWatcher {
             }
 
             // reset the time for all characters displayed or restart study
-            for (Vocabulary v:words) {
-                for (int i=0; i<v.chinese.length();) {
-                    String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
-                    i+=Character.charCount(v.chinese.codePointAt(i));
-                    if (other_hanzi.equals(question))
-                        continue;
-                    if (good==CORRECT) {
-                        myDB.resetTime(other_hanzi);
+            if (previous_guess.size() == 0)
+                for (Vocabulary v:words) {
+                    for (int i=0; i<v.chinese.length();) {
+                        String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
+                        i+=Character.charCount(v.chinese.codePointAt(i));
+                        if (other_hanzi.equals(question))
+                            continue;
+                        if (good==CORRECT) {
+                            myDB.resetTime(other_hanzi);
+                        }
+                        else
+                            myDB.worseBox(other_hanzi);
                     }
-                    else
-                        myDB.worseBox(other_hanzi);
                 }
-            }
             super.update_score();
         }
     }

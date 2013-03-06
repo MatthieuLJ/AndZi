@@ -299,12 +299,13 @@ public class GuessChineseWord extends Test {
             }
             else if (good == INCORRECT) {
                 old_scores = new HashMap<String, saved_score>();
-                for (int i=0; i<question.length();) {
-                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
-                    old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
-                    myDB.worseBox(character);
-                    i+=Character.charCount(question.codePointAt(i));
-                }
+                if (previous_guess.size()==0)
+                    for (int i=0; i<question.length();) {
+                        String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
+                        old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
+                        myDB.worseBox(character);
+                        i+=Character.charCount(question.codePointAt(i));
+                    }
                 old_scores.put(question, new saved_score(myDB.getBoxForChar(question), myDB.getExpirationTimeForChar(question)));
                 myDB.worseBox(question);
             }

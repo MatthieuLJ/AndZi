@@ -173,13 +173,19 @@ public class GuessPinyin extends Test implements TextWatcher {
             }
         });
 
+        show_words_button.setVisibility(View.VISIBLE);
         if (show_words) {
             tl.setVisibility(View.VISIBLE);
             show_words_button.setClickable(false);
         }
         else {
             tl.setVisibility(View.GONE);
-            show_words_button.setClickable(true);
+            if (myDB.getBoxForChar(current_test) >= 5) {
+                show_words_button.setClickable(false);
+                show_words_button.setVisibility(View.GONE);
+            } else {
+                show_words_button.setClickable(true);
+            }
         }
 
         Button submit_answer = (Button) res.findViewById(R.id.guess_pinyin_ok);
