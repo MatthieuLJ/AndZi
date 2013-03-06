@@ -116,13 +116,15 @@ public class GuessMissingChar extends Test implements TextWatcher {
                     chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), processing, next_index, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
                 }
 
-                while (chinese_string.indexOf("?", next_index+1) == next_index+1)
+                while (chinese_string.indexOf("?", next_index) == next_index)
                     next_index++;
-                if (chinese_string.indexOf("?", next_index+1) == -1) {
-                    chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), next_index+1, chinese_string.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                if (chinese_string.indexOf("?", next_index) == -1) {
+                    if (next_index < chinese_string.length())
+                        chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), next_index, chinese_string.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
                     break;
                 }
-                processing = next_index+1;
+                processing = next_index;
+                next_index = chinese_string.indexOf("?", next_index);
             }
             chinese.setText(chinese_text);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
