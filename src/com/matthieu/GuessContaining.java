@@ -275,6 +275,7 @@ public class GuessContaining extends Test {
         public void update_score() {
             switch(good) {
                 case CORRECT:
+                    myDB.betterBox(question);
                     ArrayList<String> good_chars=new ArrayList<String>();
                     for (String answers:correct_answers) {
                         for (int i=0; i<answers.length();) {
@@ -288,7 +289,6 @@ public class GuessContaining extends Test {
                     for (String c:good_chars) {
                         myDB.resetTime(c);
                     }
-                    myDB.betterBox(question);
                     break;
                 case INCORRECT:
                     myDB.worseBox(question);

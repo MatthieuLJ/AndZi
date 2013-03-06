@@ -97,10 +97,10 @@ public class LessonListFragment extends Fragment {
 
     private class update_lesson_list_task extends AsyncTask<Void,Void,Void> {
         private boolean do_it_again=false;
+        ArrayList<String> queried_lesson;
+
         public void update_again() {
-            synchronized (LessonListFragment.this) {
-                do_it_again = true;
-            }
+            do_it_again = true;
         }
 
         @Override
@@ -120,9 +120,12 @@ public class LessonListFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             do {
                 do_it_again=false;
+                queried_lesson = lesson;
                 cur = myDB.getVocabularyCursorInLessons(lesson, true);
                 cur.getCount();
             } while (do_it_again);
+
+            loader=null;
 
             return null;
         }
@@ -131,27 +134,31 @@ public class LessonListFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             if (getView() == null)
                 return;
-            synchronized (LessonListFragment.this) {
-                ListView list = (ListView) getView().findViewById(R.id.review_list);
-                if (list != null) {
-                    update_header_view(list);
-                    list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
-                        @Override
-                        public void click(String item_clicked) {
-                            Intent i=new Intent(getActivity(), ReferenceActivity.class);
-                            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            i.putExtra("Hanzi", item_clicked);
-                            i.putExtra("use_ref", false);
-                            startActivity(i);
-                        }
-                    }));
-                }
 
-                ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
-                if (pb != null)
-                    pb.setVisibility(View.GONE);
-                loader=null;
+            if (lesson != queried_lesson) {
+                return;
             }
+
+            ListView list = (ListView) getView().findViewById(R.id.review_list);
+            if (list != null) {
+                update_header_view(list);
+                list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
+                    @Override
+                    public void click(String item_clicked) {
+                        Intent i=new Intent(getActivity(), ReferenceActivity.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        i.putExtra("Hanzi", item_clicked);
+                        i.putExtra("use_ref", false);
+                        startActivity(i);
+                    }
+                }));
+            }
+
+            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+            if (pb != null)
+                pb.setVisibility(View.GONE);
+
+
         }
     }
 
@@ -175,10 +182,8 @@ public class LessonListFragment extends Fragment {
     }
 
     public void change_lessons(ArrayList<String> new_lessons) {
-        synchronized (LessonListFragment.this) {
-            lesson = new_lessons;
-            update_list();
-        }
+        lesson = new_lessons;
+        update_list();
     }
 
     @Override

@@ -1,9 +1,10 @@
 ONGOING (4):
 * Put back buttons for Reference Activity (for larger screens)
 * Make it pretty(ier)
-  - icons for buttons (dictionary / details fragment / tests results overlay / guess containing results / main menu / stats zoom / lesson filter)
+  - icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
+  - application icon
   V splash page + main menu layout
-* Update help
+* Update help ( /about ?)
 * Check different screen sizes
   - getWindow().setSoftInputMode(); to change the way the soft keyboard affects the activity
 
@@ -11,9 +12,7 @@ ONGOING (4):
 
 BUGS (00):
 
-FUTURE (21):
-* The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
-* Need to make sure the dictionary gets reinstalled when we upgrade the app
+FUTURE (19):
 * Add more automatic (robotium) tests
 * Test performance with huge database
 * Track memory allocation (unload DB when inactive?)
@@ -29,12 +28,16 @@ FUTURE (21):
 * Find characters based on the composition
 * Can find similar characters based on composition (and test with MCQ)
 * Suggest vocabulary based on what is already known, frequency list
-* Push database from one phone to another (ICS)
+* Push / sync database from one phone to another (ICS)
 * Teach to write characters
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (220):
+DONE (224):
+* If lesson was selected before, it is not possible to add an existing word to that lesson
+* Selecting lessons fast to check the content leads to permanent loading
+* The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
+* Need to make sure the dictionary gets reinstalled when we upgrade the app
 * Show hints in EditText boxes (add voc / lesson editor / tests / dictionary)
 * Also use 2-letter words for GuessEnglish
 * Update regularly in test activity on when tests become available
@@ -319,21 +322,15 @@ normal screens are at least 470dp x 320dp
 small screens are at least 426dp x 320dp
 
 Lint output:
-res/layout-xlarge/reference.xml:29: Warning: Nested weights are bad for performance [NestedWeights]
+res/layout-xlarge/reference.xml:30: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"/>
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout-xlarge/reference.xml:49: Warning: Nested weights are bad for performance [NestedWeights]
+res/layout-xlarge/reference.xml:50: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout/vocabulary_editor_large.xml:27: Warning: Nested weights are bad for performance [NestedWeights]
+res/layout/vocabulary_editor_large.xml:28: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"/>
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout/db.xml:16: Warning: This TableRow view is useless (no children, no background, no id, no style) [UselessLeaf]
-        <TableRow
-        ^
-res/layout/db.xml:93: Warning: This TableRow view is useless (no children, no background, no id, no style) [UselessLeaf]
-        <TableRow
-        ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -364,31 +361,7 @@ res/menu/add_vocabulary_menu_edit_multiple.xml:7: Warning: Prefer "ifRoom" inste
 res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [AlwaysShowAction]
           android:showAsAction="always"/>
           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/layout/add_vocabulary_list_new_item.xml:17: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-        <ImageView
-        ^
-res/layout/edit_lesson_list_new_item.xml:16: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-        <ImageView
-        ^
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-res/layout-xlarge/reference.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-res/layout-xlarge-land/reference.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-res/layout-xlarge/test.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-res/layout-xlarge-land/test.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-res/layout-xlarge-land/vocabulary_editor.xml:8: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-res/layout/vocabulary_editor_large.xml:7: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
-    <ImageView
-    ^
-0 errors, 34 warnings
+0 errors, 24 warnings

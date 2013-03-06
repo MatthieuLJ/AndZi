@@ -23,6 +23,7 @@
                 android:background="@color/half_transparent"
                 android:src="@drawable/plus"
                 android:scaleType="centerInside"
+                android:contentDescription="@string/add_voc_description_new_translation"
                 />
 
         <EditText

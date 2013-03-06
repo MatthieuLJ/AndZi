@@ -40,7 +40,6 @@ public class TestFragment extends Fragment {
     boolean table_filled=false;
 
     final static int size_limit = 30;
-    final static int size_threshold = 5;
 
     private static final String TAG = "TestFragment";
 
@@ -144,6 +143,7 @@ public class TestFragment extends Fragment {
             }
             flipper.removeViewAt(0);
         }
+        table_filled = false;
         start_test(null);
     }
 
@@ -157,8 +157,7 @@ public class TestFragment extends Fragment {
 
     private void trim_hanzis_to_test(String hanzi) {
         Log.d(TAG, "trim_hanzis_to_test "+hanzi);
-        ArrayList<String> copy_hanzis_to_test = new ArrayList<String>(hanzis_to_test);
-        copy_hanzis_to_test.remove(hanzi); // remove the exact same test
+
         synchronized (TestFragment.this) {
             for (int offset=0; offset<hanzi.length();) {
                 String c = hanzi.substring(offset, offset + Character.charCount(hanzi.codePointAt(offset)));
@@ -171,27 +170,19 @@ public class TestFragment extends Fragment {
                 }
                 offset += Character.charCount(hanzi.codePointAt(offset));
             }
-            if (hanzis_to_test.size() == 0) {
-                hanzis_to_test = copy_hanzis_to_test;
-                myDB.resetTime(hanzi); // even if we got it wrong last time, we'll wait until next time to test again
-            }
-        }
-        if ((hanzis_to_test.size() < size_threshold) && (!table_filled)) {
-            fill_hanzis_to_test();
-            trim_hanzis_to_test(hanzi);
         }
     }
 
-    private void set_next_char_to_study() {
+    private void set_next_char_to_study(boolean best_effort) {
         Log.d(TAG, "set_next_char_to_study");
-        if ((hanzis_to_test.size()==0) && (table_filled)) {
+        if ((hanzis_to_test.size()==0) && ((table_filled) || (!best_effort))) {
             current_test_hanzi =null;
         }
-        else if (hanzis_to_test.size()==0) {
+        else if ((hanzis_to_test.size()==0) && best_effort) {
             fill_hanzis_to_test();
             if (current_test_hanzi != null)
                 trim_hanzis_to_test(current_test_hanzi);
-            set_next_char_to_study();
+            set_next_char_to_study(best_effort);
         }
         else {
             current_test_hanzi = hanzis_to_test.remove((int)(hanzis_to_test.size()*Math.pow(Math.random(),2)));
@@ -206,7 +197,7 @@ public class TestFragment extends Fragment {
 
     public void start_test(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null)
-            set_next_char_to_study();
+            set_next_char_to_study(true);
         else
             current_test_hanzi = savedInstanceState.getString("test_hanzi");
 
@@ -240,7 +231,6 @@ public class TestFragment extends Fragment {
         }
         current_test_type = tests.get(test_index);
 
-        table_filled = false;
         my_handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -251,11 +241,13 @@ public class TestFragment extends Fragment {
 
     private View get_test_view(LayoutInflater inflater, ViewGroup container) {
         if (current_test_type == null) {
-            return done_testing(myDB.getNumChars()==0, inflater, container);
+            fill_hanzis_to_test();
+            if (hanzis_to_test.size() == 0)
+                return done_testing(myDB.getNumChars()==0, inflater, container);
+            else
+                start_test(null);
         }
-        else {
-            return current_test_type.get_view();
-        }
+        return current_test_type.get_view();
     }
 
     private View done_testing(final boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {

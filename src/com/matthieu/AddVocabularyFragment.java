@@ -245,7 +245,7 @@ public class AddVocabularyFragment extends Fragment
 
                 if (tr != null)
                     for (String e : tr.english) {
-                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
+                        tmp_translations_from_ref.add(new VocabularyItem(e, new ArrayList<String>(), VocabularyItem.FROM_REF_DB));
                     }
 
                 ArrayList<String> bare_translations = new ArrayList<String>();

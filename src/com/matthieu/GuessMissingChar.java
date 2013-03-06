@@ -97,8 +97,6 @@ public class GuessMissingChar extends Test implements TextWatcher {
             words = new ArrayList<Vocabulary>(words.subList(0,5));
         }
 
-        Log.d(TAG, "Testing for character " + current_test + " got " + words.size() + " words");
-
         TableLayout tl = (TableLayout) res.findViewById(R.id.char_finder_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
@@ -110,23 +108,18 @@ public class GuessMissingChar extends Test implements TextWatcher {
             chinese.setTextColor(Color.BLACK);
             chinese.setClickable(false);
             String chinese_string = w.chinese.replaceAll(current_test, "\\?");
-            Log.d(TAG, "String is "+chinese_string);
             SpannableString chinese_text = new SpannableString(chinese_string);
             int processing=0;
             int next_index=chinese_string.indexOf("?");
             while (processing < chinese_string.length()) {
-                Log.d(TAG, "processing at "+processing+", next index at "+next_index);
                 if (processing < next_index) {
                     chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), processing, next_index, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-                    Log.d(TAG, "Painting...");
                 }
 
                 while (chinese_string.indexOf("?", next_index+1) == next_index+1)
                     next_index++;
-                Log.d(TAG, "Moved to "+next_index+", next one at "+chinese_string.indexOf("?", next_index+1));
                 if (chinese_string.indexOf("?", next_index+1) == -1) {
                     chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), next_index+1, chinese_string.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-                    Log.d(TAG, "Paint from "+(next_index+1)+" to the end");
                     break;
                 }
                 processing = next_index+1;
@@ -254,7 +247,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 break;
             case CORRECT:
             case INCORRECT:
-                solution_view.set_answer(correctness, guess, words);
+                solution_view.set_answer(correctness, guess, words, previous_guess);
                 activity.new_solution_fragment(solution_view);
                 break;
         }
@@ -262,14 +255,16 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
     public static class GuessMissinCharResultView extends SolutionView {
         ArrayList<Vocabulary> words;
+        private ArrayList<String> previous_guess;
 
         public GuessMissinCharResultView(String question, TestActivity parent) {
             super(question, parent);
         }
 
-        public void set_answer(int good, String answer, ArrayList<Vocabulary> words) {
+        public void set_answer(int good, String answer, ArrayList<Vocabulary> words, ArrayList<String> previous_guess) {
             super.set_answer(good, answer);
             this.words = words;
+            this.previous_guess = previous_guess;
         }
 
         @Override
@@ -292,19 +287,20 @@ public class GuessMissingChar extends Test implements TextWatcher {
             }
 
             // reset the time for all characters displayed or restart study
-            for (Vocabulary v:words) {
-                for (int i=0; i<v.chinese.length();) {
-                    String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
-                    i+=Character.charCount(v.chinese.codePointAt(i));
-                    if (other_hanzi.equals(question))
-                        continue;
-                    if (good==CORRECT) {
-                        myDB.resetTime(other_hanzi);
+            if (previous_guess.size() == 0)
+                for (Vocabulary v:words) {
+                    for (int i=0; i<v.chinese.length();) {
+                        String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
+                        i+=Character.charCount(v.chinese.codePointAt(i));
+                        if (other_hanzi.equals(question))
+                            continue;
+                        if (good==CORRECT) {
+                            myDB.resetTime(other_hanzi);
+                        }
+                        else
+                            myDB.worseBox(other_hanzi);
                     }
-                    else
-                        myDB.worseBox(other_hanzi);
                 }
-            }
             super.update_score();
         }
     }

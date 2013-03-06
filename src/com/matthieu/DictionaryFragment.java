@@ -112,6 +112,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             boolean potential_english=true;
             Log.d(TAG, "Starting a new query for "+msg_query);
 
+            long start_time = System.currentTimeMillis();
+
             if (currentDB == null)
                 return null;
 
@@ -292,6 +294,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     result_cursor.close();
 
                 current_cursor = result_cursor;
+                long end_time = System.currentTimeMillis();
+                Log.d(TAG, "Dictionary query done in "+((end_time-start_time)/1000)+"s");
                 return result_cursor;
             }
         }

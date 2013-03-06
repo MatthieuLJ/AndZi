@@ -208,25 +208,25 @@ public class PinyinParser {
         return null;
     }
 
-    static WeakHashMap<String, ArrayList<HanziDB.StringElement>> cache;
+    static WeakHashMap<String, ArrayList<HanziDB.StringElement>> cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
     static private void add_to_cache(String entry, ArrayList<HanziDB.StringElement> result) {
-        if (cache == null)
-            cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
-
-        if (!cache.containsKey(entry)) {
-            ArrayList<HanziDB.StringElement> to_save = new ArrayList<HanziDB.StringElement>(result);
-            cache.put(entry, to_save);
+        synchronized(cache) {
+            if (!cache.containsKey(entry)) {
+                ArrayList<HanziDB.StringElement> to_save = new ArrayList<HanziDB.StringElement>(result);
+                cache.put(entry, to_save);
+                Log.d(TAG, "Save to cache for ["+entry+"] with "+result.size()+" items");
+            }
         }
     }
     static private ArrayList<HanziDB.StringElement> query_cache(String entry) {
-        if (cache == null) {
-            cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
-            return null;
+        synchronized(cache) {
+            if (cache.containsKey(entry)) {
+                Log.d(TAG, "Found entry for "+entry+" in cache");
+                return cache.get(entry);
+            }
+            else
+                return null;
         }
-        if (cache.containsKey(entry))
-            return cache.get(entry);
-        else
-            return null;
     }
 
     static public ArrayList<HanziDB.StringElement> parse_string_to_elements(String pinyin_string) {
