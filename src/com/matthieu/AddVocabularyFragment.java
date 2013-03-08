@@ -68,8 +68,6 @@ public class AddVocabularyFragment extends Fragment
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) res.findViewById(R.id.add_vocabulary_chinese);
         ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
         chinese_word.addTextChangedListener(text_watcher);
-        chinese_word.setMaximumTextSize(32);
-        chinese_word.setMinimumTextSize(10);
         View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
 
         return res;
