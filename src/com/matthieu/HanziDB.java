@@ -3098,7 +3098,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         double multiplicand=2;
         if (num_tested-box > 3) {
-            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/5; // multiplicand becomes between 1.2 and 2.8 depending on results so far
+            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/20; // multiplicand becomes between 1.8 and 2.2 depending on results so far
         }
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
         long res = (long) (box_delay * Math.pow(multiplicand, box) + extra_delay);
