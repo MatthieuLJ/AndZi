@@ -3166,17 +3166,20 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         else {
             cur.moveToFirst();
-            int current_box = 1 + cur.getInt(cur.getColumnIndex("box"));
+            int current_box = Math.min(9,1 + cur.getInt(cur.getColumnIndex("box")));
+            int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
             cv.put("box", current_box);
             int streak = cur.getInt(cur.getColumnIndex("streak"));
-            if (streak>3) {
-                int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
-                cv.put("num_wrong", Math.max(0,wrong-1));
+            if (streak>2) {
+                wrong = Math.max(0, wrong-1);
+                cv.put("num_wrong", wrong);
+                cv.put("streak", 0);
             }
-            cv.put("streak", streak+1);
+            else
+                cv.put("streak", streak+1);
             int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
             cv.put("num_tested", num_tested);
-            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, cur.getInt(cur.getColumnIndex("num_wrong")),cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
+            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, wrong,cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();
