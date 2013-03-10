@@ -143,7 +143,6 @@ public class ProgressGraph extends View {
     public void zoom_in() {
         if ((max_zoom==0) ||(current_zoom<max_zoom)) {
             current_zoom++;
-            Log.d(TAG, "zoom is "+current_zoom+" out of "+max_zoom);
             if (current_offset_x>0)
                 // stay centered
                 current_offset_x=2*current_offset_x+(getMeasuredWidth()-left_size)/2;
