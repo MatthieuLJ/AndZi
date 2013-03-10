@@ -276,6 +276,8 @@ public class GuessContaining extends Test {
             switch(good) {
                 case CORRECT:
                     myDB.betterBox(question);
+                    int word_box = myDB.getBoxForChar(question);
+                    int min_box=-1;
                     ArrayList<String> good_chars=new ArrayList<String>();
                     for (String answers:correct_answers) {
                         for (int i=0; i<answers.length();) {
@@ -284,7 +286,16 @@ public class GuessContaining extends Test {
                                 good_chars.add(c);
                             i+=Character.charCount(answers.codePointAt(i));
                         }
-                        myDB.betterBox(answers);
+                        int this_box=myDB.getBoxForChar(answers);
+                        if ((min_box == -1) || (this_box<min_box))
+                            min_box = this_box;
+                    }
+                    for (String answers:correct_answers) {
+                        int this_box=myDB.getBoxForChar(answers);
+                        if ((this_box == min_box) && (min_box < word_box))
+                            myDB.betterBox(answers);
+                        else
+                            myDB.resetTime(answers);
                     }
                     for (String c:good_chars) {
                         myDB.resetTime(c);
