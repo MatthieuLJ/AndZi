@@ -65,19 +65,23 @@ public class AndZiApplication extends Application {
     }
 
     public HanziDB getMyDB() {
-        if (myDB==null) {
-            if (!initialize_my_db())
-                return null;
-            update_dbs_in_details_populator();
+        synchronized(this) {
+            if (myDB==null) {
+                if (!initialize_my_db())
+                    return null;
+
+            }
         }
         return myDB;
     }
     public HanziDB getRefDB() {
+        synchronized(this) {
         if (!ref_initialized) {
             if (!initialize_ref_db())
                 return null;
         }
-        update_dbs_in_details_populator();
+        }
+
         return refDB;
     }
 
@@ -86,9 +90,11 @@ public class AndZiApplication extends Application {
     }
 
     public ProgressDB.ProgressData getCurrentProgress() {
-        if (myDB == null) {
-            if (!initialize_my_db())
-                return null;
+        synchronized(this) {
+            if (myDB == null) {
+                if (!initialize_my_db())
+                    return null;
+            }
         }
 
         return myDB.getProgress();
@@ -106,14 +112,17 @@ public class AndZiApplication extends Application {
     }
 
     public boolean initialize_my_db() {
-        if (myDB != null)
-            myDB.close();
-        try {
-            myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
-        } catch (Exception e) {
-            return false;
+        synchronized(this) {
+            if (myDB != null)
+                myDB.close();
+            try {
+                myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
+            } catch (Exception e) {
+                return false;
+            }
+            update_dbs_in_details_populator();
+            return true;
         }
-        return true;
     }
     
     public boolean initialize_ref_db() {
@@ -152,6 +161,9 @@ public class AndZiApplication extends Application {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putInt("cedict_version", this_ref_version);
             editor.commit();
+
+            update_dbs_in_details_populator();
+
             return true;
         }
     }

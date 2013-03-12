@@ -198,7 +198,10 @@ public class HanziDB extends SQLiteOpenHelper {
                         cv.put("box", score);
                         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(score));
                         cv.put("hanzi", hanzi);
-                        db.insert("leitner", null, cv);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                            db.insertWithOnConflict("leitner", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                        else
+                            db.insert("leitner", null, cv);
                     } while(cur.moveToNext());
                 }
                 cur.close();
@@ -2193,6 +2196,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 publishProgress(95);
                 app.copyFile(app.getDatabasePath(new_db_name).getPath(), db.getPath());
+                app.initialize_my_db();
 
                 publishProgress(100);
 
@@ -2241,12 +2245,12 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (finishing != null)
+                finishing.run();
+
             // Dismiss progress dialog
             if (dialog!=null)
                 dialog.dismiss();
-
-            if (finishing != null)
-                finishing.run();
         }
 
         @Override
@@ -3098,7 +3102,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         double multiplicand=2;
         if (num_tested-box > 3) {
-            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/5; // multiplicand becomes between 1.2 and 2.8 depending on results so far
+            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/20; // multiplicand becomes between 1.8 and 2.2 depending on results so far
         }
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
         long res = (long) (box_delay * Math.pow(multiplicand, box) + extra_delay);
@@ -3166,17 +3170,20 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         else {
             cur.moveToFirst();
-            int current_box = 1 + cur.getInt(cur.getColumnIndex("box"));
+            int current_box = Math.min(9,1 + cur.getInt(cur.getColumnIndex("box")));
+            int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
             cv.put("box", current_box);
             int streak = cur.getInt(cur.getColumnIndex("streak"));
-            if (streak>3) {
-                int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
-                cv.put("num_wrong", Math.max(0,wrong-1));
+            if (streak>2) {
+                wrong = Math.max(0, wrong-1);
+                cv.put("num_wrong", wrong);
+                cv.put("streak", 0);
             }
-            cv.put("streak", streak+1);
+            else
+                cv.put("streak", streak+1);
             int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
             cv.put("num_tested", num_tested);
-            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, cur.getInt(cur.getColumnIndex("num_wrong")),cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
+            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, wrong,cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();

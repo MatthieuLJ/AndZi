@@ -208,7 +208,10 @@ public class AddVocabularyFragment extends Fragment
     }
 
     String get_current_pinyin() {
-        PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
+        View v = getView();
+        if (v== null)
+            return "";
+        PinyinButtons buttons = (PinyinButtons) v.findViewById(R.id.pinyin_buttons);
         return buttons.get_current_pinyin();
     }
 
@@ -464,6 +467,7 @@ public class AddVocabularyFragment extends Fragment
 
                         new Thread(new Runnable() {
                             public void run() {
+
                                 Vocabulary voc = new Vocabulary(current_chinese_word, get_current_pinyin(), translation);
                                 myDB.addVocabulary(voc);
 
