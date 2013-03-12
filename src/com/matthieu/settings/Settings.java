@@ -202,12 +202,7 @@ public class Settings extends PreferenceActivity {
                 if (((AndZiApplication)getApplication()).check_merging_space(filePath)) {
                     ProgressDialog dialog = new ProgressDialog(this);
                     current_task = ((AndZiApplication) getApplication()).getMyDB().create_merge_task(filePath, dialog, this,
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((AndZiApplication)getApplication()).initialize_my_db();
-                                }
-                            });
+                            null);
                     current_task_type =2;
                 } else {
                     Toast.makeText(Settings.this, R.string.settings_error_not_enough_space_import, Toast.LENGTH_SHORT).show();

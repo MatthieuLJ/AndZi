@@ -2193,6 +2193,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 publishProgress(95);
                 app.copyFile(app.getDatabasePath(new_db_name).getPath(), db.getPath());
+                app.initialize_my_db();
 
                 publishProgress(100);
 
@@ -2241,12 +2242,12 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (finishing != null)
+                finishing.run();
+
             // Dismiss progress dialog
             if (dialog!=null)
                 dialog.dismiss();
-
-            if (finishing != null)
-                finishing.run();
         }
 
         @Override
