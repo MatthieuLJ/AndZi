@@ -1,5 +1,4 @@
-ONGOING (4):
-* Put back buttons for Reference Activity (for larger screens)
+ONGOING (3):
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
   - application icon
@@ -33,7 +32,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (224):
+DONE (225):
+* Put back buttons for Reference Activity (for larger screens)
 * If lesson was selected before, it is not possible to add an existing word to that lesson
 * Selecting lessons fast to check the content leads to permanent loading
 * The dictionary sometimes show chinese (trad | simp) in the translation... remove the traditional part
@@ -322,6 +322,9 @@ normal screens are at least 470dp x 320dp
 small screens are at least 426dp x 320dp
 
 Lint output:
+res/values/styles.xml:30: Error: android:textAllCaps requires API level 14 (current min is 4) [NewApi]
+        <item name="android:textAllCaps">true</item>
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout-xlarge/reference.xml:30: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"/>
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -331,6 +334,9 @@ res/layout-xlarge/reference.xml:50: Warning: Nested weights are bad for performa
 res/layout/vocabulary_editor_large.xml:28: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"/>
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/layout/main_menu.xml:9: Warning: This TableRow view is useless (no children, no background, no id, no style) [UselessLeaf]
+    <TableRow
+    ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
@@ -349,6 +355,9 @@ res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
 res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
 res/drawable/treatise.png: Warning: Found bitmap drawable res/drawable/treatise.png in densityless folder [IconLocation]
+res/layout/file_dialog_main.xml:52: Warning: Consider making the text value selectable by specifying android:textIsSelectable="true" [SelectableText]
+  <TextView android:id="@+id/path" android:layout_width="fill_parent"
+  ^
 res/layout/file_dialog_main.xml:33: Warning: This text field does not specify an inputType or a hint [TextFields]
    <EditText android:text="" android:id="@+id/fdEditTextFile"
    ^
@@ -364,4 +373,4 @@ res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-0 errors, 24 warnings
+1 errors, 26 warnings

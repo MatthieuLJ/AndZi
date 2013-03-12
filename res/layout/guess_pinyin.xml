@@ -26,6 +26,7 @@
             android:layout_gravity="center_horizontal|top"
             android:textSize="@dimen/xlarge_text"
             android:textColor="@android:color/black"
+            android:textIsSelectable="false"
             />
     <Button
             android:id="@+id/guess_pinyin_show_words"
