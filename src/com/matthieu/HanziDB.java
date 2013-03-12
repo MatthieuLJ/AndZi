@@ -198,7 +198,10 @@ public class HanziDB extends SQLiteOpenHelper {
                         cv.put("box", score);
                         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(score));
                         cv.put("hanzi", hanzi);
-                        db.insert("leitner", null, cv);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                            db.insertWithOnConflict("leitner", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                        else
+                            db.insert("leitner", null, cv);
                     } while(cur.moveToNext());
                 }
                 cur.close();
