@@ -18,6 +18,7 @@
             android:anyDensity="true"/>
 
     <application
+            android:icon="@drawable/icon"
             android:label="@string/app_name"
             android:name="AndZiApplication"
             android:hardwareAccelerated="false"

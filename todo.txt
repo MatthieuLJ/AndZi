@@ -340,20 +340,11 @@ res/layout/main_menu.xml:9: Warning: This TableRow view is useless (no children,
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
-res/drawable/drag_me.png: Warning: Found bitmap drawable res/drawable/drag_me.png in densityless folder [IconLocation]
 res/drawable/edit_text_default.9.png: Warning: Found bitmap drawable res/drawable/edit_text_default.9.png in densityless folder [IconLocation]
 res/drawable/edit_text_disabled.9.png: Warning: Found bitmap drawable res/drawable/edit_text_disabled.9.png in densityless folder [IconLocation]
 res/drawable/edit_text_focused.9.png: Warning: Found bitmap drawable res/drawable/edit_text_focused.9.png in densityless folder [IconLocation]
 res/drawable/edit_text_pressed.9.png: Warning: Found bitmap drawable res/drawable/edit_text_pressed.9.png in densityless folder [IconLocation]
-res/drawable/file.png: Warning: Found bitmap drawable res/drawable/file.png in densityless folder [IconLocation]
-res/drawable/first_tone.png: Warning: Found bitmap drawable res/drawable/first_tone.png in densityless folder [IconLocation]
-res/drawable/folder.png: Warning: Found bitmap drawable res/drawable/folder.png in densityless folder [IconLocation]
-res/drawable/fourth_tone.png: Warning: Found bitmap drawable res/drawable/fourth_tone.png in densityless folder [IconLocation]
-res/drawable/icon.png: Warning: Found bitmap drawable res/drawable/icon.png in densityless folder [IconLocation]
-res/drawable/plus.png: Warning: Found bitmap drawable res/drawable/plus.png in densityless folder [IconLocation]
-res/drawable/second_tone.png: Warning: Found bitmap drawable res/drawable/second_tone.png in densityless folder [IconLocation]
 res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
-res/drawable/third_tone.png: Warning: Found bitmap drawable res/drawable/third_tone.png in densityless folder [IconLocation]
 res/drawable/treatise.png: Warning: Found bitmap drawable res/drawable/treatise.png in densityless folder [IconLocation]
 res/layout/file_dialog_main.xml:52: Warning: Consider making the text value selectable by specifying android:textIsSelectable="true" [SelectableText]
   <TextView android:id="@+id/path" android:layout_width="fill_parent"
@@ -373,4 +364,4 @@ res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-1 errors, 26 warnings
+1 errors, 63 warnings
