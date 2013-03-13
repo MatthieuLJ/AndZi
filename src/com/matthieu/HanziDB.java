@@ -2897,7 +2897,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (group)
                 query.append("GROUP_CONCAT(e.translation,', ') AS english ");
             else
-                query.append("e.translation AS english ");
+                query.append("e.translation AS english, e.eng_id AS eng_id ");
             query.append("FROM eword AS e " +
                     " JOIN cword AS c ON c.cword_id=e.cword_id " +
                     " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ");
@@ -2911,7 +2911,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (group)
                 query.append("GROUP_CONCAT(e.translation,', ') AS english ");
             else
-                query.append("e.translation AS english ");
+                query.append("e.translation AS english, e.eng_id AS eng_id ");
 
             query.append("FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lesson_word " +
                     " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
@@ -2926,7 +2926,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (group)
                 query.append("GROUP_CONCAT(e.translation,', ') AS english ");
             else
-                query.append("e.translation AS english ");
+                query.append("e.translation AS english, e.eng_id AS eng_id ");
             query.append("FROM eword AS e " +
                     " JOIN cword AS c ON c.cword_id=e.cword_id " +
                     " WHERE (e.eng_id NOT IN (SELECT eng_id FROM lesson_word)) " +
@@ -2937,6 +2937,35 @@ public class HanziDB extends SQLiteOpenHelper {
                 query.append("GROUP BY c.cword_id ");
         }
         return db.rawQuery(query.toString(), null);
+    }
+
+    public void mergeVocabularyIntoLesson(ArrayList<String> lessons_from, String lesson_to) {
+        int lesson_id = getLessonId(lesson_to);
+        if (lesson_id == -1) {
+            Log.w(TAG, "Unknown lesson " + lesson_to);
+            return;
+        }
+
+        Cursor vocabulary_cursor = getVocabularyCursorInLessons(lessons_from, false);
+
+        if (vocabulary_cursor.moveToFirst()) {
+            final String set_lesson_assignment = "INSERT OR IGNORE INTO lesson_word (eng_id, lesson_id) VALUES(?, ?)";
+            final SQLiteStatement set_lesson_assignment_statement = db.compileStatement(set_lesson_assignment);
+            db.beginTransaction();
+            try {
+                int eng_id_column = vocabulary_cursor.getColumnIndex("eng_id");
+                do {
+                    set_lesson_assignment_statement.clearBindings();
+                    set_lesson_assignment_statement.bindDouble(1, vocabulary_cursor.getInt(eng_id_column));
+                    set_lesson_assignment_statement.bindDouble(2, lesson_id);
+                    set_lesson_assignment_statement.execute();
+                } while(vocabulary_cursor.moveToNext());
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
+        vocabulary_cursor.close();
     }
 
     protected String buildWhereQuery(ArrayList<String> lessons) {

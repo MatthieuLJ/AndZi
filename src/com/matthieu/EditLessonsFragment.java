@@ -714,16 +714,15 @@ public class EditLessonsFragment extends Fragment {
         new_lesson.label = new_name;
         current_lessons.add(0, new_lesson);
 
-        final ArrayList<Lesson> to_combine = new ArrayList<Lesson>(current_lesson_selection);
+        final ArrayList<String> to_combine = new ArrayList<String>();
+        for (Lesson l : current_lesson_selection)
+            to_combine.add(l.label);
 
         new Thread(new Runnable() {
             public void run() {
-                for (Lesson le : to_combine) {
-                    ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
-                    for (Vocabulary v:voc) {
-                        myDB.assignWordLesson(new_lesson.label, v);
-                    }
-                }
+                myDB.addLesson(new_lesson.label);
+                myDB.mergeVocabularyIntoLesson(to_combine, new_lesson.label);
+
                 new_lesson.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new_lesson.label))).size();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

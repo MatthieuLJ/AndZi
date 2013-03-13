@@ -1,4 +1,5 @@
-ONGOING (3):
+ONGOING (4):
+* Should change action bar menu in vocabulary editor depending on pager position
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
   - application icon
@@ -9,7 +10,8 @@ ONGOING (3):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (00):
+BUGS (1):
+* Make new translation or new lesson field larger
 
 FUTURE (19):
 * Add more automatic (robotium) tests
@@ -32,7 +34,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (225):
+DONE (226):
+* Merging lesson does not have any content
 * Put back buttons for Reference Activity (for larger screens)
 * If lesson was selected before, it is not possible to add an existing word to that lesson
 * Selecting lessons fast to check the content leads to permanent loading
