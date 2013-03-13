@@ -32,6 +32,7 @@
             android:textSize="@dimen/xlarge_text"
             android:gravity="center_horizontal"
             android:scrollbars="vertical"
+            android:textIsSelectable="false"
             />
     <Button
             android:id="@+id/guess_chinese_word_more_voc_button"

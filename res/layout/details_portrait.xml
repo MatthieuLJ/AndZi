@@ -25,6 +25,7 @@
             android:gravity="center_horizontal"
             android:textSize="@dimen/large_text"
             android:textColor="@android:color/black"
+            android:textIsSelectable="false"
             />
     <FrameLayout
             android:layout_width="match_parent"

@@ -121,6 +121,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cached_num_chars=0;
     }
 
+    @SuppressLint({"NewApi"})
     @Override
     public void onUpgrade(SQLiteDatabase db, final int oldVersion, final int newVersion) {
         Log.v(TAG, "onUpgrade ("+oldVersion+","+newVersion+")");
