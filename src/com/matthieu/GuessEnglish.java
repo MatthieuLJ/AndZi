@@ -103,6 +103,7 @@ public class GuessEnglish extends Test {
 
         TextView text = (TextView) res.findViewById(R.id.guess_english_word_voc);
         text.setText(solution.chinese);
+        text.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
         Button submit_answer = (Button) res.findViewById(R.id.guess_english_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
@@ -127,7 +128,7 @@ public class GuessEnglish extends Test {
     }
 
     protected int check_guess(String guess) {
-        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase(Locale.ENGLISH).split("[, -]");
+        String[] guesses=guess.replaceAll("[^A-Za-z ,]", "").toLowerCase(Locale.ENGLISH).split("[, -']");
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
                 continue;
@@ -141,10 +142,10 @@ public class GuessEnglish extends Test {
                     return CORRECT;
                 }
 
-                String[] ens=HanziDB.bare_translation(en).split("[ -]");
+                String[] ens=HanziDB.bare_translation(en).split("[ -']");
                 for (String item:ens) {
                     String tmp=item.replaceAll("[^A-Za-z]", "");
-                    if ((tmp.length()>2) && (tmp.equals(guesses[i].trim()))) {
+                    if ((tmp.length()>=2) && (tmp.equals(guesses[i].trim()))) {
                         Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
                         return CORRECT;
                     }
@@ -186,7 +187,7 @@ public class GuessEnglish extends Test {
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
-                bad_guess_text.setTextColor(Color.RED);
+                bad_guess_text.setTextColor(parent_activity.getResources().getColor(R.color.test_failure));
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);

@@ -29,6 +29,7 @@
                 android:layout_gravity="center_horizontal|top"
                 android:textSize="@dimen/xlarge_text"
                 android:textColor="@android:color/black"
+                android:textIsSelectable="false"
                 />
         <TextView
                 android:id="@+id/guess_tone_pinyin"
@@ -37,6 +38,7 @@
                 android:layout_gravity="center_horizontal|top"
                 android:textColor="@android:color/black"
                 android:textSize="@dimen/large_text"
+                android:textIsSelectable="false"
                 />
 
         <View
@@ -68,6 +70,7 @@
 
                             />
                     <ImageView
+                            android:id="@+id/guess_tone_first_tone_image"
                             android:layout_height="24sp"
                             android:layout_width="wrap_content"
                             android:layout_gravity="center"
@@ -76,6 +79,7 @@
                             android:contentDescription="@string/description_1st_tone"
                             />
                     <TextView
+                            android:id="@+id/guess_tone_first_tone_text"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
                             android:text="@string/first_tone"
@@ -97,6 +101,7 @@
 
                             />
                     <ImageView
+                            android:id="@+id/guess_tone_second_tone_image"
                             android:layout_height="24sp"
                             android:layout_width="wrap_content"
                             android:layout_gravity="center"
@@ -105,6 +110,7 @@
                             android:contentDescription="@string/description_2nd_tone"
                             />
                     <TextView
+                            android:id="@+id/guess_tone_second_tone_text"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
                             android:text="@string/second_tone"
@@ -133,6 +139,7 @@
 
                             />
                     <ImageView
+                            android:id="@+id/guess_tone_third_tone_image"
                             android:layout_height="24sp"
                             android:layout_width="wrap_content"
                             android:layout_gravity="center"
@@ -141,6 +148,7 @@
                             android:contentDescription="@string/description_3rd_tone"
                             />
                     <TextView
+                            android:id="@+id/guess_tone_third_tone_text"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
                             android:text="@string/third_tone"
@@ -162,6 +170,7 @@
 
                             />
                     <ImageView
+                            android:id="@+id/guess_tone_fourth_tone_image"
                             android:layout_height="24sp"
                             android:layout_width="wrap_content"
                             android:layout_gravity="center"
@@ -170,6 +179,7 @@
                             android:contentDescription="@string/description_4th_tone"
                             />
                     <TextView
+                            android:id="@+id/guess_tone_fourth_tone_text"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"
                             android:text="@string/fourth_tone"

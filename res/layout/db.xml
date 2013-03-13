@@ -13,7 +13,15 @@
             android:layout_width="wrap_content"
             android:stretchColumns="false"
             >
-        <TableRow>
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:id="@+id/empty_view1"/>
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
             <TextView
                     android:layout_marginLeft="10sp"
                     android:layout_marginRight="4sp"
@@ -21,6 +29,7 @@
                     android:gravity="right"
                     android:textColor="@android:color/black"
                     android:textSize="@dimen/large_text"
+                    android:textIsSelectable="false"
                     />
             <TextView
                     android:textColor="@android:color/black"
@@ -28,7 +37,10 @@
                     android:text="@string/num_chars"
                     />
         </TableRow>
-        <TableRow>
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
             <TextView
                     android:layout_marginLeft="10sp"
                     android:layout_marginRight="4sp"
@@ -36,6 +48,7 @@
                     android:gravity="right"
                     android:textColor="@android:color/black"
                     android:textSize="@dimen/large_text"
+                    android:textIsSelectable="false"
                     />
             <TextView
                     android:textColor="@android:color/black"
@@ -43,7 +56,10 @@
                     android:text="@string/num_words"
                     />
         </TableRow>
-        <TableRow>
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
             <TextView
                     android:layout_marginLeft="10sp"
                     android:layout_marginRight="4sp"
@@ -51,6 +67,7 @@
                     android:gravity="right"
                     android:textColor="@android:color/black"
                     android:textSize="@dimen/large_text"
+                    android:textIsSelectable="false"
                     />
             <TextView
                     android:textColor="@android:color/black"
@@ -58,6 +75,31 @@
                     android:text="@string/num_to_study"
                     />
         </TableRow>
+        <TableRow
+                android:id="@+id/db_stats_time_to_study_row"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+            <TextView
+                    android:layout_marginLeft="10sp"
+                    android:layout_marginRight="4sp"
+                    android:id="@+id/stats_time_to_study"
+                    android:gravity="right"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/normal_text"
+                    android:textIsSelectable="false"
+                    />
+            <TextView
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/normal_text"
+                    android:text="@string/time_to_study"
+                    />
+        </TableRow>
+        <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:id="@+id/empty_view2"/>
     </TableLayout>
     <com.matthieu.widget.ProgressGraph
             android:id="@+id/graph"

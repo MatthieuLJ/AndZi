@@ -23,27 +23,17 @@
             android:layout_height="0dp"
             android:layout_width="match_parent"
             android:layout_weight="1" />
-    <ScrollView
-            android:scrollbars="vertical"
-            android:layout_height="0dp"
+    <TextView
+            android:id="@+id/guess_chinese_word_voc"
             android:layout_width="match_parent"
-            android:measureAllChildren="true"
+            android:layout_height="wrap_content"
             android:layout_weight="8"
-            android:fillViewport="false"
-            >
-        <TextView
-                android:id="@+id/guess_chinese_word_voc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:textSize="@dimen/xlarge_text"
-                android:gravity="center_horizontal"
-                />
-    </ScrollView>
-    <View
-            android:layout_height="0dp"
-            android:layout_width="match_parent"
-            android:layout_weight="1" />
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/xlarge_text"
+            android:gravity="center_horizontal"
+            android:scrollbars="vertical"
+            android:textIsSelectable="false"
+            />
     <Button
             android:id="@+id/guess_chinese_word_more_voc_button"
             android:layout_width="match_parent"
@@ -54,22 +44,16 @@
             android:textColor="@android:color/black"
             android:textSize="@dimen/normal_text"
             />
-    <ScrollView
-            android:id="@+id/guess_chinese_word_more_voc_scroll"
-            android:scrollbars="vertical"
-            android:layout_height="0dp"
+    <TextView
+            android:id="@+id/guess_chinese_word_more_voc"
             android:layout_width="match_parent"
-            android:measureAllChildren="true"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/normal_text"
+            android:gravity="center_horizontal"
             android:layout_weight="3"
-            android:fillViewport="false"
-            >
-        <TextView
-                android:id="@+id/guess_chinese_word_more_voc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:textSize="@dimen/normal_text"/>
-    </ScrollView>
+            android:scrollbars="vertical"
+            android:visibility="gone"/>
     <View
             android:id="@+id/guess_chinese_word_more_spacer"
             android:layout_height="0dp"

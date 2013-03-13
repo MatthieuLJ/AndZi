@@ -3,9 +3,11 @@
  */
 package com.matthieu;
 
+import android.annotation.SuppressLint;
 import android.gesture.*;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
@@ -84,17 +86,49 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         TextView tv_pinyin = (TextView) res.findViewById(R.id.guess_tone_pinyin);
 
         tv_hanzi.setText(current_test);
+        tv_hanzi.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
         tv_pinyin.setText(radical);
 
-        CheckBox cb;
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
-        cb.setChecked(false);
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_second_tone);
-        cb.setChecked(false);
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_third_tone);
-        cb.setChecked(false);
-        cb = (CheckBox) res.findViewById(R.id.guess_tone_fourth_tone);
-        cb.setChecked(false);
+        CheckBox cb1 = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
+        cb1.setChecked(false);
+        CheckBox cb2 = (CheckBox) res.findViewById(R.id.guess_tone_second_tone);
+        cb2.setChecked(false);
+        CheckBox cb3 = (CheckBox) res.findViewById(R.id.guess_tone_third_tone);
+        cb3.setChecked(false);
+        CheckBox cb4 = (CheckBox) res.findViewById(R.id.guess_tone_fourth_tone);
+        cb4.setChecked(false);
+
+        int view_ids[] = { R.id.guess_tone_first_tone_image,
+                R.id.guess_tone_second_tone_image,
+                R.id.guess_tone_third_tone_image,
+                R.id.guess_tone_fourth_tone_image,
+                R.id.guess_tone_first_tone_text,
+                R.id.guess_tone_second_tone_text,
+                R.id.guess_tone_third_tone_text,
+                R.id.guess_tone_fourth_tone_text
+        };
+        for (int i=0; i<view_ids.length; i++) {
+            int id = view_ids[i];
+            View v = res.findViewById(id);
+            final CheckBox cb;
+            switch (i % 4) {
+                case 0:
+                default:
+                    cb = cb1; break;
+                case 1:
+                    cb = cb2; break;
+                case 2:
+                    cb = cb3; break;
+                case 3:
+                    cb = cb4; break;
+            }
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    cb.performClick();
+                }
+            });
+        }
 
         Log.d(TAG, "Expects tones : "+tones.toString());
 
@@ -285,7 +319,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
                     bad_guess_text.setText(label);
                 }
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
-                bad_guess_text.setTextColor(Color.RED);
+                bad_guess_text.setTextColor(parent_activity.getResources().getColor(R.color.test_failure));
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);

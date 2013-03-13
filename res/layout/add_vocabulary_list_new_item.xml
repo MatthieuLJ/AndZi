@@ -7,13 +7,24 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:orientation="horizontal">
-
     <com.matthieu.widget.ExtendingLinearLayout
             android:id="@+id/add_voc_new_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:orientation="horizontal">
+
+        <ImageView
+                android:id="@+id/add_new_translation_plus"
+                android:layout_height="36dp"
+                android:layout_width="match_parent"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:background="@color/half_transparent"
+                android:src="@drawable/plus"
+                android:scaleType="centerInside"
+                android:contentDescription="@string/add_voc_description_new_translation"
+                />
 
         <EditText
                 android:id="@+id/add_new_translation"

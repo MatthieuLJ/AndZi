@@ -21,13 +21,14 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HanziDB extends SQLiteOpenHelper {
     private static final String TAG = "HanziDB";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     protected AndZiApplication app;
     private SQLiteDatabase db;
@@ -87,8 +88,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "FOREIGN KEY (char_pinyin_id) REFERENCES char_pinyin(char_pinyin_id)," +
                 "UNIQUE(cword_id, pos))");
-        database.execSQL("CREATE INDEX cword_segment_cword_id ON cword_segment(cword_id)");
-        database.execSQL("CREATE INDEX cword_segment_char_pinyin_id ON cword_segment(char_pinyin_id)");
         database.execSQL("CREATE INDEX cword_segment_pos ON cword_segment(pos)");
         database.execSQL("CREATE TABLE eword (" +
                 "eng_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
@@ -96,22 +95,18 @@ public class HanziDB extends SQLiteOpenHelper {
                 "translation VARCHAR(250) NOT NULL," +
                 "FOREIGN KEY (cword_id) REFERENCES cword(cword_id)," +
                 "UNIQUE(cword_id, translation))");
-        database.execSQL("CREATE INDEX eword_translation ON eword(translation)");
 
         // lesson stuff
         database.execSQL("CREATE TABLE lessons (" +
                 "lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "list_order INTEGER DEFAULT 0," +
                 "name VARCHAR(64) NOT NULL UNIQUE)");
-        database.execSQL("CREATE INDEX lessons_name ON lessons(name)");
         database.execSQL("CREATE TABLE lesson_word (" +
                 "eng_id INTEGER NOT NULL," +
                 "lesson_id INTEGER NOT NULL," +
                 "FOREIGN KEY (eng_id) REFERENCES eword(eng_id)," +
                 "FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id)," +
                 "UNIQUE(eng_id,lesson_id))");
-        database.execSQL("CREATE INDEX lesson_word_eng_id ON lesson_word(eng_id)");
-        database.execSQL("CREATE INDEX lesson_word_lesson_id ON lesson_word(lesson_id)");
 
         // leitner stuff
         database.execSQL("CREATE TABLE leitner (" +
@@ -122,16 +117,16 @@ public class HanziDB extends SQLiteOpenHelper {
                 "num_wrong INTEGER DEFAULT 0," +
                 "streak INTEGER DEFAULT 0," +
                 "date_added INTEGER)");
-        database.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
 
         cached_num_chars=0;
     }
 
+    @SuppressLint({"NewApi"})
     @Override
-    public void onUpgrade(SQLiteDatabase db, final int i, final int i1) {
-        Log.v(TAG, "onUpgrade ("+i+","+i1+")");
+    public void onUpgrade(SQLiteDatabase db, final int oldVersion, final int newVersion) {
+        Log.v(TAG, "onUpgrade ("+oldVersion+","+newVersion+")");
 
-        if (i<2) {
+        if (oldVersion<2) {
             // first have to manually calculate expiration time
             Cursor cur = db.rawQuery("SELECT hanzi FROM char_pinyin GROUP BY hanzi", null);
             int num_chars= cur.getCount();
@@ -154,7 +149,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     "hanzi VARCHAR(2) PRIMARY KEY NOT NULL," +
                     "box INTEGER NOT NULL," +
                     "exp_time INTEGER NOT NULL)");
-            db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
+            //db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
             db.execSQL("INSERT INTO leitner SELECT hanzi,box,mod_time FROM old_leitner");
             db.execSQL("UPDATE leitner SET exp_time=exp_time + (CASE box WHEN 1 THEN ? WHEN 2 THEN ? WHEN 3 THEN ? WHEN 4 THEN ? ELSE 0 END)",
                     new String[] {
@@ -165,17 +160,17 @@ public class HanziDB extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE old_leitner");
         }
 
-        if (i<3) {
+        if (oldVersion<3) {
             //db.execSQL("ALTER TABLE cword ADD COLUMN score INTEGER DEFAULT 0");
         }
 
-        if (i<4) {
+        if (oldVersion<4) {
             db.execSQL("ALTER TABLE leitner ADD COLUMN num_tested INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN num_wrong INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN streak INTEGER DEFAULT 0");
             db.execSQL("ALTER TABLE leitner ADD COLUMN date_added INTEGER");
         }
-        if (i<5) {
+        if (oldVersion<5) {
             db.execSQL("DROP INDEX IF EXISTS leitner_hanzi");
             db.execSQL("ALTER TABLE leitner RENAME TO old_leitner");
             db.execSQL("CREATE TABLE leitner (" +
@@ -186,13 +181,13 @@ public class HanziDB extends SQLiteOpenHelper {
                     "num_wrong INTEGER DEFAULT 0," +
                     "streak INTEGER DEFAULT 0," +
                     "date_added INTEGER)");
-            db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
+            //db.execSQL("CREATE INDEX leitner_hanzi ON leitner(hanzi)");
             db.execSQL("INSERT INTO leitner SELECT hanzi,box,exp_time,num_tested,num_wrong, streak, date_added FROM old_leitner");
             db.execSQL("DROP TABLE old_leitner");
 
             // check if the score column exists
             Cursor test_cur = db.rawQuery("SELECT * FROM cword", null);
-            if ((i>=3) && (test_cur.getColumnIndex("score") != -1)) {
+            if ((oldVersion>=3) && (test_cur.getColumnIndex("score") != -1)) {
                 Cursor cur = db.rawQuery("SELECT chinese, score FROM cword WHERE (score>0) AND (length(chinese)>1)", null);
                 if (cur.moveToFirst()) {
                     int score_column_index = cur.getColumnIndex("score");
@@ -204,7 +199,10 @@ public class HanziDB extends SQLiteOpenHelper {
                         cv.put("box", score);
                         cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(score));
                         cv.put("hanzi", hanzi);
-                        db.insert("leitner", null, cv);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                            db.insertWithOnConflict("leitner", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                        else
+                            db.insert("leitner", null, cv);
                     } while(cur.moveToNext());
                 }
                 cur.close();
@@ -234,6 +232,15 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
             }
             test_cur.close();
+        }
+        if (oldVersion<6) {
+            db.execSQL("DROP INDEX IF EXISTS cword_segment_cword_id");
+            db.execSQL("DROP INDEX IF EXISTS cword_segment_char_pinyin_id");
+            db.execSQL("DROP INDEX IF EXISTS lessons_name");
+            db.execSQL("DROP INDEX IF EXISTS lesson_word_eng_id");
+            db.execSQL("DROP INDEX IF EXISTS lesson_word_lesson_id");
+            db.execSQL("DROP INDEX IF EXISTS leitner_hanzi");
+            db.execSQL("DROP INDEX IF EXISTS eword_translation");
         }
     }
 
@@ -2190,6 +2197,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 publishProgress(95);
                 app.copyFile(app.getDatabasePath(new_db_name).getPath(), db.getPath());
+                app.initialize_my_db();
 
                 publishProgress(100);
 
@@ -2238,12 +2246,12 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (finishing != null)
+                finishing.run();
+
             // Dismiss progress dialog
             if (dialog!=null)
                 dialog.dismiss();
-
-            if (finishing != null)
-                finishing.run();
         }
 
         @Override
@@ -2862,6 +2870,24 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    public HashMap<String, Integer> getLessonSizes() {
+        Cursor cur;
+        HashMap<String, Integer> res = new HashMap<String, Integer>();
+
+        cur = db.rawQuery("SELECT couples.lesson_id, lessons.name AS name, COUNT(couples.cword_id) AS count " +
+                "FROM (SELECT DISTINCT lesson_id , eword.cword_id FROM lesson_word " +
+                "JOIN eword ON lesson_word.eng_id=eword.eng_id) AS couples " +
+                "JOIN lessons ON lessons.lesson_id=couples.lesson_id GROUP BY couples.lesson_id", new String[]{});
+        if (cur.moveToFirst()) {
+            do{
+                String lesson_name = cur.getString(cur.getColumnIndex("name"));
+                int count = cur.getInt(cur.getColumnIndex("count"));
+                res.put(lesson_name, count);
+            }while(cur.moveToNext());
+        }
+        return res;
+    }
+
     public Cursor getVocabularyCursorInLessons(ArrayList<String> lessons, boolean group) {
         StringBuilder query=new StringBuilder();
 
@@ -2871,7 +2897,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (group)
                 query.append("GROUP_CONCAT(e.translation,', ') AS english ");
             else
-                query.append("e.translation AS english ");
+                query.append("e.translation AS english, e.eng_id AS eng_id ");
             query.append("FROM eword AS e " +
                     " JOIN cword AS c ON c.cword_id=e.cword_id " +
                     " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ");
@@ -2885,7 +2911,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (group)
                 query.append("GROUP_CONCAT(e.translation,', ') AS english ");
             else
-                query.append("e.translation AS english ");
+                query.append("e.translation AS english, e.eng_id AS eng_id ");
 
             query.append("FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lesson_word " +
                     " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
@@ -2900,7 +2926,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (group)
                 query.append("GROUP_CONCAT(e.translation,', ') AS english ");
             else
-                query.append("e.translation AS english ");
+                query.append("e.translation AS english, e.eng_id AS eng_id ");
             query.append("FROM eword AS e " +
                     " JOIN cword AS c ON c.cword_id=e.cword_id " +
                     " WHERE (e.eng_id NOT IN (SELECT eng_id FROM lesson_word)) " +
@@ -2911,6 +2937,35 @@ public class HanziDB extends SQLiteOpenHelper {
                 query.append("GROUP BY c.cword_id ");
         }
         return db.rawQuery(query.toString(), null);
+    }
+
+    public void mergeVocabularyIntoLesson(ArrayList<String> lessons_from, String lesson_to) {
+        int lesson_id = getLessonId(lesson_to);
+        if (lesson_id == -1) {
+            Log.w(TAG, "Unknown lesson " + lesson_to);
+            return;
+        }
+
+        Cursor vocabulary_cursor = getVocabularyCursorInLessons(lessons_from, false);
+
+        if (vocabulary_cursor.moveToFirst()) {
+            final String set_lesson_assignment = "INSERT OR IGNORE INTO lesson_word (eng_id, lesson_id) VALUES(?, ?)";
+            final SQLiteStatement set_lesson_assignment_statement = db.compileStatement(set_lesson_assignment);
+            db.beginTransaction();
+            try {
+                int eng_id_column = vocabulary_cursor.getColumnIndex("eng_id");
+                do {
+                    set_lesson_assignment_statement.clearBindings();
+                    set_lesson_assignment_statement.bindDouble(1, vocabulary_cursor.getInt(eng_id_column));
+                    set_lesson_assignment_statement.bindDouble(2, lesson_id);
+                    set_lesson_assignment_statement.execute();
+                } while(vocabulary_cursor.moveToNext());
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
+        vocabulary_cursor.close();
     }
 
     protected String buildWhereQuery(ArrayList<String> lessons) {
@@ -2944,121 +2999,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
     // Get information
     ////////////////////////////////////////
-    public int getNumInBox(int box) {
-        int res;
-        Cursor cur;
 
-        if (box == 0) {
-            cur = db.rawQuery("SELECT chinese FROM ( " +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box IS NULL) OR (box=0) " +
-                    "UNION " +
-                    "SELECT chars.hanzi AS chinese FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box IS NULL) OR (box=0) " +
-                    ") GROUP BY chinese",
-                    new String[] {});
-        } else {
-            cur = db.rawQuery("SELECT chinese FROM (" +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box=?) " +
-                    "UNION " +
-                    "SELECT chars.hanzi AS chinese FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box=?)" +
-                    ") GROUP BY chinese",
-                    new String[] {Integer.toString(box), Integer.toString(box)});
-        }
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumExpiredInBox(int box) {
-        if (box == 0)
-            return getNumInBox(0);
-
-        int res;
-        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
-                "SELECT cword.chinese AS chinese FROM cword " +
-                "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                "UNION " +
-                "SELECT chars.hanzi AS chinese FROM " +
-                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                ") GROUP BY chinese",
-                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()),
-                        Integer.toString(box), Long.toString(System.currentTimeMillis())});
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumInBoxOrAbove(int box) {
-        int res;
-        Cursor cur;
-
-        if (box == 0) {
-            cur = db.rawQuery("SELECT chinese FROM ( " +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "UNION " +
-                    "SELECT hanzi AS chinese FROM char_pinyin " +
-                    ") GROUP BY chinese",
-                    new String[] {});
-        } else {
-            cur = db.rawQuery("SELECT chinese FROM (" +
-                    "SELECT cword.chinese AS chinese FROM cword " +
-                    "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                    "WHERE (box>=?) " +
-                    "UNION " +
-                    "SELECT chars.hanzi AS chinese FROM " +
-                    "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                    "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                    "WHERE (box>=?)" +
-                    ") GROUP BY chinese",
-                    new String[] {Integer.toString(box), Integer.toString(box)});
-        }
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-    }
-
-    public int getNumExpiredInBoxOrAbove(int box) {
-        if (box <= 0)
-            return getNumExpired();
-
-        int res;
-        Cursor cur = db.rawQuery("SELECT chinese FROM (" +
-                "SELECT cword.chinese AS chinese FROM cword " +
-                "JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                "UNION " +
-                "SELECT chars.hanzi AS chinese FROM " +
-                "(SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
-                "JOIN leitner ON leitner.hanzi=chars.hanzi " +
-                "WHERE (box=?) AND (exp_time<?) " +
-                ") GROUP BY chinese",
-                new String[] {Integer.toString(box), Long.toString(System.currentTimeMillis()),
-                        Integer.toString(box), Long.toString(System.currentTimeMillis())});
-
-        res=cur.getCount();
-
-        cur.close();
-        return res;
-
-    }
 
     public int getNumExpired() {
         int res;
@@ -3080,6 +3021,35 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
         return res;
     }
+
+    public ProgressDB.ProgressData getProgress() {
+        ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
+
+        Cursor cur = db.rawQuery("SELECT COUNT(chinese) AS total, SUM(expired) AS expired, new_box AS box FROM ( " +
+                "SELECT chinese, new_box, exp_time, " +
+                "CASE WHEN (new_box==0) OR (exp_time<?) THEN 1 ELSE 0 END AS expired FROM ( " +
+                "SELECT cword.chinese AS chinese, MIN(IFNULL(box,0), 4) AS new_box , leitner.exp_time AS exp_time " +
+                "FROM cword " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=cword.chinese " +
+                "UNION " +
+                "SELECT chars.hanzi AS chinese, MIN(IFNULL(box,0), 4) AS new_box , leitner.exp_time AS exp_time " +
+                "FROM (SELECT * FROM char_pinyin GROUP BY hanzi) AS chars " +
+                "LEFT OUTER JOIN leitner ON leitner.hanzi=chars.hanzi " +
+                ") GROUP BY chinese " +
+                ") GROUP BY box;",
+                new String[] {Long.toString(System.currentTimeMillis())});
+        if (cur.moveToFirst()) {
+            do{
+                int box = cur.getInt(cur.getColumnIndex("box"));
+                new_data.num_in_box[box]=cur.getInt(cur.getColumnIndex("total"));
+                new_data.num_expired_in_box[box]=cur.getInt(cur.getColumnIndex("expired"));
+            }while(cur.moveToNext());
+        }
+        cur.close();
+        new_data.date = System.currentTimeMillis();
+        return new_data;
+    }
+
     public int getBoxForChar(String hanzi) {
         int res;
 
@@ -3117,48 +3087,68 @@ public class HanziDB extends SQLiteOpenHelper {
         if (box == 0)
             return 0;
 
-        long box_delay = (long) 6 * 60 * 60 * 1000; // 6 hours is basic
+        long box_delay = (long) 12 * 60 * 60 * 1000; // 6 hours is basic
 
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        return (long) (box_delay * Math.pow(2, box + 1));
+        long res = (long) (box_delay * Math.pow(2, box));
+        Log.d(TAG, "Expiry time is "+convert_time_in_string(res)+" (box is "+box+")");
+        return res;
 
         //System.out.println("With "+getNumChars()+" characters, mult is "+multiplicator+", so delay is "+(res/(1000*60*60)+" hours for box "+box));
+    }
+
+    private String convert_time_in_string(long delay) {
+        StringBuilder res = new StringBuilder();
+        if (delay / (1000*60*60*24) >= 2) {
+            res.append((long) (delay / (1000 * 60 * 60 * 24))).append(" days");
+        } else if (delay / (1000*60*60*24) >= 1) {
+            long hours = (delay / (1000*60*60)) - 24;
+            res.append("1 day ").append(hours).append(" hours");
+        } else if (delay / (1000*60*60) >= 2) {
+            res.append((long) (delay / (1000 * 60 * 60))).append(" hours");
+        } else if (delay / (1000*60*60) >= 1) {
+            long minutes = (delay / (1000*60)) - 60;
+            res.append("1 hour ").append(minutes).append(" minutes");
+        } else if (delay / (1000*60) >= 2) {
+            res.append((long) (delay / (1000 * 60))).append(" minutes");
+        } else if (delay / (1000*60) >= 1) {
+            long seconds = (delay / 1000) - 60;
+            res.append("1 minute ").append(seconds).append(" seconds");
+        } else {
+            res.append((long) (delay / 1000)).append(" seconds");
+        }
+
+        return res.toString();
     }
 
     protected long getExpiryTime (int box, int num_tested, int num_wrong, long date_started, long last_expiration) {
         if (box==0)
             return 0;
 
-        long box_delay = (long) 6 * 60 * 60 * 1000; // 6 hours is basic
+        long box_delay = (long) 12 * 60 * 60 * 1000; // 12 hours is basic (will be multiplied by 2 at least)
         long extra_delay = 0;
         if ((last_expiration != 0) && (last_expiration < System.currentTimeMillis()))
             extra_delay = (System.currentTimeMillis() - last_expiration)/2;
 
         double multiplicand=2;
-        if (num_tested > 3) {
-            multiplicand += (0.5-(num_wrong/num_tested))*8/5; // multiplicand becomes between 1.2 and 2.8 depending on results so far
+        if (num_tested-box > 3) {
+            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/20; // multiplicand becomes between 1.8 and 2.2 depending on results so far
         }
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        return (long) (box_delay * Math.pow(multiplicand, box + 1) + extra_delay);
+        long res = (long) (box_delay * Math.pow(multiplicand, box) + extra_delay);
+        Log.d(TAG, "Expiry time is "+convert_time_in_string(res)+" (box is "+box+")");
+        return res;
     }
 
-    protected ArrayList<String> getMostAdvancedExpiring(int num, boolean only_chars) {
+    public long getMostAdvancedExpiringTime() {
         Cursor cur;
-        ArrayList<String> res=new ArrayList<String>();
+        long res=-1;
 
-        if (only_chars)
-            cur = db.rawQuery("SELECT hanzi FROM leitner " +
-                    "WHERE length(hanzi)==1 AND exp_time>? ORDER BY exp_time ASC LIMIT ?",
-                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
-        else
-            cur = db.rawQuery("SELECT hanzi FROM leitner WHERE exp_time>? ORDER BY exp_time ASC LIMIT ?",
-                    new String[] {Long.toString(System.currentTimeMillis()), Integer.toString(num)});
+        cur = db.rawQuery("SELECT MIN(exp_time) AS exp FROM leitner WHERE exp_time>?",
+                new String[] {Long.toString(System.currentTimeMillis())});
 
         if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do {
-                res.add(cur.getString(cur.getColumnIndex("hanzi")));
-            } while (cur.moveToNext());
+            res = cur.getLong(cur.getColumnIndex("exp")) - System.currentTimeMillis();
         }
         cur.close();
         return res;
@@ -3172,6 +3162,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void resetTime(String hanzi) {
+        Log.d(TAG, "resetTime for "+hanzi);
         if (getBoxForChar(hanzi)==0) {
             betterBox(hanzi);
             return;
@@ -3191,6 +3182,7 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void betterBox(String hanzi) {
+        Log.d(TAG, "betterBox for "+hanzi);
         Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
                 new String[] {hanzi});
 
@@ -3208,23 +3200,28 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         else {
             cur.moveToFirst();
-            int current_box = 1 + cur.getInt(cur.getColumnIndex("box"));
+            int current_box = Math.min(9,1 + cur.getInt(cur.getColumnIndex("box")));
+            int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
             cv.put("box", current_box);
             int streak = cur.getInt(cur.getColumnIndex("streak"));
-            if (streak>3) {
-                int wrong = cur.getInt(cur.getColumnIndex("num_wrong"));
-                cv.put("num_wrong", wrong-1);
+            if (streak>2) {
+                wrong = Math.max(0, wrong-1);
+                cv.put("num_wrong", wrong);
+                cv.put("streak", 0);
             }
-            cv.put("streak", streak+1);
+            else
+                cv.put("streak", streak+1);
             int num_tested = cur.getInt(cur.getColumnIndex("num_tested")) + 1;
             cv.put("num_tested", num_tested);
-            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, cur.getInt(cur.getColumnIndex("num_wrong")),cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
+            cv.put("exp_time", System.currentTimeMillis()+getExpiryTime(current_box, num_tested, wrong,cur.getLong(cur.getColumnIndex("date_added")), cur.getLong(cur.getColumnIndex("exp_time"))));
             db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
         }
         cur.close();
     }
 
     public void worseBox(String hanzi) {
+        Log.d(TAG, "worseBox for "+hanzi);
+
         ContentValues cv = new ContentValues();
 
         Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
@@ -3259,6 +3256,8 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     public void restartStudy(String hanzi) {
+        Log.d(TAG, "worseBox for "+hanzi);
+
         ContentValues cv = new ContentValues();
         cv.put("box", 0);
         cv.put("exp_time", System.currentTimeMillis());
@@ -3334,32 +3333,6 @@ public class HanziDB extends SQLiteOpenHelper {
         }
         cur.close();
         return res;
-    }
-
-    public Cursor getCursorCharsToStudy() {
-        return db.rawQuery("SELECT char_pinyin.char_pinyin_id AS _id, char_pinyin.hanzi AS chinese," +
-                "char_pinyin.pinyin AS pinyin, (CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box " +
-                "FROM char_pinyin " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=char_pinyin.hanzi " +
-                "WHERE ((box IS NULL) OR (box=0) OR (exp_time<?)) " +
-                "AND ((char_pinyin.pinyin NOT LIKE '%5') OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi HAVING COUNT(*) <> 2)) OR (char_pinyin.hanzi IN (SELECT hanzi FROM char_pinyin GROUP BY hanzi,SUBSTR(pinyin,1, LENGTH(pinyin)-1) HAVING COUNT(*) <> 2))) " +
-                "ORDER BY forced_box DESC, exp_time ASC",
-                new String[] {Long.toString(System.currentTimeMillis())});
-    }
-
-    public Cursor getCursorWordsToStudy() {
-        return db.rawQuery("SELECT cword.cword_id AS _id, cword.chinese AS chinese, " +
-                "cword.pinyin AS pinyin, " +
-                "(CASE leitner.exp_time WHEN NULL THEN 0 ELSE leitner.exp_time END) AS exp_time, " +
-                "(CASE leitner.box WHEN NULL THEN 0 ELSE leitner.box END) AS forced_box, " +
-                "GROUP_CONCAT(eword.translation,', ') AS english " +
-                "FROM cword " +
-                "JOIN eword ON eword.cword_id=cword.cword_id " +
-                "OUTER LEFT JOIN leitner ON leitner.hanzi=cword.chinese " +
-                "WHERE (box IS NULL) OR (box=0) OR (exp_time<?) " +
-                "GROUP BY chinese, eword.cword_id ORDER BY forced_box DESC, exp_time ASC",
-                new String[] {Long.toString(System.currentTimeMillis())});
     }
 
     public Cursor getCursorToStudy() {

@@ -108,15 +108,18 @@ public class EditLessonsFragment extends Fragment {
             tmp_lessons = new ArrayList<Lesson>();
             Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
+            HashMap<String, Integer> stats = myDB.getLessonSizes();
 
             for (String existing_lesson : existing_lessons) {
                 if (isCancelled())
                     return null;
 
-                int num = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(existing_lesson))).size();
                 Lesson new_lesson = new Lesson(existing_lesson);
                 new_lesson.state = Lesson.EXISTING;
-                new_lesson.num_items = num;
+                if (stats.containsKey(existing_lesson))
+                    new_lesson.num_items = stats.get(existing_lesson);
+                else
+                    new_lesson.num_items=0;
                 tmp_lessons.add(new_lesson);
             }
 
@@ -150,8 +153,12 @@ public class EditLessonsFragment extends Fragment {
         protected Void doInBackground(Void... voids) {
             do {
                 start_over=false;
+                HashMap<String, Integer> stats = myDB.getLessonSizes();
                 for (Lesson l : current_lessons) {
-                    l.num_items= myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l.label))).size();
+                    if (stats.containsKey(l.label))
+                        l.num_items= stats.get(l.label);
+                    else
+                        l.num_items=0;
                 }
             } while (start_over);
             return null;
@@ -163,9 +170,11 @@ public class EditLessonsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
-            if (lv != null) {
-                ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+            if (getView() != null) {
+                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                if ((lv != null) && (lv.getAdapter() != null)) {
+                    ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
+                }
             }
 
             synchronized (EditLessonsFragment.this) {
@@ -221,6 +230,8 @@ public class EditLessonsFragment extends Fragment {
         public void expand_new_field(boolean expand) {
             if (first_row != null && expand && new_collapsed) {
                 new_collapsed = !expand;
+                ImageView plus = (ImageView) first_row.findViewById(R.id.add_new_lesson_plus);
+                plus.setVisibility(View.GONE);
                 first_row.expand();
                 EditText field = (EditText) first_row.findViewById(R.id.edit_new_lesson);
                 field.requestFocus();
@@ -245,11 +256,23 @@ public class EditLessonsFragment extends Fragment {
                     new_collapsed = false;
 
                 ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.edit_lesson_new_container);
-                if (new_collapsed)
+                ImageView plus = (ImageView) row.findViewById(R.id.add_new_lesson_plus);
+                if (new_collapsed) {
+                    plus.setVisibility(View.VISIBLE);
                     elv.collapse_immediate();
-                else
+                }
+                else {
+                    plus.setVisibility(View.GONE);
                     elv.expand_immediate();
+                }
                 first_row = elv;
+
+                plus.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        expand_new_field(true);
+                    }
+                });
 
                 Button new_lesson_ok = (Button) row.findViewById(R.id.edit_new_lesson_ok);
                 EditText new_lesson_field = (EditText) row.findViewById(R.id.edit_new_lesson);
@@ -259,7 +282,7 @@ public class EditLessonsFragment extends Fragment {
                         if (init_lessons_thread!=null)
                             return;
                         EditText new_lesson_field = (EditText)view.getTag(R.id.edit_new_lesson);
-                        final String new_lesson_label = new_lesson_field.getText().toString();
+                        final String new_lesson_label = new_lesson_field.getText().toString().trim();
                         new_lesson_field.setText("");
                         if (new_lesson_label.equals(""))
                             return;
@@ -525,9 +548,13 @@ public class EditLessonsFragment extends Fragment {
         TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
         if (lv == null)
             return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
-            lv.smoothScrollToPosition(0);
-        ((LessonArrayAdapter)lv.getAdapter()).expand_new_field(true);
+        LessonArrayAdapter adapter = (LessonArrayAdapter)lv.getAdapter();
+        if (adapter != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
+                lv.smoothScrollToPosition(0);
+
+            adapter.expand_new_field(true);
+        }
     }
 
     public void clone_selection() {
@@ -687,16 +714,15 @@ public class EditLessonsFragment extends Fragment {
         new_lesson.label = new_name;
         current_lessons.add(0, new_lesson);
 
-        final ArrayList<Lesson> to_combine = new ArrayList<Lesson>(current_lesson_selection);
+        final ArrayList<String> to_combine = new ArrayList<String>();
+        for (Lesson l : current_lesson_selection)
+            to_combine.add(l.label);
 
         new Thread(new Runnable() {
             public void run() {
-                for (Lesson le : to_combine) {
-                    ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
-                    for (Vocabulary v:voc) {
-                        myDB.assignWordLesson(new_lesson.label, v);
-                    }
-                }
+                myDB.addLesson(new_lesson.label);
+                myDB.mergeVocabularyIntoLesson(to_combine, new_lesson.label);
+
                 new_lesson.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new_lesson.label))).size();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

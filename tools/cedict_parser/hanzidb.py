@@ -15,7 +15,7 @@ class HanziDB:
         self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US');")
         self.connection.execute("INSERT INTO android_metadata VALUES ('en_US');")
 
-        self.connection.execute("PRAGMA user_version=2;")
+        self.connection.execute("PRAGMA user_version=6;")
 
         self.connection.execute("CREATE TABLE char_pinyin ( \
                 char_pinyin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
@@ -41,8 +41,6 @@ class HanziDB:
                 FOREIGN KEY (cword_id) REFERENCES cword(cword_id), \
                 FOREIGN KEY (char_pinyin_id) REFERENCES char_pinyin(char_pinyin_id), \
                 UNIQUE(cword_id, pos));")
-        self.connection.execute("CREATE INDEX cword_segment_cword_id ON cword_segment(cword_id);")
-        self.connection.execute("CREATE INDEX cword_segment_char_pinyin_id ON cword_segment(char_pinyin_id);")
         self.connection.execute("CREATE INDEX cword_segment_pos ON cword_segment(pos);")
         self.connection.execute("CREATE TABLE eword ( \
                 eng_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
@@ -50,27 +48,6 @@ class HanziDB:
                 translation VARCHAR(250) NOT NULL, \
                 FOREIGN KEY (cword_id) REFERENCES cword(cword_id), \
                 UNIQUE(cword_id, translation));")
-        self.connection.execute("CREATE INDEX eword_translation ON eword(translation);")
-
-        self.connection.execute("CREATE TABLE lessons ( \
-                lesson_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
-                list_order INTEGER DEFAULT 0, \
-                name VARCHAR(64) NOT NULL, \
-                UNIQUE(name));")
-        self.connection.execute("CREATE INDEX lessons_name ON lessons(name);")
-        self.connection.execute("CREATE TABLE lesson_word ( \
-                eng_id INTEGER NOT NULL, \
-                lesson_id INTEGER NOT NULL, \
-                FOREIGN KEY (eng_id) REFERENCES eword(eng_id), \
-                FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id), \
-                UNIQUE(eng_id,lesson_id));")
-        self.connection.execute("CREATE INDEX lesson_word_eng_id ON lesson_word(eng_id);")
-        self.connection.execute("CREATE INDEX lesson_word_lesson_id ON lesson_word(lesson_id);")
-        self.connection.execute("CREATE TABLE leitner ( \
-                hanzi VARCHAR(2) PRIMARY KEY NOT NULL, \
-                box INTEGER NOT NULL, \
-                exp_time INTEGER NOT NULL);")
-        self.connection.execute("CREATE INDEX leitner_hanzi ON leitner(hanzi);")
 
         # Make it Android compatible
         self.connection.commit()

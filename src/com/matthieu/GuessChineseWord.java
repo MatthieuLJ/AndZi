@@ -111,9 +111,7 @@ public class GuessChineseWord extends Test {
         if (!showing_more_voc) {
             TextView more_text = (TextView) res.findViewById(R.id.guess_chinese_word_more_voc);
             more_text.setText("");
-
-            ScrollView scroll = (ScrollView) res.findViewById(R.id.guess_chinese_word_more_voc_scroll);
-            scroll.setVisibility(View.GONE);
+            more_text.setVisibility(View.GONE);
 
             Button more = (Button) res.findViewById(R.id.guess_chinese_word_more_voc_button);
             View more_spacer = res.findViewById(R.id.guess_chinese_word_more_spacer);
@@ -208,8 +206,7 @@ public class GuessChineseWord extends Test {
             if (i<more_translations.size()-1)
                 more_text.setText(more_text.getText()+"\n");
         }
-        ScrollView scroll = (ScrollView) activity.findViewById(R.id.guess_chinese_word_more_voc_scroll);
-        scroll.setVisibility(View.VISIBLE);
+        more_text.setVisibility(View.VISIBLE);
         showing_more_voc=true;
     }
 
@@ -232,6 +229,7 @@ public class GuessChineseWord extends Test {
                         if (i<previous_guess.size()-1)
                             previous.setText(previous.getText() + ",\n");
                     }
+                    previous.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
                     previous.setVisibility(View.VISIBLE);
                     previous.invalidate();
                 }
@@ -301,12 +299,13 @@ public class GuessChineseWord extends Test {
             }
             else if (good == INCORRECT) {
                 old_scores = new HashMap<String, saved_score>();
-                for (int i=0; i<question.length();) {
-                    String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
-                    old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
-                    myDB.worseBox(character);
-                    i+=Character.charCount(question.codePointAt(i));
-                }
+                if (previous_guess.size()==0)
+                    for (int i=0; i<question.length();) {
+                        String character = question.substring(i, i+Character.charCount(question.codePointAt(i)));
+                        old_scores.put(character, new saved_score(myDB.getBoxForChar(character), myDB.getExpirationTimeForChar(character)));
+                        myDB.worseBox(character);
+                        i+=Character.charCount(question.codePointAt(i));
+                    }
                 old_scores.put(question, new saved_score(myDB.getBoxForChar(question), myDB.getExpirationTimeForChar(question)));
                 myDB.worseBox(question);
             }

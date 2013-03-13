@@ -13,6 +13,7 @@
             android:layout_width="match_parent"
             style="@style/edit_text"
             android:textSize="@dimen/large_text"
+            android:hint="@string/reference_query"
             android:layout_marginBottom="5dp"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"/>

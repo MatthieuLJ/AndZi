@@ -128,6 +128,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
         TextView chinese_hint = (TextView) res.findViewById(R.id.guess_pinyin_chinese);
         chinese_hint.setText(current_test);
+        chinese_hint.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
         final TableLayout tl = (TableLayout) res.findViewById(R.id.guess_pinyin_word_grid);
         tl.removeAllViews();
@@ -138,6 +139,7 @@ public class GuessPinyin extends Test implements TextWatcher {
             TextView chinese = new TextView(activity);
             chinese.setTextColor(Color.BLACK);
             chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
+            chinese.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
             chinese.setClickable(false);
             chinese.setText(w.chinese);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -171,13 +173,19 @@ public class GuessPinyin extends Test implements TextWatcher {
             }
         });
 
+        show_words_button.setVisibility(View.VISIBLE);
         if (show_words) {
             tl.setVisibility(View.VISIBLE);
             show_words_button.setClickable(false);
         }
         else {
             tl.setVisibility(View.GONE);
-            show_words_button.setClickable(true);
+            if (myDB.getBoxForChar(current_test) >= 5) {
+                show_words_button.setClickable(false);
+                show_words_button.setVisibility(View.GONE);
+            } else {
+                show_words_button.setClickable(true);
+            }
         }
 
         Button submit_answer = (Button) res.findViewById(R.id.guess_pinyin_ok);
@@ -249,7 +257,7 @@ public class GuessPinyin extends Test implements TextWatcher {
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
-                bad_guess_text.setTextColor(Color.RED);
+                bad_guess_text.setTextColor(parent_activity.getResources().getColor(R.color.test_failure));
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 (result_view.findViewById(R.id.test_result_wrong)).setVisibility(View.VISIBLE);

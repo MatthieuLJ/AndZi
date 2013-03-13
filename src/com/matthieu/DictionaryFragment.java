@@ -52,6 +52,26 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         query.setText("");
         query.addTextChangedListener(new Dictionary_query_parse());
 
+        final Button source_button = (Button) res.findViewById(R.id.details_source_button);
+        if (source_button != null) {
+            if (is_dictionary_search())
+                source_button.setText(R.string.details_dictionary);
+            else
+                source_button.setText(R.string.details_voc_list);
+            source_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    change_source();
+                    if (is_dictionary_search())
+                        source_button.setText(R.string.details_dictionary);
+                    else
+                        source_button.setText(R.string.details_voc_list);
+
+                }
+            });
+
+        }
+
         return res;
     }
 
@@ -78,6 +98,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     private class update_delayer extends AsyncTask<Void, Cursor, Cursor> {
         String msg_query;
         boolean msg_ref;
+        String cannot_understand_query;
 
         boolean is_cancelled = false;
         HanziDB currentDB=null;
@@ -102,6 +123,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             else {
                 currentDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
             }
+            cannot_understand_query = getResources().getString(R.string.reference_cannot_understand);
         }
 
         @Override
@@ -110,6 +132,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             boolean potential_english=true;
             Log.d(TAG, "Starting a new query for "+msg_query);
 
+            long start_time = System.currentTimeMillis();
+
             if (currentDB == null)
                 return null;
 
@@ -117,7 +141,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
             Log.d(TAG, "Detected mode "+mode);
             if (mode == -1) {
-                current_cursor = new MessageCursor("Cannot understand this query");
+                current_cursor = new MessageCursor(cannot_understand_query);
                 return current_cursor;
             }
 
@@ -131,7 +155,10 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     return current_cursor;
                 }
 
-                EditText query = (EditText) getView().findViewById(R.id.dict_query);
+                View v = getView();
+                if (v == null)
+                    return null;
+                EditText query = (EditText) v.findViewById(R.id.dict_query);
                 if (query != null) {
                     if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref)) {
                         return null;
@@ -290,6 +317,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                     result_cursor.close();
 
                 current_cursor = result_cursor;
+                long end_time = System.currentTimeMillis();
+                Log.d(TAG, "Dictionary query done in "+((end_time-start_time)/1000)+"s");
                 return result_cursor;
             }
         }

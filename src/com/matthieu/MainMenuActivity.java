@@ -26,7 +26,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.Theme_Sherlock);
+        setTheme(R.style.mainmenu_theme);
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         start_test=false;
@@ -57,11 +57,6 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         ((Button)findViewById(R.id.main_menu_ref)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_help)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_settings)).setTypeface(main_menu_font);
-
-        int num_expired = myDB.getNumExpired();
-
-        if (num_expired == 0)
-            findViewById(R.id.main_menu_test).setEnabled(false);
     }
 
     public void fail_it() {

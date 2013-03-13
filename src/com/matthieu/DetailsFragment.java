@@ -73,34 +73,6 @@ public class DetailsFragment extends Fragment {
         final View res = inflater.inflate(R.layout.details_fragment, container, false);
         FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
 
-        Button source_button = (Button) res.findViewById(R.id.details_source_button);
-        if (source_button != null) {
-            source_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    change_source();
-                }
-            });
-        }
-        Button add_edit_button = (Button) res.findViewById(R.id.details_add_edit_button);
-        if (add_edit_button != null) {
-            add_edit_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    edit_add_word();
-                }
-            });
-        }
-        Button pin_button = (Button) res.findViewById(R.id.details_pinned_button);
-        if (pin_button != null) {
-            pin_button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    pin_unpin();
-                }
-            });
-        }
-
         if (saved_data != null) {
             populate_details_view(this.getActivity(), frame, saved_data, (ReferenceActivity) getActivity());
         } else {
@@ -120,6 +92,47 @@ public class DetailsFragment extends Fragment {
             if (use_ref)
                 check_if_exists_in_db(db);
         }
+
+        final Button source_button = (Button) res.findViewById(R.id.details_source_button);
+        if (source_button != null) {
+            if (is_dictionary_search())
+                source_button.setText(R.string.details_dictionary);
+            else
+                source_button.setText(R.string.details_voc_list);
+            source_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    change_source();
+                }
+            });
+        }
+        final Button add_edit_button = (Button) res.findViewById(R.id.details_add_edit_button);
+        if (add_edit_button != null) {
+            if (exists_in_db())
+                add_edit_button.setText(R.string.details_edit);
+            else
+                add_edit_button.setText(R.string.details_add);
+            add_edit_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    edit_add_word();
+                }
+            });
+        }
+        final Button pin_button = (Button) res.findViewById(R.id.details_pinned_button);
+        if (pin_button != null) {
+            if (isPinned())
+                pin_button.setText(R.string.details_unpin);
+            else
+                pin_button.setText(R.string.details_pin);
+            pin_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    pin_unpin();
+                }
+            });
+        }
+
         return res;
     }
 
@@ -137,6 +150,16 @@ public class DetailsFragment extends Fragment {
                 SherlockFragmentActivity parent = (SherlockFragmentActivity) getActivity();
                 if (parent != null)
                     parent.invalidateOptionsMenu();
+                View v = getView();
+                if (v != null) {
+                    final Button add_edit_button = (Button) v.findViewById(R.id.details_add_edit_button);
+                    if (add_edit_button != null) {
+                        if (exists_in_db())
+                            add_edit_button.setText(R.string.details_edit);
+                        else
+                            add_edit_button.setText(R.string.details_add);
+                    }
+                }
             }
         }.execute((Void[])null);
     }
@@ -362,7 +385,7 @@ public class DetailsFragment extends Fragment {
                 if (show_pinyin_color) {
                     SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
                     info_pinyin_builder.append("(");
-                    info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pinyin));
+                    info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pinyin, activity));
                     info_pinyin_builder.append(")");
                     pinyin_info = info_pinyin_builder;
                 } else {
@@ -380,7 +403,7 @@ public class DetailsFragment extends Fragment {
                     info_pinyin_builder.append("(");
                     for (int i=0; i<pinyins.size(); i++) {
                         String pin=pinyins.get(i);
-                        info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pin));
+                        info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(pin, activity));
                         if (i < pinyins.size()-1)
                             info_pinyin_builder.append(", ");
                     }
@@ -406,7 +429,7 @@ public class DetailsFragment extends Fragment {
                     if (show_pinyin_color) {
                         SpannableStringBuilder info_pinyin_builder = new SpannableStringBuilder();
                         info_pinyin_builder.append("(");
-                        info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(voc.get(0).pinyin));
+                        info_pinyin_builder.append(PinyinParser.convert_to_spannable_version(voc.get(0).pinyin, activity));
                         info_pinyin_builder.append(")");
                         pinyin_info = info_pinyin_builder;
                     } else {
@@ -438,9 +461,10 @@ public class DetailsFragment extends Fragment {
                     for (int i=0; i<hanzi.length(); ) {
                         TextView character = new TextView(activity);
                         final String character_label = hanzi.substring(i, i + Character.charCount(hanzi.codePointAt(i)));
-                        character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xlarge_text));
+                        character.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.xxlarge_text));
                         character.setTextColor(Color.BLACK);
                         character.setText(character_label);
+                        character.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
                         if (hanzi.codePointCount(0, hanzi.length())!= 1)
                             character.setOnClickListener(new View.OnClickListener() {
                                 public void onClick(View view) {
@@ -545,6 +569,16 @@ public class DetailsFragment extends Fragment {
 
     public void pin_unpin() {
         pinned = !pinned;
+        View v= getView();
+        if (v != null) {
+            final Button pin_button = (Button) v.findViewById(R.id.details_pinned_button);
+            if (pin_button != null) {
+                if (isPinned())
+                    pin_button.setText(R.string.details_unpin);
+                else
+                    pin_button.setText(R.string.details_pin);
+            }
+        }
     }
 
     public void change_source() {

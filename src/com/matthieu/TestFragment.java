@@ -38,10 +38,8 @@ public class TestFragment extends Fragment {
 
     ArrayList<String> hanzis_to_test = new ArrayList<String>();
     boolean table_filled=false;
-    private boolean continue_with_more_chars=false;
 
     final static int size_limit = 30;
-    final static int size_threshold = 5;
 
     private static final String TAG = "TestFragment";
 
@@ -145,6 +143,7 @@ public class TestFragment extends Fragment {
             }
             flipper.removeViewAt(0);
         }
+        table_filled = false;
         start_test(null);
     }
 
@@ -152,14 +151,13 @@ public class TestFragment extends Fragment {
         Log.d(TAG, "fill_hanzis_to_test");
         synchronized (TestFragment.this) {
             hanzis_to_test = myDB.getAllToStudy(size_limit);
-            if ((continue_with_more_chars) && (hanzis_to_test.size() < size_limit))
-                hanzis_to_test.addAll(myDB.getMostAdvancedExpiring(size_limit - hanzis_to_test.size(), false));
             table_filled=true;
         }
     }
 
     private void trim_hanzis_to_test(String hanzi) {
         Log.d(TAG, "trim_hanzis_to_test "+hanzi);
+
         synchronized (TestFragment.this) {
             for (int offset=0; offset<hanzi.length();) {
                 String c = hanzi.substring(offset, offset + Character.charCount(hanzi.codePointAt(offset)));
@@ -173,22 +171,18 @@ public class TestFragment extends Fragment {
                 offset += Character.charCount(hanzi.codePointAt(offset));
             }
         }
-        if ((hanzis_to_test.size() < size_threshold) && (!table_filled)) {
-            fill_hanzis_to_test();
-            trim_hanzis_to_test(hanzi);
-        }
     }
 
-    private void set_next_char_to_study() {
+    private void set_next_char_to_study(boolean best_effort) {
         Log.d(TAG, "set_next_char_to_study");
-        if ((hanzis_to_test.size()==0) && (table_filled)) {
+        if ((hanzis_to_test.size()==0) && ((table_filled) || (!best_effort))) {
             current_test_hanzi =null;
         }
-        else if (hanzis_to_test.size()==0) {
+        else if ((hanzis_to_test.size()==0) && best_effort) {
             fill_hanzis_to_test();
             if (current_test_hanzi != null)
                 trim_hanzis_to_test(current_test_hanzi);
-            set_next_char_to_study();
+            set_next_char_to_study(best_effort);
         }
         else {
             current_test_hanzi = hanzis_to_test.remove((int)(hanzis_to_test.size()*Math.pow(Math.random(),2)));
@@ -203,7 +197,7 @@ public class TestFragment extends Fragment {
 
     public void start_test(@Nullable Bundle savedInstanceState) {
         if (savedInstanceState == null)
-            set_next_char_to_study();
+            set_next_char_to_study(true);
         else
             current_test_hanzi = savedInstanceState.getString("test_hanzi");
 
@@ -237,7 +231,6 @@ public class TestFragment extends Fragment {
         }
         current_test_type = tests.get(test_index);
 
-        table_filled = false;
         my_handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -248,13 +241,14 @@ public class TestFragment extends Fragment {
 
     private View get_test_view(LayoutInflater inflater, ViewGroup container) {
         if (current_test_type == null) {
-            return done_testing(myDB.getNumChars()==0, inflater, container);
+            fill_hanzis_to_test();
+            if (hanzis_to_test.size() == 0)
+                return done_testing(myDB.getNumChars()==0, inflater, container);
+            else
+                start_test(null);
         }
-        else {
-            return current_test_type.get_view();
-        }
+        return current_test_type.get_view();
     }
-
 
     private View done_testing(final boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
         final View res = inflater.inflate(R.layout.test_done, container, false);
@@ -266,30 +260,7 @@ public class TestFragment extends Fragment {
             message.setText(R.string.test_mastering);
         }
 
-        Button OK_button = (Button) res.findViewById(R.id.ok);
-        OK_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!empty_db) {
-                    continue_with_more_chars = true;
-                    table_filled = false;
-                    new_test();
-                } else {
-                    TestFragment.this.getActivity().finish();
-                }
-
-            }
-        });
-
-        Button Cancel_button = (Button) res.findViewById(R.id.cancel);
-        if (empty_db)
-            Cancel_button.setVisibility(View.GONE);
-        Cancel_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getActivity().finish();
-            }
-        });
+        ((TestActivity) getActivity()).test_done(true);
 
         return res;
     }

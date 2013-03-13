@@ -68,8 +68,6 @@ public class AddVocabularyFragment extends Fragment
         EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) res.findViewById(R.id.add_vocabulary_chinese);
         ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
         chinese_word.addTextChangedListener(text_watcher);
-        chinese_word.setMaximumTextSize(32);
-        chinese_word.setMinimumTextSize(10);
         View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
 
         return res;
@@ -182,7 +180,7 @@ public class AddVocabularyFragment extends Fragment
                             main_content.removeAllViews();
                             View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_enter_chinese);
+                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText("");
                         break;
                     case 1:
                         // all chinese characters
@@ -210,7 +208,10 @@ public class AddVocabularyFragment extends Fragment
     }
 
     String get_current_pinyin() {
-        PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
+        View v = getView();
+        if (v== null)
+            return "";
+        PinyinButtons buttons = (PinyinButtons) v.findViewById(R.id.pinyin_buttons);
         return buttons.get_current_pinyin();
     }
 
@@ -245,7 +246,7 @@ public class AddVocabularyFragment extends Fragment
 
                 if (tr != null)
                     for (String e : tr.english) {
-                        tmp_translations_from_ref.add(new VocabularyItem(e, refDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_REF_DB));
+                        tmp_translations_from_ref.add(new VocabularyItem(e, new ArrayList<String>(), VocabularyItem.FROM_REF_DB));
                     }
 
                 ArrayList<String> bare_translations = new ArrayList<String>();
@@ -316,6 +317,8 @@ public class AddVocabularyFragment extends Fragment
         public void expand_new_field(boolean expand) {
             if (first_row != null && expand && new_collapsed) {
                 new_collapsed = !expand;
+                ImageView plus = (ImageView) first_row.findViewById(R.id.add_new_translation_plus);
+                plus.setVisibility(View.GONE);
                 first_row.expand();
                 EditText field = (EditText) first_row.findViewById(R.id.add_new_translation);
                 field.requestFocus();
@@ -417,11 +420,23 @@ public class AddVocabularyFragment extends Fragment
                     new_collapsed=false;
 
                 ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.add_voc_new_container);
-                if (new_collapsed)
+                ImageView plus = (ImageView) row.findViewById(R.id.add_new_translation_plus);
+                if (new_collapsed) {
+                    plus.setVisibility(View.VISIBLE);
                     elv.collapse_immediate();
-                else
+                }
+                else {
+                    plus.setVisibility(View.GONE);
                     elv.expand_immediate();
+                }
                 first_row = elv;
+
+                plus.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        expand_new_field(true);
+                    }
+                });
 
                 Button add_new_word = (Button) row.findViewById(R.id.add_new_translation_ok);
                 EditText word_field = (EditText) row.findViewById(R.id.add_new_translation);
@@ -429,7 +444,7 @@ public class AddVocabularyFragment extends Fragment
                 add_new_word.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
                         EditText word_field = (EditText) view.getTag(R.id.vocabulary_item);
-                        final String translation = word_field.getText().toString();
+                        final String translation = word_field.getText().toString().trim();
                         word_field.setText("");
                         if (translation.equals(""))
                             return;
@@ -452,6 +467,7 @@ public class AddVocabularyFragment extends Fragment
 
                         new Thread(new Runnable() {
                             public void run() {
+
                                 Vocabulary voc = new Vocabulary(current_chinese_word, get_current_pinyin(), translation);
                                 myDB.addVocabulary(voc);
 
@@ -826,10 +842,6 @@ public class AddVocabularyFragment extends Fragment
     }
 
     public void set_new_lesson_assignment(HashMap<String, VocabularyEditorActivity.LessonAssignment> assignment) {
-        if (current_word_selection.size()==0) {
-            update_state();
-            return;
-        }
         for (final String l : assignment.keySet()) {
             VocabularyEditorActivity.LessonAssignment this_lesson = assignment.get(l);
             final String current_pinyin = get_current_pinyin();

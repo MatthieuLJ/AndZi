@@ -26,6 +26,7 @@
             android:layout_gravity="center_horizontal|top"
             android:textSize="@dimen/xlarge_text"
             android:textColor="@android:color/black"
+            android:textIsSelectable="false"
             />
     <Button
             android:id="@+id/guess_pinyin_show_words"
@@ -68,6 +69,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 style="@style/edit_text"
+                android:hint="@string/test_your_answer"
+                android:textSize="@dimen/large_text"
                 android:imeOptions="actionDone"
                 />
         <Button

@@ -6,6 +6,8 @@ package com.matthieu;
 import android.content.Context;
 import android.graphics.Color;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
@@ -13,6 +15,8 @@ import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.*;
+import com.matthieu.widget.CustomTypefaceSpan;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -93,8 +97,6 @@ public class GuessMissingChar extends Test implements TextWatcher {
             words = new ArrayList<Vocabulary>(words.subList(0,5));
         }
 
-        Log.d(TAG, "Testing for character " + current_test + " got " + words.size() + " words");
-
         TableLayout tl = (TableLayout) res.findViewById(R.id.char_finder_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
@@ -105,7 +107,26 @@ public class GuessMissingChar extends Test implements TextWatcher {
             chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
             chinese.setTextColor(Color.BLACK);
             chinese.setClickable(false);
-            chinese.setText(w.chinese.replaceAll(current_test, "\\?"));
+            String chinese_string = w.chinese.replaceAll(current_test, "\\?");
+            SpannableString chinese_text = new SpannableString(chinese_string);
+            int processing=0;
+            int next_index=chinese_string.indexOf("?");
+            while (processing < chinese_string.length()) {
+                if (processing < next_index) {
+                    chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), processing, next_index, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                }
+
+                while (chinese_string.indexOf("?", next_index) == next_index)
+                    next_index++;
+                if (chinese_string.indexOf("?", next_index) == -1) {
+                    if (next_index < chinese_string.length())
+                        chinese_text.setSpan(new CustomTypefaceSpan("", ((AndZiApplication) activity.getApplication()).get_chinese_font()), next_index, chinese_string.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                    break;
+                }
+                processing = next_index;
+                next_index = chinese_string.indexOf("?", next_index);
+            }
+            chinese.setText(chinese_text);
             trlp = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             trlp.setMargins(5,5,5,5);
             chinese.setLayoutParams(trlp);
@@ -205,6 +226,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 if (i<previous_guess.size()-1)
                     previous.setText(previous.getText() + ",\n");
             }
+            previous.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
             edit_guess.setText("");
             previous.setVisibility(View.VISIBLE);
             previous.invalidate();
@@ -227,7 +249,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
                 break;
             case CORRECT:
             case INCORRECT:
-                solution_view.set_answer(correctness, guess, words);
+                solution_view.set_answer(correctness, guess, words, previous_guess);
                 activity.new_solution_fragment(solution_view);
                 break;
         }
@@ -235,14 +257,16 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
     public static class GuessMissinCharResultView extends SolutionView {
         ArrayList<Vocabulary> words;
+        private ArrayList<String> previous_guess;
 
         public GuessMissinCharResultView(String question, TestActivity parent) {
             super(question, parent);
         }
 
-        public void set_answer(int good, String answer, ArrayList<Vocabulary> words) {
+        public void set_answer(int good, String answer, ArrayList<Vocabulary> words, ArrayList<String> previous_guess) {
             super.set_answer(good, answer);
             this.words = words;
+            this.previous_guess = previous_guess;
         }
 
         @Override
@@ -265,19 +289,20 @@ public class GuessMissingChar extends Test implements TextWatcher {
             }
 
             // reset the time for all characters displayed or restart study
-            for (Vocabulary v:words) {
-                for (int i=0; i<v.chinese.length();) {
-                    String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
-                    i+=Character.charCount(v.chinese.codePointAt(i));
-                    if (other_hanzi.equals(question))
-                        continue;
-                    if (good==CORRECT) {
-                        myDB.resetTime(other_hanzi);
+            if (previous_guess.size() == 0)
+                for (Vocabulary v:words) {
+                    for (int i=0; i<v.chinese.length();) {
+                        String other_hanzi = v.chinese.substring(i, i+Character.charCount(v.chinese.codePointAt(i)));
+                        i+=Character.charCount(v.chinese.codePointAt(i));
+                        if (other_hanzi.equals(question))
+                            continue;
+                        if (good==CORRECT) {
+                            myDB.resetTime(other_hanzi);
+                        }
+                        else
+                            myDB.worseBox(other_hanzi);
                     }
-                    else
-                        myDB.worseBox(other_hanzi);
                 }
-            }
             super.update_score();
         }
     }

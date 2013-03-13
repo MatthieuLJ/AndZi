@@ -3,6 +3,7 @@
  */
 package com.matthieu;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
@@ -207,25 +208,25 @@ public class PinyinParser {
         return null;
     }
 
-    static WeakHashMap<String, ArrayList<HanziDB.StringElement>> cache;
+    static WeakHashMap<String, ArrayList<HanziDB.StringElement>> cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
     static private void add_to_cache(String entry, ArrayList<HanziDB.StringElement> result) {
-        if (cache == null)
-            cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
-
-        if (!cache.containsKey(entry)) {
-            ArrayList<HanziDB.StringElement> to_save = new ArrayList<HanziDB.StringElement>(result);
-            cache.put(entry, to_save);
+        synchronized(cache) {
+            if (!cache.containsKey(entry)) {
+                ArrayList<HanziDB.StringElement> to_save = new ArrayList<HanziDB.StringElement>(result);
+                cache.put(entry, to_save);
+                Log.d(TAG, "Save to cache for ["+entry+"] with "+result.size()+" items");
+            }
         }
     }
     static private ArrayList<HanziDB.StringElement> query_cache(String entry) {
-        if (cache == null) {
-            cache = new WeakHashMap<String, ArrayList<HanziDB.StringElement>>();
-            return null;
+        synchronized(cache) {
+            if (cache.containsKey(entry)) {
+                Log.d(TAG, "Found entry for "+entry+" in cache");
+                return cache.get(entry);
+            }
+            else
+                return null;
         }
-        if (cache.containsKey(entry))
-            return cache.get(entry);
-        else
-            return null;
     }
 
     static public ArrayList<HanziDB.StringElement> parse_string_to_elements(String pinyin_string) {
@@ -418,7 +419,7 @@ public class PinyinParser {
         return result.toString();
     }
 
-    public static SpannableStringBuilder convert_to_spannable_version(String input) {
+    public static SpannableStringBuilder convert_to_spannable_version(String input, Context context) {
         int i;
         if (input.equals(""))
             return new SpannableStringBuilder("");
@@ -438,16 +439,16 @@ public class PinyinParser {
             ForegroundColorSpan color;
             switch (parsed.get(i).get_tone()) {
                 case 1:
-                    color = new ForegroundColorSpan(Color.parseColor("#FF0000"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.first_tone));
                     break;
                 case 2:
-                    color = new ForegroundColorSpan(Color.parseColor("#FF8000"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.second_tone));
                     break;
                 case 3:
-                    color = new ForegroundColorSpan(Color.parseColor("#00AA00"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.third_tone));
                     break;
                 case 4:
-                    color = new ForegroundColorSpan(Color.parseColor("#0000FF"));
+                    color = new ForegroundColorSpan(context.getResources().getColor(R.color.fourth_tone));
                     break;
                 case 0:
                 case 5:

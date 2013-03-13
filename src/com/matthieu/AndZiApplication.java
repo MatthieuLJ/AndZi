@@ -8,8 +8,11 @@ package com.matthieu;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.*;
-import android.net.ConnectivityManager;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.StatFs;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.widget.FileMountPoint;
 
@@ -28,7 +31,7 @@ public class AndZiApplication extends Application {
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     private static final String PROGRESS_DB_NAME = "progress_db";
 
-    private static final String VERSION="0.3.0";
+    private static final int this_ref_version = 1;
 
     public void onCreate() {
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
@@ -57,18 +60,23 @@ public class AndZiApplication extends Application {
     }
 
     public HanziDB getMyDB() {
-        if (myDB==null) {
-            if (!initialize_my_db())
-                return null;
-            update_dbs_in_details_populator();
+        synchronized(this) {
+            if (myDB==null) {
+                if (!initialize_my_db())
+                    return null;
+
+            }
         }
         return myDB;
     }
     public HanziDB getRefDB() {
+        synchronized(this) {
         if (!ref_initialized) {
-            initialize_ref_db();
+            if (!initialize_ref_db())
+                return null;
         }
-        update_dbs_in_details_populator();
+        }
+
         return refDB;
     }
 
@@ -77,67 +85,82 @@ public class AndZiApplication extends Application {
     }
 
     public ProgressDB.ProgressData getCurrentProgress() {
-        if (myDB == null) {
-            if (!initialize_my_db())
-                return null;
+        synchronized(this) {
+            if (myDB == null) {
+                if (!initialize_my_db())
+                    return null;
+            }
         }
-        ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
-        for (int i=0; i<4; i++) {
-            new_data.num_in_box[i]=myDB.getNumInBox(i);
-            new_data.num_expired_in_box[i]=myDB.getNumExpiredInBox(i);
-        }
-        new_data.num_in_box[4]=myDB.getNumInBoxOrAbove(4);
-        new_data.num_expired_in_box[4]=myDB.getNumExpiredInBoxOrAbove(4);
-        new_data.date = System.currentTimeMillis();
-        /*
-        Log.w(TAG, "Current progress is "+new_data.num_in_box[0]+" ("+new_data.num_expired_in_box[0]+"), "
-                +new_data.num_in_box[1]+" ("+new_data.num_expired_in_box[1]+"), "
-                +new_data.num_in_box[2]+" ("+new_data.num_expired_in_box[2]+"), "
-                +new_data.num_in_box[3]+" ("+new_data.num_expired_in_box[3]+"), "
-                +new_data.num_in_box[4]+" ("+new_data.num_expired_in_box[4]+") => total of "+
-                (new_data.num_in_box[0]+new_data.num_in_box[1]+new_data.num_in_box[2]+new_data.num_in_box[3]+new_data.num_in_box[4]));
-                */
-        return new_data;
+
+        return myDB.getProgress();
     }
 
     public String get_version() {
-        return VERSION;
+        PackageManager manager = this.getPackageManager();
+        PackageInfo info = null;
+        try {
+            info = manager.getPackageInfo(this.getPackageName(), 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return "";
+        }
+        return info.versionName;
     }
 
     public boolean initialize_my_db() {
-        if (myDB != null)
-            myDB.close();
-        try {
-            myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
-        } catch (Exception e) {
-            return false;
+        synchronized(this) {
+            if (myDB != null)
+                myDB.close();
+            try {
+                myDB = new HanziDB(this, DEFAULT_DATABASE_NAME);
+            } catch (Exception e) {
+                return false;
+            }
+            update_dbs_in_details_populator();
+            return true;
         }
-        return true;
     }
     
     public boolean initialize_ref_db() {
-        if (ref_initialized)
+        synchronized(this) {
+            if (ref_initialized)
+                return true;
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            int ref_version = prefs.getInt("cedict_version", 0);
+            int num_chars;
+
+            if (ref_version == this_ref_version)
+                try {
+                    refDB = new HanziDB(this, REF_DB_NAME);
+                    num_chars = refDB.getNumChars();
+                }
+                catch (Exception e) {
+                    num_chars=0;
+                }
+            else
+                num_chars=0;
+
+            if (num_chars==0)  {
+                Log.d(TAG, "Install new dictionary");
+                if (refDB!= null)
+                    refDB.close();
+
+                if (!installRefDB(R.raw.cedict_db))
+                    return false;
+
+                refDB = new HanziDB(this, REF_DB_NAME);
+                if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
+                    return false;
+            }
+            ref_initialized=true;
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("cedict_version", this_ref_version);
+            editor.commit();
+
+            update_dbs_in_details_populator();
+
             return true;
-
-        try {
-            refDB = new HanziDB(this, REF_DB_NAME);
         }
-        catch (Exception e) {
-            return false;
-        }
-
-        if (refDB.getNumChars()==0)  {
-            refDB.close();
-
-            if (!installRefDB(R.raw.cedict_db))
-                return false;
-
-            refDB = new HanziDB(this, REF_DB_NAME);
-            if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
-                return false;
-        }
-        ref_initialized=true;
-        return true;
     }
 
     public boolean check_exporting_space(String path) {
@@ -327,14 +350,6 @@ public class AndZiApplication extends Application {
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
     }
 
-    public boolean isOnline() {
-        ConnectivityManager cm =
-            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null &&
-           cm.getActiveNetworkInfo().isConnectedOrConnecting();
-    }
-
     private ActivityManager mActivityManager;
     public boolean isApplicationForeground() {
         ActivityManager.RunningAppProcessInfo info;
@@ -364,5 +379,12 @@ public class AndZiApplication extends Application {
 
     public boolean is_screen_on() {
         return screenReceiver.wasScreenOn;
+    }
+
+    Typeface chinese_font = null;
+    public Typeface get_chinese_font() {
+        if (chinese_font == null)
+            chinese_font = Typeface.createFromAsset(getAssets(), "fonts/HDZB_simp.png");
+        return chinese_font;
     }
 }
