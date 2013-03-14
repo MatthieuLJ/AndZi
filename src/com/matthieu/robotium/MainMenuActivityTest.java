@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
 import com.matthieu.*;
+import com.matthieu.widget.InsideScrollPager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +40,8 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     }
 
     private void clearEverything() {
-        solo.waitForActivity("MainMenuActivity", 60000); // it takes a while if we are installing Cedict
+        solo.waitForActivity("MainMenuActivity", 2000); // it takes a while if we are installing Cedict
+        solo.waitForText(getActivity().getResources().getString(R.string.main_menu_settings), 1, 60000);
 
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_settings));
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_clear), 1, very_long_delay);
@@ -85,6 +87,25 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     private void startIt() {
         // restart it
         launchActivity("com.matthieu", MainMenuActivity.class, null);
+
+        solo.waitForActivity("MainMenuActivity", 2000); // it takes a while if we are installing Cedict
+        solo.waitForText(getActivity().getResources().getString(R.string.main_menu_settings), 1, 60000);
+    }
+
+    private void install_db(String path_name) {
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_settings));
+        solo.waitForText(getActivity().getResources().getString(R.string.settings_db_import), 1, very_long_delay);
+        solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_import), 1, true);
+        solo.waitForText(path_name, 1, very_long_delay);
+        solo.clickOnText(path_name, 1, true);
+        solo.clickOnButton("Select");
+
+        solo.waitForText(getActivity().getResources().getString(R.string.db_importing),1,long_delay);
+        solo.waitForDialogToClose(very_long_delay);
+        solo.goBack();
+
+        solo.waitForActivity("MainMenuActivity", 2000); // it takes a while if we are installing Cedict
+        solo.waitForText(getActivity().getResources().getString(R.string.main_menu_settings), 1, 60000);
     }
 
     public void testFirstTimeAppOpening() {
@@ -92,7 +113,9 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         clearEverything();
 
-        assertFalse(solo.getView(R.id.main_menu_test).isEnabled());
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
+        InsideScrollPager pager = (InsideScrollPager) solo.getView(R.id.test_pager);
+        assertFalse(pager.isPagingEnabled());
     }
 
     public void testAddVocabularyEmptyApp() {
@@ -110,7 +133,6 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.clearEditText(master_chinese);
         solo.enterText(master_chinese, "你");
-// IntelliJ API Decompiler stub source generated from a class file
 
         solo.setActivityOrientation(Solo.LANDSCAPE);
 
@@ -144,6 +166,10 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(solo.searchButton("ní"));
 
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
+        EditText new_translation = (EditText) solo.getView(R.id.add_new_translation);
+        assertTrue(new_translation.getVisibility()==View.VISIBLE);
+        ImageView add_new_translation_plus = (ImageView) solo.getView(R.id.add_new_translation_plus);
+        assertTrue(add_new_translation_plus.getVisibility()==View.GONE);
 
         solo.clickOnText("ní");
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_pick_pinyin) + "你"));
@@ -159,7 +185,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
 
-        View add_new_translation_button = solo.getView(R.id.add_vocabulary_show_new_translation);
+        View add_new_translation_button = solo.getView(R.id.add_new_translation_plus);
         solo.clickOnView(add_new_translation_button);
         
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_new_translation)));
@@ -212,7 +238,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     }
 
     public void testAddVocabularyWithDict() {
-        // First wipe out everything... and install cedict
+        // First wipe out everything...
         clearEverything();
 
         // Let's add some vocabulary
@@ -235,27 +261,6 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     很好 hen3hao3 very good
     好 hao3 good
     我 wo3  I, me
-    public void testAddVocabularyWithDict() {
-        Log.d(TAG, "testAddVocabularyWithDict");
-
-        // First wipe out everything... and install cedict
-        clearEverything();
-
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.download_dictionary), 1, long_delay));
-
-        // Let's add some vocabulary
-        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
-
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_enter_chinese)));
-        EditText master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
-        assertTrue(master_chinese!=null);
-        solo.enterText(master_chinese, "你");
-
-        assertTrue(solo.searchButton("nǐ"));
-
-        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db),1,long_delay));
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_ref_db),1,long_delay));
-    }
     吗 ma5  question tag
     也 ye3  also
     他 ta1  he
@@ -312,28 +317,8 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         // First wipe out everything... and install cedict
         clearEverything();
 
-        HanziDB myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
-        final CountDownLatch latch = new CountDownLatch(1);
-        myDB.create_merge_task("/mnt/sdcard/my-test-db.azdb", null, getActivity(), new Runnable() {
-            @Override
-            public void run() {
-                latch.countDown();
-            }
-        });
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            assertFalse(true);
-            return;
-        }
-        solo.getCurrentActivity().finish();
+        install_db("my-test-db.azdb");
 
-        // quit it
-        solo.finishOpenedActivities();
-
-        startIt();
-
-        assertTrue(solo.getView(R.id.main_menu_test).isEnabled());
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
 
         test_chinese_orientation = true;
@@ -378,33 +363,10 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
     }
 
     public void testKeepGettingItRight() {
-        Log.d(TAG, "testKeepGettingItWrong");
+        Log.d(TAG, "testKeepGettingItRight");
 
-        // First wipe out everything... and install cedict
-        clearEverything();
+        install_db("my-test-db.azdb");
 
-        HanziDB myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
-        final CountDownLatch latch = new CountDownLatch(1);
-        myDB.create_merge_task("/mnt/sdcard/my-test-db.azdb", null, getActivity(), new Runnable() {
-            @Override
-            public void run() {
-                latch.countDown();
-            }
-        });
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            assertFalse(true);
-            return;
-        }
-        solo.getCurrentActivity().finish();
-
-        // quit it
-        solo.finishOpenedActivities();
-
-        startIt();
-
-        assertTrue(solo.getView(R.id.main_menu_test).isEnabled());
         solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_test));
 
         test_chinese_orientation = true;
@@ -414,7 +376,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         test_pinyin_orientation = true;
         test_tone_orientation = true;
 
-        ViewPager pager = (ViewPager) solo.getView(R.id.test_pager);
+        InsideScrollPager pager = (InsideScrollPager) solo.getView(R.id.test_pager);
         if (pager != null)
             solo.scrollToSide(Solo.RIGHT);
         solo.waitForText(getActivity().getResources().getString(R.string.num_to_study), 1, 500);
@@ -455,6 +417,8 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
             assertTrue("Score is not getting better("+new_to_study+" / "+current_to_study+")", new_to_study <= current_to_study);
             current_to_study = new_to_study;
         }
+        if (pager != null)
+            assertFalse(pager.isPagingEnabled());
     }
 
     boolean test_chinese_orientation = true;
