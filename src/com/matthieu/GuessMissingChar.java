@@ -28,6 +28,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
     private int current_view=0;
     private GuessMissinCharResultView solution_view;
 
+    private static final boolean DEBUG = false;
     private final String TAG="GuessMissingChar";
 
     protected boolean set_hanzi_to_test(String hanzi) {
@@ -42,7 +43,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
         }
 
         current_test = hanzi;
-        Log.d(TAG, "GuessMissingChar OK");
+        if (DEBUG) Log.d(TAG, "GuessMissingChar OK");
 
         solution_view = new GuessMissinCharResultView(current_test, activity);
         solution_view.prepare_view(activity.getLayoutInflater());

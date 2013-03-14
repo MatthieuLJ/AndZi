@@ -3,11 +3,8 @@
  */
 package com.matthieu;
 
-import android.annotation.SuppressLint;
 import android.gesture.*;
-import android.graphics.Color;
 import android.graphics.Point;
-import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
@@ -24,6 +21,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
 
     private GuessToneResultView solution_view;
 
+    private static final boolean DEBUG = false;
     private final String TAG="GuessTone";
 
     @Override
@@ -44,7 +42,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         if (hanzi == null) {
             return false;
         }
-        Log.d(TAG, "GuessTone OK");
+        if (DEBUG) Log.d(TAG, "GuessTone OK");
         current_test = hanzi;
 
         solution_view = new GuessToneResultView(current_test, activity);
@@ -130,7 +128,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
             });
         }
 
-        Log.d(TAG, "Expects tones : "+tones.toString());
+        if (DEBUG) Log.d(TAG, "Expects tones : "+tones.toString());
 
         Button submit_answer = (Button) res.findViewById(R.id.guess_tone_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {

@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
@@ -20,6 +19,7 @@ public class GuessEnglish extends Test {
     private int current_view=0;
     private GuessEnglishResultView solution_view;
 
+    private static final boolean DEBUG = false;
     private final String TAG="GuessEnglish";
 
     @Override
@@ -57,7 +57,7 @@ public class GuessEnglish extends Test {
         if (solution == null) {
             return false;
         }
-        Log.d(TAG, "GuessEnglish OK");
+        if (DEBUG) Log.d(TAG, "GuessEnglish OK");
 
         solution_view = new GuessEnglishResultView(hanzi, activity);
         solution_view.prepare_view(activity.getLayoutInflater());
@@ -132,13 +132,13 @@ public class GuessEnglish extends Test {
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
                 continue;
-            Log.d(TAG, "Checking "+guesses[i]);
+            if (DEBUG) Log.d(TAG, "Checking "+guesses[i]);
             guesses[i]=guesses[i].trim();
             for (String en:solution.english) {
-                Log.d(TAG, "Against "+en);
+                if (DEBUG) Log.d(TAG, "Against "+en);
                 en=en.toLowerCase(Locale.ENGLISH);
                 if (en.equals(guesses[i].trim())) {
-                    Log.d(TAG, "got a match "+en+" and "+guesses[i].trim());
+                    if (DEBUG) Log.d(TAG, "got a match "+en+" and "+guesses[i].trim());
                     return CORRECT;
                 }
 
@@ -146,7 +146,7 @@ public class GuessEnglish extends Test {
                 for (String item:ens) {
                     String tmp=item.replaceAll("[^A-Za-z]", "");
                     if ((tmp.length()>=2) && (tmp.equals(guesses[i].trim()))) {
-                        Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
+                        if (DEBUG) Log.d(TAG, "got a match "+tmp+" and "+guesses[i].trim());
                         return CORRECT;
                     }
                 }

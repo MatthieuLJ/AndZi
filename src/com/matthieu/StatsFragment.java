@@ -22,12 +22,19 @@ public class StatsFragment extends Fragment {
     protected HanziDB myDB=null;
     Timer timer;
 
+    private static final boolean DEBUG = false;
     private final String TAG="Stats";
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
     }
 
     @Override
@@ -74,6 +81,7 @@ public class StatsFragment extends Fragment {
     @Override
     public void onDestroyView() {
         timer.cancel();
+        timer.purge();
         super.onDestroyView();
     }
 
@@ -96,6 +104,9 @@ public class StatsFragment extends Fragment {
 
             @Override
             protected Void doInBackground(Void... voids) {
+                if (!myDB.isOpen()) {
+                    cancel(true);
+                }
                 num_chars = myDB.getNumChars();
                 num_words = myDB.getNumWords();
                 expired = myDB.getNumExpired();
@@ -147,9 +158,12 @@ public class StatsFragment extends Fragment {
     }
 
     private void update_time_to_study(final View v) {
+        if (!myDB.isOpen()) {
+            return;
+        }
         int expired = myDB.getNumExpired();
         long delay = myDB.getMostAdvancedExpiringTime();
-        Log.d(TAG, "delay is " + delay);
+        if (DEBUG) Log.d(TAG, "delay is " + delay);
         TableRow row = (TableRow) v.findViewById(R.id.db_stats_time_to_study_row);
         if ((expired == 0) && (delay >0)) {
             long update_time;

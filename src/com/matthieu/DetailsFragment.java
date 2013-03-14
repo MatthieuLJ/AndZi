@@ -30,6 +30,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class DetailsFragment extends Fragment {
+    private static final boolean DEBUG = false;
     private static final String TAG="Details";
     private boolean use_ref=false;
     private boolean exists_in_db=true;
@@ -327,7 +328,7 @@ public class DetailsFragment extends Fragment {
             ArrayList<Pinyin> pinyin_table = PinyinParser.parse_string_to_pinyin(pinyin);
             if ((!pinyin.equals("")) &&
                     ((pinyin_table==null) || ((pinyin_table.size() != hanzi.codePointCount(0, hanzi.length()))))) {
-                Log.e(TAG, "Cannot match string "+h+" with pinyins "+p);
+                if (DEBUG) Log.e(TAG, "Cannot match string "+h+" with pinyins "+p);
                 pinyin = "";
             }
 

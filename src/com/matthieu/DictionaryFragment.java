@@ -25,6 +25,8 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     Cursor current_cursor =null;
     static update_delayer update_task =null;
     boolean use_ref=true;
+
+    private static final boolean DEBUG = false;
     private static final String TAG="Dictionary";
 
     static final int CHINESE_TO_ENGLISH_MODE=0;
@@ -130,7 +132,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
         protected Cursor doInBackground(Void... voids) {
             Cursor result_cursor=null;
             boolean potential_english=true;
-            Log.d(TAG, "Starting a new query for "+msg_query);
+            if (DEBUG) Log.d(TAG, "Starting a new query for "+msg_query);
 
             long start_time = System.currentTimeMillis();
 
@@ -139,7 +141,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
             int mode = detect_mode(msg_query);
 
-            Log.d(TAG, "Detected mode "+mode);
+            if (DEBUG) Log.d(TAG, "Detected mode "+mode);
             if (mode == -1) {
                 current_cursor = new MessageCursor(cannot_understand_query);
                 return current_cursor;
@@ -148,7 +150,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             synchronized (DictionaryFragment.this) {
                 if ((mode == last_mode) && (msg_query.trim().equals(last_query.trim())) && (msg_ref == last_use_ref) &&
                         (current_cursor != null)) {
-                    Log.d(TAG, "Already had the results");
+                    if (DEBUG) Log.d(TAG, "Already had the results");
                     // just to make sure it's loaded....
                     current_cursor.getCount();
                     current_cursor.moveToFirst();
@@ -318,7 +320,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
 
                 current_cursor = result_cursor;
                 long end_time = System.currentTimeMillis();
-                Log.d(TAG, "Dictionary query done in "+((end_time-start_time)/1000)+"s");
+                if (DEBUG) Log.d(TAG, "Dictionary query done in "+((end_time-start_time)/1000)+"s");
                 return result_cursor;
             }
         }
@@ -363,7 +365,7 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
             if ((!msg_query.trim().equals(query.getText().toString().trim())) || (msg_ref != use_ref))
                 return;
 
-            Log.d(TAG, "msg_query is "+msg_query+", and current search is "+query.getText());
+            if (DEBUG) Log.d(TAG, "msg_query is "+msg_query+", and current search is "+query.getText());
 
             final ListView results = (ListView) getView().findViewById(R.id.dict_results);
 

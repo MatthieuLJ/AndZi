@@ -41,6 +41,7 @@ public class TestFragment extends Fragment {
 
     final static int size_limit = 30;
 
+    private static final boolean DEBUG = false;
     private static final String TAG = "TestFragment";
 
     public TestFragment() {
@@ -59,6 +60,12 @@ public class TestFragment extends Fragment {
             t.attach(activity);
         myDB = ((AndZiApplication)activity.getApplication()).getMyDB();
         my_handler = new Handler();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        myDB = ((AndZiApplication)getActivity().getApplication()).getMyDB();
     }
 
     @Override
@@ -148,7 +155,7 @@ public class TestFragment extends Fragment {
     }
 
     private void fill_hanzis_to_test() {
-        Log.d(TAG, "fill_hanzis_to_test");
+        if (DEBUG) Log.d(TAG, "fill_hanzis_to_test");
         synchronized (TestFragment.this) {
             hanzis_to_test = myDB.getAllToStudy(size_limit);
             table_filled=true;
@@ -156,7 +163,7 @@ public class TestFragment extends Fragment {
     }
 
     private void trim_hanzis_to_test(String hanzi) {
-        Log.d(TAG, "trim_hanzis_to_test "+hanzi);
+        if (DEBUG) Log.d(TAG, "trim_hanzis_to_test "+hanzi);
 
         synchronized (TestFragment.this) {
             for (int offset=0; offset<hanzi.length();) {
@@ -174,7 +181,7 @@ public class TestFragment extends Fragment {
     }
 
     private void set_next_char_to_study(boolean best_effort) {
-        Log.d(TAG, "set_next_char_to_study");
+        if (DEBUG) Log.d(TAG, "set_next_char_to_study");
         if ((hanzis_to_test.size()==0) && ((table_filled) || (!best_effort))) {
             current_test_hanzi =null;
         }
@@ -186,7 +193,7 @@ public class TestFragment extends Fragment {
         }
         else {
             current_test_hanzi = hanzis_to_test.remove((int)(hanzis_to_test.size()*Math.pow(Math.random(),2)));
-            Log.d(TAG, "Will study " + current_test_hanzi);
+            if (DEBUG) Log.d(TAG, "Will study " + current_test_hanzi);
         }
     }
 
