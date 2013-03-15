@@ -8,10 +8,8 @@ import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
 import com.matthieu.*;
 import com.matthieu.widget.InsideScrollPager;
-
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * This is a simple framework for a test of an Application.  See
@@ -60,7 +58,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         solo.waitForText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, very_long_delay);
         solo.clickOnText(getActivity().getResources().getString(R.string.settings_db_forget_progress), 1, true);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_trim_progress)));
-        ArrayList<ProgressBar> progress = solo.getCurrentProgressBars();
+        ArrayList<ProgressBar> progress = solo.getCurrentViews(ProgressBar.class);
         assertTrue(progress.size()==1);
         solo.setProgressBar(progress.get(0), progress.get(0).getMax());
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.settings_trim_all)));
@@ -212,13 +210,16 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(master_chinese!=null);
         assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
         assertTrue(solo.waitForText("You"));
+        assertTrue(solo.searchButton("nǐ"));
 
         //getInstrumentation().invokeMenuActionSync(solo.getActivityMonitor().getLastActivity(), R.id.add_vocabulary_done, 0);
         View add_vocabulary_done_button = solo.getView(R.id.add_vocabulary_done);
         solo.clickOnView(add_vocabulary_done_button);
 
+        master_chinese = (EditText) solo.getView(R.id.add_vocabulary_chinese);
+        solo.clearEditText(master_chinese);
         solo.enterText(master_chinese, "你");
-        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db)));
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_local_db), 1 , long_delay));
         assertTrue(solo.waitForText("You"));
         assertTrue(solo.searchButton("nǐ"));
 
@@ -690,4 +691,19 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
 
         solo.sleep(500);
     }
+
+
+    /* manipulating lessons with small DB
+        DB:
+        你好 ni3hao3  Hello!, Hi!  -> Lesson 1
+        很好 hen3hao3 very good    -> Lesson 1
+        好 hao3 good               -> Lesson 1
+        我 wo3  I, me              -> Lesson 2
+        吗 ma5  question tag       -> Lesson 2
+        也 ye3  also               -> Lesson 2
+        他 ta1  he                 -> Lesson 3
+        他们 ta1men5 they          -> Lesson 3
+        我们 wo3men5 we, us        -> Lesson 3
+        朋友 peng2you5 friend      -> Lesson 3
+        */
 }
