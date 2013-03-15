@@ -302,12 +302,15 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 if (answer.length() == 0) {
+                    // TODO put in strings.xml
                     bad_guess_text.setText("You did not guess anything");
                 }
                 else if (answer.length() == 1) {
+                    // TODO put in strings.xml
                     bad_guess_text.setText("You guessed tone: "+answer);
                 }
                 else {
+                    // TODO put in strings.xml
                     String label = "You guessed tones: ";
                     for(int i=0; i<answer.length(); i++) {
                         label += answer.substring(i, i+1);

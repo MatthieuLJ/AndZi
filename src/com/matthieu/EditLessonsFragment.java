@@ -293,9 +293,11 @@ public class EditLessonsFragment extends Fragment {
                         new_lesson_field.setText("");
                         if (new_lesson_label.equals(""))
                             return;
+                        // TODO put in strings.xml
                         if (new_lesson_label.equals("(none)"))
                             return;
                         if (lesson_exists(new_lesson_label)) {
+                            // TODO put in strings.xml
                             Toast.makeText(getActivity(), "The lesson [" + new_lesson_label + "] already exists", Toast.LENGTH_SHORT).show();
                             return;
                         }
@@ -335,6 +337,7 @@ public class EditLessonsFragment extends Fragment {
 
                 String more_info = "";
                 if ((le.state & Lesson.RENAMED) != 0) {
+                    // TODO put in strings.xml
                     more_info = "was : " + le.old_label;
                 }
                 if ((le.num_items != 0) &&
@@ -342,6 +345,7 @@ public class EditLessonsFragment extends Fragment {
                                 (state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED))) {
                     if (!more_info.equals(""))
                         more_info = more_info + ", ";
+                    // TODO put in strings.xml
                     more_info = more_info + "has " + le.num_items + " chinese word";
                     if (le.num_items > 1)
                         more_info += "s";
@@ -577,6 +581,7 @@ public class EditLessonsFragment extends Fragment {
             return;
         }
         final Lesson le = current_lesson_selection.get(0);
+        // TODO put in strings.xml
         String new_name = le.label + " - copy";
         StringBuilder other_new_name = new StringBuilder(new_name);
         int index = 1;
@@ -654,6 +659,7 @@ public class EditLessonsFragment extends Fragment {
             le.old_label=le.label;
 
         AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+        // TODO put in strings.xml
         alert.setTitle("Rename lesson: "+le.label);
         alert.setMessage("Enter new name: ");
 
@@ -668,11 +674,13 @@ public class EditLessonsFragment extends Fragment {
                 final String new_label = input.getText().toString();
                 if (new_label.equals(""))
                     return;
+                // TODO put in strings.xml
                 if (new_label.equals("(none)"))
                     return;
                 if (new_label.equals(le.label))
                     return;
                 if (lesson_exists(new_label)) {
+                    // TODO put in strings.xml
                     Toast.makeText(getActivity(), "The lesson [" + new_label + "] already exists", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -714,6 +722,7 @@ public class EditLessonsFragment extends Fragment {
             return;
         }
 
+        // TODO put in strings.xml
         String new_name = "Combined lesson";
         StringBuilder other_new_name = new StringBuilder(new_name);
         int index = 1;
