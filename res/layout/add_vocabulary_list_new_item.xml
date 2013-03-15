@@ -31,7 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="0dp"
                 style="@style/edit_text"
-                android:textSize="@dimen/normal_text"
+                android:textSize="@dimen/large_text"
                 android:layout_weight="1"
                 android:hint="@string/add_voc_new_translation"
                 expandable:hidable="true"

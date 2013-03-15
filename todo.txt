@@ -15,8 +15,7 @@ ONGOING (9):
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
-* Make new translation or new lesson field larger
+BUGS (00):
 
 FUTURE (19):
 * Add more automatic (robotium) tests
@@ -39,7 +38,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (229):
+DONE (230):
+* Make new translation or new lesson field larger
 * Menu should not change when changing lesson assignment.
 * Should change action bar menu in vocabulary editor depending on pager position
 * Remove Log
