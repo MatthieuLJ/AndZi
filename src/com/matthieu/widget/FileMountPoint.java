@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class FileMountPoint {
+    private static final boolean DEBUG = false;
     private final static String TAG = "FileMountPoint";
 
     static private ArrayList<String> all_mount_points() {
@@ -24,10 +25,10 @@ public class FileMountPoint {
             }
         }
         catch (FileNotFoundException e) {
-            Log.d(TAG, "Cannot find /proc/mounts...");
+            if (DEBUG) Log.d(TAG, "Cannot find /proc/mounts...");
         }
         catch (IOException e) {
-            Log.d(TAG, "Ran into problems reading /proc/mounts...");
+            if (DEBUG) Log.d(TAG, "Ran into problems reading /proc/mounts...");
         }
 
         return res;
@@ -38,7 +39,7 @@ public class FileMountPoint {
             path = (new File(path)).getCanonicalPath();
         }
         catch (IOException e) {
-            Log.d(TAG, "Ran into getting canonical path");
+            if (DEBUG) Log.d(TAG, "Ran into getting canonical path");
         }
         ArrayList<String> list =  all_mount_points();
         String res="/";

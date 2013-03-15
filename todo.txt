@@ -1,4 +1,4 @@
-ONGOING (4):
+ONGOING (10):
 * Should change action bar menu in vocabulary editor depending on pager position
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
@@ -7,11 +7,17 @@ ONGOING (4):
 * Update help ( /about ?)
 * Check different screen sizes
   - getWindow().setSoftInputMode(); to change the way the soft keyboard affects the activity
+* Remove debuggable
+* in vocabulary editor, menu should change when using a pager and moving page.
+* Header in lesson content should be clipped.
+* In the editor page, center the titles, align dictionary words to the right.
+* In reference activity, sometimes the buttons are disabled… (for the buttons in larger size)
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
-BUGS (1):
+BUGS (2):
 * Make new translation or new lesson field larger
+* Menu should not change when changing lesson assignment.
 
 FUTURE (19):
 * Add more automatic (robotium) tests
@@ -34,7 +40,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (226):
+DONE (227):
+* Remove Log
 * Merging lesson does not have any content
 * Put back buttons for Reference Activity (for larger screens)
 * If lesson was selected before, it is not possible to add an existing word to that lesson

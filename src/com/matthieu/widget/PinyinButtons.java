@@ -21,7 +21,6 @@ public class PinyinButtons extends LinearLayout {
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
 
-
     String current_chinese_word;
     AddVocabularyFragment current_fragment=null;
 

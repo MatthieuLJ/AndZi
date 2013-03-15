@@ -26,6 +26,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
     private GuessPinyinResultView solution_view;
 
+    private static final boolean DEBUG = false;
     private static final String TAG="GuessPinyin";
 
     @Override
@@ -77,7 +78,7 @@ public class GuessPinyin extends Test implements TextWatcher {
             return false;
         }
 
-        Log.d(TAG, "GuessPinyin OK");
+        if (DEBUG) Log.d(TAG, "GuessPinyin OK");
         current_test = hanzi;
 
         solution_view = new GuessPinyinResultView(current_test, activity);
@@ -124,7 +125,7 @@ public class GuessPinyin extends Test implements TextWatcher {
         LinearLayout focusable = (LinearLayout) res.findViewById(R.id.pinyin_test_focusable_linear);
         focusable.requestFocus();
 
-        Log.d(TAG, "Testing for character " + current_test + " got " + words.size() + " words");
+        if (DEBUG) Log.d(TAG, "Testing for character " + current_test + " got " + words.size() + " words");
 
         TextView chinese_hint = (TextView) res.findViewById(R.id.guess_pinyin_chinese);
         chinese_hint.setText(current_test);

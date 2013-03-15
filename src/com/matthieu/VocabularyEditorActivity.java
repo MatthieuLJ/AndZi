@@ -141,6 +141,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
             }
             set_state(activity_state.STATE_LESSON_SELECTION);
         }
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
     }
 
     @Override

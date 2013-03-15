@@ -20,6 +20,7 @@ public class ProgressDB extends SQLiteOpenHelper {
         public int num_expired_in_box[]={0,0,0,0,0};
     }
 
+    private static final boolean DEBUG = false;
     private static final String TAG="ProgressDB";
     private static final int DATABASE_VERSION = 2;
     private static final int DEFAULT_MAX=30;
@@ -27,7 +28,7 @@ public class ProgressDB extends SQLiteOpenHelper {
 
     public ProgressDB(Context context, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);
-        Log.d(TAG, "new ProgressDB "+db_name);
+        if (DEBUG) Log.d(TAG, "new ProgressDB "+db_name);
         db = this.getWritableDatabase();
         db.execSQL("PRAGMA synchronous=OFF");
         db.acquireReference();
