@@ -140,7 +140,8 @@ public class AddVocabularyFragment extends Fragment
                         (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE) ||
                         (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
                         (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED) ||
-                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED))
+                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED))
                     ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
             }
         }
@@ -617,7 +618,8 @@ public class AddVocabularyFragment extends Fragment
         if (voc == null)
             return;
 
-        if (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) {
+        if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED)){
             set_new_lesson_assignment(((VocabularyEditorActivity)getActivity()).flush_lesson_assignment());
 
             if (current_word_selection.size() == 1)

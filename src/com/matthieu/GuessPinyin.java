@@ -256,6 +256,7 @@ public class GuessPinyin extends Test implements TextWatcher {
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
+                // TODO put in strings.xml
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
                 bad_guess_text.setTextColor(parent_activity.getResources().getColor(R.color.test_failure));
