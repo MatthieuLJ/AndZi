@@ -200,6 +200,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 style="@style/button"
-                android:text="@string/ok"/>
+                android:text="@string/ok"
+                android:textSize="@dimen/large_text"/>
     </LinearLayout>
 </android.gesture.GestureOverlayView>

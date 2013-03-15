@@ -1,4 +1,4 @@
-ONGOING (10):
+ONGOING (12):
 * Should change action bar menu in vocabulary editor depending on pager position
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
@@ -12,6 +12,8 @@ ONGOING (10):
 * Header in lesson content should be clipped.
 * In the editor page, center the titles, align dictionary words to the right.
 * In reference activity, sometimes the buttons are disabled… (for the buttons in larger size)
+* Rename lessons to lists
+* Change "filtered" to "select" in export
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 

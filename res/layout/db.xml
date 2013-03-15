@@ -118,7 +118,8 @@
                 android:layout_weight="1"
                 android:layout_margin="2sp"
                 style="@style/button"
-                android:text="@string/zoom_in" />
+                android:text="@string/zoom_in"
+                android:textSize="@dimen/large_text" />
         <Button
                 android:id="@+id/graph_out"
                 android:layout_width="0dp"
@@ -126,7 +127,8 @@
                 android:layout_weight="1"
                 android:layout_margin="2sp"
                 style="@style/button"
-                android:text="@string/zoom_out" />
+                android:text="@string/zoom_out"
+                android:textSize="@dimen/large_text" />
     </LinearLayout>
 
 </LinearLayout>

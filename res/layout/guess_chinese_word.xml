@@ -82,7 +82,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 style="@style/button"
-                android:text="@string/ok"/>
+                android:text="@string/ok"
+                android:textSize="@dimen/large_text"/>
     </LinearLayout>
     <TextView
             android:id="@+id/guess_chinese_word_previous_guess"
