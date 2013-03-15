@@ -337,7 +337,9 @@ public class EditLessonsFragment extends Fragment {
                 if ((le.state & Lesson.RENAMED) != 0) {
                     more_info = "was : " + le.old_label;
                 }
-                if ((le.num_items != 0) && (state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED)) {
+                if ((le.num_items != 0) &&
+                        ((state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                                (state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED))) {
                     if (!more_info.equals(""))
                         more_info = more_info + ", ";
                     more_info = more_info + "has " + le.num_items + " chinese word";
@@ -366,7 +368,8 @@ public class EditLessonsFragment extends Fragment {
 
                 if (state == VocabularyEditorActivity.activity_state.STATE_INIT) {
                     row.setBackgroundColor(0x00000000);
-                } else if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) ||
+                } else if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                        (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED) ||
                         (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
                         (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE)) {
                     if (!current_lesson_assignment.containsKey(le.label)) {
@@ -504,7 +507,8 @@ public class EditLessonsFragment extends Fragment {
 
             /*TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
             ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();*/
-        } else if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) ||
+        } else if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED) ||
                 (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
                 (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE)) {
             if (!current_lesson_assignment.containsKey(le.label)) {
@@ -535,7 +539,10 @@ public class EditLessonsFragment extends Fragment {
                         break;
                 }
             }
-            ((VocabularyEditorActivity)getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED);
+            if (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE)
+                ((VocabularyEditorActivity)getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED);
+            else if (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE)
+                ((VocabularyEditorActivity)getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED);
         } else {
             if (current_lesson_selection.contains(le)) {
                 current_lesson_selection.remove(le);
