@@ -28,4 +28,8 @@ public class LockableViewPager extends ViewPagerParallax {
     public void setPagingEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+
+    public boolean isPagingEnabled() {
+        return enabled;
+    }
 }

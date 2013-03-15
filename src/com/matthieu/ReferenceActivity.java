@@ -13,8 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
@@ -27,6 +25,8 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
     final private static int max_details_fragments=3;
     Fragment fragments[];
     int ids[];
+
+    private static final boolean DEBUG = false;
     final private static String TAG = "RerefenceActivity";
 
     @Override
@@ -116,14 +116,14 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         try {
             getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
         } catch (IllegalStateException e) {
-            Log.e(TAG, "Got an exception saving fragment 0 " + e);
+            if (DEBUG) Log.e(TAG, "Got an exception saving fragment 0 " + e);
         }
         for (int i=1; i<=max_details_fragments; i++) {
             if (fragments[i] != null) {
                 try {
                     getSupportFragmentManager().putFragment(outState, "fragment"+i, fragments[i]);
                 } catch (IllegalStateException e) {
-                    Log.e(TAG, "Got an exception saving fragment "+i+" "+e);
+                    if (DEBUG) Log.e(TAG, "Got an exception saving fragment "+i+" "+e);
                 }
             }
         }

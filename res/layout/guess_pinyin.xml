@@ -80,6 +80,7 @@
                 android:layout_weight="1"
                 style="@style/button"
                 android:text="@string/ok"
+                android:textSize="@dimen/large_text"
                 />
     </LinearLayout>
 </LinearLayout>

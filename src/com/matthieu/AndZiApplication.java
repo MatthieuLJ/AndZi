@@ -29,6 +29,7 @@ public class AndZiApplication extends Application {
     private ScreenBroadcastReceiver screenReceiver;
     private boolean ref_initialized=false;
 
+    private static final boolean DEBUG = false;
     private static final String TAG = "AndZiApplication";
     private static final String REF_DB_NAME = "cedict_db";
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
@@ -146,7 +147,7 @@ public class AndZiApplication extends Application {
                 num_chars=0;
 
             if (num_chars==0)  {
-                Log.d(TAG, "Install new dictionary");
+                if (DEBUG) Log.d(TAG, "Install new dictionary");
                 if (refDB!= null)
                     refDB.close();
 
@@ -288,7 +289,7 @@ public class AndZiApplication extends Application {
             input = new FileInputStream(source);
         }
         catch (IOException e) {
-            Log.d(TAG, "Could not open source");
+            if (DEBUG) Log.d(TAG, "Could not open source");
             return false;
         }
         return copyFile(input, destination);
@@ -312,7 +313,7 @@ public class AndZiApplication extends Application {
             input.close();
         }
         catch (IOException e) {
-            Log.d(TAG, "Failed to copy database");
+            if (DEBUG) Log.d(TAG, "Failed to copy database");
             return false;
         }
 
@@ -339,7 +340,7 @@ public class AndZiApplication extends Application {
             return false;
         }
 
-        Log.d(TAG, "Done installing reference db " + dest);
+        if (DEBUG) Log.d(TAG, "Done installing reference db " + dest);
         update_dbs_in_details_populator();
         return true;
     }

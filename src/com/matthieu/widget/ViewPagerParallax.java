@@ -25,6 +25,7 @@ public class ViewPagerParallax extends ViewPager {
 
     Rect r = new Rect();
 
+    private static final boolean DEBUG = false;
     private final static String TAG="ViewPagerParallax";
 
     public ViewPagerParallax(Context context) {
@@ -71,7 +72,7 @@ public class ViewPagerParallax extends ViewPager {
 
             is.close();
         } catch (IOException e) {
-            Log.e(TAG, "Cannot decode: " + e.getMessage());
+            if (DEBUG) Log.e(TAG, "Cannot decode: " + e.getMessage());
             background_id = -1;
             return;
         }

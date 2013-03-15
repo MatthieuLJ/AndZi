@@ -26,6 +26,7 @@ public class GuessContaining extends Test {
 
     private GuessContainingResultView solution_view;
 
+    private static final boolean DEBUG = false;
     private final String TAG="GuessContaining";
 
     @Override
@@ -42,7 +43,7 @@ public class GuessContaining extends Test {
             return false;
         }
         current_test = hanzi;
-        Log.d(TAG, "GuessContaining OK");
+        if (DEBUG) Log.d(TAG, "GuessContaining OK");
 
         solution_view = new GuessContainingResultView(current_test, activity);
         solution_view.prepare_view(activity.getLayoutInflater());
@@ -122,7 +123,7 @@ public class GuessContaining extends Test {
         for (int i=0; i<guesses.length; i++) {
             if (guesses[i].equals(""))
                 continue;
-            Log.d(TAG, "Checking "+guesses[i]);
+            if (DEBUG) Log.d(TAG, "Checking "+guesses[i]);
             guesses[i]=guesses[i].trim();
             if (!guesses[i].contains(current_test))
                 continue;
@@ -138,7 +139,7 @@ public class GuessContaining extends Test {
                 }
             }
             else {
-                Log.d(TAG, "Good answer");
+                if (DEBUG) Log.d(TAG, "Good answer");
                 res = CORRECT;
                 correct_answers.add(guesses[i]);
             }

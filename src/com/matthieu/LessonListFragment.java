@@ -16,9 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.matthieu.widget.VocabularyCursorAdapter;
 import com.matthieu.widget.VocabularyCursorClickHandle;
-
 import java.util.ArrayList;
-
 
 public class LessonListFragment extends Fragment {
     protected HanziDB myDB=null;

@@ -4,7 +4,6 @@
 package com.matthieu;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -15,6 +14,7 @@ import java.util.Locale;
 import java.util.WeakHashMap;
 
 public class PinyinParser {
+    private static final boolean DEBUG = false;
     private final static String TAG = "PinyinParser";
     private final static String pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwyāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ\'0-5]*";
 
@@ -214,14 +214,14 @@ public class PinyinParser {
             if (!cache.containsKey(entry)) {
                 ArrayList<HanziDB.StringElement> to_save = new ArrayList<HanziDB.StringElement>(result);
                 cache.put(entry, to_save);
-                Log.d(TAG, "Save to cache for ["+entry+"] with "+result.size()+" items");
+                if (DEBUG) Log.d(TAG, "Save to cache for ["+entry+"] with "+result.size()+" items");
             }
         }
     }
     static private ArrayList<HanziDB.StringElement> query_cache(String entry) {
         synchronized(cache) {
             if (cache.containsKey(entry)) {
-                Log.d(TAG, "Found entry for "+entry+" in cache");
+                if (DEBUG) Log.d(TAG, "Found entry for "+entry+" in cache");
                 return cache.get(entry);
             }
             else
@@ -384,9 +384,9 @@ public class PinyinParser {
             }
         }
         if (res == null)
-            Log.d(TAG, "Failed to parse string ["+input+"]");
+            if (DEBUG) Log.d(TAG, "Failed to parse string ["+input+"]");
         else {
-            Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
+                if (DEBUG) Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
             add_to_cache(input, res);
         }
 

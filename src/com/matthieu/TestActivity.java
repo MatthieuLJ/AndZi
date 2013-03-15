@@ -18,6 +18,7 @@ import com.viewpagerindicator.PageIndicator;
 public class TestActivity extends SherlockFragmentActivity  implements handle_details_request {
     private Fragment fragments[];
 
+    private static final boolean DEBUG = false;
     private static final String TAG="Test_Master";
 
     @Override
@@ -83,13 +84,13 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         try {
             getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
         } catch (IllegalStateException e) {
-            Log.e(TAG, "Got an exception saving fragment 0 "+e);
+            if (DEBUG) Log.e(TAG, "Got an exception saving fragment 0 "+e);
         }
         if (fragments[1] != null) {
             try {
                 getSupportFragmentManager().putFragment(outState, "fragment1", fragments[1]);
             } catch (IllegalStateException e) {
-                Log.e(TAG, "Got an exception saving fragment 1 "+e);
+                if (DEBUG) Log.e(TAG, "Got an exception saving fragment 1 "+e);
             }
         }
         ViewPager pager = (ViewPager) findViewById(R.id.test_pager);

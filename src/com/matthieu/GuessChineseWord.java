@@ -22,6 +22,7 @@ public class GuessChineseWord extends Test {
     private int current_view=0;
     private GuessChineseWordResultView solution_view;
 
+    private static final boolean DEBUG = false;
     private final String TAG="GuessChineseWord";
 
     @Override
@@ -48,7 +49,7 @@ public class GuessChineseWord extends Test {
 
         showing_more_voc=false;
 
-        Log.d(TAG, "GuessChineseWord OK");
+        if (DEBUG) Log.d(TAG, "GuessChineseWord OK");
 
         solution_view = new GuessChineseWordResultView(hanzi, activity);
         solution_view.prepare_view(activity.getLayoutInflater());

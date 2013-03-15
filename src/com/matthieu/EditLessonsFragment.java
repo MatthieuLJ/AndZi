@@ -32,6 +32,7 @@ public class EditLessonsFragment extends Fragment {
     private InitLessons init_lessons_thread=null;
     private UpdateLessons update_lessons_thread=null;
 
+    private static final boolean DEBUG = false;
     private static final String TAG = "EditLessonsFragment";
 
     @Override
@@ -44,6 +45,12 @@ public class EditLessonsFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         myDB = ((AndZiApplication) activity.getApplication()).getMyDB();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        myDB = ((AndZiApplication) getActivity().getApplication()).getMyDB();
     }
 
     @Override
@@ -60,7 +67,7 @@ public class EditLessonsFragment extends Fragment {
                 if (to == 0)
                     to = 1;
                 Lesson le = current_lessons.get(from - 1);
-                Log.d(TAG, "Moving from " + from + " to " + to);
+                if (DEBUG) Log.d(TAG, "Moving from " + from + " to " + to);
                 current_lessons.remove(from - 1);
                 current_lessons.add(to - 1, le);
                 final ArrayList<String> lesson_order = new ArrayList<String>();
@@ -78,11 +85,11 @@ public class EditLessonsFragment extends Fragment {
 
         ProgressBar pb = (ProgressBar) res.findViewById(R.id.lessons_loading);
 
-        Log.d(TAG, "Finishing onCreateView");
+        if (DEBUG) Log.d(TAG, "Finishing onCreateView");
         synchronized (this) {
             if (init_lessons_thread == null) {
                 if (!loaded) {
-                    Log.d(TAG, "Finishing onCreateView");
+                    if (DEBUG) Log.d(TAG, "Finishing onCreateView");
                     init_lessons_thread = new InitLessons();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                         init_lessons_thread.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
@@ -106,7 +113,7 @@ public class EditLessonsFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             tmp_lessons = new ArrayList<Lesson>();
-            Log.d(TAG, "Loading lesson list");
+            if (DEBUG) Log.d(TAG, "Loading lesson list");
             ArrayList<String> existing_lessons = myDB.getLessons();
             HashMap<String, Integer> stats = myDB.getLessonSizes();
 
@@ -123,7 +130,7 @@ public class EditLessonsFragment extends Fragment {
                 tmp_lessons.add(new_lesson);
             }
 
-            Log.d(TAG, "Done with lesson list, will populate");
+            if (DEBUG) Log.d(TAG, "Done with lesson list, will populate");
             return null;
         }
 
@@ -714,16 +721,15 @@ public class EditLessonsFragment extends Fragment {
         new_lesson.label = new_name;
         current_lessons.add(0, new_lesson);
 
-        final ArrayList<Lesson> to_combine = new ArrayList<Lesson>(current_lesson_selection);
+        final ArrayList<String> to_combine = new ArrayList<String>();
+        for (Lesson l : current_lesson_selection)
+            to_combine.add(l.label);
 
         new Thread(new Runnable() {
             public void run() {
-                for (Lesson le : to_combine) {
-                    ArrayList<Vocabulary> voc = myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label)));
-                    for (Vocabulary v:voc) {
-                        myDB.assignWordLesson(new_lesson.label, v);
-                    }
-                }
+                myDB.addLesson(new_lesson.label);
+                myDB.mergeVocabularyIntoLesson(to_combine, new_lesson.label);
+
                 new_lesson.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new_lesson.label))).size();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

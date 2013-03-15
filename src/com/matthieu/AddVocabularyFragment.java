@@ -127,6 +127,8 @@ public class AddVocabularyFragment extends Fragment
 
                 // Populate the choices for the pinyin buttons
                 PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
+                if (buttons == null)
+                    return;
                 buttons.setPinyinButtons(charSequence.toString(), i, i1, i2, current_chinese_word);
 
                 ((VocabularyEditorActivity) getActivity()).clear_lesson_selection();
