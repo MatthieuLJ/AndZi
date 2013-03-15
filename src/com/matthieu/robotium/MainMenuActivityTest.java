@@ -8,6 +8,8 @@ import android.widget.*;
 import com.jayway.android.robotium.solo.Solo;
 import com.matthieu.*;
 import com.matthieu.widget.InsideScrollPager;
+import com.matthieu.widget.LockableViewPager;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -706,4 +708,49 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         我们 wo3men5 we, us        -> Lesson 3
         朋友 peng2you5 friend      -> Lesson 3
         */
+    public void testLessonShuffle() {
+        Log.d(TAG, "testLessonShuffle");
+
+        // First wipe out everything... and install cedict
+        clearEverything();
+
+        install_db("my-test-db.azdb");
+
+        solo.clickOnButton(getActivity().getResources().getString(R.string.main_menu_add_voc));
+        LockableViewPager pager = (LockableViewPager) solo.getView(R.id.voc_editor_pager);
+        if (pager != null)
+            solo.scrollToSide(Solo.RIGHT);
+        solo.waitForText("Lesson 1", 1, long_delay);
+
+        // check the content of one list
+        if (pager != null)
+            assertTrue(pager.getAdapter().getCount()==2);
+        solo.clickOnText("Lesson 1");
+        if (pager != null) {
+            assertTrue(pager.getAdapter().getCount()==3);
+            solo.scrollToSide(Solo.RIGHT);
+        }
+        assertTrue(solo.waitForText("Hello!, Hi!", 1, long_delay));
+        assertTrue(solo.waitForText("好"));
+        assertFalse(solo.waitForText("they"));
+        if (pager != null) {
+            solo.scrollToSide(Solo.LEFT);
+        }
+        solo.clickOnText("Lesson 3");
+        if (pager != null) {
+            solo.scrollToSide(Solo.RIGHT);
+        }
+        assertTrue(solo.waitForText("Hello!, Hi!", 1, long_delay));
+        assertTrue(solo.waitForText("好"));
+        assertTrue(solo.waitForText("they"));
+        assertFalse(solo.waitForText("also"));
+        if (pager != null) {
+                    solo.scrollToSide(Solo.LEFT);
+        }
+        solo.clickOnText("Lesson 1");
+        solo.clickOnText("Lesson 3");
+        if (pager != null)
+            assertTrue(pager.getAdapter().getCount()==2);
+
+    }
 }
