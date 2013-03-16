@@ -720,7 +720,7 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         LockableViewPager pager = (LockableViewPager) solo.getView(R.id.voc_editor_pager);
         if (pager != null)
             solo.scrollToSide(Solo.RIGHT);
-        solo.waitForText("Lesson 1", 1, long_delay);
+        assertTrue(solo.waitForText("Lesson 1", 1, long_delay));
 
         // check the content of one list
         if (pager != null)
@@ -745,12 +745,54 @@ public class MainMenuActivityTest extends ActivityInstrumentationTestCase2<MainM
         assertTrue(solo.waitForText("they"));
         assertFalse(solo.waitForText("also"));
         if (pager != null) {
-                    solo.scrollToSide(Solo.LEFT);
+            solo.scrollToSide(Solo.LEFT);
         }
         solo.clickOnText("Lesson 1");
         solo.clickOnText("Lesson 3");
         if (pager != null)
             assertTrue(pager.getAdapter().getCount()==2);
 
+        solo.clickOnText("Lesson 1");
+        solo.clickOnText("Lesson 3");
+
+        View merge_lesson_button = solo.getView(R.id.add_vocabulary_lesson_merge);
+        if (merge_lesson_button == null)
+            solo.clickOnMenuItem(getActivity().getResources().getString(R.string.add_voc_menu_merge_lesson));
+        else
+            solo.clickOnView(merge_lesson_button);
+        assertTrue(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_combined_lesson)));
+
+        solo.clickOnText(getActivity().getResources().getString(R.string.add_voc_combined_lesson));
+        if (pager != null) {
+            solo.scrollToSide(Solo.RIGHT);
+        }
+        assertTrue(solo.waitForText("Hello!, Hi!", 1, long_delay));
+        assertTrue(solo.waitForText("好"));
+        assertTrue(solo.waitForText("they"));
+        assertFalse(solo.waitForText("also"));
+        if (pager != null) {
+            solo.scrollToSide(Solo.LEFT);
+        }
+
+        View delete_lesson_button = solo.getView(R.id.add_vocabulary_lesson_delete);
+        if (delete_lesson_button == null)
+            solo.clickOnMenuItem(getActivity().getResources().getString(R.string.add_voc_menu_delete_lesson));
+        else
+            solo.clickOnView(delete_lesson_button);
+        assertFalse(solo.waitForText(getActivity().getResources().getString(R.string.add_voc_combined_lesson)));
+        assertTrue(solo.waitForText("Lesson 1", 1, long_delay));
+
+        solo.clickOnText("Lesson 1");
+        View rename_lesson_button = solo.getView(R.id.add_vocabulary_lesson_rename);
+        if (rename_lesson_button == null)
+            solo.clickOnMenuItem(getActivity().getResources().getString(R.string.add_voc_menu_rename_lesson));
+        else
+            solo.clickOnView(rename_lesson_button);
+        solo.waitForText(getActivity().getResources().getString(R.string.add_voc_rename_lesson_dialog_query));
+        EditText new_name = (EditText) solo.getView(R.id.lesson_rename_edit_box);
+        solo.clearEditText(new_name);
+        solo.enterText(new_name,"New Lesson");
+        solo.clickOnButton(getActivity().getResources().getString(R.string.ok));
+        assertTrue(solo.waitForText("New Lesson", 1, long_delay));
     }
 }
