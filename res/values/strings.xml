@@ -22,6 +22,7 @@
     <string name="main_menu_dict">Dictionary</string>
     <string name="main_menu_help">Help</string>
     <string name="main_menu_settings">Settings</string>
+    <string name="main_menu_fail_load_dictionary">Fail to load dictionary</string>
 
     <string name="find_tone">Find the tone for:</string>
     <string name="guess_char">Find the missing character:</string>
@@ -36,11 +37,14 @@
     <string name="as_in">As in…</string>
     <string name="zoom_in">Zoom-in</string>
     <string name="zoom_out">Zoom-out</string>
+    <string name="bad_guess_reminder_nothing">You guessed did not guess anything</string>
+    <string name="bad_guess_reminder">You guessed: %s</string>
     <string name="more_vocabulary">Show more vocabulary</string>
     <string name="num_words">Chinese words</string>
     <string name="num_chars">Chinese characters</string>
     <string name="num_to_study">Tests left</string>
     <string name="time_to_study">until next test</string>
+    <string name="not_enough_progress_data">Not enough data</string>
 
     <string name="description_splash">splash screen</string>
     <string name="description_1st_tone">first tone accent</string>
@@ -94,6 +98,9 @@
     <string name="db_merging">Merging database</string>
     <string name="db_copying">Copying…</string>
     <string name="db_importing">Importing database</string>
+    <string name="db_exporting">Exporting database</string>
+    <string name="db_error_importing">An error occured while importing the database</string>
+    <string name="db_error_exporting">An error occured while exporting the database</string>
 
     <string name="test_empty_db">Your database is empty, add some words before testing</string>
     <string name="test_mastering">You master everything!</string>
@@ -115,6 +122,17 @@
 
     <string name="add_voc_description_new_translation">Click to add a new translation</string>
     <string name="add_voc_description_new_lesson">Click to add a new list</string>
+    <string name="add_voc_lesson_already_exists">The lesson %s already exists</string>
+    <string name="add_voc_old_lesson_name">was: %s</string>
+    <string name="add_voc_lesson_info_singular">has %d chinese word</string>
+    <string name="add_voc_lesson_info_plural">has %d chinese word</string>
+    <string name="add_voc_lesson_clone">%s - copy</string>
+    <string name="add_voc_rename_lesson_dialog_title">Rename lesson: %s</string>
+    <string name="add_voc_rename_lesson_dialog_query">Enter new name: </string>
+    <string name="add_voc_lesson_already_exists">The lesson [%s] already exists</string>
+
+    <string name="add_voc_lesson_content_header_no_lesson">Words that are not assigned to any lesson</string>
+    <string name="add_voc_lesson_content_header_lessons">Words in lesson </string>
 
     <string name="add_voc_menu_done">Done</string>
     <string name="add_voc_menu_edit_translation">Edit</string>
@@ -129,6 +147,7 @@
     <string name="add_voc_menu_set_default_lesson">Default</string>
 
     <string name="edit_lesson_new">New list name</string>
+    <string name="add_voc_combined_lesson">Combined List</string>
 
     <string name="notification_ticker">More to study</string>
     <string name="notification_title">More Chinese to study</string>

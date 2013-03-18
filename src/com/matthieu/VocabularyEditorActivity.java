@@ -108,10 +108,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             }
         }
 
-        if ((hanzi!=null) && (!hanzi.equals(""))){
-            // TODO set the right state
-        }
-
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -181,8 +177,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     public void onPageScrollStateChanged(int i) {
     }
 
-
-
     public void open_lesson_list(ArrayList<String> label) {
         if (fragments[2]!=null) {
             ((LessonListFragment) fragments[2]).change_lessons(label);
@@ -233,8 +227,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     public void onBackPressed() {
         ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0))
-            pager.setCurrentItem(0, true); // TODO: only do that when we are in "editor" mode, not for lesson picking
+        if ((pager != null) && (pager.getCurrentItem() != 0) && (current_state != activity_state.STATE_LESSON_SELECTION))
+            pager.setCurrentItem(0, true);
         else
             super.onBackPressed();
     }

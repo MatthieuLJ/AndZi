@@ -275,8 +275,7 @@ public class ProgressGraph extends View {
         if (data0.size() <=1) {
             p.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 24, getResources().getDisplayMetrics()));
             p.setTextAlign(Paint.Align.CENTER);
-            // TODO put in strings.xml
-            canvas.drawText("Not enough data", getMeasuredWidth()/2, getMeasuredHeight()/2, p);
+            canvas.drawText(getResources().getString(R.string.not_enough_progress_data), getMeasuredWidth()/2, getMeasuredHeight()/2, p);
 
             return;
         }

@@ -55,20 +55,18 @@ public class LessonListFragment extends Fragment {
         }
 
         if (lesson.size() == 0)
-            // TODO put in strings.xml
-            header.setText("Words that are not assigned to any lesson");
+            header.setText(R.string.add_voc_lesson_content_header_no_lesson);
         else {
             StringBuilder lessons = new StringBuilder();
-            // TODO put in strings.xml
-            lessons.append("Words in lesson ");
+            lessons.append(getResources().getString(R.string.add_voc_lesson_content_header_lessons));
             for (int i=0; i<lesson.size(); i++) {
                 lessons.append(lesson.get(i));
                 if (i<lesson.size()-1)
                     lessons.append(", ");
             }
             String to_display;
-            if (lessons.length() > 40)
-                to_display = lessons.substring(0, 40) + "…";
+            if (lessons.length() > 70)
+                to_display = lessons.substring(0, 70) + "…";
             else
                 to_display = lessons.toString();
             header.setText(to_display);
