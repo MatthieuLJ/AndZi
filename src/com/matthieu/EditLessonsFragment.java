@@ -661,6 +661,7 @@ public class EditLessonsFragment extends Fragment {
         input.setSingleLine(false);
         input.setMaxLines(3);
         input.setText(le.label);
+        input.setId(R.id.lesson_rename_edit_box);
         alert.setView(input);
 
         alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {

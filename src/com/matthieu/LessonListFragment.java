@@ -161,8 +161,6 @@ public class LessonListFragment extends Fragment {
             ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
             if (pb != null)
                 pb.setVisibility(View.GONE);
-
-
         }
     }
 
