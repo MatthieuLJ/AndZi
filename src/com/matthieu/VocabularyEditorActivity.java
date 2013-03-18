@@ -20,7 +20,7 @@ import com.viewpagerindicator.PageIndicator;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class VocabularyEditorActivity extends SherlockFragmentActivity {
+public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
     Fragment fragments[];
 
     HanziDB refDB, myDB;
@@ -31,7 +31,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         STATE_EDIT_WORD_VOC_SELECTED_SINGLE,
         STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE,
         STATE_EDIT_WORD_DIC_SELECTED,
-        STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED,
+        STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED,
+        STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED,
         STATE_LESSON_SELECTED_SINGLE,
         STATE_LESSON_SELECTED_MULTIPLE,
         STATE_LESSON_SELECTION
@@ -97,6 +98,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
 
             PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
+            mIndicator.setOnPageChangeListener(this);
         } else if (master_linear != null) {
             FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
             if (fragments[2] == null) {
@@ -104,10 +106,6 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
             } else {
                 lesson_content.setVisibility(View.VISIBLE);
             }
-        }
-
-        if ((hanzi!=null) && (!hanzi.equals(""))){
-            // TODO set the right state
         }
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -166,6 +164,19 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
         outState.putInt("state", current_state.ordinal());
     }
 
+    @Override
+    public void onPageScrolled(int i, float v, int i1) {
+    }
+
+    @Override
+    public void onPageSelected(int i) {
+        invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int i) {
+    }
+
     public void open_lesson_list(ArrayList<String> label) {
         if (fragments[2]!=null) {
             ((LessonListFragment) fragments[2]).change_lessons(label);
@@ -216,14 +227,15 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
     @Override
     public void onBackPressed() {
         ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0))
-            pager.setCurrentItem(0, true); // TODO: only do that when we are in "editor" mode, not for lesson picking
+        if ((pager != null) && (pager.getCurrentItem() != 0) && (current_state != activity_state.STATE_LESSON_SELECTION))
+            pager.setCurrentItem(0, true);
         else
             super.onBackPressed();
     }
 
     public void set_state(activity_state new_state) {
-        if (current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED) {
+        if ((current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                (current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED)) {
             ((AddVocabularyFragment)fragments[0]).set_new_lesson_assignment(flush_lesson_assignment());
         }
         current_state = new_state;
@@ -272,30 +284,47 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         int menu_resource=0;
+        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+
         switch(current_state) {
             case STATE_INIT:
-                menu_resource = R.menu.add_vocabulary_lesson_none;
+                menu_resource = R.menu.add_vocabulary_none;
                 break;
             case STATE_EDIT_WORD:
                 menu_resource = R.menu.add_vocabulary_menu_ready;
                 break;
             case STATE_EDIT_WORD_VOC_SELECTED_SINGLE:
-                menu_resource = R.menu.add_vocabulary_menu_edit;
+            case STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED:
+                if ((pager ==null) || (pager.getCurrentItem()==0))
+                    menu_resource = R.menu.add_vocabulary_menu_edit;
+                else
+                    menu_resource = R.menu.add_vocabulary_none;
                 break;
             case STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE:
-                menu_resource = R.menu.add_vocabulary_menu_edit_multiple;
+            case STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED:
+                if ((pager ==null) || (pager.getCurrentItem()==0))
+                    menu_resource = R.menu.add_vocabulary_menu_edit_multiple;
+                else
+                    menu_resource = R.menu.add_vocabulary_none;
                 break;
-            case STATE_EDIT_WORD_VOC_SELECTED_LESSON_CHANGED:
-                menu_resource = R.menu.add_vocabulary_menu_ready;
-                break;
+
             case STATE_EDIT_WORD_DIC_SELECTED:
-                menu_resource = R.menu.add_vocabulary_menu_add;
+                if ((pager ==null) || (pager.getCurrentItem()==0))
+                    menu_resource = R.menu.add_vocabulary_menu_add;
+                else
+                    menu_resource = R.menu.add_vocabulary_none;
                 break;
             case STATE_LESSON_SELECTED_SINGLE:
-                menu_resource = R.menu.add_vocabulary_lesson_single;
+                if ((pager ==null) || (pager.getCurrentItem()==1))
+                    menu_resource = R.menu.add_vocabulary_lesson_single;
+                else
+                    menu_resource = R.menu.add_vocabulary_none;
                 break;
             case STATE_LESSON_SELECTED_MULTIPLE:
-                menu_resource = R.menu.add_vocabulary_lesson_multiple;
+                if ((pager ==null) || (pager.getCurrentItem()==1))
+                    menu_resource = R.menu.add_vocabulary_lesson_multiple;
+                else
+                    menu_resource = R.menu.add_vocabulary_none;
                 break;
             case STATE_LESSON_SELECTION:
                 menu_resource = R.menu.add_vocabulary_lesson_selection;

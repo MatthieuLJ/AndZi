@@ -21,12 +21,9 @@ import com.matthieu.HanziDB;
 import com.matthieu.R;
 
 import java.io.*;
-import java.net.*;
 import java.util.Calendar;
 
 public class Settings extends PreferenceActivity {
-
-    private static final String dictionaryURL="http://bit.ly/AndZi-Cedict";
 
     int current_task_type=0; //0=nothing
                              //1=ref download

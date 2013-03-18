@@ -44,6 +44,7 @@
             android:layout_margin="2sp"
             style="@style/button"
             android:text="@string/accept"
+            android:textSize="@dimen/large_text"
             android:visibility="gone"
             />
     <Button
@@ -53,6 +54,7 @@
             android:layout_margin="2sp"
             style="@style/button"
             android:text="@string/ok"
+            android:textSize="@dimen/large_text"
             />
 
 </LinearLayout>

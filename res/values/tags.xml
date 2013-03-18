@@ -13,4 +13,5 @@
     <item type="id" name="details_query_ref"/>
     <item type="id" name="review_list_content"/>
     <item type="id" name="test_bad_guess"/>
+    <item type="id" name="lesson_rename_edit_box"/>
 </resources>

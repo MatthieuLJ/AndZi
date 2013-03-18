@@ -139,7 +139,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
             TextView chinese = new TextView(activity);
             chinese.setTextColor(Color.BLACK);
-            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
+            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_test_text));
             chinese.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
             chinese.setClickable(false);
             chinese.setText(w.chinese);
@@ -150,7 +150,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
             TextView trans = new TextView(activity);
             trans.setTextColor(Color.BLACK);
-            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_text));
+            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_test_text));
             trans.setClickable(false);
             String en="";
             for (int j=0; j<w.english.size(); j++) {
@@ -256,8 +256,8 @@ public class GuessPinyin extends Test implements TextWatcher {
             if ((good == INCORRECT) && (!answer.equals(""))) {
                 LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
-                bad_guess_text.setText("You guessed: "+answer);
-                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
+                bad_guess_text.setText(parent_activity.getResources().getString(R.string.bad_guess_reminder, answer));
+                bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_test_text));
                 bad_guess_text.setTextColor(parent_activity.getResources().getColor(R.color.test_failure));
                 bad_guess_text.setGravity(Gravity.CENTER_HORIZONTAL);
                 bad_guess.addView(bad_guess_text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));

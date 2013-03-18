@@ -55,15 +55,21 @@ public class LessonListFragment extends Fragment {
         }
 
         if (lesson.size() == 0)
-            header.setText("Words that are not assigned to any lesson");
+            header.setText(R.string.add_voc_lesson_content_header_no_lesson);
         else {
             StringBuilder lessons = new StringBuilder();
+            lessons.append(getResources().getString(R.string.add_voc_lesson_content_header_lessons));
             for (int i=0; i<lesson.size(); i++) {
                 lessons.append(lesson.get(i));
                 if (i<lesson.size()-1)
                     lessons.append(", ");
             }
-            header.setText("Words in lesson "+lessons.toString());
+            String to_display;
+            if (lessons.length() > 70)
+                to_display = lessons.substring(0, 70) + "…";
+            else
+                to_display = lessons.toString();
+            header.setText(to_display);
         }
     }
 
@@ -155,8 +161,6 @@ public class LessonListFragment extends Fragment {
             ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
             if (pb != null)
                 pb.setVisibility(View.GONE);
-
-
         }
     }
 

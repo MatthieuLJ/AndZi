@@ -229,7 +229,7 @@ public class GuessContaining extends Test {
                     answer_box.setTypeface(((AndZiApplication) parent_activity.getApplication()).get_chinese_font());
                     answer_box.setGravity(Gravity.CENTER);
                     answer_box.setTextColor(color);
-                    answer_box.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_text));
+                    answer_box.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_test_text));
                     answer_box.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
                     answer_box.setPadding(4, 0, 4, 4);
                     final String final_answer = answer;

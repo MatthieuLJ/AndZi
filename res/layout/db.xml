@@ -28,12 +28,12 @@
                     android:id="@+id/stats_chars"
                     android:gravity="right"
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/large_text"
+                    android:textSize="@dimen/large_test_text"
                     android:textIsSelectable="false"
                     />
             <TextView
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/normal_text"
+                    android:textSize="@dimen/normal_test_text"
                     android:text="@string/num_chars"
                     />
         </TableRow>
@@ -47,7 +47,7 @@
                     android:id="@+id/stats_words"
                     android:gravity="right"
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/large_text"
+                    android:textSize="@dimen/large_test_text"
                     android:textIsSelectable="false"
                     />
             <TextView
@@ -66,12 +66,12 @@
                     android:id="@+id/stats_to_study"
                     android:gravity="right"
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/large_text"
+                    android:textSize="@dimen/large_test_text"
                     android:textIsSelectable="false"
                     />
             <TextView
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/normal_text"
+                    android:textSize="@dimen/normal_test_text"
                     android:text="@string/num_to_study"
                     />
         </TableRow>
@@ -91,7 +91,7 @@
                     />
             <TextView
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/normal_text"
+                    android:textSize="@dimen/normal_test_text"
                     android:text="@string/time_to_study"
                     />
         </TableRow>
@@ -118,7 +118,8 @@
                 android:layout_weight="1"
                 android:layout_margin="2sp"
                 style="@style/button"
-                android:text="@string/zoom_in" />
+                android:text="@string/zoom_in"
+                android:textSize="@dimen/large_test_text" />
         <Button
                 android:id="@+id/graph_out"
                 android:layout_width="0dp"
@@ -126,7 +127,8 @@
                 android:layout_weight="1"
                 android:layout_margin="2sp"
                 style="@style/button"
-                android:text="@string/zoom_out" />
+                android:text="@string/zoom_out"
+                android:textSize="@dimen/large_test_text" />
     </LinearLayout>
 
 </LinearLayout>

@@ -105,7 +105,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
             TableRow tr = new TableRow(activity);
 
             TextView chinese = new TextView(activity);
-            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_text));
+            chinese.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.large_test_text));
             chinese.setTextColor(Color.BLACK);
             chinese.setClickable(false);
             String chinese_string = w.chinese.replaceAll(current_test, "\\?");
@@ -135,7 +135,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
             TextView trans = new TextView(activity);
             trans.setClickable(false);
-            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_text));
+            trans.setTextSize(TypedValue.COMPLEX_UNIT_PX, activity.getResources().getDimension(R.dimen.normal_test_text));
             trans.setTextColor(Color.BLACK);
             String en="";
             for (int j=0; j<w.english.size(); j++) {

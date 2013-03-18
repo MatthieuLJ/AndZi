@@ -25,14 +25,14 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:gravity="center_horizontal"
                 android:textColor="@android:color/black"
-                android:textSize="@dimen/large_text"
+                android:textSize="@dimen/large_test_text"
                 android:text="@string/find_tone" />
         <TextView
                 android:id="@+id/guess_tone_chinese"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|top"
-                android:textSize="@dimen/xlarge_text"
+                android:textSize="@dimen/xlarge_test_text"
                 android:textColor="@android:color/black"
                 android:textIsSelectable="false"
                 />
@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|top"
                 android:textColor="@android:color/black"
-                android:textSize="@dimen/large_text"
+                android:textSize="@dimen/large_test_text"
                 android:textIsSelectable="false"
                 />
 
@@ -83,7 +83,7 @@
                         android:layout_width="wrap_content"
                         android:text="@string/first_tone"
                         android:textColor="@android:color/black"
-                        android:textSize="@dimen/normal_text"
+                        android:textSize="@dimen/normal_test_text"
                         android:layout_gravity="center"
                         />
             </TableRow>
@@ -114,7 +114,7 @@
                         android:layout_width="wrap_content"
                         android:text="@string/second_tone"
                         android:textColor="@android:color/black"
-                        android:textSize="@dimen/normal_text"
+                        android:textSize="@dimen/normal_test_text"
                         android:layout_gravity="center"
                         />
             </TableRow>
@@ -145,7 +145,7 @@
                         android:layout_width="wrap_content"
                         android:text="@string/third_tone"
                         android:textColor="@android:color/black"
-                        android:textSize="@dimen/normal_text"
+                        android:textSize="@dimen/normal_test_text"
                         android:layout_gravity="center"
                         />
             </TableRow>
@@ -176,7 +176,7 @@
                         android:layout_width="wrap_content"
                         android:text="@string/fourth_tone"
                         android:textColor="@android:color/black"
-                        android:textSize="@dimen/normal_text"
+                        android:textSize="@dimen/normal_test_text"
                         android:layout_gravity="center"
                         />
             </TableRow>
@@ -191,6 +191,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 style="@style/button"
-                android:text="@string/ok"/>
+                android:text="@string/ok"
+                android:textSize="@dimen/large_test_text"/>
     </LinearLayout>
 </android.gesture.GestureOverlayView>

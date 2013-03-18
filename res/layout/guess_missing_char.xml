@@ -17,7 +17,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:gravity="center_horizontal"
             android:textColor="@android:color/black"
-            android:textSize="@dimen/large_text"
+            android:textSize="@dimen/large_test_text"
             android:text="@string/guess_char" />
     <View
             android:layout_height="0dp"
@@ -57,7 +57,7 @@
                 android:layout_weight="2"
                 style="@style/edit_text"
                 android:hint="@string/test_your_answer"
-                android:textSize="@dimen/large_text"
+                android:textSize="@dimen/large_test_text"
                 android:imeOptions="actionDone"
                 />
         <Button
@@ -66,14 +66,15 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 style="@style/button"
-                android:text="@string/ok"/>
+                android:text="@string/ok"
+                android:textSize="@dimen/large_test_text"/>
     </LinearLayout>
     <TextView
             android:id="@+id/char_finder_previous_guess"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/black"
-            android:textSize="@dimen/normal_text"
+            android:textSize="@dimen/normal_test_text"
             android:visibility="gone"
             />
 </LinearLayout>
