@@ -1,4 +1,4 @@
-ONGOING (7):
+ONGOING (5):
 * Make it pretty(ier)
   - icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
   - application icon
@@ -7,7 +7,6 @@ ONGOING (7):
 * Check different screen sizes
   - getWindow().setSoftInputMode(); to change the way the soft keyboard affects the activity
 * In reference activity, sometimes the buttons are disabled… (for the buttons in larger size)
-* Change "filtered" to "select" in export
 * Tell what we are doing while loading
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
@@ -35,7 +34,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (235):
+DONE (236):
+* Change "filtered" to "select" in export
 * Remove debuggable
 * Put the strings in XML
 * Header in lesson content should be clipped.
