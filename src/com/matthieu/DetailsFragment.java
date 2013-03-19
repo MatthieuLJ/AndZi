@@ -160,6 +160,13 @@ public class DetailsFragment extends Fragment {
                         else
                             add_edit_button.setText(R.string.details_add);
                     }
+                    final Button source_button = (Button) v.findViewById(R.id.details_source_button);
+                    if ((source_button != null) && (is_dictionary_search())) {
+                        if (exists_in_db())
+                            source_button.setEnabled(true);
+                        else
+                            source_button.setEnabled(false);
+                    }
                 }
             }
         }.execute((Void[])null);
