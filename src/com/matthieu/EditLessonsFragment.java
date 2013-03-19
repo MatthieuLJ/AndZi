@@ -293,12 +293,8 @@ public class EditLessonsFragment extends Fragment {
                         new_lesson_field.setText("");
                         if (new_lesson_label.equals(""))
                             return;
-                        // TODO put in strings.xml
-                        if (new_lesson_label.equals("(none)"))
-                            return;
                         if (lesson_exists(new_lesson_label)) {
-                            // TODO put in strings.xml
-                            Toast.makeText(getActivity(), "The lesson [" + new_lesson_label + "] already exists", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), getActivity().getResources().getString(R.string.add_voc_lesson_already_exists,new_lesson_label), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         Lesson new_lesson = new Lesson(new_lesson_label);
@@ -335,27 +331,27 @@ public class EditLessonsFragment extends Fragment {
 
                 VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)getActivity()).get_state();
 
-                String more_info = "";
+                StringBuilder more_info = new StringBuilder();
                 if ((le.state & Lesson.RENAMED) != 0) {
-                    // TODO put in strings.xml
-                    more_info = "was : " + le.old_label;
+                    more_info.append(getActivity().getResources().getString(R.string.add_voc_old_lesson_name, le.old_label));
                 }
                 if ((le.num_items != 0) &&
-                        ((state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
+                        ((state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) &&
                                 (state != VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED))) {
-                    if (!more_info.equals(""))
-                        more_info = more_info + ", ";
-                    // TODO put in strings.xml
-                    more_info = more_info + "has " + le.num_items + " chinese word";
-                    if (le.num_items > 1)
-                        more_info += "s";
+                    if (!more_info.toString().equals(""))
+                        more_info.append(", ");
+
+                    if (le.num_items <=  1)
+                        more_info.append(getActivity().getResources().getString(R.string.add_voc_lesson_info_singular, le.num_items));
+                    else
+                        more_info.append(getActivity().getResources().getString(R.string.add_voc_lesson_info_plural, le.num_items));
                 }
                 TextView more_tview = (TextView) row.findViewById(R.id.lesson_more_info_label);
-                if (more_info.equals("")) {
+                if (more_info.toString().equals("")) {
                     more_tview.setVisibility(View.GONE);
                 }
                 else {
-                    more_tview.setText(more_info);
+                    more_tview.setText(more_info.toString());
                     more_tview.setVisibility(View.VISIBLE);
                 }
 
@@ -581,8 +577,7 @@ public class EditLessonsFragment extends Fragment {
             return;
         }
         final Lesson le = current_lesson_selection.get(0);
-        // TODO put in strings.xml
-        String new_name = le.label + " - copy";
+        String new_name = getResources().getString(R.string.add_voc_lesson_clone, le.label);
         StringBuilder other_new_name = new StringBuilder(new_name);
         int index = 1;
         while (lesson_exists(other_new_name.toString())) {
@@ -659,14 +654,14 @@ public class EditLessonsFragment extends Fragment {
             le.old_label=le.label;
 
         AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
-        // TODO put in strings.xml
-        alert.setTitle("Rename lesson: "+le.label);
-        alert.setMessage("Enter new name: ");
+        alert.setTitle(getResources().getString(R.string.add_voc_rename_lesson_dialog_title,le.label));
+        alert.setMessage(getResources().getString(R.string.add_voc_rename_lesson_dialog_query));
 
         final EditText input = new EditText(getActivity());
         input.setSingleLine(false);
         input.setMaxLines(3);
         input.setText(le.label);
+        input.setId(R.id.lesson_rename_edit_box);
         alert.setView(input);
 
         alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -674,14 +669,10 @@ public class EditLessonsFragment extends Fragment {
                 final String new_label = input.getText().toString();
                 if (new_label.equals(""))
                     return;
-                // TODO put in strings.xml
-                if (new_label.equals("(none)"))
-                    return;
                 if (new_label.equals(le.label))
                     return;
                 if (lesson_exists(new_label)) {
-                    // TODO put in strings.xml
-                    Toast.makeText(getActivity(), "The lesson [" + new_label + "] already exists", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getResources().getString(R.string.add_voc_lesson_already_exists,new_label), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -722,8 +713,7 @@ public class EditLessonsFragment extends Fragment {
             return;
         }
 
-        // TODO put in strings.xml
-        String new_name = "Combined lesson";
+        String new_name = getActivity().getResources().getString(R.string.add_voc_combined_lesson);
         StringBuilder other_new_name = new StringBuilder(new_name);
         int index = 1;
         while (lesson_exists(other_new_name.toString())) {

@@ -23,7 +23,7 @@
                 android:background="@drawable/main_menu_button"
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_add_voc"
-                android:textSize="@dimen/xlarge_text"
+                android:textSize="@dimen/xlarge_test_text"
                 android:onClick="handle_add_vocabulary"
                 android:singleLine="true"
                 app:max_size="@dimen/xlarge_text"/>
@@ -42,7 +42,7 @@
                 android:background="@drawable/main_menu_button"
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_test"
-                android:textSize="@dimen/xlarge_text"
+                android:textSize="@dimen/xlarge_test_text"
                 android:onClick="handle_test"
                 android:singleLine="true"
                 app:max_size="@dimen/xlarge_text"/>
@@ -60,7 +60,7 @@
                 android:background="@drawable/main_menu_button"
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_dict"
-                android:textSize="@dimen/xlarge_text"
+                android:textSize="@dimen/xlarge_test_text"
                 android:onClick="handle_dictionary"
                 android:singleLine="true"
                 app:max_size="@dimen/xlarge_text"/>
@@ -78,7 +78,7 @@
                 android:background="@drawable/main_menu_button"
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_help"
-                android:textSize="@dimen/large_text"
+                android:textSize="@dimen/large_test_text"
                 android:onClick="handle_help"
                 android:singleLine="true"
                 app:max_size="@dimen/large_text"/>
@@ -92,7 +92,7 @@
                 android:background="@drawable/main_menu_button"
                 android:textColor="@drawable/main_menu_text_color"
                 android:text="@string/main_menu_settings"
-                android:textSize="@dimen/large_text"
+                android:textSize="@dimen/large_test_text"
                 android:onClick="handle_prefs"
                 android:singleLine="true"
                 app:max_size="@dimen/large_text"/>

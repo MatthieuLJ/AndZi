@@ -56,8 +56,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     }
 
     public void fail_it() {
-        // TODO put in strings.xml
-        Toast.makeText(this, "Fail to load dictionary", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, R.string.main_menu_fail_load_dictionary, Toast.LENGTH_LONG).show();
         finish();
     }
 

@@ -20,11 +20,12 @@
             android:anyDensity="true"/>
 
     <application
-            android:icon="@drawable/icon"
+            android:icon="@drawable/zi_icon"
             android:label="@string/app_name"
             android:name="AndZiApplication"
             android:hardwareAccelerated="false"
-            android:allowBackup="true">
+            android:allowBackup="true"
+            android:debuggable="false">
         <activity
                 android:name=".MainMenuActivity"
                 android:launchMode="singleTask"

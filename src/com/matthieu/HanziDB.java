@@ -2277,8 +2277,7 @@ public class HanziDB extends SQLiteOpenHelper {
             if (error)
                 context.runOnUiThread(new Runnable() {
                     public void run() {
-                        // TODO put in strings.xml
-                        Toast.makeText(context, "An error occured while importing the database", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, R.string.db_error_importing, Toast.LENGTH_SHORT).show();
                     }
                 });
         }
@@ -2286,15 +2285,14 @@ public class HanziDB extends SQLiteOpenHelper {
         public void change_progress_dialog(ProgressDialog new_progress) {
             this.dialog = new_progress;
             if (copying) {
-                // TODO put in strings.xml
-                dialog.setTitle("Importing Database");
-                dialog.setMessage("Copying...");
+                dialog.setTitle(R.string.db_importing);
+                dialog.setMessage(context.getResources().getString(R.string.db_copying));
                 dialog.setIndeterminate(true);
                 dialog.show();
             }
             else {
-                // TODO put in strings.xml
-                dialog.setMessage("Merging database");
+                dialog.setTitle(R.string.db_importing);
+                dialog.setMessage(context.getResources().getString(R.string.db_merging));
                 dialog.setIndeterminate(false);
                 dialog.setMax(100);
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -2459,15 +2457,13 @@ public class HanziDB extends SQLiteOpenHelper {
             // create the progress dialog if needed
             if (mProgressDialog != null) {
                 if (selected_lessons == null) {
-                    // TODO put in strings.xml
-                    mProgressDialog.setTitle("Exporting Database");
-                    mProgressDialog.setMessage("Copying....");
+                    mProgressDialog.setTitle(R.string.db_exporting);
+                    mProgressDialog.setMessage(context.getResources().getString(R.string.db_copying));
                     mProgressDialog.setIndeterminate(true);
                     mProgressDialog.show();
                 }
                 else {
-                    // TODO put in strings.xml
-                    mProgressDialog.setMessage("Exporting database");
+                    mProgressDialog.setMessage(context.getResources().getString(R.string.db_exporting));
                     mProgressDialog.setIndeterminate(false);
                     mProgressDialog.setMax(100);
                     mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -2513,8 +2509,7 @@ public class HanziDB extends SQLiteOpenHelper {
                             mProgressDialog.dismiss();
 
                         if (error) {
-                            // TODO put in strings.xml
-                            Toast.makeText(context, "An error occured while exporting the database", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, R.string.db_error_exporting, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -2528,15 +2523,13 @@ public class HanziDB extends SQLiteOpenHelper {
         public void change_dialog(ProgressDialog dialog) {
             mProgressDialog = dialog;
             if (selected_lessons == null) {
-                // TODO put in strings.xml
-                mProgressDialog.setTitle("Exporting Database");
-                mProgressDialog.setMessage("Copying....");
+                mProgressDialog.setTitle(R.string.db_exporting);
+                mProgressDialog.setMessage(context.getResources().getString(R.string.db_copying));
                 mProgressDialog.setIndeterminate(true);
                 mProgressDialog.show();
             }
             else {
-                // TODO put in strings.xml
-                mProgressDialog.setMessage("Exporting database");
+                mProgressDialog.setMessage(context.getResources().getString(R.string.db_exporting));
                 mProgressDialog.setIndeterminate(false);
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                 mProgressDialog.setMax(100);
