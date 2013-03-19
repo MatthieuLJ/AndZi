@@ -305,13 +305,15 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
         @Override
         public float getPageWidth(int position) {
+            float res;
             if (((getResources().getConfiguration().screenLayout &
                     Configuration.SCREENLAYOUT_SIZE_MASK) ==
                     Configuration.SCREENLAYOUT_SIZE_LARGE) && (getCount() > 1)) {
-                return 0.5f;
+                res = 0.5f;
             } else {
-                return 1.0f;
+                res = 1.0f;
             }
+            return res;
         }
 
         @Override
@@ -339,6 +341,11 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                     break;
                 }
             }
+
+            if ((res == 0) && (getCount() == 2) &&
+                    ((getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) ==
+                            Configuration.SCREENLAYOUT_SIZE_LARGE))
+                return POSITION_NONE; // Want to make sure we update the size of the first page after we add some details...
 
             return res;
         }

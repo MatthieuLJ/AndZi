@@ -153,7 +153,7 @@
     <string name="notification_title">More Chinese to study</string>
     <string name="notification_content">You have %s tests waiting</string>
 
-    <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
+    <string name="reference_too_many_pinned">No more free panel (need to unpin)</string>
     <string name="reference_query">Query</string>
     <string name="reference_cannot_understand">Cannot understand this query</string>
 

@@ -97,8 +97,13 @@ public class DetailsFragment extends Fragment {
 
         final Button source_button = (Button) res.findViewById(R.id.details_source_button);
         if (source_button != null) {
-            if (is_dictionary_search())
+            if (is_dictionary_search()) {
                 source_button.setText(R.string.details_dictionary);
+                if (exists_in_db())
+                    source_button.setEnabled(true);
+                else
+                    source_button.setEnabled(false);
+            }
             else
                 source_button.setText(R.string.details_voc_list);
             source_button.setOnClickListener(new View.OnClickListener() {
