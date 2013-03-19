@@ -19,6 +19,8 @@ import com.matthieu.zi_app.R;
 
 import java.io.*;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
@@ -237,44 +239,6 @@ public class AndZiApplication extends Application {
         return available_space >= 3 * dbSize/stats.getBlockSize();
     }
 
-    public boolean check_ref_download_space(String path, int size) {
-        // Downloading and installing the reference database means:
-        // download the file to the path
-        // delete the existing ref db
-        // copy the new one in place
-        // delete the temporary file (?)
-
-        // first there is enough space to download the file
-        String destination_mp = FileMountPoint.mount_point(path);
-        StatFs stats = new StatFs(destination_mp);
-        int available_space = stats.getAvailableBlocks();
-        int dest_blockSize = stats.getBlockSize();
-
-        String localDB_mp = FileMountPoint.mount_point(getApplicationContext().getDatabasePath(REF_DB_NAME).getPath());
-        long installed_db_size = getApplicationContext().getDatabasePath(REF_DB_NAME).length();
-
-        if (destination_mp.equals(localDB_mp)) {
-            if (available_space + installed_db_size/dest_blockSize < 2*size/dest_blockSize)
-                return false;
-        }
-        else {
-            if (available_space < size/dest_blockSize)
-                return false;
-
-            stats = new StatFs(localDB_mp);
-            available_space = stats.getAvailableBlocks();
-            dest_blockSize = stats.getBlockSize();
-            if (available_space + installed_db_size/dest_blockSize < size/dest_blockSize)
-                return false;
-
-        }
-
-        return true;
-    }
-
-    public boolean copyMyDataBase(String destination) {
-        return copyFile(getApplicationContext().getDatabasePath(DEFAULT_DATABASE_NAME).getPath(), destination);
-    }
     public boolean copyProgressDataBase(String destination) {
         return copyFile(getApplicationContext().getDatabasePath(PROGRESS_DB_NAME).getPath(), destination);
     }
@@ -331,13 +295,12 @@ public class AndZiApplication extends Application {
         String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
         InputStream is = getResources().openRawResource(res_id);
 
-        if (!copyFile(is, dest)) {
+        if (!unpackZip(is, dest)) {
             new File(dest).delete();
             return false;
         }
 
         if (DEBUG) Log.d(TAG, "Done installing reference db " + dest);
-        update_dbs_in_details_populator();
         return true;
     }
 
@@ -388,5 +351,36 @@ public class AndZiApplication extends Application {
         if (chinese_font == null)
             chinese_font = Typeface.createFromAsset(getAssets(), "fonts/HDZB_simp.png");
         return chinese_font;
+    }
+
+    private boolean unpackZip(InputStream input, String destination)
+    {
+        ZipInputStream zis;
+        try {
+            zis = new ZipInputStream(new BufferedInputStream(input));
+            ZipEntry ze;
+            byte[] buffer = new byte[1024];
+            int count;
+
+            while ((ze = zis.getNextEntry()) != null) {
+                // only one file in the zip....
+                FileOutputStream fout = new FileOutputStream(destination);
+
+                // cteni zipu a zapis
+                while ((count = zis.read(buffer)) != -1) {
+                    fout.write(buffer, 0, count);
+                }
+
+                fout.close();
+                zis.closeEntry();
+            }
+
+            zis.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }
