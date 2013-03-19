@@ -2,11 +2,11 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:expandable="http://schemas.android.com/apk/res/com.matthieu"
+        xmlns:expandable="http://schemas.android.com/apk/res/com.matthieu.zi_app"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         >
-    <com.matthieu.widget.ExtendingLinearLayout
+    <com.matthieu.zi_app.widget.ExtendingLinearLayout
             android:id="@+id/edit_lesson_new_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -52,5 +52,5 @@
                 expandable:hidable="true"
                 android:layout_marginRight="10dp"
                 />
-    </com.matthieu.widget.ExtendingLinearLayout>
+    </com.matthieu.zi_app.widget.ExtendingLinearLayout>
 </LinearLayout>

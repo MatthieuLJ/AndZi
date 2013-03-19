@@ -101,7 +101,7 @@
                 android:layout_weight="1"
                 android:id="@+id/empty_view2"/>
     </TableLayout>
-    <com.matthieu.widget.ProgressGraph
+    <com.matthieu.zi_app.widget.ProgressGraph
             android:id="@+id/graph"
             android:layout_height="0dp"
             android:layout_width="match_parent"

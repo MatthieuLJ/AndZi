@@ -46,7 +46,7 @@
                 android:title="@string/settings_db_clear"
                 android:key="ClearDB"
                 />
-        <com.matthieu.settings.TrimProgressPreference
+        <com.matthieu.zi_app.settings.TrimProgressPreference
                 android:title="@string/settings_db_forget_progress"
                 android:key="TrimProgress"
                 />

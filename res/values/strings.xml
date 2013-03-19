@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AndZi</string>
+    <string name="app_name">Zi</string>
 
     <string name="location">Location</string>
     <string name="cant_read_folder">folder can\'t be read!</string>

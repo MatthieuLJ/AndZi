@@ -2,11 +2,11 @@
 
 <FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tlv="http://schemas.android.com/apk/res/com.matthieu"
+        xmlns:tlv="http://schemas.android.com/apk/res/com.matthieu.zi_app"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <com.matthieu.widget.TouchListView
+    <com.matthieu.zi_app.widget.TouchListView
             android:id="@+id/lesson_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
