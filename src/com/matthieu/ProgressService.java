@@ -61,7 +61,7 @@ public class ProgressService extends Service {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean notification_enabled = sp.getBoolean("notification_enabled", true);
         if ((notification_enabled) && (expired > 25)) {
-            Notification notification = new Notification(R.drawable.icon, getResources().getString(R.string.notification_ticker), System.currentTimeMillis());
+            Notification notification = new Notification(R.drawable.zi_icon_notification, getResources().getString(R.string.notification_ticker), System.currentTimeMillis());
             notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
             Intent start_test = new Intent(this, MainMenuActivity.class);
             start_test.putExtra("start_test", true);
