@@ -14,8 +14,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
-import com.matthieu.zi_app.widget.DBCheckProgressHandler;
-import com.matthieu.zi_app.R;
+import com.matthieu.zi_app.widget.ProgressHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -256,7 +255,7 @@ public class HanziDB extends SQLiteOpenHelper {
         super.close();
     }
 
-    public boolean checkDatabase(final boolean fixme, final DBCheckProgressHandler handler) {
+    public boolean checkDatabase(final boolean fixme, final ProgressHandler handler) {
         boolean res = true;
 
         final int num_steps=15;

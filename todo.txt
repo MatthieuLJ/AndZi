@@ -1,8 +1,7 @@
-ONGOING (3):
+ONGOING (2):
 * Update help ( /about ?)
 * Check different screen sizes
   - getWindow().setSoftInputMode(); to change the way the soft keyboard affects the activity
-* Tell what we are doing while loading (and keep moving, especially when installing the dictionary)
 
  http://www.chinese-forums.com/index.php?/topic/16981-a-list-of-chengyu/
 
@@ -29,7 +28,8 @@ FUTURE (19):
 * Voice recognition... ?
 * OCR : http://gaut.am/making-an-ocr-android-app-using-tesseract/ - https://github.com/rmtheis/tess-two
 
-DONE (238):
+DONE (239):
+* Tell what we are doing while loading (and keep moving, especially when installing the dictionary)
 * Make it pretty(ier)
   V icons for buttons (dictionary / details fragment / test submit / stats zoom / lesson filter)
   V application icon

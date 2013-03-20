@@ -73,7 +73,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
             getSupportFragmentManager().beginTransaction().add(android.R.id.content, splash_fragment).commit();
         }
         else {
-            if (!((AndZiApplication)getApplication()).initialize_ref_db())
+            if (!((AndZiApplication)getApplication()).initialize_ref_db(null))
                 fail_it();
             else
                 start_it();

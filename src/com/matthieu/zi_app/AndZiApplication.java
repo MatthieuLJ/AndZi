@@ -16,6 +16,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.matthieu.zi_app.widget.FileMountPoint;
 import com.matthieu.zi_app.R;
+import com.matthieu.zi_app.widget.ProgressHandler;
 
 import java.io.*;
 import java.util.*;
@@ -76,7 +77,7 @@ public class AndZiApplication extends Application {
     public HanziDB getRefDB() {
         synchronized(this) {
         if (!ref_initialized) {
-            if (!initialize_ref_db())
+            if (!initialize_ref_db(null))
                 return null;
         }
         }
@@ -124,7 +125,7 @@ public class AndZiApplication extends Application {
         }
     }
     
-    public boolean initialize_ref_db() {
+    public boolean initialize_ref_db(ProgressHandler progress) {
         synchronized(this) {
             if (ref_initialized)
                 return true;
@@ -144,13 +145,32 @@ public class AndZiApplication extends Application {
             else
                 num_chars=0;
 
+            if (progress != null)
+                progress.progress(10);
+
             if (num_chars==0)  {
                 if (DEBUG) Log.d(TAG, "Install new dictionary");
                 if (refDB!= null)
                     refDB.close();
 
-                if (!installRefDB(R.raw.cedict_db))
+                if (progress != null)
+                    progress.progress(15);
+
+                // Installing ref DB
+                ContextWrapper cw = new ContextWrapper(getApplicationContext());
+                cw.deleteDatabase(REF_DB_NAME);
+                String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
+                InputStream is = getResources().openRawResource(R.raw.cedict_db);
+
+                if (!unpackZip(is, dest, progress)) {
+                    new File(dest).delete();
                     return false;
+                }
+
+                if (DEBUG) Log.d(TAG, "Done installing reference db " + dest);
+
+                if (progress != null)
+                    progress.progress(85);
 
                 refDB = new HanziDB(this, REF_DB_NAME);
                 if ((!refDB.getReadableDatabase().isOpen()) || (refDB.getNumChars()==0))
@@ -160,6 +180,9 @@ public class AndZiApplication extends Application {
             SharedPreferences.Editor editor = prefs.edit();
             editor.putInt("cedict_version", this_ref_version);
             editor.commit();
+
+            if (progress != null)
+                progress.progress(90);
 
             update_dbs_in_details_populator();
 
@@ -289,21 +312,6 @@ public class AndZiApplication extends Application {
         initialize_my_db();
     }
 
-    public boolean installRefDB(int res_id) {
-        ContextWrapper cw = new ContextWrapper(getApplicationContext());
-        cw.deleteDatabase(REF_DB_NAME);
-        String dest = getApplicationContext().getDatabasePath(REF_DB_NAME).getPath();
-        InputStream is = getResources().openRawResource(res_id);
-
-        if (!unpackZip(is, dest)) {
-            new File(dest).delete();
-            return false;
-        }
-
-        if (DEBUG) Log.d(TAG, "Done installing reference db " + dest);
-        return true;
-    }
-
     public void replaceProgressDataBase(String source) {
         if (prog != null) {
             prog.close();
@@ -353,22 +361,25 @@ public class AndZiApplication extends Application {
         return chinese_font;
     }
 
-    private boolean unpackZip(InputStream input, String destination)
+    private boolean unpackZip(InputStream input, String destination, ProgressHandler progress)
     {
         ZipInputStream zis;
         try {
             zis = new ZipInputStream(new BufferedInputStream(input));
-            ZipEntry ze;
             byte[] buffer = new byte[1024];
             int count;
+            int loop_count=0; // that goes up to 50000+
 
-            while ((ze = zis.getNextEntry()) != null) {
+            while (zis.getNextEntry() != null) {
                 // only one file in the zip....
                 FileOutputStream fout = new FileOutputStream(destination);
 
                 // cteni zipu a zapis
                 while ((count = zis.read(buffer)) != -1) {
                     fout.write(buffer, 0, count);
+                    loop_count++;
+                    if ((progress != null) && (loop_count % 1000 == 0) && (loop_count<= 50000))
+                        progress.progress(20+60*(loop_count/1000)/50); // send from 20 to 80
                 }
 
                 fout.close();

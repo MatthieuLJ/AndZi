@@ -5,7 +5,7 @@ import android.content.*;
 import android.database.Cursor;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
-import com.matthieu.zi_app.widget.DBCheckProgressHandler;
+import com.matthieu.zi_app.widget.ProgressHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1139,7 +1139,7 @@ public class HanziDBTest extends ActivityInstrumentationTestCase2<EmptyActivity>
 
 
     public boolean checkDB(final HanziDB db, final boolean fixme) {
-        boolean res = db.checkDatabase(fixme, new DBCheckProgressHandler() {
+        boolean res = db.checkDatabase(fixme, new ProgressHandler() {
             @Override
             public void progress(int i) {
                 Log.d(TAG, "Checking database, progress " + i);

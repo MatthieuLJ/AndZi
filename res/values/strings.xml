@@ -17,6 +17,11 @@
     <string name="no">No</string>
     <string name="description_background">Background</string>
 
+    <string name="splash_init">Initializing…</string>
+    <string name="splash_load_ref">Installing dictionary…</string>
+    <string name="splash_load_db">Reading vocabulary list…</string>
+    <string name="splash_check_db">Checking vocabulary list…</string>
+
     <string name="main_menu_add_voc">Add vocabulary</string>
     <string name="main_menu_test">Test me!</string>
     <string name="main_menu_dict">Dictionary</string>
