@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res/com.matthieu"
+        xmlns:app="http://schemas.android.com/apk/res/com.matthieu.zi_app"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         >
-    <com.matthieu.widget.EditTextAutomaticSize
+    <com.matthieu.zi_app.widget.EditTextAutomaticSize
             android:id="@+id/add_vocabulary_chinese"
             android:layout_width="match_parent"
             android:layout_height="56dp"

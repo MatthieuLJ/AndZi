@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AndZi</string>
-    
+    <string name="app_name">Zi</string>
+
     <string name="location">Location</string>
     <string name="cant_read_folder">folder can\'t be read!</string>
     <string name="nnew">New</string>
@@ -16,6 +16,11 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="description_background">Background</string>
+
+    <string name="splash_init">Initializing…</string>
+    <string name="splash_load_ref">Installing dictionary…</string>
+    <string name="splash_load_db">Reading vocabulary list…</string>
+    <string name="splash_check_db">Checking vocabulary list…</string>
 
     <string name="main_menu_add_voc">Add vocabulary</string>
     <string name="main_menu_test">Test me!</string>
@@ -153,7 +158,7 @@
     <string name="notification_title">More Chinese to study</string>
     <string name="notification_content">You have %s tests waiting</string>
 
-    <string name="reference_too_many_pinned">You need to unpin some windows to open a new one</string>
+    <string name="reference_too_many_pinned">No more free panel (need to unpin)</string>
     <string name="reference_query">Query</string>
     <string name="reference_cannot_understand">Cannot understand this query</string>
 
