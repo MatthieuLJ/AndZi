@@ -25,8 +25,8 @@
                 android:key="ExportDB">
             <intent
                     android:action="android.intent.action.MAIN"
-                    android:targetPackage="com.matthieu"
-                    android:targetClass="com.matthieu.settings.ExportDB"
+                    android:targetPackage="com.matthieu.zi_app"
+                    android:targetClass="com.matthieu.zi_app.settings.ExportDB"
                     />
         </PreferenceScreen>
         <PreferenceScreen
@@ -34,8 +34,8 @@
                 android:key="EmailDB">
             <intent
                     android:action="android.intent.action.MAIN"
-                    android:targetPackage="com.matthieu"
-                    android:targetClass="com.matthieu.settings.EmailDB"
+                    android:targetPackage="com.matthieu.zi_app"
+                    android:targetClass="com.matthieu.zi_app.settings.EmailDB"
                     />
         </PreferenceScreen>
         <PreferenceScreen
