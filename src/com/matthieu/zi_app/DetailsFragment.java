@@ -147,7 +147,10 @@ public class DetailsFragment extends Fragment {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-                exists_in_db = db.getTranslations(DetailsFragment.this.current_hanzi).size() > 0;
+                if (DetailsFragment.this.current_hanzi.codePointCount(0,DetailsFragment.this.current_hanzi.length())==1)
+                    exists_in_db = db.getWordsWithPinyin(DetailsFragment.this.current_hanzi).size() > 0;
+                else
+                    exists_in_db = db.getTranslations(DetailsFragment.this.current_hanzi).size() > 0;
 
                 return null;
             }
