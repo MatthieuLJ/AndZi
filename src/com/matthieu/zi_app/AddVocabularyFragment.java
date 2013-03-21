@@ -650,16 +650,6 @@ public class AddVocabularyFragment extends Fragment
         update_state();
     }
 
-    @SuppressLint({"NewApi"})
-    public void add_new() {
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
-        if (lv == null)
-            return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
-            lv.smoothScrollToPosition(0);
-        ((VocabularyArrayAdapter)lv.getAdapter()).expand_new_field(true);
-    }
-
     public void add_selection() {
         if (current_word_selection.size()==0) {
             update_state();

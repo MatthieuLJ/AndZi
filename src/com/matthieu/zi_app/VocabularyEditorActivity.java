@@ -399,7 +399,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 if (pager!=null)
                     pager.setCurrentItem(1);
                 selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                if (selection.size() != 1) {
+                if (selection.size() < 1) {
                     ((EditLessonsFragment)fragments[1]).update_state();
                     break;
                 }
