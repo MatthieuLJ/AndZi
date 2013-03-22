@@ -384,10 +384,11 @@ public class PinyinParser {
                 i=j-1;
             }
         }
-        if (res == null)
-            if (DEBUG) Log.d(TAG, "Failed to parse string ["+input+"]");
+        if (res == null) {
+            if (DEBUG)  Log.d(TAG, "Failed to parse string ["+input+"]");
+        }
         else {
-                if (DEBUG) Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
+            if (DEBUG) Log.d(TAG, "Parsed string ["+input+"], got "+res.size()+" items");
             add_to_cache(input, res);
         }
 
