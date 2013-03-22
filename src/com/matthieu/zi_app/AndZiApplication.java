@@ -17,15 +17,13 @@ import android.util.Log;
 import com.matthieu.zi_app.widget.FileMountPoint;
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;
-import com.matthieu.zi_app.R;
 import com.matthieu.zi_app.widget.ProgressHandler;
 
 import java.io.*;
 import java.util.*;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-@ReportsCrashes(formUri = "http://www.bugsense.com/api/acra?api_key=9da47a87", formKey="")
+@ReportsCrashes(formUri = "http://www.bugsense.com/api/acra?api_key=27c6e935", formKey="")
 public class AndZiApplication extends Application {
     private HanziDB myDB=null;
     private HanziDB refDB=null;
