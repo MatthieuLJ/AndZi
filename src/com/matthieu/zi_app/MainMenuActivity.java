@@ -26,6 +26,10 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         start_test=false;
+
+        if (savedInstanceState != null) {
+            splash_fragment = getSupportFragmentManager().getFragment(savedInstanceState, "splash");
+        }
     }
 
     @Override
@@ -34,9 +38,17 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         start_test=intent.getBooleanExtra("start_test", false);
     }
 
-    public void start_it() {
-        HanziDB myDB = ((AndZiApplication)getApplication()).getMyDB();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (splash_fragment != null) {
+            try {
+                getSupportFragmentManager().putFragment(outState, "splash", splash_fragment);
+            } catch (IllegalStateException e) {}
+        }
+    }
 
+    public void start_it() {
         if (splash_fragment != null) {
             getSupportFragmentManager().beginTransaction().remove(splash_fragment).commitAllowingStateLoss();
             splash_fragment = null;
@@ -65,6 +77,9 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         super.onResume();
         ProgressService.clear_notification(getApplicationContext());
 
+        if (splash_fragment != null)
+            return;
+
         showing_splash = ((AndZiApplication) getApplication()).getShowSplash();
         ((AndZiApplication) getApplication()).showSplash(false);
 
@@ -90,7 +105,7 @@ public class MainMenuActivity extends SherlockFragmentActivity {
         Intent intent = new Intent(this, Settings.class);
         startActivity(intent);
     }
-    
+
     public void handle_test(@Nullable View v) {
         Intent intent = new Intent(this, TestActivity.class);
         startActivity(intent);
