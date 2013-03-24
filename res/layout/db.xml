@@ -52,7 +52,7 @@
                     />
             <TextView
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/normal_text"
+                    android:textSize="@dimen/normal_test_text"
                     android:text="@string/num_words"
                     />
         </TableRow>
@@ -86,7 +86,7 @@
                     android:id="@+id/stats_time_to_study"
                     android:gravity="right"
                     android:textColor="@android:color/black"
-                    android:textSize="@dimen/normal_text"
+                    android:textSize="@dimen/large_test_text"
                     android:textIsSelectable="false"
                     />
             <TextView
