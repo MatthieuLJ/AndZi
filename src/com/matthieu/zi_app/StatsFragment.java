@@ -15,7 +15,6 @@ import android.widget.Button;
 import android.widget.TableRow;
 import android.widget.TextView;
 import com.matthieu.zi_app.widget.ProgressGraph;
-import com.matthieu.zi_app.R;
 
 import java.util.*;
 
@@ -83,6 +82,7 @@ public class StatsFragment extends Fragment {
     public void onDestroyView() {
         timer.cancel();
         timer.purge();
+        timer=null;
         super.onDestroyView();
     }
 
@@ -211,7 +211,8 @@ public class StatsFragment extends Fragment {
                 }
             };
 
-            timer.schedule(task, update_time);
+            if (timer != null)
+                timer.schedule(task, update_time);
         } else {
             row.setVisibility(View.GONE);
             update_stats(v);
