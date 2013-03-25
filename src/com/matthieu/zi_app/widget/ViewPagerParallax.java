@@ -59,6 +59,9 @@ public class ViewPagerParallax extends ViewPager {
 
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
+            options.inDither = false;
+            options.inScaled = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
             BitmapFactory.decodeStream(is, null, options);
 
             imageHeight = options.outHeight;
@@ -68,7 +71,8 @@ public class ViewPagerParallax extends ViewPager {
             is.reset();
 
             overlap_level = zoom_level * Math.min(Math.max(imageWidth / zoom_level - getWidth(),0) / (max_num_pages - 1), getWidth()/2); // how many pixels to shift for each panel
-            saved_bitmap = BitmapFactory.decodeStream(is);
+            options.inJustDecodeBounds = false;
+            saved_bitmap = BitmapFactory.decodeStream(is, null, options);
 
             is.close();
         } catch (IOException e) {
@@ -105,7 +109,7 @@ public class ViewPagerParallax extends ViewPager {
                 (int) (overlap_level * (current_position + current_offset) + (getWidth() * zoom_level)), imageHeight);
 
         dst.set((int) (getScrollX()), 0,
-                (int) (getScrollX() + canvas.getWidth()), canvas.getHeight());
+                (int) (getScrollX() + canvas.getWidth()), getHeight());
 
         canvas.drawBitmap(saved_bitmap, src, dst, null);
     }
