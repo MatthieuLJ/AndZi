@@ -5,6 +5,7 @@ package com.matthieu.zi_app.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -21,6 +22,9 @@ public class ExtendingLinearLayout extends LinearLayout {
 
     private int current_height, current_width;
     int saved_height;
+
+    final String TAG="ExtendingLinearLayout";
+    final boolean DEBUG=false;
 
     private LinearLayout.LayoutParams savedParams;
     protected Handler handler = new Handler();
@@ -67,7 +71,7 @@ public class ExtendingLinearLayout extends LinearLayout {
     }
 
     public void expand() {
-        //Log.d(TAG, "expand !");
+        if(DEBUG) Log.d(TAG, "expand !");
         if (state > 0)
             return;
         if (state < 0) {
@@ -85,7 +89,7 @@ public class ExtendingLinearLayout extends LinearLayout {
     }
 
     public void collapse() {
-        //Log.d(TAG, "collapse !");
+        if(DEBUG) Log.d(TAG, "collapse !");
         if (state < 0)
             return;
         if (state > 0) {
@@ -120,11 +124,11 @@ public class ExtendingLinearLayout extends LinearLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //Log.d(TAG, "onMeasure..." + MeasureSpec.toString(widthMeasureSpec) +", "+MeasureSpec.toString(heightMeasureSpec));
+        if(DEBUG) Log.d(TAG, "onMeasure..." + MeasureSpec.toString(widthMeasureSpec) +", "+MeasureSpec.toString(heightMeasureSpec));
         int new_height;
 
         if (state == -1) {
-            //Log.d(TAG, "initiate collapse...");
+            if(DEBUG) Log.d(TAG, "initiate collapse...");
             for (View v : itemsToHide) {
                 v.setVisibility(VISIBLE);
             }
@@ -138,7 +142,7 @@ public class ExtendingLinearLayout extends LinearLayout {
             new_height = getMeasuredHeight();
         }
         else if (state == 1) {
-            //Log.d(TAG, "initiate expand...");
+            if(DEBUG) Log.d(TAG, "initiate expand...");
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
@@ -154,18 +158,19 @@ public class ExtendingLinearLayout extends LinearLayout {
             for (View v : itemsToHide) {
                 v.setVisibility(GONE);
             }
+            if(DEBUG) Log.d(TAG, "saved_height: "+saved_height+", new_height: "+new_height);
         }
         else {
             super.onMeasure(widthMeasureSpec,heightMeasureSpec);
-            //Log.d(TAG, "usual ("+state+")");
+            if(DEBUG) Log.d(TAG, "usual ("+state+")");
             return;
         }
 
-        //Log.v(TAG, "setMeasure " + current_width + ", " + saved_height);
-        setMeasuredDimension(current_width,saved_height);
+        if(DEBUG) Log.v(TAG, "setMeasure " + current_width + ", " + current_height);
+        setMeasuredDimension(current_width,current_height);
 
-        //Log.v(TAG, "state : "+state+", saved width "+savedParams.width+", height "+savedParams.height);
-        //Log.v(TAG, "from " + current_height + " to " +new_height);
+        if(DEBUG) Log.v(TAG, "state : "+state+", saved width "+savedParams.width+", height "+savedParams.height);
+        if(DEBUG) Log.v(TAG, "from " + current_height + " to " +new_height);
         if (runnable == null) {
             runnable = new ResizeRunnable(current_height, new_height, 500 );
             handler.post(runnable);
@@ -173,7 +178,7 @@ public class ExtendingLinearLayout extends LinearLayout {
     }
 
     protected void closeAnimation() {
-        //Log.d(TAG, "closing...");
+        if(DEBUG) Log.d(TAG, "closing...");
         setLayoutParams(savedParams);
         if (state > 0) {
             for (View v : itemsToHide) {
@@ -233,7 +238,7 @@ public class ExtendingLinearLayout extends LinearLayout {
             if(elapsed >= duration)
             {
                 closeAnimation();
-                return;//Done
+                return;
             }
 
             float timelinePoint = (float) elapsed / (float) duration;
@@ -247,7 +252,7 @@ public class ExtendingLinearLayout extends LinearLayout {
             LinearLayout.LayoutParams new_params = new LinearLayout.LayoutParams(savedParams);
             new_params.height = newHeight;
             new_params.width = getWidth();
-            //Log.v(TAG, "set params "+getWidth()+", "+newHeight);
+            if(DEBUG) Log.v(TAG, "set params "+getWidth()+", "+newHeight);
             setLayoutParams(new_params);
             handler.postDelayed(this, refreshTime);
 
