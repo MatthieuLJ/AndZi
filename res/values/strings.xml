@@ -104,8 +104,8 @@
     <string name="db_copying">Copying…</string>
     <string name="db_importing">Importing database</string>
     <string name="db_exporting">Exporting database</string>
-    <string name="db_error_importing">An error occured while importing the database</string>
-    <string name="db_error_exporting">An error occured while exporting the database</string>
+    <string name="db_error_importing">An error occurred while importing the database</string>
+    <string name="db_error_exporting">An error occurred while exporting the database</string>
 
     <string name="test_empty_db">Your database is empty, add some words before testing</string>
     <string name="test_mastering">You master everything!</string>
@@ -134,7 +134,6 @@
     <string name="add_voc_lesson_clone">%s - copy</string>
     <string name="add_voc_rename_lesson_dialog_title">Rename lesson: %s</string>
     <string name="add_voc_rename_lesson_dialog_query">Enter new name: </string>
-    <string name="add_voc_lesson_already_exists">The lesson [%s] already exists</string>
 
     <string name="add_voc_lesson_content_header_no_lesson">Words that are not assigned to any lesson</string>
     <string name="add_voc_lesson_content_header_lessons">Words in lesson </string>

@@ -23,3 +23,11 @@
 #target_help {
     margin-left: 45%;
 }
+
+a{font-weight:bold;}
+a:link {text-decoration:none; color:#000000;}
+a:visited {text-decoration:none;color:#444444;}
+a:hover {text-decoration:underline;color:#000000;}
+a:active {text-decoration:underline;color:#000000;background-color: #777777}
+
+body {background-color: rgba(204, 232, 240, 0.70);}

@@ -347,18 +347,25 @@ res/layout-xlarge/reference.xml:50: Warning: Nested weights are bad for performa
 res/layout/vocabulary_editor_large.xml:28: Warning: Nested weights are bad for performance [NestedWeights]
                     android:layout_weight="1"/>
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
+res/values/dimensions.xml:10: Warning: The resource R.dimen.xxlarge_test_text appears to be unused [UnusedResources]
+    <dimen name="xxlarge_test_text">36sp</dimen>
+           ~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/main_menu.xml:9: Warning: This TableRow view is useless (no children, no background, no id, no style) [UselessLeaf]
     <TableRow
     ^
 res/layout/file_dialog_main.xml:16: Warning: This LinearLayout layout or its LinearLayout parent is useless [UselessParent]
    <LinearLayout android:orientation="horizontal"
    ^
+res/drawable/call.png: Warning: Found bitmap drawable res/drawable/call.png in densityless folder [IconLocation]
 res/drawable/edit_text_default.9.png: Warning: Found bitmap drawable res/drawable/edit_text_default.9.png in densityless folder [IconLocation]
 res/drawable/edit_text_disabled.9.png: Warning: Found bitmap drawable res/drawable/edit_text_disabled.9.png in densityless folder [IconLocation]
 res/drawable/edit_text_focused.9.png: Warning: Found bitmap drawable res/drawable/edit_text_focused.9.png in densityless folder [IconLocation]
 res/drawable/edit_text_pressed.9.png: Warning: Found bitmap drawable res/drawable/edit_text_pressed.9.png in densityless folder [IconLocation]
-res/drawable/splash.jpg: Warning: Found bitmap drawable res/drawable/splash.jpg in densityless folder [IconLocation]
-res/drawable/treatise.png: Warning: Found bitmap drawable res/drawable/treatise.png in densityless folder [IconLocation]
+res/drawable/mayuan.png: Warning: Found bitmap drawable res/drawable/mayuan.png in densityless folder [IconLocation]
+res/drawable/splash_background.png: Warning: Found bitmap drawable res/drawable/splash_background.png in densityless folder [IconLocation]
+res/drawable/splash_logo.png: Warning: Found bitmap drawable res/drawable/splash_logo.png in densityless folder [IconLocation]
+res/drawable/zi_icon.png: Warning: Found bitmap drawable res/drawable/zi_icon.png in densityless folder [IconLocation]
+res/drawable/zi_icon_notification.png: Warning: Found bitmap drawable res/drawable/zi_icon_notification.png in densityless folder [IconLocation]
 res/layout/file_dialog_main.xml:52: Warning: Consider making the text value selectable by specifying android:textIsSelectable="true" [SelectableText]
   <TextView android:id="@+id/path" android:layout_width="fill_parent"
   ^
@@ -377,4 +384,4 @@ res/menu/reference_details.xml:7: Warning: Prefer "ifRoom" instead of "always" [
 res/layout/file_dialog_row.xml:6: Warning: [Accessibility] Missing contentDescription attribute on image [ContentDescription]
  <ImageView android:layout_alignParentLeft="true" android:id="@+id/fdrowimage"
  ^
-1 errors, 63 warnings
+1 errors, 22 warnings
