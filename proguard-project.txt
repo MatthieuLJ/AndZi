@@ -1,6 +1,6 @@
--injars      bin/classes
--outjars     bin/classes-processed.jar
--libraryjars /home/matthieu/android/platforms/android-17/android.jar
+#-injars      bin/classes
+#-outjars     bin/classes-processed.jar
+#-libraryjars /home/matthieu/android/platforms/android-17/android.jar
 
 -dontpreverify
 -repackageclasses ''
@@ -53,10 +53,7 @@
     public static <fields>;
 }
 
-# keep this class so that logging will show 'ACRA' and not a obfuscated name like 'a'.
-# Note: if you are removing log messages elsewhere in this file then this isn't necessary
 #ACRA specifics
-
 
 # keep this class so that logging will show 'ACRA' and not a obfuscated name like 'a'.
 # Note: if you are removing log messages elsewhere in this file then this isn't necessary
