@@ -7,9 +7,10 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import com.matthieu.zi_app.R;
+import android.support.v4.app.NotificationCompat;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -62,12 +63,16 @@ public class ProgressService extends Service {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         boolean notification_enabled = sp.getBoolean("notification_enabled", true);
         if ((notification_enabled) && (expired > 25)) {
-            Notification notification = new Notification(R.drawable.zi_icon_notification, getResources().getString(R.string.notification_ticker), System.currentTimeMillis());
-            notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_ONLY_ALERT_ONCE;
+            Notification notification;
             Intent start_test = new Intent(this, MainMenuActivity.class);
             start_test.putExtra("start_test", true);
             PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, PendingIntent.FLAG_CANCEL_CURRENT);
-            notification.setLatestEventInfo(getApplicationContext(), getResources().getString(R.string.notification_title), getResources().getString(R.string.notification_content, expired), pi);
+
+            notification = new NotificationCompat.Builder(this).setContentTitle(getResources().getString(R.string.notification_title))
+                    .setContentText(getResources().getString(R.string.notification_content, expired))
+                    .setSmallIcon(R.drawable.zi_icon_notification).setContentIntent(pi)
+                    .setAutoCancel(true).setOnlyAlertOnce(true).build();
+
             nm.notify(NOTIFICATION_ID, notification);
         }
         else {
