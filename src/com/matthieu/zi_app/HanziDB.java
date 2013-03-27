@@ -2110,7 +2110,12 @@ public class HanziDB extends SQLiteOpenHelper {
                 // copy a backup
                 try {
                     other_db = new HanziDB(app, to_merge_name);
+                    if (other_db.getNumChars() == 0) {
+                        clean_up_on_cancel(true);
+                        return null;
+                    }
                 } catch (Exception e) {
+                    clean_up_on_cancel(true);
                     return null;
                 }
                 publishProgress(10);
