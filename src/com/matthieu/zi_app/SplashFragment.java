@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.matthieu.zi_app.widget.ProgressHandler;
@@ -27,6 +28,12 @@ public class SplashFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         final View res = inflater.inflate(R.layout.main_menu_splash, container, false);
+        ImageView back = (ImageView) res.findViewById(R.id.splash_background);
+        try{
+            back.setImageDrawable(getResources().getDrawable(R.drawable.splash_background));
+        } catch (OutOfMemoryError error) {
+            back.setBackgroundColor(getResources().getColor(R.color.splash_background_fallback));
+        }
         TextView tversion = (TextView) res.findViewById(R.id.splash_version);
         tversion.setText(((AndZiApplication) getActivity().getApplication()).get_version());
 
