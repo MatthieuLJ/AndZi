@@ -20,4 +20,6 @@
     <color name="test_success">#009922</color>
     <color name="test_failure">#CC1111</color>
 
+    <color name="splash_background_fallback">#ffaaaaaa</color>
+
 </resources>

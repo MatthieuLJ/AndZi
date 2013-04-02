@@ -8,7 +8,7 @@
     <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/splash_background"
+            android:id="@+id/splash_background"
             android:scaleType="centerCrop"
             android:contentDescription="@string/description_splash"
             />
