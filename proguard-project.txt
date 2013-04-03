@@ -6,6 +6,7 @@
 -repackageclasses ''
 -allowaccessmodification
 -optimizations !code/simplification/arithmetic
+-optimizations !method/inlining/*
 -keepattributes *Annotation*,SourceFile,LineNumberTable,*Annotation*
 -renamesourcefileattribute SourceFile
 -dontwarn java.awt.**,javax.security.**,java.beans.**,com.sun.**
