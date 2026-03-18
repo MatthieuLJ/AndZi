@@ -14,6 +14,9 @@ import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import androidx.fragment.app.FragmentActivity;
+
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.matthieu.zi_app.widget.LockableViewPager;
 
 import java.util.ArrayList;
@@ -90,16 +93,17 @@ public class VocabularyEditorActivity extends FragmentActivity implements ViewPa
         }
 
         if (pager != null) {
-            /* TODO
             pager.set_max_pages(3);
             pager.setBackgroundAsset(R.raw.mayuan);
             pager.setOffscreenPageLimit(2);
-            pager.setAdapter(new editor_pager(getSupportFragmentManager()));
+            editor_pager adapter = new editor_pager(getSupportFragmentManager());
+            pager.setAdapter(adapter);
 
-            PageIndicator mIndicator = findViewById(R.id.pager_indicator);
-            mIndicator.setViewPager(pager);
-            mIndicator.setOnPageChangeListener(this);
-             */
+            TabLayout tabLayout = findViewById(R.id.pager_indicator);
+            if (tabLayout != null) {
+                tabLayout.setupWithViewPager(pager);
+            }
+            pager.addOnPageChangeListener(this);
         } else if (master_linear != null) {
             FrameLayout lesson_content = findViewById(R.id.ve_fragment2);
             if (fragments[2] == null) {
@@ -247,7 +251,7 @@ public class VocabularyEditorActivity extends FragmentActivity implements ViewPa
 
     private class editor_pager extends FragmentPagerAdapter {
         public editor_pager(FragmentManager fm) {
-            super(fm);
+            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         }
 
         @Override
@@ -260,6 +264,7 @@ public class VocabularyEditorActivity extends FragmentActivity implements ViewPa
             return fragments[2]==null?2:3;
         }
 
+        @Override
         public CharSequence getPageTitle(int position) {
             switch(position) {
                 case 0:
