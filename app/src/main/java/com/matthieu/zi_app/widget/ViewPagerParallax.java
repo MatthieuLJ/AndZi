@@ -102,6 +102,9 @@ public class ViewPagerParallax extends ViewPager {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (saved_bitmap == null || saved_bitmap.isRecycled())
+            return;
+
         if (current_position == -1)
             current_position=getCurrentItem();
 
