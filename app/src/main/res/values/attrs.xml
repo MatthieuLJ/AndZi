@@ -1,0 +1,15 @@
+<resources>
+    <declare-styleable name="ModifiableLinearLayout">
+        <attr name="hidable" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="AdaptiveTextSize">
+        <attr name="min_size" format="dimension" />
+        <attr name="max_size" format="dimension" />
+    </declare-styleable>
+
+    <attr name="selectedColor" format="color" />
+    <attr name="fadeLength" format="integer" />
+    <attr name="fadeDelay" format="integer" />
+    <attr name="vpiUnderlinePageIndicatorStyle" format="reference" />
+
+</resources>

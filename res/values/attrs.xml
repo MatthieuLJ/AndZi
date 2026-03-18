@@ -1,9 +1,0 @@
-<resources>
-    <declare-styleable name="ModifiableLinearLayout">
-        <attr name="hidable" format="boolean" />
-    </declare-styleable>
-    <declare-styleable name="AdaptiveTextSize">
-        <attr name="min_size" format="dimension" />
-        <attr name="max_size" format="dimension" />
-    </declare-styleable>
-</resources>
