@@ -16,7 +16,6 @@ import android.widget.LinearLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
 import com.matthieu.zi_app.widget.LockableViewPager;
 
 import java.util.ArrayList;

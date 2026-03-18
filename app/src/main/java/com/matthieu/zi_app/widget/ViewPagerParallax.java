@@ -102,7 +102,8 @@ public class ViewPagerParallax extends ViewPager {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (saved_bitmap == null || saved_bitmap.isRecycled())
+        Bitmap bitmap = saved_bitmap;
+        if (bitmap == null || bitmap.isRecycled())
             return;
 
         if (current_position == -1)
@@ -114,7 +115,7 @@ public class ViewPagerParallax extends ViewPager {
         dst.set(getScrollX(), 0,
                 getScrollX() + canvas.getWidth(), getHeight());
 
-        canvas.drawBitmap(saved_bitmap, src, dst, null);
+        canvas.drawBitmap(bitmap, src, dst, null);
     }
 
     public void set_max_pages(int num_max_pages) {
