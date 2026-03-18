@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -40,7 +41,7 @@ public class HanziDB extends SQLiteOpenHelper {
         db.execSQL("PRAGMA case_sensitive_like=ON");
         db.execSQL("PRAGMA synchronous=NORMAL");
         db.acquireReference();
-        if (DEBUG) Log.e(TAG, "Opened db "+this.toString());
+        if (DEBUG) Log.e(TAG, "Opened db "+ this);
     }
 
     ////////////////////////////////////////
@@ -247,7 +248,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
-        if (DEBUG) Log.e(TAG, "Closing database"+this.toString());
+        if (DEBUG) Log.e(TAG, "Closing database"+ this);
         if (db != null) {
             db.releaseReference();
             db.close();
@@ -301,7 +302,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check every cword has at least one translation
             c = db.rawQuery("SELECT cword_id FROM cword WHERE cword_id NOT IN (SELECT cword_id FROM eword)", null);
@@ -318,7 +319,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check foreign key from cword_segment to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM cword_segment WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
@@ -336,7 +337,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check foreign key from cword_segment to char_pinyin_id
             c = db.rawQuery("SELECT DISTINCT char_pinyin_id FROM cword_segment WHERE char_pinyin_id NOT IN (SELECT char_pinyin_id FROM char_pinyin)", null);
@@ -354,7 +355,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check all char_pinyins are used
             c=db.rawQuery("SELECT char_pinyin_id FROM char_pinyin WHERE char_pinyin_id NOT IN (SELECT DISTINCT char_pinyin_id FROM cword_segment)", null);
@@ -371,7 +372,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check foreign key from eword to cword_id
             c = db.rawQuery("SELECT DISTINCT cword_id FROM eword WHERE cword_id NOT IN (SELECT cword_id FROM cword)", null);
@@ -389,7 +390,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check for unique char/pinyin pairs in char_pinyin
             c = db.rawQuery("SELECT COUNT(char_pinyin_id) AS count, hanzi, pinyin FROM char_pinyin GROUP BY hanzi, pinyin " +
@@ -424,7 +425,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check for unique chinese/pinyin in cword
             c = db.rawQuery("SELECT COUNT(cword_id) AS count, chinese, pinyin FROM cword GROUP BY chinese, pinyin " +
@@ -461,7 +462,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check cword length is correct
             c= db.rawQuery("SELECT cword_id FROM cword WHERE length(chinese) != length", null);
@@ -472,7 +473,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check for unique cword/translation in eword
             c = db.rawQuery("SELECT COUNT(cword_id) AS count, cword_id, translation FROM eword GROUP BY cword_id, translation " +
@@ -508,7 +509,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             //
             // Lessons
@@ -530,7 +531,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check foreign key from lesson_word to eword
             c = db.rawQuery("SELECT DISTINCT eng_id FROM lesson_word WHERE eng_id NOT IN (SELECT eng_id FROM eword)", null);
@@ -548,7 +549,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             //
             // Leitner
@@ -570,7 +571,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             // check all characters in leitner table are in DB
             c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE length(hanzi)>1 AND hanzi NOT IN (SELECT chinese FROM cword)", null);
@@ -588,7 +589,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
 
             c = db.rawQuery("SELECT DISTINCT hanzi FROM leitner WHERE num_wrong > num_tested", null);
             if (c.moveToFirst()) {
@@ -605,7 +606,7 @@ public class HanziDB extends SQLiteOpenHelper {
             c.close();
             current_step++;
             if (handler != null)
-                handler.progress((int)(current_step*100/num_steps));
+                handler.progress(current_step*100/num_steps);
         }
         catch (SQLiteException exp) {
             if (DEBUG) Log.d(TAG, "Ran into a problem while opening database");
@@ -1060,7 +1061,7 @@ public class HanziDB extends SQLiteOpenHelper {
     // Query for mixed or incomplete data
     ////////////////////////////////////////
     public static class StringElement {
-        public static enum type_t {
+        public enum type_t {
             CHINESE,
             PINYIN_WITH_TONE,
             PINYIN_WITHOUT_TONE,
@@ -1260,7 +1261,7 @@ public class HanziDB extends SQLiteOpenHelper {
             query.append(") ");
         }
         query.append("ORDER BY pinyin, _id;");
-        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+ query_args);
 
         return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
@@ -1460,7 +1461,7 @@ public class HanziDB extends SQLiteOpenHelper {
             query.append(") ");
         }
         query.append("ORDER BY sort, length, pinyin, _id;");
-        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+ query_args);
 
         return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
@@ -1634,7 +1635,7 @@ public class HanziDB extends SQLiteOpenHelper {
             query.append(") ");
         }
         query.append("ORDER BY sort, length, pinyin, _id;");
-        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+ query_args);
 
         return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
@@ -1667,7 +1668,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 query.append(" UNION ");
         }
         query.append("ORDER BY sort");
-        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+query_args.toString());
+        if (DEBUG) Log.d(TAG, "Query is ["+query+"] with args "+ query_args);
 
         return db.rawQuery(query.toString(), query_args.toArray(new String[query_args.size()]));
     }
@@ -1775,11 +1776,11 @@ public class HanziDB extends SQLiteOpenHelper {
         class bridge_input {
             public int cword_id;
             public int char_pinyin_id;
-            public int position;
-            public String word_chinese;
-            public String word_pinyin;
-            public String chinese;
-            public String pinyin;
+            public final int position;
+            public final String word_chinese;
+            public final String word_pinyin;
+            public final String chinese;
+            public final String pinyin;
             public ArrayList<String> english;
             public bridge_input(String word_chinese, String word_pinyin, String chinese, String pinyin, int position) {
                 this.word_chinese=word_chinese;
@@ -2153,7 +2154,7 @@ public class HanziDB extends SQLiteOpenHelper {
                     if (!original_lessons.contains(l))
                         merge_to.addLesson(l);
 
-                    ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(l)));
+                    ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Collections.singletonList(l)));
                     merge_to.addVocabulary(voc);
                     for (Vocabulary v:voc) {
                         merge_to.assignWordLesson(l,v);
@@ -2161,7 +2162,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
 
                 // add the vocabulary that's not in any lesson
-                ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Arrays.asList("")));
+                ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Collections.singletonList("")));
                 merge_to.addVocabulary(voc);
 
                 ArrayList<String> chars = merge_from.getAllChars();
@@ -2212,7 +2213,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 publishProgress(100);
 
                 if (isCancelled()) { // everything went through anyway...
-                    onPostExecute((Void) null);
+                    onPostExecute(null);
                 }
             }
 
@@ -2398,7 +2399,7 @@ public class HanziDB extends SQLiteOpenHelper {
                         continue;
                     new_db.addLesson(lesson);
 
-                    ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Arrays.asList(lesson)));
+                    ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Collections.singletonList(lesson)));
                     new_db.addVocabulary(lesson_voc);
                     for (Vocabulary v : lesson_voc) {
                         new_db.assignWordLesson(lesson, v);
@@ -2451,7 +2452,7 @@ public class HanziDB extends SQLiteOpenHelper {
                 HanziDB.this.app.deleteDatabase(new_db_name);
 
                 if (isCancelled()) { // everything went through anyway...
-                    onPostExecute((Void) null);
+                    onPostExecute(null);
                 }
             }
             return null;
@@ -2994,9 +2995,9 @@ public class HanziDB extends SQLiteOpenHelper {
                 continue;
             }
             if (--size == 0)
-                whereQuery += "'" + Integer.toString(id) + "'";
+                whereQuery += "'" + id + "'";
             else
-                whereQuery += "'" + Integer.toString(id) + "',";
+                whereQuery += "'" + id + "',";
         }
         whereQuery += ")";
         return whereQuery;
@@ -3113,22 +3114,22 @@ public class HanziDB extends SQLiteOpenHelper {
     private String convert_time_in_string(long delay) {
         StringBuilder res = new StringBuilder();
         if (delay / (1000*60*60*24) >= 2) {
-            res.append((long) (delay / (1000 * 60 * 60 * 24))).append(" days");
+            res.append(delay / (1000 * 60 * 60 * 24)).append(" days");
         } else if (delay / (1000*60*60*24) >= 1) {
             long hours = (delay / (1000*60*60)) - 24;
             res.append("1 day ").append(hours).append(" hours");
         } else if (delay / (1000*60*60) >= 2) {
-            res.append((long) (delay / (1000 * 60 * 60))).append(" hours");
+            res.append(delay / (1000 * 60 * 60)).append(" hours");
         } else if (delay / (1000*60*60) >= 1) {
             long minutes = (delay / (1000*60)) - 60;
             res.append("1 hour ").append(minutes).append(" minutes");
         } else if (delay / (1000*60) >= 2) {
-            res.append((long) (delay / (1000 * 60))).append(" minutes");
+            res.append(delay / (1000 * 60)).append(" minutes");
         } else if (delay / (1000*60) >= 1) {
             long seconds = (delay / 1000) - 60;
             res.append("1 minute ").append(seconds).append(" seconds");
         } else {
-            res.append((long) (delay / 1000)).append(" seconds");
+            res.append(delay / 1000).append(" seconds");
         }
 
         return res.toString();

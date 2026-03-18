@@ -16,8 +16,8 @@ import java.util.ArrayList;
 public class GuessTone extends Test implements GestureOverlayView.OnGesturePerformedListener {
     private String current_test;
     private Pinyin pinyin;
-    private ArrayList<Integer> tones=new ArrayList<Integer>();
-    private View master_view[]=null;
+    private final ArrayList<Integer> tones=new ArrayList<Integer>();
+    private View[] master_view =null;
     private int current_view=0;
 
     private GuessToneResultView solution_view;
@@ -67,7 +67,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         ArrayList<String> pinyins;
         String radical;
 
-        GestureOverlayView overlay = (GestureOverlayView) res.findViewById(R.id.guess_tone_gestureview);
+        GestureOverlayView overlay = res.findViewById(R.id.guess_tone_gestureview);
         overlay.addOnGesturePerformedListener(this);
 
         pinyins = myDB.getPinyinForChar(current_test);
@@ -81,23 +81,23 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
             }
         }
 
-        TextView tv_hanzi = (TextView) res.findViewById(R.id.guess_tone_chinese);
-        TextView tv_pinyin = (TextView) res.findViewById(R.id.guess_tone_pinyin);
+        TextView tv_hanzi = res.findViewById(R.id.guess_tone_chinese);
+        TextView tv_pinyin = res.findViewById(R.id.guess_tone_pinyin);
 
         tv_hanzi.setText(current_test);
         tv_hanzi.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
         tv_pinyin.setText(radical);
 
-        CheckBox cb1 = (CheckBox) res.findViewById(R.id.guess_tone_first_tone);
+        CheckBox cb1 = res.findViewById(R.id.guess_tone_first_tone);
         cb1.setChecked(false);
-        CheckBox cb2 = (CheckBox) res.findViewById(R.id.guess_tone_second_tone);
+        CheckBox cb2 = res.findViewById(R.id.guess_tone_second_tone);
         cb2.setChecked(false);
-        CheckBox cb3 = (CheckBox) res.findViewById(R.id.guess_tone_third_tone);
+        CheckBox cb3 = res.findViewById(R.id.guess_tone_third_tone);
         cb3.setChecked(false);
-        CheckBox cb4 = (CheckBox) res.findViewById(R.id.guess_tone_fourth_tone);
+        CheckBox cb4 = res.findViewById(R.id.guess_tone_fourth_tone);
         cb4.setChecked(false);
 
-        int view_ids[] = { R.id.guess_tone_first_tone_image,
+        int[] view_ids = { R.id.guess_tone_first_tone_image,
                 R.id.guess_tone_second_tone_image,
                 R.id.guess_tone_third_tone_image,
                 R.id.guess_tone_fourth_tone_image,
@@ -131,7 +131,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
 
         if (DEBUG) Log.d(TAG, "Expects tones : "+tones.toString());
 
-        Button submit_answer = (Button) res.findViewById(R.id.guess_tone_ok);
+        Button submit_answer = res.findViewById(R.id.guess_tone_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -258,16 +258,16 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         CheckBox cb=null;
         switch (tone) {
             case 1:
-                cb = (CheckBox) activity.findViewById(R.id.guess_tone_first_tone);
+                cb = activity.findViewById(R.id.guess_tone_first_tone);
                 break;
             case 2:
-                cb = (CheckBox) activity.findViewById(R.id.guess_tone_second_tone);
+                cb = activity.findViewById(R.id.guess_tone_second_tone);
                 break;
             case 3:
-                cb = (CheckBox) activity.findViewById(R.id.guess_tone_third_tone);
+                cb = activity.findViewById(R.id.guess_tone_third_tone);
                 break;
             case 4:
-                cb = (CheckBox) activity.findViewById(R.id.guess_tone_fourth_tone);
+                cb = activity.findViewById(R.id.guess_tone_fourth_tone);
                 break;
         }
         if (cb != null)
@@ -278,13 +278,13 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         String tones_checked="";
         CheckBox cb;
 
-        cb = (CheckBox) activity.findViewById(R.id.guess_tone_first_tone);
+        cb = activity.findViewById(R.id.guess_tone_first_tone);
         if (cb.isChecked()) tones_checked+="1";
-        cb = (CheckBox) activity.findViewById(R.id.guess_tone_second_tone);
+        cb = activity.findViewById(R.id.guess_tone_second_tone);
         if (cb.isChecked()) tones_checked+="2";
-        cb = (CheckBox) activity.findViewById(R.id.guess_tone_third_tone);
+        cb = activity.findViewById(R.id.guess_tone_third_tone);
         if (cb.isChecked()) tones_checked+="3";
-        cb = (CheckBox) activity.findViewById(R.id.guess_tone_fourth_tone);
+        cb = activity.findViewById(R.id.guess_tone_fourth_tone);
         if (cb.isChecked()) tones_checked+="4";
 
         int correctness = check_guess(tones_checked);
@@ -300,7 +300,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
             if ((good == INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
+                LinearLayout bad_guess = result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 if (answer.length() == 0) {
                     bad_guess_text.setText(R.string.bad_guess_reminder_nothing);
@@ -308,7 +308,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
                 else {
                     StringBuilder wrong_tones = new StringBuilder();
                     for(int i=0; i<answer.length(); i++) {
-                        wrong_tones.append(answer.substring(i, i+1));
+                        wrong_tones.append(answer.charAt(i));
                         if (i<answer.length()-1)
                             wrong_tones.append(", ");
                     }

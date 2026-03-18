@@ -24,4 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Zi_app"
 include(":app")
- 

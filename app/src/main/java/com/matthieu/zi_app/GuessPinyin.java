@@ -22,7 +22,7 @@ public class GuessPinyin extends Test implements TextWatcher {
     private String pinyin;
     private ArrayList<Vocabulary> words;
     private boolean show_words=false;
-    private View master_view[]=null;
+    private View[] master_view =null;
     private int current_view=0;
 
     private GuessPinyinResultView solution_view;
@@ -100,7 +100,7 @@ public class GuessPinyin extends Test implements TextWatcher {
         current_view = 1-current_view;
         View res = master_view[current_view];
 
-        EditText guess = (EditText) res.findViewById(R.id.pinyin_test_guess);
+        EditText guess = res.findViewById(R.id.pinyin_test_guess);
 
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
@@ -123,16 +123,16 @@ public class GuessPinyin extends Test implements TextWatcher {
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.pinyin_test_focusable_linear);
+        LinearLayout focusable = res.findViewById(R.id.pinyin_test_focusable_linear);
         focusable.requestFocus();
 
         if (DEBUG) Log.d(TAG, "Testing for character " + current_test + " got " + words.size() + " words");
 
-        TextView chinese_hint = (TextView) res.findViewById(R.id.guess_pinyin_chinese);
+        TextView chinese_hint = res.findViewById(R.id.guess_pinyin_chinese);
         chinese_hint.setText(current_test);
         chinese_hint.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
-        final TableLayout tl = (TableLayout) res.findViewById(R.id.guess_pinyin_word_grid);
+        final TableLayout tl = res.findViewById(R.id.guess_pinyin_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
         for (Vocabulary w : words) {
@@ -167,7 +167,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
             tl.addView(tr);
         }
-        Button show_words_button = (Button) res.findViewById(R.id.guess_pinyin_show_words);
+        Button show_words_button = res.findViewById(R.id.guess_pinyin_show_words);
         show_words_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 tl.setVisibility(View.VISIBLE);
@@ -190,7 +190,7 @@ public class GuessPinyin extends Test implements TextWatcher {
             }
         }
 
-        Button submit_answer = (Button) res.findViewById(R.id.guess_pinyin_ok);
+        Button submit_answer = res.findViewById(R.id.guess_pinyin_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -203,7 +203,7 @@ public class GuessPinyin extends Test implements TextWatcher {
 
     @Override
     public void kill_view(View v) {
-        EditText guess = (EditText) v.findViewById(R.id.pinyin_test_guess);
+        EditText guess = v.findViewById(R.id.pinyin_test_guess);
         if (guess==null)
             return;
         guess.setOnEditorActionListener(null);
@@ -229,7 +229,7 @@ public class GuessPinyin extends Test implements TextWatcher {
     }
 
     public void check_answer() {
-        EditText word_guess = (EditText) activity.findViewById(R.id.pinyin_test_guess);
+        EditText word_guess = activity.findViewById(R.id.pinyin_test_guess);
         if (word_guess==null)
             return;
 
@@ -255,7 +255,7 @@ public class GuessPinyin extends Test implements TextWatcher {
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
             if ((good == INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
+                LinearLayout bad_guess = result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText(parent_activity.getResources().getString(R.string.bad_guess_reminder, answer));
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_test_text));
@@ -300,11 +300,7 @@ public class GuessPinyin extends Test implements TextWatcher {
         if (ok_button == null)
             return;
 
-        if ((charSequence.toString().codePointCount(0, charSequence.toString().length()) > 0) && (!Pinyin.verify_pinyin(charSequence.toString()))) {
-            ok_button.setEnabled(false);
-        } else {
-            ok_button.setEnabled(true);
-        }
+        ok_button.setEnabled((charSequence.toString().codePointCount(0, charSequence.toString().length()) <= 0) || (Pinyin.verify_pinyin(charSequence.toString())));
     }
 
     public void afterTextChanged(Editable editable) {

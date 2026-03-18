@@ -71,7 +71,7 @@ public class GuessChineseWord extends Test {
 
         ArrayList<String> bare_translations = new ArrayList<String>();
 
-        EditText guess = (EditText) res.findViewById(R.id.chinese_word_test_guess);
+        EditText guess = res.findViewById(R.id.chinese_word_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -92,7 +92,7 @@ public class GuessChineseWord extends Test {
         /*guess.requestFocus();
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
-        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.chinese_work_focusable_linear);
+        LinearLayout focusable = res.findViewById(R.id.chinese_work_focusable_linear);
         focusable.requestFocus();
 
         for (String s : translations) {
@@ -103,7 +103,7 @@ public class GuessChineseWord extends Test {
                 more_translations.remove(j);
         }
 
-        TextView text = (TextView) res.findViewById(R.id.guess_chinese_word_voc);
+        TextView text = res.findViewById(R.id.guess_chinese_word_voc);
         text.setText("");
         for (int i=0; i<translations.size(); i++) {
             text.setText(text.getText()+translations.get(i));
@@ -111,11 +111,11 @@ public class GuessChineseWord extends Test {
                 text.setText(text.getText()+"\n");
         }
         if (!showing_more_voc) {
-            TextView more_text = (TextView) res.findViewById(R.id.guess_chinese_word_more_voc);
+            TextView more_text = res.findViewById(R.id.guess_chinese_word_more_voc);
             more_text.setText("");
             more_text.setVisibility(View.GONE);
 
-            Button more = (Button) res.findViewById(R.id.guess_chinese_word_more_voc_button);
+            Button more = res.findViewById(R.id.guess_chinese_word_more_voc_button);
             View more_spacer = res.findViewById(R.id.guess_chinese_word_more_spacer);
             if (more_translations.size() == 0) {
                 more.setVisibility(View.GONE);
@@ -137,7 +137,7 @@ public class GuessChineseWord extends Test {
         }
 
         previous_guess = new ArrayList<String>();
-        TextView previous = (TextView) res.findViewById(R.id.guess_chinese_word_previous_guess);
+        TextView previous = res.findViewById(R.id.guess_chinese_word_previous_guess);
         previous.setText("");
         previous.setVisibility(View.GONE);
 
@@ -147,7 +147,7 @@ public class GuessChineseWord extends Test {
         }
         guess.setHint(hint.toString());
 
-        Button submit_answer = (Button) res.findViewById(R.id.guess_chinese_word_ok);
+        Button submit_answer = res.findViewById(R.id.guess_chinese_word_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -160,7 +160,7 @@ public class GuessChineseWord extends Test {
 
     @Override
     public void kill_view(View v) {
-        EditText guess = (EditText) v.findViewById(R.id.chinese_word_test_guess);
+        EditText guess = v.findViewById(R.id.chinese_word_test_guess);
         if (guess==null)
             return;
         guess.setOnEditorActionListener(null);
@@ -198,10 +198,10 @@ public class GuessChineseWord extends Test {
     }
 
     public void more_voc(@Nullable View v) {
-        Button more = (Button) activity.findViewById(R.id.guess_chinese_word_more_voc_button);
+        Button more = activity.findViewById(R.id.guess_chinese_word_more_voc_button);
         more.setVisibility(View.GONE);
 
-        TextView more_text = (TextView) activity.findViewById(R.id.guess_chinese_word_more_voc);
+        TextView more_text = activity.findViewById(R.id.guess_chinese_word_more_voc);
         more_text.setText("");
         for (int i=0; i<more_translations.size(); i++) {
             more_text.setText(more_text.getText()+more_translations.get(i));
@@ -213,7 +213,7 @@ public class GuessChineseWord extends Test {
     }
 
     void check_answer() {
-        EditText word_guess = (EditText) activity.findViewById(R.id.chinese_word_test_guess);
+        EditText word_guess = activity.findViewById(R.id.chinese_word_test_guess);
         if (word_guess==null)
             return;
 
@@ -224,7 +224,7 @@ public class GuessChineseWord extends Test {
             case OTHER:
                 if (!previous_guess.contains(guess)) {
                     previous_guess.add(guess);
-                    TextView previous = (TextView) activity.findViewById(R.id.guess_chinese_word_previous_guess);
+                    TextView previous = activity.findViewById(R.id.guess_chinese_word_previous_guess);
                     previous.setText("Previous try:\n");
                     for (int i=0; i<previous_guess.size(); i++) {
                         previous.setText(previous.getText() + previous_guess.get(i));

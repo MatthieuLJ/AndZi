@@ -6,38 +6,42 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.support.v4.app.*;
-import android.support.v4.view.ViewPager;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.zi_app.widget.ViewPagerParallax;
 import com.matthieu.zi_app.widget.handle_details_request;
-import com.viewpagerindicator.PageIndicator;
+import androidx.fragment.app.FragmentActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import com.matthieu.zi_app.R;
 
-public class ReferenceActivity extends SherlockFragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
+import java.util.ArrayList;
+
+public class ReferenceActivity extends FragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
     final private static int max_details_fragments=3;
-    Fragment fragments[];
-    int ids[];
+    Fragment[] fragments;
+    int[] ids;
 
     private static final boolean DEBUG = false;
     final private static String TAG = "RerefenceActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.Theme_Sherlock);
-        requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_INDETERMINATE_PROGRESS);
+        // TODO: setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.reference);
 
-        ViewPagerParallax pager = (ViewPagerParallax) findViewById(R.id.reference_pager);
+        ViewPagerParallax pager = findViewById(R.id.reference_pager);
 
         fragments = new Fragment[max_details_fragments+1];
         ids = new int[max_details_fragments+1];
@@ -50,7 +54,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             if (pager == null) {
                 ids = savedInstanceState.getIntArray("ids");
 
-                LinearLayout master_linear = (LinearLayout) findViewById(R.id.ref_linear);
+                LinearLayout master_linear = findViewById(R.id.ref_linear);
                 if (master_linear!=null) {
                     for (int i=1; i<=max_details_fragments; i++) {
                         master_linear.getChildAt(i).setId(ids[i]);
@@ -59,12 +63,12 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                     }
                 }
 
-                LinearLayout master_table = (LinearLayout) findViewById(R.id.ref_table);
+                LinearLayout master_table = findViewById(R.id.ref_table);
                 if (master_table != null) {
                     for (int i=1; i<=max_details_fragments; i++) {
                         ((LinearLayout)master_table.getChildAt(i/2)).getChildAt(i%2).setId(ids[i]);
                         if (fragments[i]!=null) {
-                            ((LinearLayout)master_table.getChildAt(i/2)).setVisibility(View.VISIBLE);
+                            master_table.getChildAt(i/2).setVisibility(View.VISIBLE);
                             ((LinearLayout)master_table.getChildAt(i/2)).getChildAt(i%2).setVisibility(View.VISIBLE);
                         }
                     }
@@ -80,7 +84,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             fragments[0] = new DictionaryFragment();
 
             if (pager == null) {
-                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                androidx.fragment.app.FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                 ft.add(R.id.ref_fragment0, fragments[0]);
                 ft.commit();
             }
@@ -92,9 +96,11 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             pager.setOffscreenPageLimit(max_details_fragments+1);
             pager.setAdapter(new reference_pager(getSupportFragmentManager()));
 
-            PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
+            /* TODO
+            PageIndicator mIndicator = findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
             mIndicator.setOnPageChangeListener(this);
+            */
             if (savedInstanceState != null)
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
         }
@@ -105,9 +111,11 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             new_details_request(hanzi, use_ref);
         }
 
+        /* TODO
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+         */
     }
 
     @Override
@@ -127,7 +135,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                 }
             }
         }
-        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        ViewPager pager = findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
@@ -165,7 +173,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                 break;
             if ((((DetailsFragment)fragments[i]).is_dictionary_search() == use_ref) &&
                 ((DetailsFragment)fragments[i]).get_hanzi().equals(new_hanzi)) {
-                ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+                ViewPager pager = findViewById(R.id.reference_pager);
                 if (pager != null) {
                     pager.setCurrentItem(i, true);
                 }
@@ -203,17 +211,17 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             }
 
             FragmentManager fm = getSupportFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
+            androidx.fragment.app.FragmentTransaction ft = fm.beginTransaction();
             ft.remove(fragments[index]);
             ft.commit();
 
             max = index;
         }
 
-        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        ViewPager pager = findViewById(R.id.reference_pager);
 
         FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction ft = fm.beginTransaction();
+        androidx.fragment.app.FragmentTransaction ft = fm.beginTransaction();
 
         // shift
         for (int i=max; i>1; i--) {
@@ -229,7 +237,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         bundle.putBoolean("use_ref", use_ref);
         fragments[1].setArguments(bundle);
 
-        LinearLayout master_linear = (LinearLayout) findViewById(R.id.ref_linear);
+        LinearLayout master_linear = findViewById(R.id.ref_linear);
         if (master_linear != null) {
             int id_removed = master_linear.getChildAt(max).getId();
             master_linear.removeViewAt(max);
@@ -241,7 +249,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             ids[1] = id_removed;
         }
 
-        LinearLayout master_table = (LinearLayout) findViewById(R.id.ref_table);
+        LinearLayout master_table = findViewById(R.id.ref_table);
         if (master_table != null) {
             int row = max / 2;
             LinearLayout tr = (LinearLayout) master_table.getChildAt(row);
@@ -252,7 +260,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
                 FrameLayout moving_fl = (FrameLayout) ((LinearLayout) master_table.getChildAt(r-1)).getChildAt(1);
                 ((LinearLayout) master_table.getChildAt(r-1)).removeViewAt(1);
                 ((LinearLayout) master_table.getChildAt(r)).addView(moving_fl, 0);
-                ((LinearLayout) master_table.getChildAt(r)).setVisibility(View.VISIBLE);
+                master_table.getChildAt(r).setVisibility(View.VISIBLE);
             }
             FrameLayout fl = new FrameLayout(this);
             fl.setId(id_removed);
@@ -285,7 +293,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
     @Override
     public void onBackPressed() {
-        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        ViewPager pager = findViewById(R.id.reference_pager);
         if ((pager != null) && (pager.getCurrentItem() != 0) && (((DictionaryFragment)fragments[0]).has_search()))
             pager.setCurrentItem(0, true);
         else
@@ -353,10 +361,10 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        ViewPager pager = findViewById(R.id.reference_pager);
 
         menu.clear();
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
 
         if (pager != null) {
             int page = pager.getCurrentItem();
@@ -402,32 +410,28 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
+        ViewPager pager = findViewById(R.id.reference_pager);
         int page=0;
         if (pager!= null)
             page = pager.getCurrentItem();
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            case R.id.reference_source:
-                ((DictionaryFragment)fragments[0]).change_source();
-                invalidateOptionsMenu();
-                break;
-            case R.id.details_add_edit:
-                ((DetailsFragment)fragments[page]).edit_add_word();
-                break;
-            case R.id.details_pinned:
-                ((DetailsFragment)fragments[page]).pin_unpin();
-                invalidateOptionsMenu();
-                break;
-            case R.id.details_source:
-                ((DetailsFragment)fragments[page]).change_source();
-                invalidateOptionsMenu();
-                break;
-            default:
-                return false;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.reference_source) {
+            ((DictionaryFragment) fragments[0]).change_source();
+            invalidateOptionsMenu();
+        } else if (itemId == R.id.details_add_edit) {
+            ((DetailsFragment) fragments[page]).edit_add_word();
+        } else if (itemId == R.id.details_pinned) {
+            ((DetailsFragment) fragments[page]).pin_unpin();
+            invalidateOptionsMenu();
+        } else if (itemId == R.id.details_source) {
+            ((DetailsFragment) fragments[page]).change_source();
+            invalidateOptionsMenu();
+        } else {
+            return false;
         }
         return true;
     }

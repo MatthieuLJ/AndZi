@@ -5,7 +5,7 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,20 +28,20 @@ public class SplashFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         final View res = inflater.inflate(R.layout.main_menu_splash, container, false);
-        ImageView back = (ImageView) res.findViewById(R.id.splash_background);
+        ImageView back = res.findViewById(R.id.splash_background);
         try{
             back.setImageDrawable(getResources().getDrawable(R.drawable.splash_background));
         } catch (OutOfMemoryError error) {
             back.setBackgroundColor(getResources().getColor(R.color.splash_background_fallback));
         }
-        TextView tversion = (TextView) res.findViewById(R.id.splash_version);
+        TextView tversion = res.findViewById(R.id.splash_version);
         tversion.setText(((AndZiApplication) getActivity().getApplication()).get_version());
 
-        final ProgressBar progress = (ProgressBar) res.findViewById(R.id.splash_progress);
+        final ProgressBar progress = res.findViewById(R.id.splash_progress);
         progress.setIndeterminate(false);
         progress.setMax(100);
 
-        final TextView stage_text = (TextView) res.findViewById(R.id.splash_stage);
+        final TextView stage_text = res.findViewById(R.id.splash_stage);
 
         if (db_loader == null) {
             db_loader = new SplashLoader(progress, stage_text);

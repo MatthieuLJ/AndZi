@@ -201,11 +201,11 @@ public class ExtendingLinearLayout extends LinearLayout {
     {
         private long startTime;
 
-        private long refreshTime = 50;
+        private final long refreshTime = 50;
 
         private int startHeight;
         private int endHeight;
-        private int duration;
+        private final int duration;
 
 
         protected ResizeRunnable(int sHeight, int eHeight, int dur)

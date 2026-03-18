@@ -39,6 +39,7 @@ public class AndZiApplication extends Application {
     private static final int this_ref_version = 1;
 
     public void onCreate() {
+        super.onCreate();
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
@@ -210,8 +211,7 @@ public class AndZiApplication extends Application {
 
             long dbSize = source_path.length()/stats.getBlockSize();
 
-            if (available_space < 2*dbSize)
-                return false;
+            return available_space >= 2 * dbSize;
         }
         else {
             long dbSize = source_path.length();
@@ -225,11 +225,8 @@ public class AndZiApplication extends Application {
             stats = new StatFs(localDB_mp);
             available_space = stats.getAvailableBlocks();
 
-            if (available_space < dbSize/stats.getBlockSize())
-                return false;
+            return available_space >= dbSize / stats.getBlockSize();
         }
-
-        return true;
     }
 
     public boolean check_replace_progress(String path) {
@@ -351,7 +348,7 @@ public class AndZiApplication extends Application {
     }
 
     public boolean is_screen_on() {
-        return screenReceiver.wasScreenOn;
+        return ScreenBroadcastReceiver.wasScreenOn;
     }
 
     Typeface chinese_font = null;
@@ -374,7 +371,6 @@ public class AndZiApplication extends Application {
                 // only one file in the zip....
                 FileOutputStream fout = new FileOutputStream(destination);
 
-                // cteni zipu a zapis
                 while ((count = zis.read(buffer)) != -1) {
                     fout.write(buffer, 0, count);
                     loop_count++;

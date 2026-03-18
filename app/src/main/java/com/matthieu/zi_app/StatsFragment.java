@@ -8,7 +8,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.*;
 import android.widget.Button;
@@ -41,17 +41,17 @@ public class StatsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.db, container, false);
 
-        final ProgressGraph graph = (ProgressGraph) res.findViewById(R.id.graph);
+        final ProgressGraph graph = res.findViewById(R.id.graph);
         graph.set_data(((AndZiApplication) getActivity().getApplication()).getProgress());
 
-        Button zoomin= (Button) res.findViewById(R.id.graph_in);
+        Button zoomin= res.findViewById(R.id.graph_in);
         zoomin.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 graph.zoom_in();
                 update_buttons(getView());
             }
         });
-        Button zoomout= (Button) res.findViewById(R.id.graph_out);
+        Button zoomout= res.findViewById(R.id.graph_out);
         zoomout.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 graph.zoom_out();
@@ -116,20 +116,20 @@ public class StatsFragment extends Fragment {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                final ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
+                final ProgressGraph graph = v.findViewById(R.id.graph);
                 if (graph == null)
                     return;
                 graph.update_graph(true);
 
                 TextView tv;
 
-                tv = (TextView) v.findViewById(R.id.stats_chars);
+                tv = v.findViewById(R.id.stats_chars);
                 tv.setText(""+num_chars);
 
-                tv = (TextView) v.findViewById(R.id.stats_words);
+                tv = v.findViewById(R.id.stats_words);
                 tv.setText(""+num_words);
 
-                tv = (TextView) v.findViewById(R.id.stats_to_study);
+                tv = v.findViewById(R.id.stats_to_study);
                 tv.setText(""+expired);
             }
         };
@@ -141,21 +141,11 @@ public class StatsFragment extends Fragment {
     }
 
     private void update_buttons(View v) {
-        Button zoomin= (Button) v.findViewById(R.id.graph_in);
-        Button zoomout= (Button) v.findViewById(R.id.graph_out);
-        ProgressGraph graph = (ProgressGraph) v.findViewById(R.id.graph);
-        if (graph.can_zoom_in()) {
-            zoomin.setEnabled(true);
-        }
-        else {
-            zoomin.setEnabled(false);
-        }
-        if (graph.can_zoom_out()) {
-            zoomout.setEnabled(true);
-        }
-        else {
-            zoomout.setEnabled(false);
-        }
+        Button zoomin= v.findViewById(R.id.graph_in);
+        Button zoomout= v.findViewById(R.id.graph_out);
+        ProgressGraph graph = v.findViewById(R.id.graph);
+        zoomin.setEnabled(graph.can_zoom_in());
+        zoomout.setEnabled(graph.can_zoom_out());
     }
 
     private void update_time_to_study(final View v) {
@@ -165,37 +155,37 @@ public class StatsFragment extends Fragment {
         int expired = myDB.getNumExpired();
         long delay = myDB.getMostAdvancedExpiringTime();
         if (DEBUG) Log.d(TAG, "delay is " + delay);
-        TableRow row = (TableRow) v.findViewById(R.id.db_stats_time_to_study_row);
+        TableRow row = v.findViewById(R.id.db_stats_time_to_study_row);
         if ((expired == 0) && (delay >0)) {
             long update_time;
             StringBuilder time_to_display = new StringBuilder();
             row.setVisibility(View.VISIBLE);
             if (delay / (1000*60*60*24) >= 2) {
-                time_to_display.append((long)(delay / (1000*60*60*24))).append(" days");
+                time_to_display.append(delay / (1000*60*60*24)).append(" days");
                 update_time = 1000*60*60*24;
             } else if (delay / (1000*60*60*24) >= 1) {
                 long hours = (delay / (1000*60*60)) - 24;
                 time_to_display.append("1 day ").append(hours).append(" hours");
                 update_time = 1000*60*60;
             } else if (delay / (1000*60*60) >= 2) {
-                time_to_display.append((long)(delay / (1000*60*60))).append(" hours");
+                time_to_display.append(delay / (1000*60*60)).append(" hours");
                 update_time = 1000*60*60;
             } else if (delay / (1000*60*60) >= 1) {
                 long minutes = (delay / (1000*60)) - 60;
                 time_to_display.append("1 hour ").append(minutes).append(" minutes");
                 update_time = 1000*60;
             } else if (delay / (1000*60) >= 2) {
-                time_to_display.append((long)(delay / (1000*60))).append(" minutes");
+                time_to_display.append(delay / (1000*60)).append(" minutes");
                 update_time = 1000*60;
             } else if (delay / (1000*60) >= 1) {
                 long seconds = (delay / 1000) - 60;
                 time_to_display.append("1 minute ").append(seconds).append(" seconds");
                 update_time = 1000;
             } else {
-                time_to_display.append((long)(delay / 1000)).append(" seconds");
+                time_to_display.append(delay / 1000).append(" seconds");
                 update_time = 1000;
             }
-            TextView time_field = (TextView) v.findViewById(R.id.stats_time_to_study);
+            TextView time_field = v.findViewById(R.id.stats_time_to_study);
             time_field.setText(time_to_display.toString());
 
             TimerTask task = new TimerTask() {

@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class PinyinButtons extends LinearLayout {
     ArrayList<PinyinButton> pinyin_choices = new ArrayList<PinyinButton>();
-    private Handler process_handler = new Handler();
+    private final Handler process_handler = new Handler();
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
 
@@ -123,7 +123,7 @@ public class PinyinButtons extends LinearLayout {
     }
 
     private class PinyinButton {
-        private String hanzi;
+        private final String hanzi;
         private ArrayList<String> db_pinyins;
 
         private String new_pinyin="";
@@ -131,7 +131,7 @@ public class PinyinButtons extends LinearLayout {
         private String current_choice="";
 
         //private final static String TAG = "PinyinButton";
-        private Button button;
+        private final Button button;
 
         public PinyinButton(String h, Button b) {
             button = b;
@@ -239,8 +239,8 @@ public class PinyinButtons extends LinearLayout {
             private void fill_dialog(final Dialog dial) {
                 dial.setContentView(R.layout.add_vocabulary_pinyin_dialog);
 
-                final ListView list = (ListView) dial.findViewById(R.id.pinyin_dialog_choices);
-                String choices[] = new String[PinyinButton.this.get_number_pinyins()];
+                final ListView list = dial.findViewById(R.id.pinyin_dialog_choices);
+                String[] choices = new String[PinyinButton.this.get_number_pinyins()];
                 for (int i=0; i<PinyinButton.this.get_number_pinyins(); i++) {
                     choices[i] = new Pinyin(PinyinButton.this.get_pinyin(i)).get_pretty();
                     //Log.d(TAG, "Add pinyin " + choices[i] +" to the list");
@@ -254,10 +254,10 @@ public class PinyinButtons extends LinearLayout {
                     }
                 });
 
-                Button OK_button = (Button) dial.findViewById(R.id.edit_new_pinyin_ok);
+                Button OK_button = dial.findViewById(R.id.edit_new_pinyin_ok);
                 OK_button.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
-                        EditText new_pinyin = (EditText) dial.findViewById(R.id.edit_new_pinyin);
+                        EditText new_pinyin = dial.findViewById(R.id.edit_new_pinyin);
                         change_pinyin(new Pinyin(new_pinyin.getText().toString()).get_lame());
                         dial.dismiss();
                     }

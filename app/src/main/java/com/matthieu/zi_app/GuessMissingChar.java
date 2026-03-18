@@ -24,8 +24,8 @@ import java.util.Collections;
 public class GuessMissingChar extends Test implements TextWatcher {
     private String current_test;
     private ArrayList<Vocabulary> words=new ArrayList<Vocabulary>();
-    private ArrayList<String> previous_guess=new ArrayList<String>();
-    private View master_view[]=null;
+    private final ArrayList<String> previous_guess=new ArrayList<String>();
+    private View[] master_view =null;
     private int current_view=0;
     private GuessMissinCharResultView solution_view;
 
@@ -64,7 +64,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
         current_view = 1-current_view;
         View res = master_view[current_view];
 
-        EditText guess = (EditText) res.findViewById(R.id.missing_test_guess);
+        EditText guess = res.findViewById(R.id.missing_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -86,10 +86,10 @@ public class GuessMissingChar extends Test implements TextWatcher {
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.missing_test_focusable_linear);
+        LinearLayout focusable = res.findViewById(R.id.missing_test_focusable_linear);
         focusable.requestFocus();
 
-        TextView previous = (TextView) res.findViewById(R.id.char_finder_previous_guess);
+        TextView previous = res.findViewById(R.id.char_finder_previous_guess);
         previous.setText("");
         previous.setVisibility(View.GONE);
         previous_guess.clear();
@@ -99,7 +99,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
             words = new ArrayList<Vocabulary>(words.subList(0,5));
         }
 
-        TableLayout tl = (TableLayout) res.findViewById(R.id.char_finder_word_grid);
+        TableLayout tl = res.findViewById(R.id.char_finder_word_grid);
         tl.removeAllViews();
         TableRow.LayoutParams trlp;
         for (Vocabulary w : words) {
@@ -155,7 +155,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
             tl.addView(tr);
         }
 
-        Button submit_answer = (Button) res.findViewById(R.id.guess_missing_char_ok);
+        Button submit_answer = res.findViewById(R.id.guess_missing_char_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -168,7 +168,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
 
     @Override
     public void kill_view(View v) {
-        EditText guess = (EditText) v.findViewById(R.id.missing_test_guess);
+        EditText guess = v.findViewById(R.id.missing_test_guess);
         if (guess==null)
             return;
         guess.setOnEditorActionListener(null);
@@ -220,8 +220,8 @@ public class GuessMissingChar extends Test implements TextWatcher {
         if (res == OTHER) {
             if (!previous_guess.contains(guess))
                 previous_guess.add(guess);
-            TextView previous = (TextView) activity.findViewById(R.id.char_finder_previous_guess);
-            EditText edit_guess = (EditText) activity.findViewById(R.id.missing_test_guess);
+            TextView previous = activity.findViewById(R.id.char_finder_previous_guess);
+            EditText edit_guess = activity.findViewById(R.id.missing_test_guess);
             previous.setText("Previous try:\n");
             for (int i=0; i<previous_guess.size(); i++) {
                 previous.setText(previous.getText() + previous_guess.get(i));
@@ -238,7 +238,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
     }
 
     public void check_answer() {
-        EditText word_guess = (EditText) activity.findViewById(R.id.missing_test_guess);
+        EditText word_guess = activity.findViewById(R.id.missing_test_guess);
         if (word_guess==null)
             return;
 
@@ -319,11 +319,7 @@ public class GuessMissingChar extends Test implements TextWatcher {
         if (ok_button == null)
             return;
 
-        if (charSequence.toString().codePointCount(0, charSequence.toString().length()) > 1) {
-            ok_button.setEnabled(false);
-        } else {
-            ok_button.setEnabled(true);
-        }
+        ok_button.setEnabled(charSequence.toString().codePointCount(0, charSequence.toString().length()) <= 1);
 
     }
 

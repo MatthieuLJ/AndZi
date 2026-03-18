@@ -20,7 +20,7 @@ public abstract class Test {
     protected static HanziDB myDB, refDB;
     protected TestActivity activity;
 
-    static private Timer timer = new Timer();
+    static private final Timer timer = new Timer();
 
     final static public int CORRECT=1;
     final static public int INCORRECT=2;
@@ -83,7 +83,7 @@ public abstract class Test {
 
         protected View show_solution(boolean show_accept) {
             if ((good == Test.INCORRECT) && (!answer.equals(""))) {
-                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
+                LinearLayout bad_guess = result_view.findViewById(R.id.test_result_wrong_guess);
                 TextView bad_guess_text = new TextView(parent_activity);
                 bad_guess_text.setText("You guessed: "+answer);
                 bad_guess_text.setTextSize(TypedValue.COMPLEX_UNIT_PX, parent_activity.getResources().getDimension(R.dimen.large_test_text));
@@ -116,10 +116,10 @@ public abstract class Test {
         }
 
         protected void hide_details(ViewGroup container) {
-            ViewGroup test_results = (ViewGroup) container.findViewById(R.id.test_results);
+            ViewGroup test_results = container.findViewById(R.id.test_results);
             if (test_results != null)
                 DetailsFragment.kill_detail_view(test_results);
-            ViewGroup test_bad_guess = (ViewGroup) container.findViewById(R.id.test_bad_guess);
+            ViewGroup test_bad_guess = container.findViewById(R.id.test_bad_guess);
             if (test_bad_guess != null)
                 DetailsFragment.kill_detail_view(test_bad_guess);
         }

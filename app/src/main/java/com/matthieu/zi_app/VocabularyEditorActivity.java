@@ -2,26 +2,25 @@ package com.matthieu.zi_app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager.widget.ViewPager;
 import android.view.View;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
+import androidx.fragment.app.FragmentActivity;
 import com.matthieu.zi_app.widget.LockableViewPager;
-import com.viewpagerindicator.PageIndicator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
-    Fragment fragments[];
+public class VocabularyEditorActivity extends FragmentActivity implements ViewPager.OnPageChangeListener {
+    Fragment[] fragments;
 
     HanziDB refDB, myDB;
 
@@ -44,7 +43,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.Theme_Sherlock);
+        //TODO: setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.vocabulary_editor);
 
@@ -55,8 +54,8 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
         fragments = new Fragment[3];
 
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-        LinearLayout master_linear = (LinearLayout) findViewById(R.id.voc_editor_linear);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
+        LinearLayout master_linear = findViewById(R.id.voc_editor_linear);
 
         if (savedInstanceState != null) {
             current_state = activity_state.values()[savedInstanceState.getInt("state")];
@@ -91,16 +90,18 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         }
 
         if (pager != null) {
+            /* TODO
             pager.set_max_pages(3);
             pager.setBackgroundAsset(R.raw.mayuan);
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new editor_pager(getSupportFragmentManager()));
 
-            PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
+            PageIndicator mIndicator = findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
             mIndicator.setOnPageChangeListener(this);
+             */
         } else if (master_linear != null) {
-            FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+            FrameLayout lesson_content = findViewById(R.id.ve_fragment2);
             if (fragments[2] == null) {
                 lesson_content.setVisibility(View.GONE);
             } else {
@@ -108,9 +109,11 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             }
         }
 
+        /* TODO
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+         */
     }
 
     @Override
@@ -127,7 +130,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     protected void onResume() {
         super.onResume();
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
         if (getIntent().getAction().equals(Intent.ACTION_EDIT)) {
             if (pager != null) {
                 pager.setPagingEnabled(true);
@@ -157,7 +160,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 getSupportFragmentManager().putFragment(outState, "fragment2", fragments[2]);
             } catch (IllegalStateException e) {}
         }
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
@@ -185,7 +188,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("lesson", label);
             fragments[2].setArguments(bundle);
-            FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+            FrameLayout lesson_content = findViewById(R.id.ve_fragment2);
             if (lesson_content != null) {
                 lesson_content.setVisibility(View.VISIBLE);
 
@@ -195,14 +198,14 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 ft.commit();
             }
 
-            LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
-            if (pager != null)
+            LockableViewPager pager = findViewById(R.id.voc_editor_pager);
+            if (pager != null && pager.getAdapter() != null)
                 pager.getAdapter().notifyDataSetChanged();
         }
     }
 
     public void close_lesson_list() {
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
         if ((pager != null) && (pager.getCurrentItem()==2)) {
             pager.setCurrentItem(1, true);
         }
@@ -213,9 +216,9 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         ft.remove(fragments[2]);
         ft.commit();
         fragments[2]=null;
-        if (pager != null)
+        if (pager != null && pager.getAdapter() != null)
             pager.getAdapter().notifyDataSetChanged();
-        FrameLayout lesson_content = (FrameLayout) findViewById(R.id.ve_fragment2);
+        FrameLayout lesson_content = findViewById(R.id.ve_fragment2);
         if (lesson_content != null)
             lesson_content.setVisibility(View.GONE);
     }
@@ -226,7 +229,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
 
     @Override
     public void onBackPressed() {
-        ViewPager pager = (ViewPager) findViewById(R.id.voc_editor_pager);
+        ViewPager pager = findViewById(R.id.voc_editor_pager);
         if ((pager != null) && (pager.getCurrentItem() != 0) && (current_state != activity_state.STATE_LESSON_SELECTION))
             pager.setCurrentItem(0, true);
         else
@@ -284,7 +287,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         int menu_resource=0;
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
 
         switch(current_state) {
             case STATE_INIT:
@@ -331,7 +334,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 break;
         }
         menu.clear();
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(menu_resource, menu);
 
         return true;
@@ -340,93 +343,84 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         ArrayList<String> selection;
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            case R.id.add_vocabulary_add_selection:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).add_selection();
-                if ((fragments[2] != null) && (((LessonListFragment)fragments[2]).current_lessons().contains(((AddVocabularyFragment)fragments[0]).get_default_lesson()))) {
-                    ((LessonListFragment)fragments[2]).update_list();
-                }
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_add_selection) {
+            if (pager != null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment) fragments[0]).add_selection();
+            if ((fragments[2] != null) && (((LessonListFragment) fragments[2]).current_lessons().contains(((AddVocabularyFragment) fragments[0]).get_default_lesson()))) {
+                ((LessonListFragment) fragments[2]).update_list();
+            }
 
-                return true;
-            case R.id.add_vocabulary_delete_selection:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).del_selection();
-                if (fragments[2] != null)
-                    ((LessonListFragment)fragments[2]).update_list();
-                return true;
-            case R.id.add_vocabulary_edit_translation:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).edit_selection();
-                if (fragments[2] != null)
-                    ((LessonListFragment)fragments[2]).update_list();
-                return true;
-            case R.id.add_vocabulary_done:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).done();
-                return true;
-
-            case R.id.add_vocabulary_lesson_select_all:
-                ((EditLessonsFragment)fragments[1]).set_select_all();
-                break;
-            case R.id.add_vocabulary_lesson_select_none:
-                ((EditLessonsFragment)fragments[1]).set_select_none();
-                break;
-            case R.id.add_vocabulary_lesson_select_done:
-                Intent resultIntent = getIntent();
-                selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                Bundle b = new Bundle();
-                b.putStringArrayList("lesson_list", selection);
-                resultIntent.putExtras(b);
-                setResult(RESULT_OK, resultIntent);
-                finish();
-                break;
-            case R.id.add_vocabulary_lesson_clone:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                ((EditLessonsFragment)fragments[1]).clone_selection();
-                break;
-            case R.id.add_vocabulary_lesson_delete:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                if (selection.size() < 1) {
-                    ((EditLessonsFragment)fragments[1]).update_state();
-                    break;
-                }
+            return true;
+        } else if (itemId == R.id.add_vocabulary_delete_selection) {
+            if (pager != null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment) fragments[0]).del_selection();
+            if (fragments[2] != null)
+                ((LessonListFragment) fragments[2]).update_list();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_edit_translation) {
+            if (pager != null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment) fragments[0]).edit_selection();
+            if (fragments[2] != null)
+                ((LessonListFragment) fragments[2]).update_list();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_done) {
+            if (pager != null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment) fragments[0]).done();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_lesson_select_all) {
+            ((EditLessonsFragment) fragments[1]).set_select_all();
+        } else if (itemId == R.id.add_vocabulary_lesson_select_none) {
+            ((EditLessonsFragment) fragments[1]).set_select_none();
+        } else if (itemId == R.id.add_vocabulary_lesson_select_done) {
+            Intent resultIntent = getIntent();
+            selection = ((EditLessonsFragment) fragments[1]).get_selection();
+            Bundle b = new Bundle();
+            b.putStringArrayList("lesson_list", selection);
+            resultIntent.putExtras(b);
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        } else if (itemId == R.id.add_vocabulary_lesson_clone) {
+            if (pager != null)
+                pager.setCurrentItem(1);
+            ((EditLessonsFragment) fragments[1]).clone_selection();
+        } else if (itemId == R.id.add_vocabulary_lesson_delete) {
+            if (pager != null)
+                pager.setCurrentItem(1);
+            selection = ((EditLessonsFragment) fragments[1]).get_selection();
+            if (selection.size() < 1) {
+                ((EditLessonsFragment) fragments[1]).update_state();
+            } else {
                 close_lesson_list();
-                ((EditLessonsFragment)fragments[1]).del_selection();
-                break;
-            case R.id.add_vocabulary_lesson_rename:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                if (selection.size() != 1) {
-                    ((EditLessonsFragment)fragments[1]).update_state();
-                    break;
-                }
+                ((EditLessonsFragment) fragments[1]).del_selection();
+            }
+        } else if (itemId == R.id.add_vocabulary_lesson_rename) {
+            if (pager != null)
+                pager.setCurrentItem(1);
+            selection = ((EditLessonsFragment) fragments[1]).get_selection();
+            if (selection.size() != 1) {
+                ((EditLessonsFragment) fragments[1]).update_state();
+            } else {
                 close_lesson_list();
-                ((EditLessonsFragment)fragments[1]).rename_selection();
-                break;
-            case R.id.add_vocabulary_lesson_merge:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                ((EditLessonsFragment)fragments[1]).merge_selection();
-                break;
-            case R.id.add_vocabulary_lesson_set_default:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                set_default_list();
-                break;
+                ((EditLessonsFragment) fragments[1]).rename_selection();
+            }
+        } else if (itemId == R.id.add_vocabulary_lesson_merge) {
+            if (pager != null)
+                pager.setCurrentItem(1);
+            ((EditLessonsFragment) fragments[1]).merge_selection();
+        } else if (itemId == R.id.add_vocabulary_lesson_set_default) {
+            if (pager != null)
+                pager.setCurrentItem(0);
+            set_default_list();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -442,7 +436,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             ((AddVocabularyFragment)fragments[0]).set_default_lesson(lesson);
         }
         ((EditLessonsFragment)fragments[1]).clear_selection();
-        LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
+        LockableViewPager pager = findViewById(R.id.voc_editor_pager);
         if (pager != null) {
             pager.setCurrentItem(0, true);
         }

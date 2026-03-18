@@ -14,7 +14,7 @@ public class InsideScrollPager extends LockableViewPager {
     @SuppressLint({"NewApi"})
     protected boolean canScroll(View v, boolean checkV, int dx, int x, int y) {
         if (v instanceof ProgressGraph) {
-            return ((ProgressGraph) v).canScrollHorizontally(-dx);
+            return v.canScrollHorizontally(-dx);
         } else {
             return super.canScroll(v, checkV, dx, x, y);
         }

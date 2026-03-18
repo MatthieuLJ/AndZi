@@ -7,6 +7,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class Vocabulary implements Parcelable {
     public String chinese;
@@ -21,7 +22,7 @@ public class Vocabulary implements Parcelable {
     public Vocabulary(String ch, String pi, String en) {
         chinese = ch;
         pinyin = pi;
-        english = new ArrayList<String>(Arrays.asList(en));
+        english = new ArrayList<String>(Collections.singletonList(en));
     }
     public Vocabulary(String ch, String pi, ArrayList<String> en) {
         chinese = ch;

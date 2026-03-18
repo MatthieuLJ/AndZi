@@ -17,7 +17,7 @@ import java.util.WeakHashMap;
 public class PinyinParser {
     private static final boolean DEBUG = false;
     private final static String TAG = "PinyinParser";
-    private final static String pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwyāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ\'0-5]*";
+    private final static String pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwyāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ'0-5]*";
 
     static public ArrayList<String> parse_string(String pinyin_string)
     {
@@ -44,7 +44,7 @@ public class PinyinParser {
             }
             result = temp;
 
-            temp = parse_string(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            temp = parse_string(pinyin_string.substring(split_index + 1));
             if (temp == null)
             {
                 return null;
@@ -66,7 +66,7 @@ public class PinyinParser {
         {
             if (split_index == 0)
             {
-                return parse_string(pinyin_string.substring(1, pinyin_string.length()));
+                return parse_string(pinyin_string.substring(1));
             }
 
             temp = parse_string(pinyin_string.substring(0, split_index+1));
@@ -76,7 +76,7 @@ public class PinyinParser {
             }
             result = temp;
 
-            temp = parse_string(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            temp = parse_string(pinyin_string.substring(split_index + 1));
             if (temp == null)
             {
                 return null;
@@ -94,7 +94,7 @@ public class PinyinParser {
             {
                 if (i < pinyin_string.length())
                 {
-                    String next_step=pinyin_string.substring(i, pinyin_string.length());
+                    String next_step=pinyin_string.substring(i);
                     temp = parse_string(next_step);
                     if (temp == null)
                     {
@@ -140,7 +140,7 @@ public class PinyinParser {
             }
             result = temp;
 
-            temp = parse_string_to_pinyin(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            temp = parse_string_to_pinyin(pinyin_string.substring(split_index + 1));
             if (temp == null)
             {
                 return null;
@@ -171,7 +171,7 @@ public class PinyinParser {
             }
             result = temp;
 
-            temp = parse_string_to_pinyin(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            temp = parse_string_to_pinyin(pinyin_string.substring(split_index + 1));
             if (temp == null)
             {
                 return null;
@@ -189,7 +189,7 @@ public class PinyinParser {
             {
                 if (i < pinyin_string.length())
                 {
-                    String next_step=pinyin_string.substring(i, pinyin_string.length());
+                    String next_step=pinyin_string.substring(i);
                     temp = parse_string_to_pinyin(next_step);
                     if (temp == null)
                     {
@@ -262,7 +262,7 @@ public class PinyinParser {
             }
             result = temp;
 
-            temp = parse_string_to_elements(pinyin_string.substring(split_index+1, pinyin_string.length()));
+            temp = parse_string_to_elements(pinyin_string.substring(split_index+1));
             if (temp == null)
             {
                 return null;
@@ -293,7 +293,7 @@ public class PinyinParser {
             }
             result = temp;
 
-            temp = parse_string_to_elements(pinyin_string.substring(split_index + 1, pinyin_string.length()));
+            temp = parse_string_to_elements(pinyin_string.substring(split_index + 1));
             if (temp == null)
             {
                 return null;
@@ -312,7 +312,7 @@ public class PinyinParser {
             {
                 if (i < pinyin_string.length())
                 {
-                    String next_step=pinyin_string.substring(i, pinyin_string.length());
+                    String next_step=pinyin_string.substring(i);
                     temp = parse_string_to_elements(next_step);
                     if (temp == null)
                     {

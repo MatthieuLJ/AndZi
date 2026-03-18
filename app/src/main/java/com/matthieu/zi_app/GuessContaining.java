@@ -22,7 +22,7 @@ public class GuessContaining extends Test {
     protected ArrayList<String> bad_answers=new ArrayList<String>();
     protected ArrayList<String> new_answers=new ArrayList<String>();
 
-    private View master_view[]=null;
+    private View[] master_view =null;
     private int current_view=0;
 
     private GuessContainingResultView solution_view;
@@ -64,7 +64,7 @@ public class GuessContaining extends Test {
         current_view = 1-current_view;
         View res = master_view[current_view];
 
-        EditText guess = (EditText) res.findViewById(R.id.containing_test_guess);
+        EditText guess = res.findViewById(R.id.containing_test_guess);
         guess.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if (i == EditorInfo.IME_ACTION_DONE)
@@ -86,14 +86,14 @@ public class GuessContaining extends Test {
         InputMethodManager imm = (InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showSoftInputFromInputMethod(guess.getWindowToken(), InputMethodManager.SHOW_IMPLICIT);*/
 
-        LinearLayout focusable = (LinearLayout) res.findViewById(R.id.containing_focusable_linear);
+        LinearLayout focusable = res.findViewById(R.id.containing_focusable_linear);
         focusable.requestFocus();
 
-        TextView clue= (TextView) res.findViewById(R.id.guess_containing_chinese);
+        TextView clue= res.findViewById(R.id.guess_containing_chinese);
         clue.setText(current_test);
         clue.setTypeface(((AndZiApplication) activity.getApplication()).get_chinese_font());
 
-        Button submit_answer = (Button) res.findViewById(R.id.guess_containing_ok);
+        Button submit_answer = res.findViewById(R.id.guess_containing_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -106,7 +106,7 @@ public class GuessContaining extends Test {
 
     @Override
     public void kill_view(View v) {
-        EditText guess = (EditText) v.findViewById(R.id.containing_test_guess);
+        EditText guess = v.findViewById(R.id.containing_test_guess);
         if (guess==null)
             return;
         guess.setOnEditorActionListener(null);
@@ -149,7 +149,7 @@ public class GuessContaining extends Test {
     }
 
     public void check_answer() {
-        EditText word_guess = (EditText) activity.findViewById(R.id.containing_test_guess);
+        EditText word_guess = activity.findViewById(R.id.containing_test_guess);
         if (word_guess==null)
             return;
 
@@ -177,10 +177,10 @@ public class GuessContaining extends Test {
         @Override
         public View get_view(LayoutInflater inflater, ViewGroup container) {
             if (correct_answers.size() + bad_answers.size() + new_answers.size() > 0) {
-                LinearLayout bad_guess_container = (LinearLayout) result_view.findViewById(R.id.test_result_wrong);
+                LinearLayout bad_guess_container = result_view.findViewById(R.id.test_result_wrong);
                 bad_guess_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 0));
 
-                LinearLayout bad_guess = (LinearLayout) result_view.findViewById(R.id.test_result_wrong_guess);
+                LinearLayout bad_guess = result_view.findViewById(R.id.test_result_wrong_guess);
                 TableLayout tl = new TableLayout(parent_activity);
                 //tl.setStretchAllColumns(true);
                 int table=0, offset_in_table=0, offset_in_column=0, table_size=bad_answers.size();

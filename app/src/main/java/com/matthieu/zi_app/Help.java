@@ -14,7 +14,7 @@ public class Help extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.help_page);
 
-        WebView wv = (WebView) findViewById(R.id.help_content);
+        WebView wv = findViewById(R.id.help_content);
         wv.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {

@@ -49,7 +49,7 @@ public class FileDialog extends ListActivity {
     private int selectionMode = SelectionMode.MODE_CREATE;
 
     private File selectedFile;
-    private HashMap<String, Integer> lastPositions = new HashMap<String, Integer>();
+    private final HashMap<String, Integer> lastPositions = new HashMap<String, Integer>();
 
     /** Called when the activity is first created. */
     @Override
@@ -58,12 +58,12 @@ public class FileDialog extends ListActivity {
         setResult(RESULT_CANCELED, getIntent());
 
         setContentView(R.layout.file_dialog_main);
-        myPath = (TextView) findViewById(R.id.path);
-        mFileName = (EditText) findViewById(R.id.fdEditTextFile);
+        myPath = findViewById(R.id.path);
+        mFileName = findViewById(R.id.fdEditTextFile);
 
         inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
-        selectButton = (Button) findViewById(R.id.fdButtonSelect);
+        selectButton = findViewById(R.id.fdButtonSelect);
         selectButton.setEnabled(false);
         selectButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -75,7 +75,7 @@ public class FileDialog extends ListActivity {
             }
         });
 
-        final Button newButton = (Button) findViewById(R.id.fdButtonNew);
+        final Button newButton = findViewById(R.id.fdButtonNew);
         newButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 setCreateVisible(v);
@@ -91,18 +91,18 @@ public class FileDialog extends ListActivity {
             newButton.setEnabled(false);
         }
 
-        layoutSelect = (LinearLayout) findViewById(R.id.fdLinearLayoutSelect);
-        layoutCreate = (LinearLayout) findViewById(R.id.fdLinearLayoutCreate);
+        layoutSelect = findViewById(R.id.fdLinearLayoutSelect);
+        layoutCreate = findViewById(R.id.fdLinearLayoutCreate);
         layoutCreate.setVisibility(View.GONE);
 
-        final Button cancelButton = (Button) findViewById(R.id.fdButtonCancel);
+        final Button cancelButton = findViewById(R.id.fdButtonCancel);
         cancelButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 setSelectVisible(v);
             }
 
         });
-        final Button createButton = (Button) findViewById(R.id.fdButtonCreate);
+        final Button createButton = findViewById(R.id.fdButtonCreate);
         createButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 if (mFileName.getText().length() > 0) {

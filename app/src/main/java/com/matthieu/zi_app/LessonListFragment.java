@@ -7,7 +7,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +31,7 @@ public class LessonListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+        // setRetainInstance(true); // Deprecated in AndroidX
     }
 
     @Override
@@ -51,7 +51,7 @@ public class LessonListFragment extends Fragment {
     private void update_header_view(ListView list) {
         TextView header = (TextView) list.getTag(R.id.header_view);
         if (header == null) {
-            header = (TextView) getLayoutInflater(null).inflate(R.layout.lesson_list_header, list, false);
+            header = (TextView) getLayoutInflater().inflate(R.layout.lesson_list_header, list, false);
             list.setTag(R.id.header_view, header);
             list.addHeaderView(header, null, false);
         }
@@ -80,7 +80,7 @@ public class LessonListFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (cur != null) {
-            ListView list = (ListView) getView().findViewById(R.id.review_list);
+            ListView list = getView().findViewById(R.id.review_list);
             update_header_view(list);
             list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
                 @Override
@@ -93,7 +93,7 @@ public class LessonListFragment extends Fragment {
                 }
             }));
 
-            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+            ProgressBar pb = getView().findViewById(R.id.lesson_content_loading);
             pb.setVisibility(View.GONE);
             loader=null;
         } else {
@@ -115,10 +115,10 @@ public class LessonListFragment extends Fragment {
                 this.cancel(true);
                 return;
             }
-            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+            ProgressBar pb = getView().findViewById(R.id.lesson_content_loading);
             pb.setVisibility(View.VISIBLE);
 
-            ListView list = (ListView) getView().findViewById(R.id.review_list);
+            ListView list = getView().findViewById(R.id.review_list);
             list.setAdapter(null);
         }
 
@@ -145,7 +145,7 @@ public class LessonListFragment extends Fragment {
                 return;
             }
 
-            ListView list = (ListView) getView().findViewById(R.id.review_list);
+            ListView list = getView().findViewById(R.id.review_list);
             if (list != null) {
                 update_header_view(list);
                 list.setAdapter(new VocabularyCursorAdapter(getActivity(), cur, new VocabularyCursorClickHandle() {
@@ -160,7 +160,7 @@ public class LessonListFragment extends Fragment {
                 }));
             }
 
-            ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lesson_content_loading);
+            ProgressBar pb = getView().findViewById(R.id.lesson_content_loading);
             if (pb != null)
                 pb.setVisibility(View.GONE);
         }

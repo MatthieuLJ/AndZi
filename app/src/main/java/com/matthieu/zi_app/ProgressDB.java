@@ -16,15 +16,15 @@ public class ProgressDB extends SQLiteOpenHelper {
 
     static public class ProgressData {
         public long date=0;
-        public int num_in_box[]={0,0,0,0,0};
-        public int num_expired_in_box[]={0,0,0,0,0};
+        public int[] num_in_box ={0,0,0,0,0};
+        public int[] num_expired_in_box ={0,0,0,0,0};
     }
 
     private static final boolean DEBUG = false;
     private static final String TAG="ProgressDB";
     private static final int DATABASE_VERSION = 2;
     private static final int DEFAULT_MAX=30;
-    private SQLiteDatabase db;
+    private final SQLiteDatabase db;
 
     public ProgressDB(Context context, String db_name) {
         super(context, db_name, null, DATABASE_VERSION);

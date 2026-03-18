@@ -6,7 +6,7 @@ package com.matthieu.zi_app;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,13 +17,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 import com.matthieu.zi_app.R;
-import org.jetbrains.annotations.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TestFragment extends Fragment {
-    private ArrayList<Test> tests;
+    private final ArrayList<Test> tests;
 
     private static final int num_char_tests = 4;
     private Animation animFlipIn,animFlipOut;
@@ -74,7 +74,7 @@ public class TestFragment extends Fragment {
         View res = inflater.inflate(R.layout.test_flipper, container, false);
         start_test(savedInstanceState);
         View test = get_test_view(inflater, container);
-        ViewFlipper flipper = (ViewFlipper) res.findViewById(R.id.test_flipper);
+        ViewFlipper flipper = res.findViewById(R.id.test_flipper);
         flipper.addView(test);
 
         flipper.setInAnimation(animFlipIn);
@@ -86,8 +86,13 @@ public class TestFragment extends Fragment {
     public void onDestroyView() {
         if (current_test_type != null) {
             ViewGroup container = (ViewGroup) getView();
-            current_test_type.kill_view(container);
-            ((ViewFlipper)container.findViewById(R.id.test_flipper)).removeAllViews();
+            if (container != null) {
+                current_test_type.kill_view(container);
+                ViewFlipper flipper = container.findViewById(R.id.test_flipper);
+                if (flipper != null) {
+                    flipper.removeAllViews();
+                }
+            }
         }
 
         super.onDestroyView();
@@ -103,7 +108,7 @@ public class TestFragment extends Fragment {
     public void new_test() {
         if (getView() == null)
             return;
-        ViewFlipper flipper = (ViewFlipper) getView().findViewById(R.id.test_flipper);
+        ViewFlipper flipper = getView().findViewById(R.id.test_flipper);
 
         if (getActivity() == null)
             return;
@@ -125,7 +130,7 @@ public class TestFragment extends Fragment {
     public void show_solution(Test.SolutionView s) {
         if (getView() == null)
             return;
-        ViewFlipper flipper = (ViewFlipper) getView().findViewById(R.id.test_flipper);
+        ViewFlipper flipper = getView().findViewById(R.id.test_flipper);
 
         if (getActivity() == null)
             return;
@@ -134,7 +139,7 @@ public class TestFragment extends Fragment {
         current_solution = s;
         View new_view = s.get_view(inflater, flipper);
 
-        Button next_test = (Button) new_view.findViewById(R.id.test_result_next);
+        Button next_test = new_view.findViewById(R.id.test_result_next);
         next_test.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -260,7 +265,7 @@ public class TestFragment extends Fragment {
 
     private View done_testing(final boolean empty_db, final LayoutInflater inflater, final ViewGroup container) {
         final View res = inflater.inflate(R.layout.test_done, container, false);
-        TextView message = (TextView) res.findViewById(R.id.test_done_text);
+        TextView message = res.findViewById(R.id.test_done_text);
         if (empty_db) {
             message.setText(R.string.test_empty_db);
         }

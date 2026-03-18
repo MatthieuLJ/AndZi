@@ -18,7 +18,7 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 //import android.util.Log;
@@ -50,7 +50,7 @@ public class AddVocabularyFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+        // setRetainInstance(true); // Deprecated in AndroidX
 
         translations_from_ref = new ArrayList<VocabularyItem>();
         translations_displayed_from_ref = new ArrayList<VocabularyItem>();
@@ -66,7 +66,7 @@ public class AddVocabularyFragment extends Fragment
         }
         final View res = inflater.inflate(R.layout.add_vocabulary_top, container, false);
 
-        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) res.findViewById(R.id.add_vocabulary_chinese);
+        EditTextAutomaticSize chinese_word = res.findViewById(R.id.add_vocabulary_chinese);
         ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
         chinese_word.addTextChangedListener(text_watcher);
         View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, (ViewGroup) res.findViewById(R.id.main_content));
@@ -86,14 +86,14 @@ public class AddVocabularyFragment extends Fragment
         if (state == VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTION)
             return;
 
-        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
+        EditTextAutomaticSize chinese_word = getView().findViewById(R.id.add_vocabulary_chinese);
         if (!current_chinese_word.equals("")) {
             chinese_word.setText(current_chinese_word);
         }
     }
 
     public void set_word_to_edit(String hanzi) {
-        EditTextAutomaticSize chinese_word = (EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese);
+        EditTextAutomaticSize chinese_word = getView().findViewById(R.id.add_vocabulary_chinese);
         if (chinese_word!= null) {
             chinese_word.setText(hanzi);
         }
@@ -101,7 +101,7 @@ public class AddVocabularyFragment extends Fragment
 
     // Handle when the content of the chinese word text field changes
     private class ChineseTextWatcher implements TextWatcher {
-        private EditTextAutomaticSize tview;
+        private final EditTextAutomaticSize tview;
         private int state; // 0 is empty, 1 is "normal", 2 is "wrong character in the string"
 
         public ChineseTextWatcher(EditTextAutomaticSize tv) {
@@ -127,7 +127,7 @@ public class AddVocabularyFragment extends Fragment
                 current_chinese_word = ((EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese)).getText().toString();
 
                 // Populate the choices for the pinyin buttons
-                PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
+                PinyinButtons buttons = getView().findViewById(R.id.pinyin_buttons);
                 if (buttons == null)
                     return;
                 buttons.setPinyinButtons(charSequence.toString(), i, i1, i2, current_chinese_word);
@@ -175,7 +175,7 @@ public class AddVocabularyFragment extends Fragment
             }
             //Log.d(TAG, "context going to state "+new_state);
 
-            LinearLayout main_content = (LinearLayout) getView().findViewById(R.id.main_content);
+            LinearLayout main_content = getView().findViewById(R.id.main_content);
             if (new_state != state) {
                 switch(new_state) {
                     case 0:
@@ -190,10 +190,10 @@ public class AddVocabularyFragment extends Fragment
                         // all chinese characters
                         main_content.removeAllViews();
                         View.inflate(getActivity(), R.layout.add_vocabulary_context, main_content);
-                        PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
+                        PinyinButtons buttons = getView().findViewById(R.id.pinyin_buttons);
                         buttons.set_containing_fragment(AddVocabularyFragment.this);
                         buttons.clearPinyinButtons(); //setPinyinButtons(current_chinese_word);
-                        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+                        ListView lv = getView().findViewById(R.id.vocabulary_list);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
                         break;
@@ -215,7 +215,7 @@ public class AddVocabularyFragment extends Fragment
         View v = getView();
         if (v== null)
             return "";
-        PinyinButtons buttons = (PinyinButtons) v.findViewById(R.id.pinyin_buttons);
+        PinyinButtons buttons = v.findViewById(R.id.pinyin_buttons);
         return buttons.get_current_pinyin();
     }
 
@@ -269,7 +269,7 @@ public class AddVocabularyFragment extends Fragment
             translations_from_ref=tmp_translations_from_ref;
             translations_displayed_from_ref=tmp_translations_displayed_from_ref;
 
-            ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+            ListView lv = getView().findViewById(R.id.vocabulary_list);
             if (lv != null) {
                 ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
@@ -289,7 +289,7 @@ public class AddVocabularyFragment extends Fragment
                 translations_displayed_from_ref.add(v);
         }
 
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        ListView lv = getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -321,10 +321,10 @@ public class AddVocabularyFragment extends Fragment
         public void expand_new_field(boolean expand) {
             if (first_row != null && expand && new_collapsed) {
                 new_collapsed = !expand;
-                ImageView plus = (ImageView) first_row.findViewById(R.id.add_new_translation_plus);
+                ImageView plus = first_row.findViewById(R.id.add_new_translation_plus);
                 plus.setVisibility(View.GONE);
                 first_row.expand();
-                EditText field = (EditText) first_row.findViewById(R.id.add_new_translation);
+                EditText field = first_row.findViewById(R.id.add_new_translation);
                 field.requestFocus();
             } else if (first_row == null && expand && new_collapsed) {
                 new_collapsed = !expand;
@@ -394,12 +394,12 @@ public class AddVocabularyFragment extends Fragment
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater(null);
+                    LayoutInflater inflater = getLayoutInflater();
                     row = inflater.inflate(R.layout.add_vocabulary_list_title, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_title);
                 }
 
-                TextView title = (TextView) row.findViewById(R.id.add_title);
+                TextView title = row.findViewById(R.id.add_title);
                 if ((position==1) && (my != 0))
                     title.setText(R.string.add_voc_local_db);
                 else
@@ -415,7 +415,7 @@ public class AddVocabularyFragment extends Fragment
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater(null);
+                    LayoutInflater inflater = getLayoutInflater();
                     row = inflater.inflate(R.layout.add_vocabulary_list_new_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_new_item);
                 }
@@ -423,8 +423,8 @@ public class AddVocabularyFragment extends Fragment
                 if ((getCount()==1) && (!get_current_pinyin().equals("")))
                     new_collapsed=false;
 
-                ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.add_voc_new_container);
-                ImageView plus = (ImageView) row.findViewById(R.id.add_new_translation_plus);
+                ExtendingLinearLayout elv = row.findViewById(R.id.add_voc_new_container);
+                ImageView plus = row.findViewById(R.id.add_new_translation_plus);
                 if (new_collapsed) {
                     plus.setVisibility(View.VISIBLE);
                     elv.collapse_immediate();
@@ -442,8 +442,8 @@ public class AddVocabularyFragment extends Fragment
                     }
                 });
 
-                Button add_new_word = (Button) row.findViewById(R.id.add_new_translation_ok);
-                EditText word_field = (EditText) row.findViewById(R.id.add_new_translation);
+                Button add_new_word = row.findViewById(R.id.add_new_translation_ok);
+                EditText word_field = row.findViewById(R.id.add_new_translation);
                 add_new_word.setTag(R.id.vocabulary_item, word_field);
                 add_new_word.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
@@ -501,12 +501,12 @@ public class AddVocabularyFragment extends Fragment
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater(null);
+                    LayoutInflater inflater = getLayoutInflater();
                     row = inflater.inflate(desired_layout, parent, false);
                     row.setTag(R.id.add_list_view_inflated, desired_layout);
                 }
 
-                TextView word = (TextView) row.findViewById(R.id.add_word);
+                TextView word = row.findViewById(R.id.add_word);
                 word.setText(voc.translation);
                 switch(voc.state) {
                     case VocabularyItem.FROM_LOCAL_DB: // local database
@@ -550,12 +550,12 @@ public class AddVocabularyFragment extends Fragment
                     row = convertView;
                 }
                 else {
-                    LayoutInflater inflater = getLayoutInflater(null);
+                    LayoutInflater inflater = getLayoutInflater();
                     row = inflater.inflate(R.layout.add_vocabulary_list_ref_item, parent, false);
                     row.setTag(R.id.add_list_view_inflated, R.layout.add_vocabulary_list_ref_item);
                 }
 
-                TextView word = (TextView) row.findViewById(R.id.add_word);
+                TextView word = row.findViewById(R.id.add_word);
                 word.setText(voc.translation);
                 word.setTypeface(null, Typeface.ITALIC);
                 word.setTag(R.id.vocabulary_item, voc);
@@ -588,7 +588,7 @@ public class AddVocabularyFragment extends Fragment
         return default_lesson;
     }
 
-    private ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
+    private final ArrayList<VocabularyItem> current_word_selection=new ArrayList<VocabularyItem>();
 
     void update_state() {
         VocabularyEditorActivity.activity_state state;
@@ -668,7 +668,7 @@ public class AddVocabularyFragment extends Fragment
         }
 
         current_word_selection.clear();
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        ListView lv = getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -700,7 +700,7 @@ public class AddVocabularyFragment extends Fragment
         hide_duplicates_in_ref();
 
         current_word_selection.clear();
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        ListView lv = getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -717,7 +717,7 @@ public class AddVocabularyFragment extends Fragment
 
     public void done() {
         ((VocabularyEditorActivity)getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
-        EditText chinese_word = (EditText) getView().findViewById(R.id.add_vocabulary_chinese);
+        EditText chinese_word = getView().findViewById(R.id.add_vocabulary_chinese);
         if (chinese_word != null)
             chinese_word.setText("");
         if (translations_from_ref != null)
@@ -729,7 +729,7 @@ public class AddVocabularyFragment extends Fragment
         if (current_word_selection != null)
             current_word_selection.clear();
         current_chinese_word="";
-        ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+        ListView lv = getView().findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -772,7 +772,7 @@ public class AddVocabularyFragment extends Fragment
                     modified_voc.english.add(value);
                     current_word_selection.clear();
 
-                    ListView lv = (ListView) getView().findViewById(R.id.vocabulary_list);
+                    ListView lv = getView().findViewById(R.id.vocabulary_list);
                     if (lv != null) {
                         ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }

@@ -15,13 +15,14 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.zi_app.widget.VocabularyCursorAdapter;
 import com.matthieu.zi_app.widget.VocabularyCursorClickHandle;
 import com.matthieu.zi_app.widget.handle_details_request;
@@ -73,7 +74,7 @@ public class DetailsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.details_fragment, container, false);
-        FrameLayout frame = (FrameLayout) res.findViewById(R.id.top_level_detail_view);
+        FrameLayout frame = res.findViewById(R.id.top_level_detail_view);
 
         if (saved_data != null) {
             populate_details_view(this.getActivity(), frame, saved_data, (ReferenceActivity) getActivity());
@@ -95,14 +96,11 @@ public class DetailsFragment extends Fragment {
                 check_if_exists_in_db(db);
         }
 
-        final Button source_button = (Button) res.findViewById(R.id.details_source_button);
+        final Button source_button = res.findViewById(R.id.details_source_button);
         if (source_button != null) {
             if (is_dictionary_search()) {
                 source_button.setText(R.string.details_dictionary);
-                if (exists_in_db())
-                    source_button.setEnabled(true);
-                else
-                    source_button.setEnabled(false);
+                source_button.setEnabled(exists_in_db());
             }
             else
                 source_button.setText(R.string.details_voc_list);
@@ -113,7 +111,7 @@ public class DetailsFragment extends Fragment {
                 }
             });
         }
-        final Button add_edit_button = (Button) res.findViewById(R.id.details_add_edit_button);
+        final Button add_edit_button = res.findViewById(R.id.details_add_edit_button);
         if (add_edit_button != null) {
             if (exists_in_db())
                 add_edit_button.setText(R.string.details_edit);
@@ -126,7 +124,7 @@ public class DetailsFragment extends Fragment {
                 }
             });
         }
-        final Button pin_button = (Button) res.findViewById(R.id.details_pinned_button);
+        final Button pin_button = res.findViewById(R.id.details_pinned_button);
         if (pin_button != null) {
             if (isPinned())
                 pin_button.setText(R.string.details_unpin);
@@ -157,24 +155,21 @@ public class DetailsFragment extends Fragment {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                SherlockFragmentActivity parent = (SherlockFragmentActivity) getActivity();
+                FragmentActivity parent = (FragmentActivity) getActivity();
                 if (parent != null)
                     parent.invalidateOptionsMenu();
                 View v = getView();
                 if (v != null) {
-                    final Button add_edit_button = (Button) v.findViewById(R.id.details_add_edit_button);
+                    final Button add_edit_button = v.findViewById(R.id.details_add_edit_button);
                     if (add_edit_button != null) {
                         if (exists_in_db())
                             add_edit_button.setText(R.string.details_edit);
                         else
                             add_edit_button.setText(R.string.details_add);
                     }
-                    final Button source_button = (Button) v.findViewById(R.id.details_source_button);
+                    final Button source_button = v.findViewById(R.id.details_source_button);
                     if ((source_button != null) && (is_dictionary_search())) {
-                        if (exists_in_db())
-                            source_button.setEnabled(true);
-                        else
-                            source_button.setEnabled(false);
+                        source_button.setEnabled(exists_in_db());
                     }
                 }
             }
@@ -183,7 +178,7 @@ public class DetailsFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        FrameLayout frame = (FrameLayout) getView().findViewById(R.id.top_level_detail_view);
+        FrameLayout frame = getView().findViewById(R.id.top_level_detail_view);
         saved_data = save_detail_view(frame);
         super.onDestroyView();
     }
@@ -211,7 +206,7 @@ public class DetailsFragment extends Fragment {
                                       final boolean ref_query, final handle_details_request new_request) {
 
         // if the view already had a detail list...
-        ListView old_list= (ListView) section.findViewById(R.id.details_list);
+        ListView old_list= section.findViewById(R.id.details_list);
         if (old_list != null) {
             synchronized (locker) {
                 VocabularyCursorAdapter old_adapter=(VocabularyCursorAdapter) old_list.getAdapter();
@@ -219,7 +214,7 @@ public class DetailsFragment extends Fragment {
                 String old_query = (String) old_list.getTag(R.id.detail_query_hanzi);
                 String old_pinyins = (String) old_list.getTag(R.id.detail_query_pinyin);
 
-                if ((old_query != null) && (hanzi.equals(old_query)) && (old_pinyins != null) && (old_pinyins.equals(pinyin))) {
+                if ((hanzi.equals(old_query)) && (old_pinyins != null) && (old_pinyins.equals(pinyin))) {
                     // same query, not really anything to do here...
                     return;
                 } else if ((old_populate_task!=null) && (old_populate_task.get() != null) && (old_populate_task.get().getStatus() != AsyncTask.Status.FINISHED)) {
@@ -250,7 +245,7 @@ public class DetailsFragment extends Fragment {
         View.inflate(activity, R.layout.details, section);
         synchronized (locker) {
             // first write the word at the top
-            LinearLayout top_word = (LinearLayout) section.findViewById(R.id.details_title);
+            LinearLayout top_word = section.findViewById(R.id.details_title);
             top_word.removeAllViews();
             for (int i=0; i<saved.saved_hanzi.length(); ) {
                 TextView character = new TextView(activity);
@@ -270,7 +265,7 @@ public class DetailsFragment extends Fragment {
             }
 
             // write the pinyin info
-            final TextView info = (TextView) section.findViewById(R.id.details_info);
+            final TextView info = section.findViewById(R.id.details_info);
             if (saved.saved_pinyin_info != null) {
                 info.setText(saved.saved_pinyin_info);
                 info.setVisibility(View.VISIBLE);
@@ -282,7 +277,7 @@ public class DetailsFragment extends Fragment {
                 saved.saved_task.change_container(section);
             }
 
-            ListView list = (ListView) section.findViewById(R.id.details_list);
+            ListView list = section.findViewById(R.id.details_list);
             if (saved.saved_cursor!= null) {
                 VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
                 if (adapter == null) {
@@ -300,7 +295,7 @@ public class DetailsFragment extends Fragment {
 
             }
 
-            ProgressBar loading_wheel = (ProgressBar) section.findViewById(R.id.details_loading);
+            ProgressBar loading_wheel = section.findViewById(R.id.details_loading);
             if ((saved.saved_task == null) &&(loading_wheel != null))
                 loading_wheel.setVisibility(View.GONE);
 
@@ -374,7 +369,7 @@ public class DetailsFragment extends Fragment {
             }
             View.inflate(activity, R.layout.details, container.get());
 
-            ListView list = (ListView) container.get().findViewById(R.id.details_list);
+            ListView list = container.get().findViewById(R.id.details_list);
             list.setVisibility(View.GONE);
 
             list.setTag(R.id.detail_populator, new WeakReference<populator>(this));
@@ -385,7 +380,7 @@ public class DetailsFragment extends Fragment {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(activity);
             show_pinyin_color = sp.getBoolean("color_pinyin", true);
 
-            ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
+            ProgressBar loading_wheel = container.get().findViewById(R.id.details_loading);
             if (loading_wheel != null)
                 loading_wheel.setVisibility(View.VISIBLE);
         }
@@ -473,7 +468,7 @@ public class DetailsFragment extends Fragment {
             synchronized (locker) {
                 if ((container.get()!=null) && (activity!=null)) {
                     // first write the word at the top
-                    LinearLayout top_word = (LinearLayout) container.get().findViewById(R.id.details_title);
+                    LinearLayout top_word = container.get().findViewById(R.id.details_title);
                     top_word.removeAllViews();
                     for (int i=0; i<hanzi.length(); ) {
                         TextView character = new TextView(activity);
@@ -494,7 +489,7 @@ public class DetailsFragment extends Fragment {
                     }
 
                     // write the pinyin info
-                    final TextView info = (TextView) container.get().findViewById(R.id.details_info);
+                    final TextView info = container.get().findViewById(R.id.details_info);
                     if (pinyin_info != null) {
                         info.setText(pinyin_info);
                         info.setVisibility(View.VISIBLE);
@@ -502,14 +497,14 @@ public class DetailsFragment extends Fragment {
                         info.setVisibility(View.GONE);
                     }
 
-                    ListView list = (ListView) container.get().findViewById(R.id.details_list);
+                    ListView list = container.get().findViewById(R.id.details_list);
                     VocabularyCursorAdapter adapter = (VocabularyCursorAdapter) list.getAdapter();
                     if (adapter == null)
                         list.setAdapter(new VocabularyCursorAdapter(activity, cursor, clicker));
                     else
                         adapter.changeCursor(cursor);
                     list.setVisibility(View.VISIBLE);
-                    ProgressBar loading_wheel = (ProgressBar) container.get().findViewById(R.id.details_loading);
+                    ProgressBar loading_wheel = container.get().findViewById(R.id.details_loading);
                     if (loading_wheel != null)
                         loading_wheel.setVisibility(View.GONE);
                 }
@@ -523,7 +518,7 @@ public class DetailsFragment extends Fragment {
     static public void kill_detail_view(ViewGroup section) {
         if (section == null)
             return;
-        ListView old_list= (ListView) section.findViewById(R.id.details_list);
+        ListView old_list= section.findViewById(R.id.details_list);
         if (old_list == null)
             return;
         synchronized (locker) {
@@ -550,7 +545,7 @@ public class DetailsFragment extends Fragment {
     static public saved_details save_detail_view(ViewGroup section) {
         if (section == null)
             return null;
-        ListView old_list= (ListView) section.findViewById(R.id.details_list);
+        ListView old_list= section.findViewById(R.id.details_list);
         if (old_list == null)
             return null;
         saved_details res = new saved_details();
@@ -564,7 +559,7 @@ public class DetailsFragment extends Fragment {
                 res.saved_cursor = old_adapter.getCursor();
             }
 
-            final TextView pinyin_info = (TextView) section.findViewById(R.id.details_info);
+            final TextView pinyin_info = section.findViewById(R.id.details_info);
             if (pinyin_info != null) {
                 res.saved_pinyin_info = pinyin_info.getText();
             }
@@ -588,7 +583,7 @@ public class DetailsFragment extends Fragment {
         pinned = !pinned;
         View v= getView();
         if (v != null) {
-            final Button pin_button = (Button) v.findViewById(R.id.details_pinned_button);
+            final Button pin_button = v.findViewById(R.id.details_pinned_button);
             if (pin_button != null) {
                 if (isPinned())
                     pin_button.setText(R.string.details_unpin);

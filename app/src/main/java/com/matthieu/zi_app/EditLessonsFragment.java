@@ -12,7 +12,7 @@ import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.*;
 import android.view.inputmethod.InputMethodManager;
@@ -22,6 +22,7 @@ import com.matthieu.zi_app.widget.TouchListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class EditLessonsFragment extends Fragment {
@@ -57,7 +58,7 @@ public class EditLessonsFragment extends Fragment {
     @SuppressLint({"NewApi"})
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.edit_lessons, container, false);
-        TouchListView list = (TouchListView) res.findViewById(R.id.lesson_list);
+        TouchListView list = res.findViewById(R.id.lesson_list);
         list.setDropListener(new TouchListView.DropListener() {
             public void drop(int from, int to) {
                 if (from == 0)
@@ -73,7 +74,7 @@ public class EditLessonsFragment extends Fragment {
                 final ArrayList<String> lesson_order = new ArrayList<String>();
                 for (Lesson l : current_lessons)
                     lesson_order.add(l.label);
-                TouchListView lv = (TouchListView) res.findViewById(R.id.lesson_list);
+                TouchListView lv = res.findViewById(R.id.lesson_list);
                 ((LessonArrayAdapter) lv.getAdapter()).notifyDataSetChanged();
                 new Thread(new Runnable() {
                     public void run() {
@@ -83,7 +84,7 @@ public class EditLessonsFragment extends Fragment {
             }
         });
 
-        ProgressBar pb = (ProgressBar) res.findViewById(R.id.lessons_loading);
+        ProgressBar pb = res.findViewById(R.id.lessons_loading);
 
         if (DEBUG) Log.d(TAG, "Finishing onCreateView");
         synchronized (this) {
@@ -141,12 +142,12 @@ public class EditLessonsFragment extends Fragment {
                     current_lessons = tmp_lessons;
                     loaded = true;
 
-                    TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                    TouchListView lv = getView().findViewById(R.id.lesson_list);
                     if (lv != null) {
                         lv.setAdapter(new LessonArrayAdapter());
                     }
 
-                    ProgressBar pb = (ProgressBar) getView().findViewById(R.id.lessons_loading);
+                    ProgressBar pb = getView().findViewById(R.id.lessons_loading);
                     pb.setVisibility(View.GONE);
                 }
 
@@ -178,7 +179,7 @@ public class EditLessonsFragment extends Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             if (getView() != null) {
-                TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                TouchListView lv = getView().findViewById(R.id.lesson_list);
                 if ((lv != null) && (lv.getAdapter() != null)) {
                     ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                 }
@@ -237,10 +238,10 @@ public class EditLessonsFragment extends Fragment {
         public void expand_new_field(boolean expand) {
             if (first_row != null && expand && new_collapsed) {
                 new_collapsed = !expand;
-                ImageView plus = (ImageView) first_row.findViewById(R.id.add_new_lesson_plus);
+                ImageView plus = first_row.findViewById(R.id.add_new_lesson_plus);
                 plus.setVisibility(View.GONE);
                 first_row.expand();
-                EditText field = (EditText) first_row.findViewById(R.id.edit_new_lesson);
+                EditText field = first_row.findViewById(R.id.edit_new_lesson);
                 field.requestFocus();
             } else if (first_row == null && expand && new_collapsed) {
                 new_collapsed = !expand;
@@ -262,8 +263,8 @@ public class EditLessonsFragment extends Fragment {
                 if (getCount()==1)
                     new_collapsed = false;
 
-                ExtendingLinearLayout elv = (ExtendingLinearLayout) row.findViewById(R.id.edit_lesson_new_container);
-                ImageView plus = (ImageView) row.findViewById(R.id.add_new_lesson_plus);
+                ExtendingLinearLayout elv = row.findViewById(R.id.edit_lesson_new_container);
+                ImageView plus = row.findViewById(R.id.add_new_lesson_plus);
                 if (new_collapsed) {
                     plus.setVisibility(View.VISIBLE);
                     elv.collapse_immediate();
@@ -281,8 +282,8 @@ public class EditLessonsFragment extends Fragment {
                     }
                 });
 
-                Button new_lesson_ok = (Button) row.findViewById(R.id.edit_new_lesson_ok);
-                EditText new_lesson_field = (EditText) row.findViewById(R.id.edit_new_lesson);
+                Button new_lesson_ok = row.findViewById(R.id.edit_new_lesson_ok);
+                EditText new_lesson_field = row.findViewById(R.id.edit_new_lesson);
                 new_lesson_ok.setTag(R.id.edit_new_lesson, new_lesson_field);
                 new_lesson_ok.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
@@ -346,7 +347,7 @@ public class EditLessonsFragment extends Fragment {
                     else
                         more_info.append(getActivity().getResources().getString(R.string.add_voc_lesson_info_plural, le.num_items));
                 }
-                TextView more_tview = (TextView) row.findViewById(R.id.lesson_more_info_label);
+                TextView more_tview = row.findViewById(R.id.lesson_more_info_label);
                 if (more_info.toString().equals("")) {
                     more_tview.setVisibility(View.GONE);
                 }
@@ -355,7 +356,7 @@ public class EditLessonsFragment extends Fragment {
                     more_tview.setVisibility(View.VISIBLE);
                 }
 
-                TextView label = (TextView) row.findViewById(R.id.lesson_label);
+                TextView label = row.findViewById(R.id.lesson_label);
                 label.setText(le.label);
                 if ((le.state & Lesson.NEW) != 0) {
                     label.setPaintFlags(label.getPaintFlags() | Paint.FAKE_BOLD_TEXT_FLAG);
@@ -445,7 +446,7 @@ public class EditLessonsFragment extends Fragment {
         return false;
     }
 
-    private ArrayList<Lesson> current_lesson_selection=new ArrayList<Lesson>();
+    private final ArrayList<Lesson> current_lesson_selection=new ArrayList<Lesson>();
 
     public ArrayList<String> get_selection() {
         ArrayList<String> res = new ArrayList<String>();
@@ -581,7 +582,7 @@ public class EditLessonsFragment extends Fragment {
         new Thread(new Runnable() {
             public void run() {
                 myDB.addLesson(final_new_name);
-                for (Vocabulary voc:myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(le.label))))
+                for (Vocabulary voc:myDB.getVocabularyInLessons(new ArrayList<String>(Collections.singletonList(le.label))))
                     myDB.assignWordLesson(final_new_name, voc);
                 ArrayList<String> lesson_order=new ArrayList<String>();
                 for (Lesson l:current_lessons)
@@ -722,11 +723,11 @@ public class EditLessonsFragment extends Fragment {
                 myDB.addLesson(new_lesson.label);
                 myDB.mergeVocabularyIntoLesson(to_combine, new_lesson.label);
 
-                new_lesson.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Arrays.asList(new_lesson.label))).size();
+                new_lesson.num_items=myDB.getVocabularyInLessons(new ArrayList<String>(Collections.singletonList(new_lesson.label))).size();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+                        TouchListView lv = getView().findViewById(R.id.lesson_list);
                         if (lv == null)
                             return;
                         ((LessonArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
@@ -767,7 +768,7 @@ public class EditLessonsFragment extends Fragment {
     public void redraw_list() {
         if (getView() == null)
             return;
-        TouchListView lv = (TouchListView) getView().findViewById(R.id.lesson_list);
+        TouchListView lv = getView().findViewById(R.id.lesson_list);
         LessonArrayAdapter adapter = (LessonArrayAdapter) lv.getAdapter();
         if (adapter != null)
             adapter.notifyDataSetChanged();

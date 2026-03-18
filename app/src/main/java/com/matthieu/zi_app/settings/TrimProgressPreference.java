@@ -31,23 +31,23 @@ public class TrimProgressPreference extends DialogPreference implements SeekBar.
 {
     private SeekBar mSeekBar;
     private TextView mValueText;
-    private Context mContext;
-    private ProgressDB progress_db;
+    private final Context mContext;
+    private final ProgressDB progress_db;
 
     private final static String TAG="TrimProgressPreference";
 
     private int mValue;
 
-    private int []labels = {R.string.settings_trim_all, R.string.settings_trim_one_day, R.string.settings_trim_three_days,
+    private final int []labels = {R.string.settings_trim_all, R.string.settings_trim_one_day, R.string.settings_trim_three_days,
             R.string.settings_trim_one_week, R.string.settings_trim_three_weeks, R.string.settings_trim_one_month,
             R.string.settings_trim_three_months, R.string.settings_trim_one_year};
     /*
     private long []delays = {1L*24*60*60*1000, 3L*24*60*60*1000, 1L*7*24*60*60*
             1L*30*24*60*60*1000, 3L*30*24*60*60*1000, 1L*365*24*60*60*1000};
             */
-    private long []delays = {86400000, 259200000, 604800000, 1814400000,
+    private final long []delays = {86400000, 259200000, 604800000, 1814400000,
             2592000000L, 7776000000L, 31536000000L};
-    private int max_range;
+    private final int max_range;
 
 
     public TrimProgressPreference(Context context, AttributeSet attrs) {

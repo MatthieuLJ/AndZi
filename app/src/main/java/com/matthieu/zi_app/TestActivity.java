@@ -5,31 +5,34 @@ package com.matthieu.zi_app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.*;
-import android.support.v4.view.ViewPager;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager.widget.ViewPager;
+import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.widget.LinearLayout;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.zi_app.widget.InsideScrollPager;
 import com.matthieu.zi_app.widget.handle_details_request;
+import android.view.MenuItem;
+import androidx.fragment.app.FragmentStatePagerAdapter;
 import com.matthieu.zi_app.R;
-import com.viewpagerindicator.PageIndicator;
 
-public class TestActivity extends SherlockFragmentActivity  implements handle_details_request {
-    private Fragment fragments[];
+public class TestActivity extends FragmentActivity  implements handle_details_request {
+    private Fragment[] fragments;
 
     private static final boolean DEBUG = false;
     private static final String TAG="Test_Master";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.Theme_Sherlock);
+        // TODO: setTheme(R.style.Theme_Sherlock);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.test);
-        InsideScrollPager pager = (InsideScrollPager) findViewById(R.id.test_pager);
-        LinearLayout linear = (LinearLayout) findViewById(R.id.test_linear);
+        InsideScrollPager pager = findViewById(R.id.test_pager);
+        LinearLayout linear = findViewById(R.id.test_linear);
 
         fragments = new Fragment[2];
 
@@ -60,23 +63,25 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
         }
 
         if (pager != null) {
+            /* TODO
             pager.set_max_pages(2);
             pager.setBackgroundAsset(R.raw.bamboo);
             pager.setOffscreenPageLimit(2);
-
             pager.setAdapter(new test_pager_adapter(getSupportFragmentManager()));
 
-            PageIndicator mIndicator = (PageIndicator) findViewById(R.id.pager_indicator);
+            PageIndicator mIndicator = findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
-
             mIndicator.setOnPageChangeListener(new keyboard_handle());
+            */
             if (savedInstanceState == null)
                 pager.setCurrentItem(0, false);
         }
 
+        /* TODO
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+         */
     }
 
     @Override
@@ -94,7 +99,7 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 if (DEBUG) Log.e(TAG, "Got an exception saving fragment 1 "+e);
             }
         }
-        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        ViewPager pager = findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         } else {
@@ -114,7 +119,9 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     @Override
     protected void onStart() {
         super.onStart();
-        ((TestFragment)fragments[0]).resume_test();
+        if (fragments[0] != null) {
+            ((TestFragment)fragments[0]).resume_test();
+        }
     }
 
     private class keyboard_handle implements ViewPager.OnPageChangeListener {
@@ -136,14 +143,16 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     }
 
     public void new_solution_fragment(Test.SolutionView solution) {
-        ((TestFragment) fragments[0]).show_solution(solution);
+        if (fragments[0] != null) {
+            ((TestFragment) fragments[0]).show_solution(solution);
+        }
     }
 
     public void score_changed() {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+                ViewPager pager = findViewById(R.id.test_pager);
                 if ((pager == null) || (pager.getCurrentItem()==1))
                     update_stats();
             }
@@ -151,12 +160,14 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
     }
 
     public void update_stats() {
-        ((StatsFragment) fragments[1]).update_stats();
+        if (fragments[1] != null) {
+            ((StatsFragment) fragments[1]).update_stats();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        ViewPager pager = (ViewPager) findViewById(R.id.test_pager);
+        ViewPager pager = findViewById(R.id.test_pager);
         if ((pager != null) && (pager.getCurrentItem() != 0) && (test_ready))
             pager.setCurrentItem(0, true);
         else
@@ -165,23 +176,23 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
         }
         return false;
     }
 
     boolean test_ready=true;
     public void test_done(boolean done) {
-        InsideScrollPager pager = (InsideScrollPager) findViewById(R.id.test_pager);
+        InsideScrollPager pager = findViewById(R.id.test_pager);
         if (pager != null) {
             if (done)
                 pager.setCurrentItem(1, true);
             pager.setPagingEnabled(!done);
         }
-        if ((!test_ready) && (!done))
+        if ((!test_ready) && (!done) && (fragments[0] != null))
             ((TestFragment) fragments[0]).new_test();
         test_ready =!done;
     }

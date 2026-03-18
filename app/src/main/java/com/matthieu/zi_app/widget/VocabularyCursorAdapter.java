@@ -57,15 +57,15 @@ public class VocabularyCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(final View view, final Context context, final Cursor cursor) {
-        final TextView details_chinese = (TextView) view.findViewById(R.id.details_chinese_word);
+        final TextView details_chinese = view.findViewById(R.id.details_chinese_word);
         details_chinese.setText(cursor.getString(chinese_column_index));
         details_chinese.setTypeface(((AndZiApplication) context.getApplicationContext()).get_chinese_font());
-        final TextView details_pinyin = (TextView) view.findViewById(R.id.details_pinyin_word);
+        final TextView details_pinyin = view.findViewById(R.id.details_pinyin_word);
         if (show_pinyin_color)
             details_pinyin.setText(PinyinParser.convert_to_spannable_version(cursor.getString(pinyin_column_index), context));
         else
             details_pinyin.setText(PinyinParser.convert_to_pretty_version(cursor.getString(pinyin_column_index)));
-        TextView details_translations = (TextView) view.findViewById(R.id.details_translations);
+        TextView details_translations = view.findViewById(R.id.details_translations);
         details_translations.setText(cursor.getString(english_column_index));
         final String chinese = cursor.getString(chinese_column_index);
         if (click_handle != null) {

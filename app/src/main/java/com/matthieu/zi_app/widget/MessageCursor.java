@@ -3,7 +3,7 @@ package com.matthieu.zi_app.widget;
 import android.database.AbstractCursor;
 
 public class MessageCursor extends AbstractCursor {
-    private String message;
+    private final String message;
 
     public MessageCursor(String message) {
         this.message = message;

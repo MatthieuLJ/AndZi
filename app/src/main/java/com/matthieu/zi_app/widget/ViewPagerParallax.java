@@ -3,7 +3,7 @@ package com.matthieu.zi_app.widget;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.*;
-import android.support.v4.view.ViewPager;
+import androidx.viewpager.widget.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
 
@@ -108,8 +108,8 @@ public class ViewPagerParallax extends ViewPager {
         src.set((int) (overlap_level * (current_position + current_offset)), 0,
                 (int) (overlap_level * (current_position + current_offset) + (getWidth() * zoom_level)), imageHeight);
 
-        dst.set((int) (getScrollX()), 0,
-                (int) (getScrollX() + canvas.getWidth()), getHeight());
+        dst.set(getScrollX(), 0,
+                getScrollX() + canvas.getWidth(), getHeight());
 
         canvas.drawBitmap(saved_bitmap, src, dst, null);
     }
