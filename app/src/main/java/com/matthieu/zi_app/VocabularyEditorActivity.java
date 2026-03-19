@@ -2,6 +2,7 @@ package com.matthieu.zi_app;
 
 import android.content.Intent;
 import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
@@ -13,7 +14,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.tabs.TabLayout;
 import com.matthieu.zi_app.widget.LockableViewPager;
@@ -21,7 +21,7 @@ import com.matthieu.zi_app.widget.LockableViewPager;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class VocabularyEditorActivity extends FragmentActivity implements ViewPager.OnPageChangeListener {
+public class VocabularyEditorActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
     Fragment[] fragments;
 
     HanziDB refDB, myDB;
@@ -426,6 +426,7 @@ public class VocabularyEditorActivity extends FragmentActivity implements ViewPa
                 pager.setCurrentItem(0);
             set_default_list();
         }
+
         return super.onOptionsItemSelected(item);
     }
 

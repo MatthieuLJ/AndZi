@@ -63,12 +63,12 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         }
 
         if (pager != null) {
-            /* TODO
             pager.set_max_pages(2);
             pager.setBackgroundAsset(R.raw.bamboo);
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new test_pager_adapter(getSupportFragmentManager()));
 
+            /* TODO
             PageIndicator mIndicator = findViewById(R.id.pager_indicator);
             mIndicator.setViewPager(pager);
             mIndicator.setOnPageChangeListener(new keyboard_handle());
@@ -201,7 +201,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
     // The FragmentPagerAdapter does not resume well old fragments
     private class test_pager_adapter extends FragmentStatePagerAdapter {
         public test_pager_adapter(FragmentManager fm) {
-            super(fm);
+            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         }
 
         @Override
