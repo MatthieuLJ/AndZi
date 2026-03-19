@@ -4,11 +4,7 @@ plugins {
 
 android {
     namespace = "com.matthieu.zi_app"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.matthieu.zi_app"
