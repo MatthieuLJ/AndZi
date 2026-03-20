@@ -66,7 +66,10 @@ public class ProgressService extends Service {
             Notification notification;
             Intent start_test = new Intent(this, MainMenuActivity.class);
             start_test.putExtra("start_test", true);
-            PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, PendingIntent.FLAG_CANCEL_CURRENT);
+            
+            int flags = PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+            
+            PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, flags);
 
             notification = new NotificationCompat.Builder(this).setContentTitle(getResources().getString(R.string.notification_title))
                     .setContentText(getResources().getString(R.string.notification_content, expired))
