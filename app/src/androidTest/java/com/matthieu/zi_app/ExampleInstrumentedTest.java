@@ -1,4 +1,4 @@
-package com.matthieu.zi_app;
+package com.matthieu.flash;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.matthieu.zi_app", appContext.getPackageName());
+        assertEquals("com.matthieu.flash", appContext.getPackageName());
     }
 }

@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         >
-    <com.matthieu.zi_app.widget.ExtendingLinearLayout
+    <com.matthieu.flash.widget.ExtendingLinearLayout
             android:id="@+id/edit_lesson_new_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -52,5 +52,5 @@
                 expandable:hidable="true"
                 android:layout_marginRight="10dp"
                 />
-    </com.matthieu.zi_app.widget.ExtendingLinearLayout>
+    </com.matthieu.flash.widget.ExtendingLinearLayout>
 </LinearLayout>

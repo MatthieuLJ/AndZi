@@ -7,7 +7,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:orientation="horizontal">
-    <com.matthieu.zi_app.widget.ExtendingLinearLayout
+    <com.matthieu.flash.widget.ExtendingLinearLayout
             android:id="@+id/add_voc_new_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -48,5 +48,5 @@
                 expandable:hidable="true"
                 android:layout_marginRight="10dp"
                 />
-    </com.matthieu.zi_app.widget.ExtendingLinearLayout>
+    </com.matthieu.flash.widget.ExtendingLinearLayout>
 </LinearLayout>

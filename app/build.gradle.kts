@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.matthieu.zi_app"
+    namespace = "com.matthieu.flash"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.matthieu.zi_app"
+        applicationId = "com.matthieu.flash"
         minSdk = 33
         targetSdk = 36
         versionCode = 1

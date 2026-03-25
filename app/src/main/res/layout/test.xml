@@ -5,7 +5,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.matthieu.zi_app.widget.InsideScrollPager
+    <com.matthieu.flash.widget.InsideScrollPager
             android:id="@+id/test_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"

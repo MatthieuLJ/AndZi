@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <com.matthieu.zi_app.widget.TouchListView
+    <com.matthieu.flash.widget.TouchListView
             android:id="@+id/lesson_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -13,7 +13,7 @@
                 android:layout_width="match_parent"
                 app:tabMode="fixed"
                 app:tabGravity="fill" />
-    <com.matthieu.zi_app.widget.LockableViewPager
+    <com.matthieu.flash.widget.LockableViewPager
             android:id="@+id/voc_editor_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"

@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         >
-    <com.matthieu.zi_app.widget.EditTextAutomaticSize
+    <com.matthieu.flash.widget.EditTextAutomaticSize
             android:id="@+id/add_vocabulary_chinese"
             android:layout_width="match_parent"
             android:layout_height="56dp"

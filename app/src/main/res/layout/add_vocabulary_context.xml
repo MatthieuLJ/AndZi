@@ -13,7 +13,7 @@
             android:layout_gravity="center_horizontal"
             android:fillViewport="true"
             android:layout_margin="5dp">
-        <com.matthieu.zi_app.widget.PinyinButtons
+        <com.matthieu.flash.widget.PinyinButtons
                 android:id="@+id/pinyin_buttons"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"

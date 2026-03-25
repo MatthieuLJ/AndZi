@@ -1,4 +1,4 @@
-package com.matthieu.zi_app;
+package com.matthieu.flash;
 
 import org.junit.Test;
 
