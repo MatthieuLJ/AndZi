@@ -79,26 +79,28 @@ public class PinyinButtons extends LinearLayout {
         process_handler.post(new UpdateDefaultPinyin());
     }
 
-    public void setPinyinButtons(String charSequence, int i, int i1, int i2, String chinese_word) {
+    public void setPinyinButtons(String charSequence, int start, int before, int count, String chinese_word) {
         current_chinese_word = chinese_word;
 
-        if (i1 > 0) {
+        if (before > 0) {
             // remove the ones that were changed
-            for (int j=0; j<i1; j++) {
-                pinyin_choices.remove(i);
-                this.removeViewAt(i);
+            for (int j=0; j<before; j++) {
+                if (pinyin_choices.size() > start) {
+                    pinyin_choices.remove(start);
+                    this.removeViewAt(start);
+                }
             }
         }
-        if (i2 > 0) {
-            for (int j=0; j<i2; j++) {
+        if (count > 0) {
+            for (int j=0; j<count; j++) {
                 Button b = new Button(getContext());
                 b.setBackgroundColor(0x00000000);
                 b.setTextColor(0xff000000);
                 b.setBackgroundResource(0);
-                PinyinButton tmp = new PinyinButton(charSequence.substring(i + j, i + j + 1), b);
+                PinyinButton tmp = new PinyinButton(charSequence.substring(start + j, start + j + 1), b);
                 process_handler.post(new PinyinButtonFiller(tmp));
-                pinyin_choices.add(i + j, tmp);
-                this.addView(b, i + j,
+                pinyin_choices.add(start + j, tmp);
+                this.addView(b, start + j,
                         new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             }
         }

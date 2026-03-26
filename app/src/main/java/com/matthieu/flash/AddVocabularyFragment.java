@@ -107,7 +107,7 @@ public class AddVocabularyFragment extends Fragment
             state=-1;
         }
 
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
             if (getView() == null)
                 return;
 
@@ -128,7 +128,7 @@ public class AddVocabularyFragment extends Fragment
                 PinyinButtons buttons = getView().findViewById(R.id.pinyin_buttons);
                 if (buttons == null)
                     return;
-                buttons.setPinyinButtons(charSequence.toString(), i, i1, i2, current_chinese_word);
+                buttons.setPinyinButtons(charSequence.toString(), start, before, count, current_chinese_word);
 
                 ((VocabularyEditorActivity) getActivity()).clear_lesson_selection();
                 ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD);
