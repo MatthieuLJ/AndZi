@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <menu
-        xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/add_vocabulary_edit_translation"
-          android:title="@string/add_voc_menu_edit_translation"
-          android:showAsAction="ifRoom|withText"/>
+        xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/add_vocabulary_edit_translation"
+        android:title="@string/add_voc_menu_edit_translation"
+        app:showAsAction="always" />
     <item android:id="@+id/add_vocabulary_delete_selection"
           android:title="@string/add_voc_menu_delete_translation"
-          android:showAsAction="always"/>
+        app:showAsAction="always" />
     <item android:id="@+id/add_vocabulary_done"
           android:title="@string/add_voc_menu_done"
-          android:showAsAction="always"/>
+        app:showAsAction="always" />
 </menu>
