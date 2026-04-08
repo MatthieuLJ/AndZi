@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.Html;
 import android.util.AttributeSet;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 
 public class PinyinButtons extends LinearLayout {
     ArrayList<PinyinButton> pinyin_choices = new ArrayList<PinyinButton>();
-    private final Handler process_handler = new Handler();
+    private final Handler process_handler = new Handler(Looper.getMainLooper());
     protected HanziDB myDB=null;
     protected HanziDB refDB=null;
 

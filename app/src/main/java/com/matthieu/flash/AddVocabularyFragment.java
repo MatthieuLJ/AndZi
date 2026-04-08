@@ -17,6 +17,8 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.fragment.app.Fragment;
+
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 //import android.util.Log;
@@ -53,7 +55,7 @@ public class AddVocabularyFragment extends Fragment
         translations_from_ref = new ArrayList<VocabularyItem>();
         translations_displayed_from_ref = new ArrayList<VocabularyItem>();
         translations_in_db = new ArrayList<VocabularyItem>();
-        process_handler = new Handler();
+        process_handler = new Handler(Looper.getMainLooper());
     }
 
     @Override
