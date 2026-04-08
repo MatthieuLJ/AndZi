@@ -2,6 +2,8 @@ package com.matthieu.flash;
 
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -113,11 +115,21 @@ public class VocabularyEditorActivity extends AppCompatActivity implements ViewP
             }
         }
 
-        /* TODO
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-         */
+        OnBackPressedCallback backCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                ViewPager pager = findViewById(R.id.voc_editor_pager);
+                if ((pager != null) && (pager.getCurrentItem() != 0) && (current_state != activity_state.STATE_LESSON_SELECTION))
+                    pager.setCurrentItem(0, true);
+                else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        };
+
+        getOnBackPressedDispatcher().addCallback(this, backCallback);
+
     }
 
     @Override
@@ -231,14 +243,6 @@ public class VocabularyEditorActivity extends AppCompatActivity implements ViewP
         ((EditLessonsFragment)fragments[1]).update_lesson_list();
     }
 
-    @Override
-    public void onBackPressed() {
-        ViewPager pager = findViewById(R.id.voc_editor_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0) && (current_state != activity_state.STATE_LESSON_SELECTION))
-            pager.setCurrentItem(0, true);
-        else
-            super.onBackPressed();
-    }
 
     public void set_state(activity_state new_state) {
         if ((current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
