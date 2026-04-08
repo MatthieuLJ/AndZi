@@ -6,6 +6,7 @@ package com.matthieu.flash;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -68,20 +69,26 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new test_pager_adapter(getSupportFragmentManager()));
 
-            /* TODO
-            PageIndicator mIndicator = findViewById(R.id.pager_indicator);
-            mIndicator.setViewPager(pager);
-            mIndicator.setOnPageChangeListener(new keyboard_handle());
-            */
             if (savedInstanceState == null)
                 pager.setCurrentItem(0, false);
         }
 
-        /* TODO
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-         */
+
+        OnBackPressedCallback backCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                ViewPager pager = findViewById(R.id.test_pager);
+                if ((pager != null) && (pager.getCurrentItem() != 0) && (test_ready))
+                    pager.setCurrentItem(0, true);
+                else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        };
+
+        getOnBackPressedDispatcher().addCallback(this, backCallback);
+
     }
 
     @Override
@@ -165,14 +172,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        ViewPager pager = findViewById(R.id.test_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0) && (test_ready))
-            pager.setCurrentItem(0, true);
-        else
-            super.onBackPressed();
-    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
