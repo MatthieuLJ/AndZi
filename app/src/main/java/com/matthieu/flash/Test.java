@@ -2,6 +2,7 @@ package com.matthieu.flash;
 
 import android.app.Activity;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -50,7 +51,7 @@ public abstract class Test {
             this.question = question;
             this.parent_activity = parent;
 
-            handler = new Handler();
+            handler = new Handler(Looper.getMainLooper());
         }
 
         public View prepare_view(LayoutInflater inflater) {
@@ -58,7 +59,7 @@ public abstract class Test {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    DetailsFragment.populate_details_view(parent_activity, (ViewGroup) result_view.findViewById(R.id.test_results), question, false, parent_activity);
+                    DetailsFragment.populate_details_view(parent_activity, result_view.findViewById(R.id.test_results), question, false, parent_activity);
                 }
             }, 500);
             return result_view;
