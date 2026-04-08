@@ -13,12 +13,13 @@ package com.matthieu.flash;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Looper;
 import android.text.Editable;
@@ -33,9 +34,8 @@ import com.matthieu.flash.widget.PinyinButtons;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
-public class AddVocabularyFragment extends Fragment
+public class AddVocabularyActivity extends AppCompatActivity
 {
     //private static final String TAG="AddVocabularyActivity";
 
@@ -44,60 +44,70 @@ public class AddVocabularyFragment extends Fragment
     private ArrayList<VocabularyItem> translations_in_db;
     private HanziDB myDB=null;
     private HanziDB refDB=null;
-
-    private String default_lesson="";
     private String current_chinese_word="";
     private Handler process_handler=null;
+
+    public enum activity_state {
+        STATE_INIT,
+        STATE_EDIT_WORD,
+        STATE_EDIT_WORD_VOC_SELECTED_SINGLE,
+        STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE,
+        STATE_EDIT_WORD_DIC_SELECTED,
+    }
+    private activity_state current_state = activity_state.STATE_INIT;
+    public activity_state get_state() {
+        return current_state;
+    }
+
+    public void set_state(activity_state state) {current_state = state;}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // setRetainInstance(true); // Deprecated in AndroidX
 
+        setContentView(R.layout.add_vocabulary_top);
+
         translations_from_ref = new ArrayList<>();
         translations_displayed_from_ref = new ArrayList<>();
         translations_in_db = new ArrayList<>();
         process_handler = new Handler(Looper.getMainLooper());
+
+        EditTextAutomaticSize chinese_word = findViewById(R.id.add_vocabulary_chinese);
+        ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
+        chinese_word.addTextChangedListener(text_watcher);
+        View.inflate(getApplicationContext(), R.layout.add_vocabulary_wrong_entry, findViewById(R.id.main_content));
+
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Bundle bundle=getArguments();
-        if (bundle != null) {
-            current_chinese_word = bundle.getString("hanzi");
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent.getAction().equals(Intent.ACTION_EDIT)) {
+            String hanzi = intent.getStringExtra("Hanzi");
+            if (hanzi != null) {
+                set_word_to_edit(hanzi);
+            }
         }
-        final View res = inflater.inflate(R.layout.add_vocabulary_top, container, false);
-
-        EditTextAutomaticSize chinese_word = res.findViewById(R.id.add_vocabulary_chinese);
-        ChineseTextWatcher text_watcher = new ChineseTextWatcher(chinese_word);
-        chinese_word.addTextChangedListener(text_watcher);
-        View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, res.findViewById(R.id.main_content));
-
-        return res;
     }
+
 
     @Override
     public void onResume() {
         super.onResume();
 
         // in case those changed...
-        myDB = ((AndZiApplication) requireActivity().getApplication()).getMyDB();
-        refDB = ((AndZiApplication) requireActivity().getApplication()).getRefDB();
+        myDB = ((AndZiApplication) getApplication()).getMyDB();
+        refDB = ((AndZiApplication) getApplication()).getRefDB();
 
-        VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity) requireActivity()).get_state();
-        if (state == VocabularyEditorActivity.activity_state.STATE_LESSON_SELECTION)
-            return;
-
-        assert getView() != null;
-        EditTextAutomaticSize chinese_word = getView().findViewById(R.id.add_vocabulary_chinese);
+        EditTextAutomaticSize chinese_word = findViewById(R.id.add_vocabulary_chinese);
         if (!current_chinese_word.isEmpty()) {
             chinese_word.setText(current_chinese_word);
         }
     }
 
     public void set_word_to_edit(String hanzi) {
-        assert getView() != null;
-        EditTextAutomaticSize chinese_word = getView().findViewById(R.id.add_vocabulary_chinese);
+        EditTextAutomaticSize chinese_word = findViewById(R.id.add_vocabulary_chinese);
         if (chinese_word!= null) {
             chinese_word.setText(hanzi);
         }
@@ -114,40 +124,30 @@ public class AddVocabularyFragment extends Fragment
         }
 
         public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-            if (getView() == null)
-                return;
-
             // change text size to fit in the box
             tview.adaptTextSize();
-
-            // if there was a word to edit, maybe we made some changes to the previous one...
-            if (state==1)
-                ((VocabularyEditorActivity)requireActivity()).update_lesson_list();
 
             // check if we only have chinese characters (change layout if not)
             checkChineseChars();
 
             if (state == 1) {
-                current_chinese_word = ((EditTextAutomaticSize) getView().findViewById(R.id.add_vocabulary_chinese)).getText().toString();
+                current_chinese_word = ((EditTextAutomaticSize) findViewById(R.id.add_vocabulary_chinese)).getText().toString();
 
                 // Populate the choices for the pinyin buttons
-                PinyinButtons buttons = getView().findViewById(R.id.pinyin_buttons);
+                PinyinButtons buttons = findViewById(R.id.pinyin_buttons);
                 if (buttons == null)
                     return;
                 buttons.setPinyinButtons(charSequence.toString(), start, before, count, current_chinese_word);
 
-                ((VocabularyEditorActivity) requireActivity()).clear_lesson_selection();
-                ((VocabularyEditorActivity) requireActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD);
+                set_state(activity_state.STATE_EDIT_WORD);
             }
             else {
-                VocabularyEditorActivity.activity_state current_state = ((VocabularyEditorActivity) requireActivity()).get_state();
-                if ((current_state== VocabularyEditorActivity.activity_state.STATE_EDIT_WORD) ||
-                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE) ||
-                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
-                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED) ||
-                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
-                        (current_state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED))
-                    ((VocabularyEditorActivity) requireActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
+                activity_state current_state = get_state();
+                if ((current_state== activity_state.STATE_EDIT_WORD) ||
+                        (current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE) ||
+                        (current_state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE) ||
+                        (current_state == activity_state.STATE_EDIT_WORD_DIC_SELECTED))
+                    set_state(activity_state.STATE_INIT);
             }
         }
 
@@ -179,26 +179,25 @@ public class AddVocabularyFragment extends Fragment
             }
             //Log.d(TAG, "context going to state "+new_state);
 
-            assert getView() != null;
-            LinearLayout main_content = getView().findViewById(R.id.main_content);
+            LinearLayout main_content = findViewById(R.id.main_content);
             if (new_state != state) {
                 switch(new_state) {
                     case 0:
                         // empty string
                         if(state == 1) {
                             main_content.removeAllViews();
-                            View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
+                            View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText("");
+                        ((TextView) findViewById(R.id.warning_chinese_word)).setText("");
                         break;
                     case 1:
                         // all chinese characters
                         main_content.removeAllViews();
-                        View.inflate(getActivity(), R.layout.add_vocabulary_context, main_content);
-                        PinyinButtons buttons = getView().findViewById(R.id.pinyin_buttons);
-                        buttons.set_containing_fragment(AddVocabularyFragment.this);
+                        View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_context, main_content);
+                        PinyinButtons buttons = findViewById(R.id.pinyin_buttons);
+                        buttons.set_containing_fragment(AddVocabularyActivity.this);
                         buttons.clearPinyinButtons(); //setPinyinButtons(current_chinese_word);
-                        ListView lv = getView().findViewById(R.id.vocabulary_list);
+                        ListView lv = findViewById(R.id.vocabulary_list);
                         //lv.addFooterView();
                         lv.setAdapter(new VocabularyArrayAdapter());
                         break;
@@ -206,9 +205,9 @@ public class AddVocabularyFragment extends Fragment
                         // some non-chinese characters...
                         if(state == 1) {
                             main_content.removeAllViews();
-                            View.inflate(getActivity(), R.layout.add_vocabulary_wrong_entry, main_content);
+                            View.inflate(AddVocabularyActivity.this, R.layout.add_vocabulary_wrong_entry, main_content);
                         }
-                        ((TextView) getView().findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_only_chinese);
+                        ((TextView) findViewById(R.id.warning_chinese_word)).setText(R.string.add_voc_only_chinese);
                         break;
                 }
                 state = new_state;
@@ -217,10 +216,7 @@ public class AddVocabularyFragment extends Fragment
     }
 
     String get_current_pinyin() {
-        View v = getView();
-        if (v== null)
-            return "";
-        PinyinButtons buttons = v.findViewById(R.id.pinyin_buttons);
+        PinyinButtons buttons = findViewById(R.id.pinyin_buttons);
         return buttons.get_current_pinyin();
     }
 
@@ -247,14 +243,14 @@ public class AddVocabularyFragment extends Fragment
 
                 if (tr != null)
                     for (String e : tr.english) {
-                        tmp_translations_in_db.add(new VocabularyItem(e, myDB.getLessonForWord(tr.chinese, tr.pinyin, e), VocabularyItem.FROM_LOCAL_DB));
+                        tmp_translations_in_db.add(new VocabularyItem(e, VocabularyItem.FROM_LOCAL_DB));
                     }
 
                 tr = refDB.getTranslations(current_chinese_word, current_pinyin_word);
 
                 if (tr != null)
                     for (String e : tr.english) {
-                        tmp_translations_from_ref.add(new VocabularyItem(e, new ArrayList<>(), VocabularyItem.FROM_REF_DB));
+                        tmp_translations_from_ref.add(new VocabularyItem(e, VocabularyItem.FROM_REF_DB));
                     }
 
                 ArrayList<String> bare_translations = new ArrayList<>();
@@ -273,8 +269,7 @@ public class AddVocabularyFragment extends Fragment
             translations_from_ref=tmp_translations_from_ref;
             translations_displayed_from_ref=tmp_translations_displayed_from_ref;
 
-            assert getView() != null;
-            ListView lv = getView().findViewById(R.id.vocabulary_list);
+            ListView lv = findViewById(R.id.vocabulary_list);
             if (lv != null) {
                 ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
             }
@@ -294,8 +289,7 @@ public class AddVocabularyFragment extends Fragment
                 translations_displayed_from_ref.add(v);
         }
 
-        assert getView() != null;
-        ListView lv = getView().findViewById(R.id.vocabulary_list);
+        ListView lv = findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -303,7 +297,6 @@ public class AddVocabularyFragment extends Fragment
 
     private static class VocabularyItem {
         public String translation;
-        public ArrayList<String> lessons;
         public int state; // 1 from local database; 2 in ref DB; 3 if edited; 4 if new
         public boolean expanded; // if the view is expanded
 
@@ -311,9 +304,8 @@ public class AddVocabularyFragment extends Fragment
         public static final int FROM_REF_DB=2;
         public static final int NEW=4;
 
-        public VocabularyItem(String tr, ArrayList<String > ls, int from) {
+        public VocabularyItem(String tr, int from) {
             translation=tr;
-            lessons=ls;
             state=from;
             expanded =false;
         }
@@ -464,13 +456,9 @@ public class AddVocabularyFragment extends Fragment
                                 return;
                         }
 
-                        ArrayList<String> word_lesson = new ArrayList<>();
-                        if (!default_lesson.isEmpty()) {
-                            word_lesson.add(default_lesson);
-                        }
-                        translations_in_db.add(new VocabularyItem(translation, word_lesson, VocabularyItem.NEW));
+                        translations_in_db.add(new VocabularyItem(translation, VocabularyItem.NEW));
                         new_collapsed = true;
-                        InputMethodManager imm = (InputMethodManager)AddVocabularyFragment.this.requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        InputMethodManager imm = (InputMethodManager) AddVocabularyActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(word_field.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 
                         hide_duplicates_in_ref();
@@ -480,10 +468,6 @@ public class AddVocabularyFragment extends Fragment
 
                                 Vocabulary voc = new Vocabulary(current_chinese_word, get_current_pinyin(), translation);
                                 myDB.addVocabulary(voc);
-
-                                if (!default_lesson.isEmpty()) {
-                                    myDB.assignWordLesson(default_lesson, voc);
-                                }
                             }
                         }).start();
                     }
@@ -570,7 +554,7 @@ public class AddVocabularyFragment extends Fragment
                 row.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        AddVocabularyFragment.this.handle_word_click(view);
+                        AddVocabularyActivity.this.handle_word_click(view);
                     }
                 });
                 row.setClickable(true);
@@ -586,67 +570,101 @@ public class AddVocabularyFragment extends Fragment
         }
     }
 
-    public void set_default_lesson(String lesson) {
-        default_lesson=lesson;
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        int menu_resource=0;
+
+        switch(current_state) {
+            case STATE_INIT:
+                menu_resource = R.menu.add_vocabulary_none;
+                break;
+            case STATE_EDIT_WORD:
+                menu_resource = R.menu.add_vocabulary_menu_ready;
+                break;
+            case STATE_EDIT_WORD_VOC_SELECTED_SINGLE:
+                menu_resource = R.menu.add_vocabulary_menu_edit;
+                break;
+            case STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE:
+                menu_resource = R.menu.add_vocabulary_menu_edit_multiple;
+                break;
+            case STATE_EDIT_WORD_DIC_SELECTED:
+                menu_resource = R.menu.add_vocabulary_menu_add;
+                break;
+        }
+        menu.clear();
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(menu_resource, menu);
+
+        return true;
     }
 
-    public String get_default_lesson() {
-        return default_lesson;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        ArrayList<String> selection;
+
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_add_selection) {
+            add_selection();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_delete_selection) {
+            del_selection();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_edit_translation) {
+            edit_selection();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_done) {
+            done();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private final ArrayList<VocabularyItem> current_word_selection=new ArrayList<>();
 
     void update_state() {
-        VocabularyEditorActivity.activity_state state;
+        activity_state state;
 
         if (current_chinese_word.isEmpty()) {
-            state = VocabularyEditorActivity.activity_state.STATE_INIT;
-            ((VocabularyEditorActivity)requireActivity()).clear_lesson_selection();
+            state = activity_state.STATE_INIT;
         } else if (current_word_selection.isEmpty()) {
-            state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD;
-            ((VocabularyEditorActivity)requireActivity()).clear_lesson_selection();
+            state = activity_state.STATE_EDIT_WORD;
         } else if (translations_in_db.contains(current_word_selection.get(0))) {
             if (current_word_selection.size() == 1)
-                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE;
+                state = activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE;
             else
-                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE;
-            ((VocabularyEditorActivity)requireActivity()).edit_lesson_assignment(get_current_lesson_assignment());
+                state = activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE;
         } else {
-            state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED;
-            ((VocabularyEditorActivity)requireActivity()).clear_lesson_selection();
+            state = activity_state.STATE_EDIT_WORD_DIC_SELECTED;
         }
 
-        ((VocabularyEditorActivity)requireActivity()).set_state(state);
+        set_state(state);
     }
 
     void handle_word_click(View v) {
         final VocabularyItem voc = (VocabularyItem) v.getTag(R.id.vocabulary_item);
-        VocabularyEditorActivity.activity_state state = ((VocabularyEditorActivity)requireActivity()).get_state();
+        activity_state state = get_state();
         if (voc == null)
             return;
 
-        if ((state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE_LESSON_CHANGED) ||
-                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE_LESSON_CHANGED)){
-            set_new_lesson_assignment(((VocabularyEditorActivity)requireActivity()).flush_lesson_assignment());
-
-            if (current_word_selection.size() == 1)
-                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE;
-            else
-                state = VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE;
-        }
 
         if (current_word_selection.contains(voc)) {
             current_word_selection.remove(voc);
             v.setBackgroundColor(0x00000000);
-        } else if (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD) {
+        } else if (state == activity_state.STATE_EDIT_WORD) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else if (translations_in_db.contains(voc) &&
-                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE || state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE)) {
+                (state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_SINGLE ||
+                        state == activity_state.STATE_EDIT_WORD_VOC_SELECTED_MULTIPLE)) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else if (translations_from_ref.contains(voc) && !translations_in_db.contains(voc) &&
-                (state == VocabularyEditorActivity.activity_state.STATE_EDIT_WORD_DIC_SELECTED)) {
+                (state == activity_state.STATE_EDIT_WORD_DIC_SELECTED)) {
             current_word_selection.add(voc);
             v.setBackgroundColor(0xFF777777);
         } else {
@@ -664,9 +682,6 @@ public class AddVocabularyFragment extends Fragment
         final ArrayList<Vocabulary> to_add = new ArrayList<>();
 
         for (VocabularyItem v : current_word_selection) {
-            if (!default_lesson.isEmpty()) {
-                v.lessons.add(default_lesson);
-            }
             translations_in_db.add(v);
             translations_displayed_from_ref.remove(v);
 
@@ -674,8 +689,7 @@ public class AddVocabularyFragment extends Fragment
         }
 
         current_word_selection.clear();
-        assert getView() != null;
-        ListView lv = getView().findViewById(R.id.vocabulary_list);
+        ListView lv = findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -684,10 +698,6 @@ public class AddVocabularyFragment extends Fragment
         new Thread(new Runnable() {
             public void run() {
                 myDB.addVocabulary(to_add);
-                if (!default_lesson.isEmpty()) {
-                    for (Vocabulary v : to_add)
-                        myDB.assignWordLesson(default_lesson, v);
-                }
             }
         }).start();
     }
@@ -700,15 +710,13 @@ public class AddVocabularyFragment extends Fragment
         final ArrayList<Vocabulary> to_del = new ArrayList<>();
 
         for (VocabularyItem v : current_word_selection) {
-            v.lessons.clear();
             translations_in_db.remove(v);
             to_del.add(new Vocabulary(current_chinese_word, get_current_pinyin(), v.translation));
         }
         hide_duplicates_in_ref();
 
         current_word_selection.clear();
-        assert getView() != null;
-        ListView lv = getView().findViewById(R.id.vocabulary_list);
+        ListView lv = findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -724,9 +732,8 @@ public class AddVocabularyFragment extends Fragment
     }
 
     public void done() {
-        ((VocabularyEditorActivity)requireActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_INIT);
-        assert getView() != null;
-        EditText chinese_word = getView().findViewById(R.id.add_vocabulary_chinese);
+        set_state(activity_state.STATE_INIT);
+        EditText chinese_word = findViewById(R.id.add_vocabulary_chinese);
         if (chinese_word != null)
             chinese_word.setText("");
         if (translations_from_ref != null)
@@ -737,7 +744,7 @@ public class AddVocabularyFragment extends Fragment
             translations_in_db.clear();
         current_word_selection.clear();
         current_chinese_word="";
-        ListView lv = getView().findViewById(R.id.vocabulary_list);
+        ListView lv = findViewById(R.id.vocabulary_list);
         if (lv != null) {
             ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
         }
@@ -749,12 +756,12 @@ public class AddVocabularyFragment extends Fragment
             update_state();
             return;
         }
-        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
         final VocabularyItem v = current_word_selection.get(0);
         alert.setTitle(getResources().getString(R.string.add_voc_edit_translation)+current_chinese_word);
         alert.setMessage(R.string.add_voc_edit_new_word);
 
-        final EditText input = new EditText(getActivity());
+        final EditText input = new EditText(this);
         input.setSingleLine(false);
         input.setMaxLines(3);
         input.setText(v.translation);
@@ -780,8 +787,7 @@ public class AddVocabularyFragment extends Fragment
                     modified_voc.english.add(value);
                     current_word_selection.clear();
 
-                    assert getView() != null;
-                    ListView lv = getView().findViewById(R.id.vocabulary_list);
+                    ListView lv = findViewById(R.id.vocabulary_list);
                     if (lv != null) {
                         ((VocabularyArrayAdapter)lv.getAdapter()).notifyDataSetChanged();
                     }
@@ -790,8 +796,6 @@ public class AddVocabularyFragment extends Fragment
                     new Thread(new Runnable() {
                         public void run() {
                             myDB.addVocabulary(modified_voc);
-                            for (String le:v.lessons)
-                                myDB.assignWordLesson(le, modified_voc);
                         }
                     }).start();
 
@@ -807,72 +811,5 @@ public class AddVocabularyFragment extends Fragment
         });
 
         alert.show();
-    }
-
-    HashMap<String, VocabularyEditorActivity.LessonAssignment> get_current_lesson_assignment() {
-        if (current_word_selection.isEmpty()) {
-            update_state();
-            return null;
-        }
-        HashMap<String, VocabularyEditorActivity.LessonAssignment> res = new HashMap<>();
-        for (int i=0; i<current_word_selection.size(); i++ ) {
-            VocabularyItem v = current_word_selection.get(i);
-            if (i==0) {
-                for (String l:v.lessons) {
-                    VocabularyEditorActivity.LessonAssignment new_assign = new VocabularyEditorActivity.LessonAssignment();
-                    new_assign.state=1;
-                    new_assign.partiable=false;
-                    res.put(l, new_assign);
-                }
-            } else {
-                for (String l:v.lessons) {
-                    if (!res.containsKey(l)) {
-                        VocabularyEditorActivity.LessonAssignment new_assign = new VocabularyEditorActivity.LessonAssignment();
-                        new_assign.state=2;
-                        new_assign.partiable=true;
-                        res.put(l, new_assign);
-                    }
-                }
-                for (String l:res.keySet()) {
-                    if (!v.lessons.contains(l)) {
-                        VocabularyEditorActivity.LessonAssignment assign = res.get(l);
-                        assert assign != null;
-                        assign.state=2;
-                        assign.partiable=true;
-                    }
-                }
-            }
-        }
-        return res;
-    }
-
-    public void set_new_lesson_assignment(HashMap<String, VocabularyEditorActivity.LessonAssignment> assignment) {
-        for (final String l : assignment.keySet()) {
-            VocabularyEditorActivity.LessonAssignment this_lesson = assignment.get(l);
-            final String current_pinyin = get_current_pinyin();
-            assert this_lesson != null;
-            if (this_lesson.state == 2)
-                continue;
-            for (final VocabularyItem v : current_word_selection) {
-                switch (this_lesson.state) {
-                    case 0:
-                        v.lessons.remove(l);
-                        new Thread(new Runnable() {
-                            public void run() {
-                                myDB.removeWordLesson(l, v.translation, current_chinese_word, current_pinyin);
-                            }
-                        }).start();
-                        break;
-                    case 1:
-                        v.lessons.add(l);
-                        new Thread(new Runnable() {
-                            public void run() {
-                                myDB.assignWordLesson(l, v.translation, current_chinese_word, current_pinyin);
-                            }
-                        }).start();
-                        break;
-                }
-            }
-        }
     }
 }

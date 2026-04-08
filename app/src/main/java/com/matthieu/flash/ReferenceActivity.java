@@ -7,22 +7,27 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.lifecycle.Lifecycle;
 import androidx.viewpager.widget.ViewPager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import com.matthieu.flash.widget.ViewPagerParallax;
+
 import com.matthieu.flash.widget.handle_details_request;
 import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import com.matthieu.flash.R;
 
 public class ReferenceActivity extends FragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
     final private static int max_details_fragments=3;
@@ -39,7 +44,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
 
         setContentView(R.layout.reference);
 
-        ViewPagerParallax pager = findViewById(R.id.reference_pager);
+        ViewPager2 pager = findViewById(R.id.reference_pager);
 
         fragments = new Fragment[max_details_fragments+1];
         ids = new int[max_details_fragments+1];
@@ -89,16 +94,9 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
         }
 
         if (pager != null) {
-            pager.set_max_pages(max_details_fragments+1);
-            pager.setBackgroundAsset(R.raw.call);
             pager.setOffscreenPageLimit(max_details_fragments+1);
-            pager.setAdapter(new reference_pager(getSupportFragmentManager()));
+            pager.setAdapter(new reference_pager(getSupportFragmentManager(), ReferenceActivity.this.getLifecycle()));
 
-            /* TODO
-            PageIndicator mIndicator = findViewById(R.id.pager_indicator);
-            mIndicator.setViewPager(pager);
-            mIndicator.setOnPageChangeListener(this);
-            */
             if (savedInstanceState != null)
                 pager.setCurrentItem(savedInstanceState.getInt("position"));
         }
@@ -109,11 +107,22 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
             new_details_request(hanzi, use_ref);
         }
 
-        /* TODO
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-         */
+
+        OnBackPressedCallback backCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                ViewPager pager = findViewById(R.id.reference_pager);
+                if ((pager != null) && (pager.getCurrentItem() != 0) && (((DictionaryFragment)fragments[0]).has_search()))
+                    pager.setCurrentItem(0, true);
+                else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        };
+
+        getOnBackPressedDispatcher().addCallback(this, backCallback);
+
     }
 
     @Override
@@ -289,37 +298,16 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
     @Override
     public void onPageScrollStateChanged(int i) {}
 
-    @Override
-    public void onBackPressed() {
-        ViewPager pager = findViewById(R.id.reference_pager);
-        if ((pager != null) && (pager.getCurrentItem() != 0) && (((DictionaryFragment)fragments[0]).has_search()))
-            pager.setCurrentItem(0, true);
-        else
-            super.onBackPressed();
-    }
-
     // use a FragmentPagerAdapter here because we are moving pages around (FragmentStatePagerAdapter does not do that well : http://code.google.com/p/android/issues/detail?id=37990)
-    private class reference_pager extends FragmentPagerAdapter {
-        public reference_pager(FragmentManager fm) {
-            super(fm);
+    private class reference_pager extends FragmentStateAdapter {
+        public reference_pager(FragmentManager fm, Lifecycle lf) {
+            super(fm, lf);
         }
 
+        @NonNull
         @Override
-        public Fragment getItem(int i) {
-            return fragments[i];
-        }
-
-        @Override
-        public float getPageWidth(int position) {
-            float res;
-            if (((getResources().getConfiguration().screenLayout &
-                    Configuration.SCREENLAYOUT_SIZE_MASK) ==
-                    Configuration.SCREENLAYOUT_SIZE_LARGE) && (getCount() > 1)) {
-                res = 0.5f;
-            } else {
-                res = 1.0f;
-            }
-            return res;
+        public Fragment createFragment(int position) {
+            return fragments[position];
         }
 
         @Override
@@ -328,32 +316,13 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
         }
 
         @Override
-        public int getCount() {
+        public int getItemCount() {
             int max;
             for (max=1; max<=max_details_fragments; max++) {
                 if (fragments[max] == null)
                     break;
             }
             return max;
-        }
-
-        @Override
-        public int getItemPosition(Object object) {
-            int res = POSITION_NONE;
-            Fragment fragment = (Fragment) object;
-            for (int i=0; i<max_details_fragments+1; i++) {
-                if (fragment.equals(fragments[i])) {
-                    res = i;
-                    break;
-                }
-            }
-
-            if ((res == 0) && (getCount() == 2) &&
-                    ((getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) ==
-                            Configuration.SCREENLAYOUT_SIZE_LARGE))
-                return POSITION_NONE; // Want to make sure we update the size of the first page after we add some details...
-
-            return res;
         }
     }
 

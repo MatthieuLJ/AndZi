@@ -155,7 +155,7 @@ public class DetailsFragment extends Fragment {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                FragmentActivity parent = (FragmentActivity) getActivity();
+                FragmentActivity parent = getActivity();
                 if (parent != null)
                     parent.invalidateOptionsMenu();
                 View v = getView();
@@ -598,7 +598,7 @@ public class DetailsFragment extends Fragment {
     }
 
     public void edit_add_word() {
-        Intent i=new Intent(getActivity(), VocabularyEditorActivity.class);
+        Intent i=new Intent(getActivity(), AddVocabularyActivity.class);
         i.setAction(Intent.ACTION_EDIT);
         i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         i.putExtra("Hanzi", current_hanzi);

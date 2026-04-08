@@ -29,7 +29,7 @@ public class PinyinButtons extends LinearLayout {
     protected HanziDB refDB=null;
 
     String current_chinese_word;
-    AddVocabularyFragment current_fragment=null;
+    AddVocabularyActivity current_fragment=null;
 
     public PinyinButtons(Context context) {
         super(context);
@@ -50,7 +50,7 @@ public class PinyinButtons extends LinearLayout {
         myDB = ((AndZiApplication) context.getApplicationContext()).getMyDB();
     }
 
-    public void set_containing_fragment(AddVocabularyFragment fr) {
+    public void set_containing_fragment(AddVocabularyActivity fr) {
         current_fragment = fr;
     }
 

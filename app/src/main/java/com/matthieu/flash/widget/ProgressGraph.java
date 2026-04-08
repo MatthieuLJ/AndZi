@@ -397,12 +397,12 @@ public class ProgressGraph extends View {
                     }
 
                     x0 = (int) (left_size + (getMeasuredWidth() - left_size) * (current_data.get(first_data_idx).date - range_date_min) / (range_date_max - range_date_min));
-                    y0 = (int) (getMeasuredHeight() - bottom_size - h * get_box_total(first_data_idx, b) / max_scale);
+                    y0 = getMeasuredHeight() - bottom_size - h * get_box_total(first_data_idx, b) / max_scale;
                     graph_path.moveTo(x0, y0);
 
                     for (int i = first_data_idx + 1; i <= last_data_idx; i++) {
                         x1 = (int) (left_size + (getMeasuredWidth() - left_size) * (current_data.get(i).date - range_date_min) / (range_date_max - range_date_min));
-                        y1 = (int) (getMeasuredHeight() - bottom_size - h * get_box_total(i, b) / max_scale);
+                        y1 = getMeasuredHeight() - bottom_size - h * get_box_total(i, b) / max_scale;
                         graph_path.lineTo(x1, y1);
                     }
                     // close the path
@@ -427,7 +427,7 @@ public class ProgressGraph extends View {
             if ((x > left_size) && (x < getMeasuredWidth() + right_size)) {
                 p.setTextAlign(Paint.Align.LEFT);
                 for (int b = 0; b < 5; b++) {
-                    int y = (int) (getMeasuredHeight() - bottom_size - h * get_box_total(current_data.size() - 1, b) / max_scale);
+                    int y = getMeasuredHeight() - bottom_size - h * get_box_total(current_data.size() - 1, b) / max_scale;
                     int val = current_data.get(current_data.size() - 1).num_in_box[b];
 
                     switch (b) {

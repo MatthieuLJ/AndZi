@@ -100,7 +100,7 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
     public void handle_add_vocabulary(View v) {
-        Intent intent = new Intent(this, VocabularyEditorActivity.class);
+        Intent intent = new Intent(this, AddVocabularyActivity.class);
         intent.setAction(Intent.ACTION_EDIT);
         startActivity(intent);
     }

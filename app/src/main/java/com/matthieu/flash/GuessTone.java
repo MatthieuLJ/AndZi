@@ -129,7 +129,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
             });
         }
 
-        if (DEBUG) Log.d(TAG, "Expects tones : "+tones.toString());
+        if (DEBUG) Log.d(TAG, "Expects tones : "+ tones);
 
         Button submit_answer = res.findViewById(R.id.guess_tone_ok);
         submit_answer.setOnClickListener(new View.OnClickListener() {
@@ -326,7 +326,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
 
         @Override
         public void kill_view(View v) {
-            DetailsFragment.kill_detail_view((ViewGroup) v.findViewById(R.id.test_results));
+            DetailsFragment.kill_detail_view(v.findViewById(R.id.test_results));
         }
 
         @Override

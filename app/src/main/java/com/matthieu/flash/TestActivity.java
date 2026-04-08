@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -14,11 +15,10 @@ import androidx.viewpager.widget.ViewPager;
 import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.widget.LinearLayout;
-import com.matthieu.flash.widget.InsideScrollPager;
 import com.matthieu.flash.widget.handle_details_request;
 import android.view.MenuItem;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import com.matthieu.flash.R;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 public class TestActivity extends FragmentActivity  implements handle_details_request {
     private Fragment[] fragments;
@@ -32,7 +32,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.test);
-        InsideScrollPager pager = findViewById(R.id.test_pager);
+        ViewPager2 pager = findViewById(R.id.test_pager);
         LinearLayout linear = findViewById(R.id.test_linear);
 
         fragments = new Fragment[2];
@@ -64,8 +64,6 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         }
 
         if (pager != null) {
-            pager.set_max_pages(2);
-            pager.setBackgroundAsset(R.raw.bamboo);
             pager.setOffscreenPageLimit(2);
             pager.setAdapter(new test_pager_adapter(getSupportFragmentManager()));
 
@@ -92,7 +90,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         try {
             getSupportFragmentManager().putFragment(outState, "fragment0", fragments[0]);
@@ -172,8 +170,6 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         }
     }
 
-
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
@@ -186,11 +182,11 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
 
     boolean test_ready=true;
     public void test_done(boolean done) {
-        InsideScrollPager pager = findViewById(R.id.test_pager);
+        ViewPager2 pager = findViewById(R.id.test_pager);
         if (pager != null) {
             if (done)
                 pager.setCurrentItem(1, true);
-            pager.setPagingEnabled(!done);
+            pager.setUserInputEnabled(!done);
         }
         if ((!test_ready) && (!done) && (fragments[0] != null))
             ((TestFragment) fragments[0]).new_test();
@@ -199,29 +195,20 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
 
     // using a FragmentStatePagerAdapter here because some Fragments go away and come back (for the test)
     // The FragmentPagerAdapter does not resume well old fragments
-    private class test_pager_adapter extends FragmentStatePagerAdapter {
+    private class test_pager_adapter extends FragmentStateAdapter {
         public test_pager_adapter(FragmentManager fm) {
-            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+            super(fm, TestActivity.this.getLifecycle() );
+        }
+
+        @NonNull
+        @Override
+        public Fragment createFragment(int position) {
+            return fragments[position];
         }
 
         @Override
-        public Fragment getItem(int i) {
-            return fragments[i];
-        }
-
-        @Override
-        public int getCount() {
+        public int getItemCount() {
             return 2;
-        }
-
-        @Override
-        public int getItemPosition(Object object) {
-            Fragment fragment = (Fragment) object;
-            for (int i=0; i<2; i++)
-                if (fragment.equals(fragments[i]))
-                    return POSITION_UNCHANGED;
-
-            return POSITION_NONE;
         }
     }
 }

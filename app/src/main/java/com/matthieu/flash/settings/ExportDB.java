@@ -13,10 +13,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.*;
 import android.widget.Toast;
+
+import com.matthieu.flash.AddVocabularyActivity;
 import com.matthieu.flash.AndZiApplication;
 import com.matthieu.flash.HanziDB;
 import com.matthieu.flash.R;
-import com.matthieu.flash.VocabularyEditorActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class ExportDB extends PreferenceActivity {
             public boolean onPreferenceChange(Preference preference, Object o) {
                 boolean select = sp.getBoolean("selected_lessons", false);
                 if (!select) { // this is called before it is actually called, let's go select some lessons
-                    Intent i = new Intent(ExportDB.this, VocabularyEditorActivity.class);
+                    Intent i = new Intent(ExportDB.this, AddVocabularyActivity.class);
                     i.setAction(Intent.ACTION_PICK);
                     i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivityForResult(i, 0);
