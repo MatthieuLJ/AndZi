@@ -4,7 +4,7 @@
  * ChineseTextWatcher    checks if the input is Chinese or not and trigger the rest of the processing when there is some change
  * PinyinButtonFiller    gets all the available pinyins for a particular character
  * PinyinButton          holds the current value / default value and other possible values for each pinyin button
- * UpdateDefaultPinyint  tries to find the word in the database to set the default pinyin values for each button
+ * UpdateDefaultPinyin   tries to find the word in the database to set the default pinyin values for each button
  * UpdateVocabularyList   gets the translations in the local database and in the reference database
  * VocabularyArrayAdapter is the adapter for the list of translations
  */
@@ -33,7 +33,6 @@ import com.matthieu.flash.widget.ExtendingLinearLayout;
 import com.matthieu.flash.widget.PinyinButtons;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class AddVocabularyActivity extends AppCompatActivity
 {
@@ -59,12 +58,14 @@ public class AddVocabularyActivity extends AppCompatActivity
         return current_state;
     }
 
-    public void set_state(activity_state state) {current_state = state;}
+    public void set_state(activity_state state) {
+        current_state = state;
+        invalidateOptionsMenu();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setRetainInstance(true); // Deprecated in AndroidX
 
         setContentView(R.layout.add_vocabulary_top);
 
@@ -650,7 +651,6 @@ public class AddVocabularyActivity extends AppCompatActivity
         activity_state state = get_state();
         if (voc == null)
             return;
-
 
         if (current_word_selection.contains(voc)) {
             current_word_selection.remove(voc);
