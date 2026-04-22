@@ -46,7 +46,6 @@ public class DetailsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
     }
 
     public String get_hanzi() {
