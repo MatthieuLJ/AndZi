@@ -481,20 +481,15 @@ public class AddVocabularyActivity extends AppCompatActivity
             if ((position >1) && (position<my+2)) {
                 // part of the local DB
                 final VocabularyItem voc = translations_in_db.get(position-2);
-                boolean has_lessons= !(myDB.getLessons().isEmpty());
-                int desired_layout;
-                if (has_lessons)
-                    desired_layout = R.layout.add_vocabulary_list_item;
-                else
-                    desired_layout = R.layout.add_vocabulary_list_ref_item;
+                int layout = R.layout.add_vocabulary_list_ref_item;
 
-                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==desired_layout)) {
+                if ((convertView != null) && ((Integer)convertView.getTag(R.id.add_list_view_inflated)==layout)) {
                     row = convertView;
                 }
                 else {
                     LayoutInflater inflater = getLayoutInflater();
-                    row = inflater.inflate(desired_layout, parent, false);
-                    row.setTag(R.id.add_list_view_inflated, desired_layout);
+                    row = inflater.inflate(layout, parent, false);
+                    row.setTag(R.id.add_list_view_inflated, layout);
                 }
 
                 TextView word = row.findViewById(R.id.add_word);

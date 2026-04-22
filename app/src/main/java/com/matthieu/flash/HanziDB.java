@@ -5,6 +5,7 @@ package com.matthieu.flash;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -13,16 +14,19 @@ import android.database.sqlite.*;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
 import com.matthieu.flash.widget.ProgressHandler;
-import com.matthieu.flash.R;
 
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -212,7 +216,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
                 cur = db.rawQuery("SELECT COUNT(cword_id) AS count FROM cword", null);
                 cur.moveToFirst();
-                int num_words= cur.getInt(cur.getColumnIndex("count"));
+                @SuppressLint("Range") int num_words= cur.getInt(cur.getColumnIndex("count"));
                 cur.close();
                 if (num_words < 3000) { // forget it otherwise... it would do some ANR
                     db.beginTransaction();
@@ -257,6 +261,7 @@ public class HanziDB extends SQLiteOpenHelper {
         super.close();
     }
 
+    @SuppressLint("Range")
     public boolean checkDatabase(final boolean fixme, final ProgressHandler handler) {
         boolean res = true;
 
@@ -279,9 +284,11 @@ public class HanziDB extends SQLiteOpenHelper {
                     "GROUP BY cword_id", null);
             if (c.moveToFirst()) {
                 do{
-                    int cword_id = c.getInt(c.getColumnIndex("cword_id"));
-                    String pinyin = c.getString(c.getColumnIndex("pinyin"));
-                    String t_pinyin = c.getString(c.getColumnIndex("t_pinyin"));
+                    // TODO: we should be removing those SuppressLint annotations by checking
+                    // (and asserting) on the columnIndex not being < 0
+                    @SuppressLint("Range") int cword_id = c.getInt(c.getColumnIndex("cword_id"));
+                    @SuppressLint("Range") String pinyin = c.getString(c.getColumnIndex("pinyin"));
+                    @SuppressLint("Range") String t_pinyin = c.getString(c.getColumnIndex("t_pinyin"));
                     if (!pinyin.equals(t_pinyin)) {
                         res = false;
                         if (DEBUG) Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id+ " : " + pinyin + " != " + t_pinyin);
@@ -289,8 +296,8 @@ public class HanziDB extends SQLiteOpenHelper {
                             db.delete("cword", "cword_id=?", new String[]{Integer.toString(cword_id)});
                         }
                     }
-                    String chinese = c.getString(c.getColumnIndex("chinese"));
-                    String t_chinese = c.getString(c.getColumnIndex("t_chinese"));
+                    @SuppressLint("Range") String chinese = c.getString(c.getColumnIndex("chinese"));
+                    @SuppressLint("Range") String t_chinese = c.getString(c.getColumnIndex("t_chinese"));
                     if (!chinese.equals(t_chinese)) {
                         res = false;
                         if (DEBUG) Log.w(TAG, "Wrong pinyin formwation with cword_id " + cword_id + " : " + chinese + " != " + t_chinese);
@@ -917,6 +924,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     protected int getWordId(String chinese, String pinyin) {
         int res=-1;
         Cursor cur = db.rawQuery("SELECT * FROM cword WHERE chinese=? AND pinyin=?", new String[] {chinese, pinyin});
@@ -932,6 +940,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     protected int getCharPinyinId(String hanzi, String pinyin) {
         int res;
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=? AND pinyin=?", new String[] {hanzi, pinyin});
@@ -963,6 +972,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     public String get_toned_pinyin_in_pair(String hanzi) {
         String res=null;
         Cursor cur = db.rawQuery("SELECT pinyin FROM char_pinyin WHERE hanzi=? AND " +
@@ -973,6 +983,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     public ArrayList<String> getPinyinForChar(String hanzi) {
         ArrayList<String> res = new ArrayList<String>();
         Cursor cur = db.rawQuery("SELECT * FROM char_pinyin WHERE hanzi=?", new String[] {hanzi});
@@ -987,6 +998,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     protected Vocabulary getTranslations(int cword_id) {
         Vocabulary res=null;
 
@@ -1009,6 +1021,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     protected ArrayList<Integer> getCwordWithChar(int char_pinyin_id) {
         ArrayList<Integer> res = new ArrayList<Integer>();
         Cursor cur = db.rawQuery("SELECT cword_id " +
@@ -1024,6 +1037,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     public ArrayList<String> getAllChars() {
         ArrayList<String> res = new ArrayList<String>();
 
@@ -1041,6 +1055,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     public ArrayList<String> getAllWords() {
         ArrayList<String> res = new ArrayList<String>();
 
@@ -1083,6 +1098,7 @@ public class HanziDB extends SQLiteOpenHelper {
         public String pinyin_part() {
             return content.substring(Character.charCount(content.codePointAt(0)));
         }
+        @NonNull
         public String toString() { return content; }
     }
 
@@ -1090,7 +1106,7 @@ public class HanziDB extends SQLiteOpenHelper {
         StringBuilder query = new StringBuilder();
         ArrayList<String> query_args=new ArrayList<String>();
 
-        if (elements.size()==0)
+        if (elements.isEmpty())
             return null;
 
         if (group) {
@@ -1271,7 +1287,7 @@ public class HanziDB extends SQLiteOpenHelper {
         StringBuilder query = new StringBuilder();
         ArrayList<String> query_args=new ArrayList<String>();
 
-        if (elements.size()==0)
+        if (elements.isEmpty())
             return null;
 
         if (group) {
@@ -1928,6 +1944,7 @@ public class HanziDB extends SQLiteOpenHelper {
         }
     }
 
+    @SuppressLint("Range")
     public void delVocabulary(String english, String chinese, String pinyin) {
         int eng_id, cword_id;
 
@@ -1976,6 +1993,7 @@ public class HanziDB extends SQLiteOpenHelper {
         db.delete("eword", "cword_id=?", new String[] {Integer.toString(cword_id)} );
     }
 
+    @SuppressLint("Range")
     protected void delCharPinyin(int char_pinyin_id) {
         String hanzi;
         Cursor cur = db.rawQuery("SELECT hanzi  " +
@@ -1999,6 +2017,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
+    @SuppressLint("Range")
     protected void delCword(int cword_id) {
         String hanzi;
         Cursor cur = db.rawQuery("SELECT chinese  " +
@@ -2077,17 +2096,19 @@ public class HanziDB extends SQLiteOpenHelper {
         HanziDB other_db=null;
         HanziDB merge_from, merge_to;
         String path;
-        ProgressDialog dialog;
+        Dialog dialog;
         Activity context;
         Runnable finishing;
         boolean copying;
         int last_progress;
 
-        public merge_task(String path, ProgressDialog dialog, Activity context,  Runnable finishing) {
+        public merge_task(String path, Dialog dialog, Activity context,  Runnable finishing) {
             this.path = path;
             this.dialog = dialog;
             this.context = context;
             this.finishing = finishing;
+
+            dialog.setContentView(R.layout.progress_window);
         }
 
         @Override
@@ -2143,28 +2164,16 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
 
                 // merge it
-                ArrayList<String> original_lessons = merge_to.getLessons();
-                ArrayList<String> lessons = merge_from.getLessons();
-                for (int i=0; i<lessons.size(); i++) {
-                    publishProgress(10+(i*50)/(lessons.size()+1));
+                ArrayList<String> chinese_words = merge_from.getAllWords();
+                for (int i=0; i<chinese_words.size(); i++) {
+                    ArrayList<Vocabulary> voc = merge_from.getWordsWithPinyin(chinese_words.get(i));
+                    merge_to.addVocabulary(voc);
+                    publishProgress(10+(i*50)/(chinese_words.size()+1));
                     if (isCancelled()) {
                         clean_up_on_cancel(false);
                         return null;
                     }
-                    String l = lessons.get(i);
-                    if (!original_lessons.contains(l))
-                        merge_to.addLesson(l);
-
-                    ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Collections.singletonList(l)));
-                    merge_to.addVocabulary(voc);
-                    for (Vocabulary v:voc) {
-                        merge_to.assignWordLesson(l,v);
-                    }
                 }
-
-                // add the vocabulary that's not in any lesson
-                ArrayList<Vocabulary> voc = merge_from.getVocabularyInLessons(new ArrayList<String>(Collections.singletonList("")));
-                merge_to.addVocabulary(voc);
 
                 ArrayList<String> chars = merge_from.getAllChars();
                 for (int i=0; i<chars.size(); i++) {
@@ -2194,16 +2203,6 @@ public class HanziDB extends SQLiteOpenHelper {
                     }
                 }
 
-                ArrayList<String> all_lessons=new ArrayList<String>();
-                all_lessons.addAll(lessons);
-                all_lessons.addAll(0,original_lessons);
-                // remove duplicate from the end
-                for (int i=all_lessons.size()-1; i>=0; i--) {
-                    if (all_lessons.indexOf(all_lessons.get(i))<i)
-                        all_lessons.remove(i);
-                }
-                merge_to.sortLessons(all_lessons);
-
                 other_db.close();
                 HanziDB.this.close();
 
@@ -2223,28 +2222,30 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected void onPreExecute() {
-            // create the progress dialog if needed
+            // create the progress bar if needed
             if (dialog!=null) {
+                ProgressBar progress = dialog.findViewById(R.id.progress);
+                TextView message = dialog.findViewById(R.id.message);
                 if (getAllChars().size()==0) {
                     copying = true;
                     dialog.setTitle(R.string.db_importing);
-                    dialog.setMessage(context.getResources().getString(R.string.db_copying));
-                    dialog.setIndeterminate(true);
+                    message.setText(context.getResources().getString(R.string.db_copying));
+                    progress.setIndeterminate(true);
                     dialog.show();
                 }
                 else {
                     copying = false;
                     dialog.setTitle(R.string.db_importing);
-                    dialog.setMessage(context.getResources().getString(R.string.db_merging));
-                    dialog.setIndeterminate(false);
-                    dialog.setMax(100);
+                    message.setText(context.getResources().getString(R.string.db_merging));
+                    progress.setIndeterminate(false);
+                    progress.setMax(100);
                     dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                         public void onCancel(DialogInterface dialogInterface) {
                             cancel(false);
                         }
                     });
                     dialog.setCancelable(true);
-                    dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    //progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                     dialog.show();
                 }
             }
@@ -2253,8 +2254,10 @@ public class HanziDB extends SQLiteOpenHelper {
         @Override
         protected void onProgressUpdate(Integer... values) {
             last_progress = values[0];
-            if (dialog!=null)
-                dialog.setProgress(values[0]);
+            if (dialog!=null) {
+                ProgressBar progress = dialog.findViewById(R.id.progress);
+                progress.setProgress(values[0]);
+            }
         }
 
         @Override
@@ -2291,26 +2294,28 @@ public class HanziDB extends SQLiteOpenHelper {
 
         public void change_progress_dialog(ProgressDialog new_progress) {
             this.dialog = new_progress;
+            ProgressBar progress = dialog.findViewById(R.id.progress);
+            TextView message = dialog.findViewById(R.id.message);
             if (copying) {
                 dialog.setTitle(R.string.db_importing);
-                dialog.setMessage(context.getResources().getString(R.string.db_copying));
-                dialog.setIndeterminate(true);
+                message.setText(context.getResources().getString(R.string.db_copying));
+                progress.setIndeterminate(true);
                 dialog.show();
             }
             else {
                 dialog.setTitle(R.string.db_importing);
-                dialog.setMessage(context.getResources().getString(R.string.db_merging));
-                dialog.setIndeterminate(false);
-                dialog.setMax(100);
+                message.setText(context.getResources().getString(R.string.db_merging));
+                progress.setIndeterminate(false);
+                progress.setMax(100);
                 dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     public void onCancel(DialogInterface dialogInterface) {
                         cancel(false);
                     }
                 });
                 dialog.setCancelable(true);
-                dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                //progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                 dialog.show();
-                dialog.setProgress(last_progress);
+                progress.setProgress(last_progress);
             }
         }
 
@@ -2339,15 +2344,13 @@ public class HanziDB extends SQLiteOpenHelper {
         final String new_db_name = "tmp_db";
         HanziDB new_db=null;
         boolean with_scores;
-        ArrayList<String> selected_lessons;
         String path;
         Activity context;
         Runnable finishing;
         int last_progress=0;
 
-        public export_task(String path, ArrayList<String> selected_lessons, ProgressDialog dialog, boolean with_scores, Activity context, Runnable finishing) {
+        public export_task(String path, ProgressDialog dialog, boolean with_scores, Activity context, Runnable finishing) {
             this.path = path;
-            this.selected_lessons = selected_lessons;
             this.with_scores = with_scores;
             this.context = context;
             this.finishing = finishing;
@@ -2356,12 +2359,12 @@ public class HanziDB extends SQLiteOpenHelper {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            if ((with_scores) && (selected_lessons == null)) {
+            if (with_scores) {
                 if (!app.copyFile(db.getPath(), path)) {
                     clean_up_on_cancel(true);
                     return null;
                 }
-            } else if (selected_lessons == null) {
+            } else {
                 if (!app.copyFile(db.getPath(), HanziDB.this.app.getDatabasePath(new_db_name).getPath())) {
                     clean_up_on_cancel(true);
                     return null;
@@ -2380,81 +2383,6 @@ public class HanziDB extends SQLiteOpenHelper {
                 }
 
                 HanziDB.this.app.deleteDatabase(new_db_name);
-            } else {
-                try {
-                    new_db = new HanziDB(app, new_db_name);
-                } catch (Exception e) {
-                    return null;
-                }
-                publishProgress(10);
-
-                for (int i=0; i<selected_lessons.size(); i++) {
-                    String lesson = selected_lessons.get(i);
-                    if (isCancelled()) {
-                        clean_up_on_cancel(false);
-                        return null;
-                    }
-                    publishProgress(10+(i*70)/selected_lessons.size());
-                    if (DEBUG) Log.d(TAG, "exporting lesson "+lesson);
-                    if (lesson.equals(""))
-                        continue;
-                    new_db.addLesson(lesson);
-
-                    ArrayList<Vocabulary> lesson_voc = getVocabularyInLessons(new ArrayList<String>(Collections.singletonList(lesson)));
-                    new_db.addVocabulary(lesson_voc);
-                    for (Vocabulary v : lesson_voc) {
-                        new_db.assignWordLesson(lesson, v);
-                    }
-                }
-                new_db.sortLessons(selected_lessons);
-
-                if (with_scores) {
-                    ArrayList<String> chars = new_db.getAllChars();
-                    for (int i=0; i<chars.size(); i++) {
-                        String c = chars.get(i);
-                        if (isCancelled()) {
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-                        publishProgress(80+(i*5)/chars.size());
-                        int b = getBoxForChar(c);
-                        if (b!=0) {
-                            long t = getExpirationTimeForChar(c);
-                            new_db.setBoxForChar(c, b);
-                            new_db.setExpirationTimeForChar(c, t);
-                        }
-                    }
-                    ArrayList<String> words = new_db.getAllWords();
-                    for (int i=0; i<words.size(); i++) {
-                        String c = words.get(i);
-                        if (isCancelled()) {
-                            clean_up_on_cancel(false);
-                            return null;
-                        }
-                        publishProgress(85+(i*5)/words.size());
-                        int b = getBoxForChar(c);
-                        if (b!=0) {
-                            long t = getExpirationTimeForChar(c);
-                            new_db.setBoxForChar(c, b);
-                            new_db.setExpirationTimeForChar(c, t);
-                        }
-                    }
-                }
-
-
-                if (!app.copyFile(new_db.getWritableDatabase().getPath(), path)) {
-                    clean_up_on_cancel(true);
-                    return null;
-                }
-                new_db.close();
-
-                publishProgress(95);
-
-                HanziDB.this.app.deleteDatabase(new_db_name);
-
-                if (isCancelled()) { // everything went through anyway...
-                    onPostExecute(null);
-                }
             }
             return null;
         }
@@ -2463,25 +2391,10 @@ public class HanziDB extends SQLiteOpenHelper {
         protected void onPreExecute() {
             // create the progress dialog if needed
             if (mProgressDialog != null) {
-                if (selected_lessons == null) {
-                    mProgressDialog.setTitle(R.string.db_exporting);
-                    mProgressDialog.setMessage(context.getResources().getString(R.string.db_copying));
-                    mProgressDialog.setIndeterminate(true);
-                    mProgressDialog.show();
-                }
-                else {
-                    mProgressDialog.setMessage(context.getResources().getString(R.string.db_exporting));
-                    mProgressDialog.setIndeterminate(false);
-                    mProgressDialog.setMax(100);
-                    mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                        public void onCancel(DialogInterface dialogInterface) {
-                            cancel(false);
-                        }
-                    });
-                    mProgressDialog.setCancelable(true);
-                    mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                    mProgressDialog.show();
-                }
+                mProgressDialog.setTitle(R.string.db_exporting);
+                mProgressDialog.setMessage(context.getResources().getString(R.string.db_copying));
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.show();
             }
         }
 
@@ -2529,37 +2442,18 @@ public class HanziDB extends SQLiteOpenHelper {
 
         public void change_dialog(ProgressDialog dialog) {
             mProgressDialog = dialog;
-            if (selected_lessons == null) {
-                mProgressDialog.setTitle(R.string.db_exporting);
-                mProgressDialog.setMessage(context.getResources().getString(R.string.db_copying));
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.show();
-            }
-            else {
-                mProgressDialog.setMessage(context.getResources().getString(R.string.db_exporting));
-                mProgressDialog.setIndeterminate(false);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.setMax(100);
-                mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    public void onCancel(DialogInterface dialogInterface) {
-                        cancel(false);
-                    }
-                });
-                mProgressDialog.setCancelable(true);
-                mProgressDialog.show();
-                mProgressDialog.setProgress(last_progress);
-            }
+            mProgressDialog.setTitle(R.string.db_exporting);
+            mProgressDialog.setMessage(context.getResources().getString(R.string.db_copying));
+            mProgressDialog.setIndeterminate(true);
+            mProgressDialog.show();
         }
     }
 
     @SuppressLint({"NewApi"})
     public export_task create_export_task(final String path, final boolean with_scores, final ArrayList<String> selected_lessons, ProgressDialog dialog, final Activity context, final Runnable finishing) {
-        export_task res = new export_task(path, selected_lessons, dialog, with_scores, context, finishing);
+        export_task res = new export_task(path, dialog, with_scores, context, finishing);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            res.execute((Void[])null);
+        res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
 
         return res;
     }
@@ -2616,393 +2510,11 @@ public class HanziDB extends SQLiteOpenHelper {
     public clear_task create_clear_task(ProgressDialog dialog, @Nullable final Runnable finishing) {
         clear_task res = new clear_task(dialog, finishing);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
-        else
-            res.execute((Void[])null);
+        res.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
 
         return res;
     }
 
-    /*
-     *
-     *  Lesson database management
-     *
-     *
-     */
-
-    ////////////////////////////////////////
-    // Manage Lessons
-    ////////////////////////////////////////
-    @SuppressLint({"NewApi"})
-    public void addLesson(String name) {
-        ContentValues cv = new ContentValues();
-        cv.put("name", name);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
-            db.insertWithOnConflict("lessons", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
-        else
-            db.insert("lessons", null, cv);
-    }
-
-    public void delLesson(String name) {
-        int lesson_id;
-
-        lesson_id = getLessonId(name);
-        if (lesson_id == -1)
-            return;
-
-        db.delete("lesson_word", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
-        db.delete("lessons", "lesson_id=?", new String[] {Integer.toString(lesson_id)});
-    }
-
-    public void renameLesson(String old_name, String new_name) {
-        int lesson_id;
-
-        lesson_id = getLessonId(old_name);
-        if (lesson_id == -1)
-            return;
-
-        ContentValues cv = new ContentValues();
-        cv.put("name", new_name);
-
-        db.update("lessons", cv, "lesson_id=?", new String[] {Integer.toString(lesson_id)});
-    }
-
-    public ArrayList<String> getLessons() {
-        ArrayList<String> res = new ArrayList<String>();
-
-        Cursor cur = db.rawQuery("SELECT name FROM lessons ORDER BY list_order ASC", null);
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                res.add(cur.getString(cur.getColumnIndex("name")));
-            }while(cur.moveToNext());
-        }
-        cur.close();
-        return res;
-    }
-
-    protected int getLessonId(String name) {
-        int res = -1;
-        Cursor cur = db.rawQuery("SELECT * FROM lessons WHERE name=?", new String[] {name});
-        if (cur.moveToFirst()) {
-            res = cur.getInt(cur.getColumnIndex("lesson_id"));
-        }
-        cur.close();
-        return res;
-
-    }
-
-    protected void sortLessons(ArrayList<String> lessons) {
-        int i = 1;
-        ContentValues cv = new ContentValues();
-        for (String le : lessons) {
-            cv.clear();
-            cv.put("list_order", i);
-
-            db.update("lessons", cv, "name=?", new String[] {le});
-            i++;
-        }
-
-    }
-
-    ////////////////////////////////////////
-    // Manage Words in lessons
-    ////////////////////////////////////////
-    @SuppressLint({"NewApi"})
-    public void assignWordLesson(String lesson, String english, String chinese, String pinyin) {
-        int eng_id=-1;
-        int lesson_id;
-
-        lesson_id = getLessonId(lesson);
-        if (lesson_id == -1) {
-            if (DEBUG) Log.w(TAG, "Unknown lesson " + lesson);
-            return;
-        }
-
-        Cursor cur = db.rawQuery("SELECT eng_id " +
-                "FROM eword " +
-                "  JOIN cword ON cword.cword_id=eword.cword_id " +
-                "WHERE eword.translation=? AND cword.chinese=? AND cword.pinyin=?",
-                new String[] {english,chinese,pinyin});
-        if (cur.moveToFirst()) {
-            eng_id = cur.getInt(cur.getColumnIndex("eng_id"));
-        }
-        cur.close();
-        if (eng_id == -1) {
-            if (DEBUG) Log.w(TAG, "Cannot find word ("+english+","+chinese+","+pinyin);
-            return;
-        }
-
-        ContentValues cv = new ContentValues();
-        cv.put("lesson_id", lesson_id);
-        cv.put("eng_id", Integer.toString(eng_id));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
-            db.insertWithOnConflict("lesson_word", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
-        else
-            db.insert("lesson_word", null, cv);
-    }
-
-    public void assignWordLesson(String lesson, Vocabulary voc) {
-        Vocabulary new_voc;
-        if (voc.english == null) {
-            new_voc = getTranslations(voc.chinese, voc.pinyin);
-        }
-        else {
-            new_voc = voc;
-        }
-        if (new_voc != null)
-            for (String english : new_voc.english) {
-                assignWordLesson(lesson, english, voc.chinese, voc.pinyin);
-            }
-    }
-
-    public void removeWordLesson(String lesson, String english, String chinese, String pinyin) {
-        int eng_id=-1;
-        int lesson_id;
-
-        lesson_id = getLessonId(lesson);
-        if (lesson_id == -1) {
-            if (DEBUG) Log.w(TAG, "Unknown lesson " + lesson);
-            return;
-        }
-
-        Cursor cur = db.rawQuery("SELECT eng_id " +
-                "FROM eword " +
-                "  JOIN cword ON cword.cword_id=eword.cword_id " +
-                "WHERE eword.translation=? AND cword.chinese=? AND cword.pinyin=?",
-                new String[] {english,chinese,pinyin});
-        if (cur.moveToFirst()) {
-            eng_id = cur.getInt(cur.getColumnIndex("eng_id"));
-        }
-        cur.close();
-        if (eng_id == -1) {
-            if (DEBUG) Log.w(TAG, "Cannot find word ("+english+","+chinese+","+pinyin);
-            return;
-        }
-
-        db.delete("lesson_word", "eng_id=? AND lesson_id=?", new String[] {Integer.toString(eng_id), Integer.toString(lesson_id)});
-    }
-
-    public ArrayList<String> getLessonForWord(String chinese, String pinyin, String english) {
-        ArrayList<String> res=new ArrayList<String>();
-        int cword_id = getWordId(chinese, pinyin);
-
-        if (cword_id == -1)
-            return res;
-
-        Cursor cur = db.rawQuery("SELECT l.name AS name " +
-                "FROM lessons AS l " +
-                " JOIN lesson_word AS lw ON lw.lesson_id=l.lesson_id " +
-                " JOIN (SELECT cword_id, eng_id FROM eword WHERE translation=?) AS ew ON lw.eng_id=ew.eng_id" +
-                " JOIN (SELECT cword_id FROM cword WHERE chinese=? AND pinyin=?) AS cw ON ew.cword_id=cw.cword_id"
-                , new String[] {english, chinese, pinyin});
-
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                //Log.d(TAG, "got record " + cur.getInt(cur.getColumnIndex("cword_id")) + " for word " + chinese);
-                res.add(cur.getString(cur.getColumnIndex("name")));
-            }while(cur.moveToNext());
-        }
-
-        cur.close();
-        return res;
-    }
-
-    public ArrayList<Vocabulary> getVocabularyInLessons(ArrayList<String> lessons) {
-        ArrayList<Vocabulary> res = new ArrayList<Vocabulary>();
-        Vocabulary tmp=null;
-        Cursor cur;
-
-        if ((lessons.size() == 1) && (lessons.contains(""))) {
-            // only words not in any lesson
-            cur = db.rawQuery("SELECT e.translation AS translation, " +
-                    "c.chinese AS chinese, " +
-                    "c.pinyin AS pinyin " +
-                    "FROM eword AS e " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ORDER BY c.cword_id"
-                    ,null);
-        } else if (!lessons.contains("")) {
-            // words that have some lessons associated with them
-            String whereQuery = buildWhereQuery(lessons);
-
-            cur = db.rawQuery("SELECT e.translation AS translation, " +
-                    "c.chinese AS chinese, " +
-                    "c.pinyin AS pinyin " +
-                    "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
-                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id ORDER BY c.cword_id"
-                    ,null);
-
-
-        } else {
-            // a little bit of both
-            lessons.remove("");
-            String whereQuery = buildWhereQuery(lessons);
-            cur = db.rawQuery("SELECT e.translation AS translation, " +
-                    "c.chinese AS chinese, " +
-                    "c.pinyin AS pinyin, " +
-                    "c.cword_id AS cword_id " +
-                    "FROM eword AS e " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) " +
-                    "UNION " +
-                    "SELECT e.translation AS translation, " +
-                    "c.chinese AS chinese, " +
-                    "c.pinyin AS pinyin, " +
-                    "c.cword_id AS cword_id " +
-                    "FROM (SELECT * FROM lesson_word " + whereQuery + ") AS lesson_word " +
-                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                    "ORDER BY cword_id"
-                    ,null);
-        }
-        if (cur.moveToFirst()) {
-            res.ensureCapacity(cur.getCount());
-            do{
-                String chinese = cur.getString(cur.getColumnIndex("chinese"));
-                String pinyin = cur.getString(cur.getColumnIndex("pinyin"));
-                if (tmp == null)
-                    tmp = new Vocabulary(chinese, pinyin,
-                            cur.getString(cur.getColumnIndex("translation")));
-                else {
-                    if (tmp.chinese.equals(chinese) && tmp.pinyin.equals(pinyin))
-                        tmp.english.add(cur.getString(cur.getColumnIndex("translation")));
-                    else {
-                        res.add(tmp);
-                        tmp = new Vocabulary(chinese, pinyin,
-                                cur.getString(cur.getColumnIndex("translation")));
-                    }
-                }
-            }while(cur.moveToNext());
-            res.add(tmp);
-        }
-        cur.close();
-        return res;
-    }
-
-    public HashMap<String, Integer> getLessonSizes() {
-        Cursor cur;
-        HashMap<String, Integer> res = new HashMap<String, Integer>();
-
-        cur = db.rawQuery("SELECT couples.lesson_id, lessons.name AS name, COUNT(couples.cword_id) AS count " +
-                "FROM (SELECT DISTINCT lesson_id , eword.cword_id FROM lesson_word " +
-                "JOIN eword ON lesson_word.eng_id=eword.eng_id) AS couples " +
-                "JOIN lessons ON lessons.lesson_id=couples.lesson_id GROUP BY couples.lesson_id", new String[]{});
-        if (cur.moveToFirst()) {
-            do{
-                String lesson_name = cur.getString(cur.getColumnIndex("name"));
-                int count = cur.getInt(cur.getColumnIndex("count"));
-                res.put(lesson_name, count);
-            }while(cur.moveToNext());
-        }
-        cur.close();
-        return res;
-    }
-
-    public Cursor getVocabularyCursorInLessons(ArrayList<String> lessons, boolean group) {
-        StringBuilder query=new StringBuilder();
-
-        if ((lessons.size() == 1) && (lessons.contains(""))) {
-            // only words not in any lesson
-            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
-            if (group)
-                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
-            else
-                query.append("e.translation AS english, e.eng_id AS eng_id ");
-            query.append("FROM eword AS e " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                    " WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word) ");
-            if (group)
-                query.append("GROUP BY c.cword_id ");
-        } else if (!lessons.contains("")) {
-            // words that have some lessons associated with them
-            String whereQuery = buildWhereQuery(lessons);
-
-            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
-            if (group)
-                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
-            else
-                query.append("e.translation AS english, e.eng_id AS eng_id ");
-
-            query.append("FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lesson_word " +
-                    " JOIN eword AS e ON lesson_word.eng_id=e.eng_id " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id ");
-            if (group)
-                query.append("GROUP BY c.cword_id ");
-        } else {
-            // a little bit of both
-            lessons.remove("");
-            String whereQuery = buildWhereQuery(lessons);
-            query.append("SELECT c.cword_id AS _id, c.chinese AS chinese, c.pinyin AS pinyin, ");
-            if (group)
-                query.append("GROUP_CONCAT(e.translation,', ') AS english ");
-            else
-                query.append("e.translation AS english, e.eng_id AS eng_id ");
-            query.append("FROM eword AS e " +
-                    " JOIN cword AS c ON c.cword_id=e.cword_id " +
-                    " WHERE (e.eng_id NOT IN (SELECT eng_id FROM lesson_word)) " +
-                    " OR (e.eng_id IN " +
-                    "   (SELECT eword.eng_id FROM (SELECT * FROM lesson_word ").append(whereQuery).append(") AS lessons" +
-                    "   JOIN eword ON lessons.eng_id=eword.eng_id))");
-            if (group)
-                query.append("GROUP BY c.cword_id ");
-        }
-        return db.rawQuery(query.toString(), null);
-    }
-
-    public void mergeVocabularyIntoLesson(ArrayList<String> lessons_from, String lesson_to) {
-        int lesson_id = getLessonId(lesson_to);
-        if (lesson_id == -1) {
-            if (DEBUG) Log.w(TAG, "Unknown lesson " + lesson_to);
-            return;
-        }
-
-        Cursor vocabulary_cursor = getVocabularyCursorInLessons(lessons_from, false);
-
-        if (vocabulary_cursor.moveToFirst()) {
-            final String set_lesson_assignment = "INSERT OR IGNORE INTO lesson_word (eng_id, lesson_id) VALUES(?, ?)";
-            final SQLiteStatement set_lesson_assignment_statement = db.compileStatement(set_lesson_assignment);
-            db.beginTransaction();
-            try {
-                int eng_id_column = vocabulary_cursor.getColumnIndex("eng_id");
-                do {
-                    set_lesson_assignment_statement.clearBindings();
-                    set_lesson_assignment_statement.bindDouble(1, vocabulary_cursor.getInt(eng_id_column));
-                    set_lesson_assignment_statement.bindDouble(2, lesson_id);
-                    set_lesson_assignment_statement.execute();
-                } while(vocabulary_cursor.moveToNext());
-                db.setTransactionSuccessful();
-            } finally {
-                db.endTransaction();
-            }
-        }
-        vocabulary_cursor.close();
-    }
-
-    protected String buildWhereQuery(ArrayList<String> lessons) {
-        String whereQuery = "WHERE lesson_word.lesson_id IN (";
-        int size = lessons.size();
-        if (size == 0)
-            return "";
-
-        for (String lesson : lessons) {
-            int id = getLessonId(lesson);
-            if (id == -1) {
-                size --;
-                continue;
-            }
-            if (--size == 0)
-                whereQuery += "'" + id + "'";
-            else
-                whereQuery += "'" + id + "',";
-        }
-        whereQuery += ")";
-        return whereQuery;
-    }
 
     /*
      *
@@ -3037,6 +2549,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     public ProgressDB.ProgressData getProgress() {
         ProgressDB.ProgressData new_data = new ProgressDB.ProgressData();
 
@@ -3065,6 +2578,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return new_data;
     }
 
+    @SuppressLint("Range")
     public int getBoxForChar(String hanzi) {
         int res;
 
@@ -3082,6 +2596,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     protected long getExpirationTimeForChar(String hanzi) {
         long res;
 
@@ -3147,7 +2662,7 @@ public class HanziDB extends SQLiteOpenHelper {
 
         double multiplicand=2;
         if (num_tested-box > 3) {
-            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/20; // multiplicand becomes between 1.8 and 2.2 depending on results so far
+            multiplicand += (0.5-((double) num_wrong /(num_tested-box)))*8/20; // multiplicand becomes between 1.8 and 2.2 depending on results so far
         }
         // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
         long res = (long) (box_delay * Math.pow(multiplicand, box) + extra_delay);
@@ -3155,6 +2670,7 @@ public class HanziDB extends SQLiteOpenHelper {
         return res;
     }
 
+    @SuppressLint("Range")
     public long getMostAdvancedExpiringTime() {
         Cursor cur;
         long res=-1;
@@ -3176,6 +2692,7 @@ public class HanziDB extends SQLiteOpenHelper {
         db.delete("leitner", null, null);
     }
 
+    @SuppressLint("Range")
     public void resetTime(String hanzi) {
         if (DEBUG) Log.d(TAG, "resetTime for "+hanzi);
         if (getBoxForChar(hanzi)==0) {
@@ -3196,6 +2713,7 @@ public class HanziDB extends SQLiteOpenHelper {
         db.update("leitner", cv, "hanzi=?", new String[] {hanzi});
     }
 
+    @SuppressLint("Range")
     public void betterBox(String hanzi) {
         if (DEBUG) Log.d(TAG, "betterBox for "+hanzi);
         Cursor cur = db.rawQuery("SELECT * FROM leitner WHERE hanzi=?",
@@ -3234,6 +2752,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
+    @SuppressLint("Range")
     public void worseBox(String hanzi) {
         if (DEBUG) Log.d(TAG, "worseBox for "+hanzi);
 
@@ -3270,6 +2789,7 @@ public class HanziDB extends SQLiteOpenHelper {
         cur.close();
     }
 
+    @SuppressLint("Range")
     public void restartStudy(String hanzi) {
         if (DEBUG) Log.d(TAG, "worseBox for "+hanzi);
 
@@ -3336,6 +2856,7 @@ public class HanziDB extends SQLiteOpenHelper {
     ////////////////////////////////////////
 
     // TestActivity
+    @SuppressLint("Range")
     public ArrayList<String> getAllToStudy(int limit) {
         ArrayList<String> res=new ArrayList<String>();
 
