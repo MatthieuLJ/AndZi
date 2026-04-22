@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.viewpager.widget.ViewPager;
 import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 import android.widget.LinearLayout;
@@ -75,7 +74,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         OnBackPressedCallback backCallback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                ViewPager pager = findViewById(R.id.test_pager);
+                ViewPager2 pager = findViewById(R.id.test_pager);
                 if ((pager != null) && (pager.getCurrentItem() != 0) && (test_ready))
                     pager.setCurrentItem(0, true);
                 else {
@@ -104,7 +103,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
                 if (DEBUG) Log.e(TAG, "Got an exception saving fragment 1 "+e);
             }
         }
-        ViewPager pager = findViewById(R.id.test_pager);
+        ViewPager2 pager = findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         } else {
@@ -129,7 +128,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         }
     }
 
-    private class keyboard_handle implements ViewPager.OnPageChangeListener {
+    private class keyboard_handle extends ViewPager2.OnPageChangeCallback {
         @Override
         public void onPageScrolled(int i, float v, int i1) {
 
@@ -157,7 +156,7 @@ public class TestActivity extends FragmentActivity  implements handle_details_re
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ViewPager pager = findViewById(R.id.test_pager);
+                ViewPager2 pager = findViewById(R.id.test_pager);
                 if ((pager == null) || (pager.getCurrentItem()==1))
                     update_stats();
             }
