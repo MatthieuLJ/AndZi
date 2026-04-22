@@ -6,16 +6,9 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"
         >
-    <com.matthieu.flash.widget.ViewPagerParallax
+    <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/reference_pager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"/>
-
-    <!-- TODO
-    <com.viewpagerindicator.UnderlinePageIndicator
-            android:id="@+id/pager_indicator"
-            android:layout_height="2dp"
-            android:layout_width="match_parent" />
-    -->
 </LinearLayout>

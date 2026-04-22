@@ -3,7 +3,6 @@ package com.matthieu.flash;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 
@@ -11,9 +10,8 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.Lifecycle;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,13 +21,12 @@ import android.widget.LinearLayout;
 import com.matthieu.flash.widget.handle_details_request;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
-import androidx.viewpager2.widget.ViewPager2;
 
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-public class ReferenceActivity extends FragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
+public class ReferenceActivity extends FragmentActivity implements handle_details_request {
     final private static int max_details_fragments=3;
     Fragment[] fragments;
     int[] ids;
@@ -111,7 +108,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
         OnBackPressedCallback backCallback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                ViewPager pager = findViewById(R.id.reference_pager);
+                ViewPager2 pager = findViewById(R.id.reference_pager);
                 if ((pager != null) && (pager.getCurrentItem() != 0) && (((DictionaryFragment)fragments[0]).has_search()))
                     pager.setCurrentItem(0, true);
                 else {
@@ -142,7 +139,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
                 }
             }
         }
-        ViewPager pager = findViewById(R.id.test_pager);
+        ViewPager2 pager = findViewById(R.id.test_pager);
         if (pager != null) {
             outState.putInt("position", pager.getCurrentItem());
         }
@@ -180,7 +177,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
                 break;
             if ((((DetailsFragment)fragments[i]).is_dictionary_search() == use_ref) &&
                 ((DetailsFragment)fragments[i]).get_hanzi().equals(new_hanzi)) {
-                ViewPager pager = findViewById(R.id.reference_pager);
+                ViewPager2 pager = findViewById(R.id.reference_pager);
                 if (pager != null) {
                     pager.setCurrentItem(i, true);
                 }
@@ -225,7 +222,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
             max = index;
         }
 
-        ViewPager pager = findViewById(R.id.reference_pager);
+        ViewPager2 pager = findViewById(R.id.reference_pager);
 
         FragmentManager fm = getSupportFragmentManager();
         androidx.fragment.app.FragmentTransaction ft = fm.beginTransaction();
@@ -280,23 +277,22 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
         ft.commit();
 
         // refresh
-
         if (pager != null) {
             pager.getAdapter().notifyDataSetChanged();
             pager.setCurrentItem(1, true);
         }
     }
 
-    @Override
-    public void onPageScrolled(int i, float v, int i1) {}
-
-    @Override
-    public void onPageSelected(int i) {
-        invalidateOptionsMenu();
+    private class pageChangeCallback extends ViewPager2.OnPageChangeCallback {
+        @Override
+        public void onPageSelected(int position) {
+            invalidateOptionsMenu();
+        }
+        @Override
+        public void onPageScrollStateChanged(int state) {}
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
     }
-
-    @Override
-    public void onPageScrollStateChanged(int i) {}
 
     // use a FragmentPagerAdapter here because we are moving pages around (FragmentStatePagerAdapter does not do that well : http://code.google.com/p/android/issues/detail?id=37990)
     private class reference_pager extends FragmentStateAdapter {
@@ -328,7 +324,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        ViewPager pager = findViewById(R.id.reference_pager);
+        ViewPager2 pager = findViewById(R.id.reference_pager);
 
         menu.clear();
         MenuInflater inflater = getMenuInflater();
@@ -377,7 +373,7 @@ public class ReferenceActivity extends FragmentActivity implements handle_detail
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        ViewPager pager = findViewById(R.id.reference_pager);
+        ViewPager2 pager = findViewById(R.id.reference_pager);
         int page=0;
         if (pager!= null)
             page = pager.getCurrentItem();
