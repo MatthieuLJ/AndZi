@@ -75,31 +75,7 @@ public class PinyinButtons extends LinearLayout {
     }
 
     public void setPinyinButtons(String charSequence, int i, int i1, int i2, String chinese_word) {
-        current_chinese_word = chinese_word;
-
-        if (i1 > 0) {
-            // remove the ones that were changed
-            for (int j=0; j<i1; j++) {
-                pinyin_choices.remove(i);
-                this.removeViewAt(i);
-            }
-        }
-        if (i2 > 0) {
-            for (int j=0; j<i2; j++) {
-                Button b = new Button(getContext());
-                b.setBackgroundColor(0x00000000);
-                b.setTextColor(0xff000000);
-                b.setBackgroundResource(0);
-                PinyinButton tmp = new PinyinButton(charSequence.substring(i + j, i + j + 1), b);
-                process_handler.post(new PinyinButtonFiller(tmp));
-                pinyin_choices.add(i + j, tmp);
-                this.addView(b, i + j,
-                        new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            }
-        }
-
-        // populate the default values for the pinyin buttons
-        process_handler.post(new UpdateDefaultPinyin());
+        setPinyinButtons(chinese_word);
     }
 
     private class PinyinButtonFiller implements Runnable {

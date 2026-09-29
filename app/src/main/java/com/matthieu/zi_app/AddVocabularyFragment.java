@@ -130,7 +130,7 @@ public class AddVocabularyFragment extends Fragment
                 PinyinButtons buttons = (PinyinButtons) getView().findViewById(R.id.pinyin_buttons);
                 if (buttons == null)
                     return;
-                buttons.setPinyinButtons(charSequence.toString(), i, i1, i2, current_chinese_word);
+                buttons.setPinyinButtons(current_chinese_word);
 
                 ((VocabularyEditorActivity) getActivity()).clear_lesson_selection();
                 ((VocabularyEditorActivity) getActivity()).set_state(VocabularyEditorActivity.activity_state.STATE_EDIT_WORD);
