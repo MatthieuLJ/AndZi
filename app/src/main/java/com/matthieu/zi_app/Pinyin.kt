@@ -3,310 +3,241 @@
  * and provides different formatting of the same pinyin
  * Also offers static function to verify a pinyin
  */
-package com.matthieu.zi_app;
+package com.matthieu.zi_app
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.Locale
 
-public class Pinyin {
-    private String lame="";
-    private String radical="";
-    private int tone=-1;
-    private String print="";
-    private String html_color_print="";
+class Pinyin {
+    var lame: String = ""
+        private set
+    var radical: String = ""
+        private set
+    var tone: Int = -1
+        private set
+    var print: String = ""
+        private set
+    var html_color_print: String = ""
+        private set
 
-    private static boolean map_initialized=false;
+    constructor()
 
-    private final static Map<String, ArrayList<String>> pinyin_by_first_letter = new HashMap<String, ArrayList<String>>();
-    private static Map<String, Integer> vowels_to_tone=null;
-    private static Map<String, String> lame_vowels=null;
+    constructor(entry: String) {
+        if (!verify_pinyin(entry)) return
 
-    public  Pinyin(String entry) {
-        int i,j;
-        String temp;
-
-        if (!verify_pinyin(entry))
-            return;
-
-        for (i = 0; i < 6; i++) {
-            if (entry.endsWith(""+i)) {
-                temp=entry.substring(0, entry.length()-1);
-                for (j = 0; j < pinyin_list_notone.length; j++) {
-                    if (temp.equals(pinyin_list_notone[j])) {
-                        this.lame = temp+i;
-                        this.radical = temp;
-                        this.tone = i;
-                        if (i==0)
-                            this.tone=5;
-                        switch(tone) {
-                            case 5:
-                                this.print=pinyin_list_tone5[j];
-                                this.html_color_print=this.print;
-                                break;
-                            case 1:
-                                this.print=pinyin_list_tone1[j];
-                                this.html_color_print="<font color=\"red\">"+this.print+"</font>";
-                                break;
-                            case 2:
-                                this.print=pinyin_list_tone2[j];
-                                this.html_color_print="<font color=\"#ff8000\">"+this.print+"</font>";
-                                break;
-                            case 3:
-                                this.print=pinyin_list_tone3[j];
-                                this.html_color_print="<font color=\"green\">"+this.print+"</font>";
-                                break;
-                            case 4:
-                                this.print=pinyin_list_tone4[j];
-                                this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
-                                break;
+        for (i in 0..5) {
+            if (entry.endsWith(i.toString())) {
+                val temp = entry.substring(0, entry.length - 1)
+                for (j in pinyin_list_notone.indices) {
+                    if (temp == pinyin_list_notone[j]) {
+                        this.lame = temp + i
+                        this.radical = temp
+                        this.tone = if (i == 0) 5 else i
+                        when (this.tone) {
+                            5 -> {
+                                this.print = pinyin_list_tone5[j]
+                                this.html_color_print = this.print
+                            }
+                            1 -> {
+                                this.print = pinyin_list_tone1[j]
+                                this.html_color_print = "<font color=\"red\">${this.print}</font>"
+                            }
+                            2 -> {
+                                this.print = pinyin_list_tone2[j]
+                                this.html_color_print = "<font color=\"#ff8000\">${this.print}</font>"
+                            }
+                            3 -> {
+                                this.print = pinyin_list_tone3[j]
+                                this.html_color_print = "<font color=\"green\">${this.print}</font>"
+                            }
+                            4 -> {
+                                this.print = pinyin_list_tone4[j]
+                                this.html_color_print = "<font color=\"blue\">${this.print}</font>"
+                            }
                         }
-                        return;
+                        return
                     }
                 }
             }
         }
-        for (String v:vowels_to_tone.keySet()) {
+
+        ensureMapsInitialized()
+        val vToTone = vowels_to_tone ?: emptyMap()
+        val lVowels = lame_vowels ?: emptyMap()
+
+        for (v in vToTone.keys) {
             if (entry.contains(v)) {
-                this.tone = vowels_to_tone.get(v);
-                this.print = entry;
-                switch(tone) {
-                    case 1:
-                        this.html_color_print="<font color=\"red\">"+this.print+"</font>";
-                        break;
-                    case 2:
-                        this.html_color_print="<font color=\"#ff8000\">"+this.print+"</font>";
-                        break;
-                    case 3:
-                        this.html_color_print="<font color=\"green\">"+this.print+"</font>";
-                        break;
-                    case 4:
-                        this.html_color_print="<font color=\"blue\">"+this.print+"</font>";
-                        break;
+                this.tone = vToTone[v] ?: 5
+                this.print = entry
+                when (this.tone) {
+                    1 -> this.html_color_print = "<font color=\"red\">${this.print}</font>"
+                    2 -> this.html_color_print = "<font color=\"#ff8000\">${this.print}</font>"
+                    3 -> this.html_color_print = "<font color=\"green\">${this.print}</font>"
+                    4 -> this.html_color_print = "<font color=\"blue\">${this.print}</font>"
                 }
-                this.radical=entry.replaceAll(v, lame_vowels.get(v));
-                this.lame = this.radical + this.tone;
-                return;
+                val replacement = lVowels[v] ?: ""
+                this.radical = entry.replace(v, replacement)
+                this.lame = "${this.radical}${this.tone}"
+                return
             }
         }
 
-        for (i = 0; i < pinyin_list_notone.length; i++) {
-            if ((entry.equals(pinyin_list_notone[i])) || (entry.equals(pinyin_list_tone5[i]))) {
-                this.lame=pinyin_list_notone[i]+"5";
-                this.radical=pinyin_list_notone[i];
-                this.tone=0;
-                this.print=pinyin_list_tone5[i];
-                this.html_color_print=pinyin_list_tone5[i];
-                return;
+        for (i in pinyin_list_notone.indices) {
+            if (entry == pinyin_list_notone[i] || entry == pinyin_list_tone5[i]) {
+                this.lame = "${pinyin_list_notone[i]}5"
+                this.radical = pinyin_list_notone[i]
+                this.tone = 0
+                this.print = pinyin_list_tone5[i]
+                this.html_color_print = pinyin_list_tone5[i]
+                return
             }
         }
     }
 
-    public Pinyin(String entry, boolean incomplete) {
-        if (entry.length()==0)
-            return;
+    constructor(entry: String, incomplete: Boolean) {
+        if (entry.isEmpty()) return
 
-        synchronized (pinyin_by_first_letter) {
-            if (!map_initialized)
-                create_pinyin_map();
-        }
+        ensureMapsInitialized()
 
-        String initial = entry.substring(0,1);
-        if (!pinyin_by_first_letter.containsKey(initial))
-            return;
+        val initial = entry.substring(0, 1)
+        val candidates = pinyin_by_first_letter[initial] ?: return
 
-        for (String candidate:pinyin_by_first_letter.get(initial)) {
+        for (candidate in candidates) {
             if (candidate.startsWith(entry)) {
-                for (String v:vowels_to_tone.keySet()) {
+                val vToTone = vowels_to_tone ?: emptyMap()
+                val lVowels = lame_vowels ?: emptyMap()
+                for (v in vToTone.keys) {
                     if (entry.contains(v)) {
-                        this.tone = vowels_to_tone.get(v);
-                        this.lame = entry.replaceAll(v, lame_vowels.get(v));
-                        return;
+                        this.tone = vToTone[v] ?: 0
+                        this.lame = entry.replace(v, lVowels[v] ?: "")
+                        return
                     }
                 }
-                this.tone=0;
-                this.lame=entry;
-                return;
-
+                this.tone = 0
+                this.lame = entry
+                return
             }
         }
     }
 
-    public static void prepare_pinyin_process() {
-        create_pinyin_map();
+    fun get_tone(): Int = if (tone == 0) 5 else tone
+
+    fun get_lame(): String = lame
+
+    fun get_radical(): String = radical
+
+    fun get_pretty(): String = print
+
+    fun get_color(): String = html_color_print
+
+    fun tone_is_given(): Boolean = tone != 0
+
+    fun equals(pinyin: Pinyin): Boolean =
+        pinyin.lame == lame && pinyin.get_tone() == get_tone()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Pinyin) return false
+        return equals(other)
     }
 
-    private static void create_pinyin_map() {
-        String first;
-        ArrayList<String> list;
+    override fun hashCode(): Int {
+        var result = lame.hashCode()
+        result = 31 * result + get_tone()
+        return result
+    }
 
-        if (map_initialized)
-            return;
+    companion object {
+        @Volatile
+        private var map_initialized = false
 
-        for (String pin:pinyin_list_notone) {
-            first = pin.substring(0,1);
-            if (pinyin_by_first_letter.containsKey(first)) {
-                list = pinyin_by_first_letter.get(first);
-                list.add(pin);
-            }
-            else {
-                list = new ArrayList<String>();
-                list.add(pin);
-                pinyin_by_first_letter.put(first, list);
-            }
+        private val pinyin_by_first_letter = HashMap<String, ArrayList<String>>()
+        private var vowels_to_tone: Map<String, Int>? = null
+        private var lame_vowels: Map<String, String>? = null
+
+        @JvmStatic
+        fun prepare_pinyin_process() {
+            ensureMapsInitialized()
         }
-        for (String pin:pinyin_list_tone1) {
-            first = pin.substring(0,1);
-            if (pinyin_by_first_letter.containsKey(first)) {
-                list = pinyin_by_first_letter.get(first);
-                list.add(pin);
-            }
-            else {
-                list = new ArrayList<String>();
-                list.add(pin);
-                pinyin_by_first_letter.put(first, list);
-            }
-        }
-        for (String pin:pinyin_list_tone2) {
-            first = pin.substring(0,1);
-            if (pinyin_by_first_letter.containsKey(first)) {
-                list = pinyin_by_first_letter.get(first);
-                list.add(pin);
-            }
-            else {
-                list = new ArrayList<String>();
-                list.add(pin);
-                pinyin_by_first_letter.put(first, list);
-            }
-        }
-        for (String pin:pinyin_list_tone3) {
-            first = pin.substring(0,1);
-            if (pinyin_by_first_letter.containsKey(first)) {
-                list = pinyin_by_first_letter.get(first);
-                list.add(pin);
-            }
-            else {
-                list = new ArrayList<String>();
-                list.add(pin);
-                pinyin_by_first_letter.put(first, list);
-            }
-        }
-        for (String pin:pinyin_list_tone4) {
-            first = pin.substring(0,1);
-            if (pinyin_by_first_letter.containsKey(first)) {
-                list = pinyin_by_first_letter.get(first);
-                list.add(pin);
-            }
-            else {
-                list = new ArrayList<String>();
-                list.add(pin);
-                pinyin_by_first_letter.put(first, list);
-            }
-        }
-        for (String pin:pinyin_list_tone5) {
-            first = pin.substring(0,1);
-            if (pinyin_by_first_letter.containsKey(first)) {
-                list = pinyin_by_first_letter.get(first);
-                list.add(pin);
-            }
-            else {
-                list = new ArrayList<String>();
-                list.add(pin);
-                pinyin_by_first_letter.put(first, list);
+
+        private fun ensureMapsInitialized() {
+            if (map_initialized) return
+            synchronized(pinyin_by_first_letter) {
+                if (!map_initialized) {
+                    create_pinyin_map()
+                }
             }
         }
 
-        vowels_to_tone = new HashMap<String, Integer>();
-        final String[] first_tone_vowels = {"ā", "ō", "ē", "ī", "ū", "ǖ"};
-        final String[] second_tone_vowels = {"á", "ó", "é", "í", "ú", "ǘ"};
-        final String[] third_tone_vowels = {"ǎ", "ǒ", "ě", "ǐ", "ǔ", "ǚ"};
-        final String[] fourth_tone_vowels = {"à", "ò", "è", "ì", "ù", "ǜ"};
-        for(String s:first_tone_vowels)
-            vowels_to_tone.put(s,1);
-        for(String s:second_tone_vowels)
-            vowels_to_tone.put(s,2);
-        for(String s:third_tone_vowels)
-            vowels_to_tone.put(s,3);
-        for(String s:fourth_tone_vowels)
-            vowels_to_tone.put(s,4);
+        private fun create_pinyin_map() {
+            val allLists = arrayOf(
+                pinyin_list_notone,
+                pinyin_list_tone1,
+                pinyin_list_tone2,
+                pinyin_list_tone3,
+                pinyin_list_tone4,
+                pinyin_list_tone5
+            )
 
-        lame_vowels = new HashMap<String, String>();
-        final String[] a_vowels={"ā", "á", "ǎ", "à"};
-        final String[] o_vowels={"ō", "ó", "ǒ", "ò"};
-        final String[] e_vowels={"ē", "é", "ě", "è"};
-        final String[] i_vowels={"ī", "í", "ǐ", "ì"};
-        final String[] u_vowels={"ū", "ú", "ǔ", "ù"};
-        final String[] v_vowels={"ǖ", "ǘ", "ǚ", "ǜ"};
-        for(String s:a_vowels)
-            lame_vowels.put(s, "a");
-        for(String s:o_vowels)
-            lame_vowels.put(s, "o");
-        for(String s:e_vowels)
-            lame_vowels.put(s, "e");
-        for(String s:i_vowels)
-            lame_vowels.put(s, "i");
-        for(String s:u_vowels)
-            lame_vowels.put(s, "u");
-        for(String s:v_vowels)
-            lame_vowels.put(s, "v");
-
-        map_initialized=true;
-    }
-
-    public static boolean verify_pinyin(String entry) {
-        int i;
-        String temp="";
-
-        synchronized (pinyin_by_first_letter) {
-            if (!map_initialized)
-                create_pinyin_map();
-        }
-
-        if (entry.length()==0)
-            return false;
-
-        for (i = 0; i < 6; i++) {
-            if (entry.endsWith(""+i)) {
-                temp=entry.substring(0, entry.length()-1).toLowerCase(Locale.ENGLISH);
+            for (list in allLists) {
+                for (pin in list) {
+                    val first = pin.substring(0, 1)
+                    pinyin_by_first_letter.getOrPut(first) { ArrayList() }.add(pin)
+                }
             }
+
+            val vMap = HashMap<String, Int>()
+            val firstToneVowels = arrayOf("ā", "ō", "ē", "ī", "ū", "ǖ")
+            val secondToneVowels = arrayOf("á", "ó", "é", "í", "ú", "ǘ")
+            val thirdToneVowels = arrayOf("ǎ", "ǒ", "ě", "ǐ", "ǔ", "ǚ")
+            val fourthToneVowels = arrayOf("à", "ò", "è", "ì", "ù", "ǜ")
+            for (s in firstToneVowels) vMap[s] = 1
+            for (s in secondToneVowels) vMap[s] = 2
+            for (s in thirdToneVowels) vMap[s] = 3
+            for (s in fourthToneVowels) vMap[s] = 4
+            vowels_to_tone = vMap
+
+            val lMap = HashMap<String, String>()
+            val aVowels = arrayOf("ā", "á", "ǎ", "à")
+            val oVowels = arrayOf("ō", "ó", "ǒ", "ò")
+            val eVowels = arrayOf("ē", "é", "ě", "è")
+            val iVowels = arrayOf("ī", "í", "ǐ", "ì")
+            val uVowels = arrayOf("ū", "ú", "ǔ", "ù")
+            val vVowels = arrayOf("ǖ", "ǘ", "ǚ", "ǜ")
+            for (s in aVowels) lMap[s] = "a"
+            for (s in oVowels) lMap[s] = "o"
+            for (s in eVowels) lMap[s] = "e"
+            for (s in iVowels) lMap[s] = "i"
+            for (s in uVowels) lMap[s] = "u"
+            for (s in vVowels) lMap[s] = "v"
+            lame_vowels = lMap
+
+            map_initialized = true
         }
-        if (temp.equals(""))
-            temp=entry.toLowerCase(Locale.ENGLISH);
 
-        return pinyin_by_first_letter.containsKey(temp.substring(0, 1)) && pinyin_by_first_letter.get(temp.substring(0, 1)).contains(temp);
+        @JvmStatic
+        fun verify_pinyin(entry: String): Boolean {
+            if (entry.isEmpty()) return false
 
-    }
+            ensureMapsInitialized()
 
-    public int get_tone () {
-        return tone==0?5:tone;
-    }
+            var temp = ""
+            for (i in 0..5) {
+                if (entry.endsWith(i.toString())) {
+                    temp = entry.substring(0, entry.length - 1).lowercase(Locale.ENGLISH)
+                }
+            }
+            if (temp.isEmpty()) {
+                temp = entry.lowercase(Locale.ENGLISH)
+            }
 
-    public String get_lame() {
-        return lame;
-    }
+            if (temp.isEmpty()) return false
+            val initial = temp.substring(0, 1)
+            val list = pinyin_by_first_letter[initial] ?: return false
+            return list.contains(temp)
+        }
 
-    public String get_radical() {
-        return radical;
-    }
-
-    public String get_pretty() {
-        return print;
-    }
-
-    public String get_color() {
-        return html_color_print;
-    }
-
-    public boolean equals(Pinyin pinyin) {
-        return (pinyin.get_lame().equals(get_lame())) && (pinyin.get_tone() == get_tone());
-    }
-
-    public boolean tone_is_given() {
-        return !(tone==0);
-    }
-
-    private static final String[] pinyin_list_notone = {
+        @JvmField
+        val pinyin_list_notone = arrayOf(
             "a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca", "sa", "zha", "cha", "sha", "ga", "ka", "ha",
             "o", "bo", "po", "mo", "fo",
             "me", "de", "te", "ne", "le", "ze", "ce", "se", "zhe", "che", "she", "re", "ge", "ke", "he",
@@ -344,8 +275,10 @@ public class Pinyin {
             "yue", "nve", "lve", "jue", "que", "xue",
             "yuan", "juan", "quan", "xuan",
             "yun", "jun", "qun", "xun"
-    };
-    private static final String[] pinyin_list_tone1 = {
+        )
+
+        @JvmField
+        val pinyin_list_tone1 = arrayOf(
             "ā", "bā", "pā", "mā", "fā", "dā", "tā", "nā", "lā", "zā", "cā", "sā", "zhā", "chā", "shā", "gā", "kā", "hā",
             "ō", "bō", "pō", "mō", "fō",
             "mē", "dē", "tē", "nē", "lē", "zē", "cē", "sē", "zhē", "chē", "shē", "rē", "gē", "kē", "hē",
@@ -383,8 +316,10 @@ public class Pinyin {
             "yuē", "nüē", "lüē", "juē", "quē", "xuē",
             "yuān", "juān", "quān", "xuān",
             "yūn", "jūn", "qūn", "xūn"
-    };
-    private static final String[] pinyin_list_tone2 = {
+        )
+
+        @JvmField
+        val pinyin_list_tone2 = arrayOf(
             "á", "bá", "pá", "má", "fá", "dá", "tá", "ná", "lá", "zá", "cá", "sá", "zhá", "chá", "shá", "gá", "ká", "há",
             "ó", "bó", "pó", "mó", "fó",
             "mé", "dé", "té", "né", "lé", "zé", "cé", "sé", "zhé", "ché", "shé", "ré", "gé", "ké", "hé",
@@ -414,16 +349,18 @@ public class Pinyin {
             "wá", "zhuá", "chuá", "shuá", "ruá", "guá", "kuá", "huá",
             "wó", "duó", "tuó", "nuó", "luó", "zuó", "cuó", "suó", "zhuó", "chuó", "shuó", "ruó", "guó", "kuó", "huó",
             "wái", "zhuái", "chuái", "shuái", "guái", "kuái", "huái",
-            "wéi", "duí", "tuí", "zuí", "cuí", "suí", "zhuí", "chuí", "shuí", "ruí", "guí", "kuí", "huí",
-            "wán", "duán", "tuán", "nuán", "luán", "zuán", "cuán", "suán", "zhuán", "chuán", "shuán", "ruán", "guán", "kuán", "huán",
+            "wéi", "duí", "tuí", "zuí", "cuí", "suí", "zhuí", "chuí", "shuí", "ruī", "guí", "kuí", "huí",
+            "wán", "duán", "tuán", "nuán", "luán", "zuán", "cuán", "suán", "zhuán", "chuán", "shuān", "ruán", "guán", "kuán", "huán",
             "wén", "dún", "tún", "lún", "zún", "cún", "sún", "zhún", "chún", "shún", "rún", "gún", "kún", "hún",
             "wáng", "zhuáng", "chuáng", "shuáng", "guáng", "kuáng", "huáng", "wéng",
             "yú", "nǘ", "lǘ", "jú", "qú", "xú",
             "yué", "nüé", "lüé", "jué", "qué", "xué",
             "yuán", "juán", "quán", "xuán",
             "yún", "jún", "qún", "xún"
-    };
-    private static final String[] pinyin_list_tone3 = {
+        )
+
+        @JvmField
+        val pinyin_list_tone3 = arrayOf(
             "ǎ", "bǎ", "pǎ", "mǎ", "fǎ", "dǎ", "tǎ", "nǎ", "lǎ", "zǎ", "cǎ", "sǎ", "zhǎ", "chǎ", "shǎ", "gǎ", "kǎ", "hǎ",
             "ǒ", "bǒ", "pǒ", "mǒ", "fǒ",
             "mě", "dě", "tě", "ně", "lě", "zě", "cě", "sě", "zhě", "chě", "shě", "rě", "gě", "kě", "hě",
@@ -444,7 +381,7 @@ public class Pinyin {
             "yǎo", "biǎo", "piǎo", "miǎo", "diǎo", "tiǎo", "niǎo", "liǎo", "jiǎo", "qiǎo", "xiǎo",
             "yě", "biě", "piě", "miě", "diě", "tiě", "niě", "liě", "jiě", "qiě", "xiě",
             "yǒu", "miǔ", "diǔ", "niǔ", "liǔ", "jiǔ", "qiǔ", "xiǔ",
-            "yǎn", "biǎn", "piǎn", "miǎn", "diǎn", "tiǎn", "niǎn", "liǎn", "jiǎn", "qiǎn", "xiǎn",
+            "yǎn", "biǎn", "piǎn", "miǎn", "diǎn", "tiǎn", "niǎn", "liān", "jiǎn", "qiǎn", "xiǎn",
             "yǐn", "bǐn", "pǐn", "mǐn", "nǐn", "lǐn", "jǐn", "qǐn", "xǐn",
             "yǎng", "niǎng", "liǎng", "jiǎng", "qiǎng", "xiǎng",
             "yǐng", "bǐng", "pǐng", "mǐng", "dǐng", "tǐng", "nǐng", "lǐng", "jǐng", "qǐng", "xǐng",
@@ -461,8 +398,10 @@ public class Pinyin {
             "yuě", "nüě", "lüě", "juě", "quě", "xuě",
             "yuǎn", "juǎn", "quǎn", "xuǎn",
             "yǔn", "jǔn", "qǔn", "xǔn"
-    };
-    private static final String[] pinyin_list_tone4 = {
+        )
+
+        @JvmField
+        val pinyin_list_tone4 = arrayOf(
             "à", "bà", "pà", "mà", "fà", "dà", "tà", "nà", "là", "zà", "cà", "sà", "zhà", "chà", "shà", "gà", "kà", "hà",
             "ò", "bò", "pò", "mò", "fò",
             "mè", "dè", "tè", "nè", "lè", "zè", "cè", "sè", "zhè", "chè", "shè", "rè", "gè", "kè", "hè",
@@ -493,15 +432,17 @@ public class Pinyin {
             "wò", "duò", "tuò", "nuò", "luò", "zuò", "cuò", "suò", "zhuò", "chuò", "shuò", "ruò", "guò", "kuò", "huò",
             "wài", "zhuài", "chuài", "shuài", "guài", "kuài", "huài",
             "wèi", "duì", "tuì", "zuì", "cuì", "suì", "zhuì", "chuì", "shuì", "ruì", "guì", "kuì", "huì",
-            "wàn", "duàn", "tuàn", "nuàn", "luàn", "zuàn", "cuàn", "suàn", "zhuàn", "chuàn", "shuàn", "ruàn", "guàn", "kuàn", "huàn",
+            "wàn", "duàn", "tuàn", "nuàn", "luàn", "zuàn", "cuàn", "suàn", "zhuàn", "chuàn", "shuān", "ruàn", "guàn", "kuàn", "huàn",
             "wèn", "dùn", "tùn", "lùn", "zùn", "cùn", "sùn", "zhùn", "chùn", "shùn", "rùn", "gùn", "kùn", "hùn",
             "wàng", "zhuàng", "chuàng", "shuàng", "guàng", "kuàng", "huàng", "wèng",
             "yǜ", "nǜ", "lǜ", "jǜ", "qù", "xù",
             "yuè", "nüè", "lüè", "juè", "què", "xuè",
             "yuàn", "juàn", "quàn", "xuàn",
             "yǜn", "jǜn", "qǜn", "xǜn"
-    };
-    private static final String[] pinyin_list_tone5 = {
+        )
+
+        @JvmField
+        val pinyin_list_tone5 = arrayOf(
             "a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca", "sa", "zha", "cha", "sha", "ga", "ka", "ha",
             "o", "bo", "po", "mo", "fo",
             "me", "de", "te", "ne", "le", "ze", "ce", "se", "zhe", "che", "she", "re", "ge", "ke", "he",
@@ -539,5 +480,6 @@ public class Pinyin {
             "yue", "nüe", "lüe", "jue", "que", "xue",
             "yuan", "juan", "quan", "xuan",
             "yun", "jun", "qun", "xun"
-    };
+        )
+    }
 }

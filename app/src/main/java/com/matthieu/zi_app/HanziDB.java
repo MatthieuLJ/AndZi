@@ -3097,59 +3097,18 @@ public class HanziDB extends SQLiteOpenHelper {
     }
 
     protected long getExpiryTime (int box) {
-        if (box == 0)
-            return 0;
-
-        long box_delay = (long) 12 * 60 * 60 * 1000; // 6 hours is basic
-
-        // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        long res = (long) (box_delay * Math.pow(2, box));
-        if (DEBUG) Log.d(TAG, "Expiry time is "+convert_time_in_string(res)+" (box is "+box+")");
+        long res = LeitnerScheduler.calculateSimpleExpiryDelay(box);
+        if (DEBUG) Log.d(TAG, "Expiry time is " + convert_time_in_string(res) + " (box is " + box + ")");
         return res;
-
-        //System.out.println("With "+getNumChars()+" characters, mult is "+multiplicator+", so delay is "+(res/(1000*60*60)+" hours for box "+box));
     }
 
     private String convert_time_in_string(long delay) {
-        StringBuilder res = new StringBuilder();
-        if (delay / (1000*60*60*24) >= 2) {
-            res.append((long) (delay / (1000 * 60 * 60 * 24))).append(" days");
-        } else if (delay / (1000*60*60*24) >= 1) {
-            long hours = (delay / (1000*60*60)) - 24;
-            res.append("1 day ").append(hours).append(" hours");
-        } else if (delay / (1000*60*60) >= 2) {
-            res.append((long) (delay / (1000 * 60 * 60))).append(" hours");
-        } else if (delay / (1000*60*60) >= 1) {
-            long minutes = (delay / (1000*60)) - 60;
-            res.append("1 hour ").append(minutes).append(" minutes");
-        } else if (delay / (1000*60) >= 2) {
-            res.append((long) (delay / (1000 * 60))).append(" minutes");
-        } else if (delay / (1000*60) >= 1) {
-            long seconds = (delay / 1000) - 60;
-            res.append("1 minute ").append(seconds).append(" seconds");
-        } else {
-            res.append((long) (delay / 1000)).append(" seconds");
-        }
-
-        return res.toString();
+        return LeitnerScheduler.formatDelayString(delay);
     }
 
     protected long getExpiryTime (int box, int num_tested, int num_wrong, long date_started, long last_expiration) {
-        if (box==0)
-            return 0;
-
-        long box_delay = (long) 12 * 60 * 60 * 1000; // 12 hours is basic (will be multiplied by 2 at least)
-        long extra_delay = 0;
-        if ((last_expiration != 0) && (last_expiration < System.currentTimeMillis()))
-            extra_delay = (System.currentTimeMillis() - last_expiration)/2;
-
-        double multiplicand=2;
-        if (num_tested-box > 3) {
-            multiplicand += (0.5-(num_wrong/(num_tested-box)))*8/20; // multiplicand becomes between 1.8 and 2.2 depending on results so far
-        }
-        // at the minimum this will give a delay of 12 hours and will double per box and per power of 10
-        long res = (long) (box_delay * Math.pow(multiplicand, box) + extra_delay);
-        if (DEBUG) Log.d(TAG, "Expiry time is "+convert_time_in_string(res)+" (box is "+box+")");
+        long res = LeitnerScheduler.calculateAdaptiveExpiryDelay(box, num_tested, num_wrong, last_expiration);
+        if (DEBUG) Log.d(TAG, "Expiry time is " + convert_time_in_string(res) + " (box is " + box + ")");
         return res;
     }
 
