@@ -2,25 +2,25 @@ package com.matthieu.zi_app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager.widget.ViewPager;
 import com.matthieu.zi_app.widget.LockableViewPager;
 import com.viewpagerindicator.PageIndicator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class VocabularyEditorActivity extends SherlockFragmentActivity implements ViewPager.OnPageChangeListener {
+public class VocabularyEditorActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
     Fragment fragments[];
 
     HanziDB refDB, myDB;
@@ -108,9 +108,11 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
             }
         }
 
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
     }
 
     @Override
@@ -331,7 +333,7 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
                 break;
         }
         menu.clear();
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
         inflater.inflate(menu_resource, menu);
 
         return true;
@@ -342,91 +344,81 @@ public class VocabularyEditorActivity extends SherlockFragmentActivity implement
         ArrayList<String> selection;
         LockableViewPager pager = (LockableViewPager) findViewById(R.id.voc_editor_pager);
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            case R.id.add_vocabulary_add_selection:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).add_selection();
-                if ((fragments[2] != null) && (((LessonListFragment)fragments[2]).current_lessons().contains(((AddVocabularyFragment)fragments[0]).get_default_lesson()))) {
-                    ((LessonListFragment)fragments[2]).update_list();
-                }
-
-                return true;
-            case R.id.add_vocabulary_delete_selection:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).del_selection();
-                if (fragments[2] != null)
-                    ((LessonListFragment)fragments[2]).update_list();
-                return true;
-            case R.id.add_vocabulary_edit_translation:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).edit_selection();
-                if (fragments[2] != null)
-                    ((LessonListFragment)fragments[2]).update_list();
-                return true;
-            case R.id.add_vocabulary_done:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                ((AddVocabularyFragment)fragments[0]).done();
-                return true;
-
-            case R.id.add_vocabulary_lesson_select_all:
-                ((EditLessonsFragment)fragments[1]).set_select_all();
-                break;
-            case R.id.add_vocabulary_lesson_select_none:
-                ((EditLessonsFragment)fragments[1]).set_select_none();
-                break;
-            case R.id.add_vocabulary_lesson_select_done:
-                Intent resultIntent = getIntent();
-                selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                Bundle b = new Bundle();
-                b.putStringArrayList("lesson_list", selection);
-                resultIntent.putExtras(b);
-                setResult(RESULT_OK, resultIntent);
-                finish();
-                break;
-            case R.id.add_vocabulary_lesson_clone:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                ((EditLessonsFragment)fragments[1]).clone_selection();
-                break;
-            case R.id.add_vocabulary_lesson_delete:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                if (selection.size() < 1) {
-                    ((EditLessonsFragment)fragments[1]).update_state();
-                    break;
-                }
-                close_lesson_list();
-                ((EditLessonsFragment)fragments[1]).del_selection();
-                break;
-            case R.id.add_vocabulary_lesson_rename:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                selection = ((EditLessonsFragment)fragments[1]).get_selection();
-                if (selection.size() != 1) {
-                    ((EditLessonsFragment)fragments[1]).update_state();
-                    break;
-                }
-                close_lesson_list();
-                ((EditLessonsFragment)fragments[1]).rename_selection();
-                break;
-            case R.id.add_vocabulary_lesson_merge:
-                if (pager!=null)
-                    pager.setCurrentItem(1);
-                ((EditLessonsFragment)fragments[1]).merge_selection();
-                break;
-            case R.id.add_vocabulary_lesson_set_default:
-                if (pager!=null)
-                    pager.setCurrentItem(0);
-                set_default_list();
-                break;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_add_selection) {
+            if (pager!=null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment)fragments[0]).add_selection();
+            if ((fragments[2] != null) && (((LessonListFragment)fragments[2]).current_lessons().contains(((AddVocabularyFragment)fragments[0]).get_default_lesson()))) {
+                ((LessonListFragment)fragments[2]).update_list();
+            }
+            return true;
+        } else if (itemId == R.id.add_vocabulary_delete_selection) {
+            if (pager!=null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment)fragments[0]).del_selection();
+            if (fragments[2] != null)
+                ((LessonListFragment)fragments[2]).update_list();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_edit_translation) {
+            if (pager!=null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment)fragments[0]).edit_selection();
+            if (fragments[2] != null)
+                ((LessonListFragment)fragments[2]).update_list();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_done) {
+            if (pager!=null)
+                pager.setCurrentItem(0);
+            ((AddVocabularyFragment)fragments[0]).done();
+            return true;
+        } else if (itemId == R.id.add_vocabulary_lesson_select_all) {
+            ((EditLessonsFragment)fragments[1]).set_select_all();
+        } else if (itemId == R.id.add_vocabulary_lesson_select_none) {
+            ((EditLessonsFragment)fragments[1]).set_select_none();
+        } else if (itemId == R.id.add_vocabulary_lesson_select_done) {
+            Intent resultIntent = getIntent();
+            selection = ((EditLessonsFragment)fragments[1]).get_selection();
+            Bundle b = new Bundle();
+            b.putStringArrayList("lesson_list", selection);
+            resultIntent.putExtras(b);
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        } else if (itemId == R.id.add_vocabulary_lesson_clone) {
+            if (pager!=null)
+                pager.setCurrentItem(1);
+            ((EditLessonsFragment)fragments[1]).clone_selection();
+        } else if (itemId == R.id.add_vocabulary_lesson_delete) {
+            if (pager!=null)
+                pager.setCurrentItem(1);
+            selection = ((EditLessonsFragment)fragments[1]).get_selection();
+            if (selection.size() < 1) {
+                ((EditLessonsFragment)fragments[1]).update_state();
+                return super.onOptionsItemSelected(item);
+            }
+            close_lesson_list();
+            ((EditLessonsFragment)fragments[1]).del_selection();
+        } else if (itemId == R.id.add_vocabulary_lesson_rename) {
+            if (pager!=null)
+                pager.setCurrentItem(1);
+            selection = ((EditLessonsFragment)fragments[1]).get_selection();
+            if (selection.size() != 1) {
+                ((EditLessonsFragment)fragments[1]).update_state();
+                return super.onOptionsItemSelected(item);
+            }
+            close_lesson_list();
+            ((EditLessonsFragment)fragments[1]).rename_selection();
+        } else if (itemId == R.id.add_vocabulary_lesson_merge) {
+            if (pager!=null)
+                pager.setCurrentItem(1);
+            ((EditLessonsFragment)fragments[1]).merge_selection();
+        } else if (itemId == R.id.add_vocabulary_lesson_set_default) {
+            if (pager!=null)
+                pager.setCurrentItem(0);
+            set_default_list();
         }
         return super.onOptionsItemSelected(item);
     }

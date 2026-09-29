@@ -239,23 +239,23 @@ public class ProgressGraph extends View {
 
         String date_label="00/00/00";
         p.getTextBounds(date_label, 0, date_label.length(), bottom_axis_r);
-        bottom_size= (int) android.util.FloatMath.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + bottom_axis_r.height();
+        bottom_size= (int) Math.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + bottom_axis_r.height();
 
         String max_label=Integer.toString(max_scale);
         p.getTextBounds(max_label, 0,max_label.length(), left_axis_r);
         // This one is for the left axis and labels
-        left_size= (int) android.util.FloatMath.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + left_axis_r.width();
+        left_size= (int) Math.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2 + 2 + 4 + 1, getResources().getDisplayMetrics())) + left_axis_r.width();
         // This is for the current number indicators
-        right_size= (int) android.util.FloatMath.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 6 + 2 +2, getResources().getDisplayMetrics())) + left_axis_r.width() + left_axis_r.height();
+        right_size= (int) Math.ceil(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 6 + 2 +2, getResources().getDisplayMetrics())) + left_axis_r.width() + left_axis_r.height();
         // This is only the printed part of those current indicators
-        label_size = (int) android.util.FloatMath.ceil(left_axis_r.height()/2);
+        label_size = (int) Math.ceil(left_axis_r.height()/2.0);
 
 
     }
 
     static public int getMax_zoom(long min_date, long max_date) {
         long one_day = 1000 * 60 * 60 * 24;
-        return (int) android.util.FloatMath.floor((float)(log((max_date-min_date)/one_day)/log(2)));
+        return (int) Math.floor((float)(log((max_date-min_date)/one_day)/log(2)));
         // the logic is: one_day x 2^(max_zoom) <= max_date - min_date
     }
 
@@ -297,26 +297,26 @@ public class ProgressGraph extends View {
             // left axis is (2 points) LABEL (2 points) (horizontal line of 4 points) (vertical line of 1 point width)
 
             // draw the top of the scale
-            canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())), 0, left_size-1, 0, p);
-            canvas.drawText(Integer.toString(max_scale),(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
+            canvas.drawLine((int) Math.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())), 0, left_size-1, 0, p);
+            canvas.drawText(Integer.toString(max_scale),(int) Math.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                     left_axis_r.height(), p);
             last_offset=left_axis_r.height();
 
             // draw the bottom of the scale
-            canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
+            canvas.drawLine((int) Math.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
                     getMeasuredHeight()-bottom_size, left_size-1, getMeasuredHeight()-bottom_size, p);
-            canvas.drawText("0",(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
+            canvas.drawText("0",(int) Math.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                     getMeasuredHeight()-bottom_size, p);
             first_offset=getMeasuredHeight()-bottom_size-left_axis_r.height();
 
             // draw some intermediary values
             int int_value= 0;
             while(int_value < max_scale) {
-                canvas.drawLine((int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
+                canvas.drawLine((int) Math.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1, getResources().getDisplayMetrics())),
                         (float) ((1.0-log_scale(int_value, max_scale)))*(getMeasuredHeight()-bottom_size), left_size-1, (float) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size)), p);
                 if (((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2 > last_offset) &&
                         ((int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2<first_offset)) {
-                    canvas.drawText(Integer.toString(int_value),(int) android.util.FloatMath.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
+                    canvas.drawText(Integer.toString(int_value),(int) Math.floor(left_size - TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4 + 1 + 2, getResources().getDisplayMetrics())),
                             (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))+left_axis_r.height()/2, p);
                     first_offset = (int) ((1-log_scale(int_value, max_scale))*(getMeasuredHeight()-bottom_size))-left_axis_r.height()/2;
                 }

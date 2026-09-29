@@ -15,13 +15,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.zi_app.widget.VocabularyCursorAdapter;
 import com.matthieu.zi_app.widget.VocabularyCursorClickHandle;
 import com.matthieu.zi_app.widget.handle_details_request;
@@ -157,7 +157,7 @@ public class DetailsFragment extends Fragment {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                SherlockFragmentActivity parent = (SherlockFragmentActivity) getActivity();
+                AppCompatActivity parent = (AppCompatActivity) getActivity();
                 if (parent != null)
                     parent.invalidateOptionsMenu();
                 View v = getView();

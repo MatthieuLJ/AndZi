@@ -1,7 +1,6 @@
 package com.matthieu.zi_app;
 
-import android.test.AndroidTestCase;
-import android.util.Log;
+import junit.framework.TestCase;
 import java.util.ArrayList;
 
 /**
@@ -9,17 +8,7 @@ import java.util.ArrayList;
  * Date: 6/1/11
  * Time: 4:23 PM
  */
-public class PinyinParserTest extends AndroidTestCase {
-    private static final String TAG="PinyinParserTest";
-
-    @Override
-    protected void setUp() {
-        Log.d(TAG, " is setup");
-    }
-
-    @Override
-    protected void tearDown() {
-    }
+public class PinyinParserTest extends TestCase {
 
     public void testSimple() {
         ArrayList<String> res=PinyinParser.parse_string("ni3hao3");

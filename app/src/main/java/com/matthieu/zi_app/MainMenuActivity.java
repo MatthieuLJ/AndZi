@@ -6,15 +6,15 @@ package com.matthieu.zi_app;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.zi_app.settings.Settings;
 import org.jetbrains.annotations.Nullable;
 
-public class MainMenuActivity extends SherlockFragmentActivity {
+public class MainMenuActivity extends AppCompatActivity {
     private final String TAG="MainMenuActivity";
     boolean showing_splash = false;
     boolean start_test;
@@ -24,7 +24,9 @@ public class MainMenuActivity extends SherlockFragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.mainmenu_theme);
         super.onCreate(savedInstanceState);
-        getSupportActionBar().hide();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         start_test=false;
 
         if (savedInstanceState != null) {

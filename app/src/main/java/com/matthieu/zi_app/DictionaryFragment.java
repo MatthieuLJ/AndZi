@@ -8,13 +8,12 @@ import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.database.MergeCursor;
 import android.os.*;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.matthieu.zi_app.widget.MessageCursor;
 import com.matthieu.zi_app.widget.VocabularyCursorAdapter;
 import com.matthieu.zi_app.widget.VocabularyCursorClickHandle;
@@ -45,7 +44,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View res = inflater.inflate(R.layout.dictionary, container, false);
-        ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
 
         final ListView results = (ListView) res.findViewById(R.id.dict_results);
         results.setAdapter(new VocabularyCursorAdapter(getActivity(), null, this));
@@ -332,7 +330,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 Cursor current_cursor = ((VocabularyCursorAdapter)results.getAdapter()).getCursor();
                 if (current_cursor instanceof MessageCursor)
                     ((VocabularyCursorAdapter)results.getAdapter()).changeCursor(null);
-                ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(true);
             }
         }
 
@@ -342,7 +339,6 @@ public class DictionaryFragment extends Fragment implements VocabularyCursorClic
                 EditText query = (EditText) getView().findViewById(R.id.dict_query);
                 if (msg_query.trim().equals(query.getText().toString().trim()) && (msg_ref == use_ref)) {
                     publish_cursor(cursor);
-                    ((SherlockFragmentActivity)getActivity()).setSupportProgressBarIndeterminateVisibility(false);
                 }
                 else {
                     if (cursor!=null)

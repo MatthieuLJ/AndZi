@@ -6,22 +6,25 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.support.v4.app.*;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager.widget.ViewPager;
 import com.matthieu.zi_app.widget.ViewPagerParallax;
 import com.matthieu.zi_app.widget.handle_details_request;
 import com.viewpagerindicator.PageIndicator;
 
-public class ReferenceActivity extends SherlockFragmentActivity implements handle_details_request, ViewPager.OnPageChangeListener{
+public class ReferenceActivity extends AppCompatActivity implements handle_details_request, ViewPager.OnPageChangeListener{
     final private static int max_details_fragments=3;
     Fragment fragments[];
     int ids[];
@@ -32,7 +35,6 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_Sherlock);
-        requestWindowFeature(com.actionbarsherlock.view.Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.reference);
@@ -105,9 +107,11 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
             new_details_request(hanzi, use_ref);
         }
 
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
     }
 
     @Override
@@ -356,7 +360,7 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         ViewPager pager = (ViewPager) findViewById(R.id.reference_pager);
 
         menu.clear();
-        MenuInflater inflater = getSupportMenuInflater();
+        MenuInflater inflater = getMenuInflater();
 
         if (pager != null) {
             int page = pager.getCurrentItem();
@@ -407,27 +411,23 @@ public class ReferenceActivity extends SherlockFragmentActivity implements handl
         if (pager!= null)
             page = pager.getCurrentItem();
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            case R.id.reference_source:
-                ((DictionaryFragment)fragments[0]).change_source();
-                invalidateOptionsMenu();
-                break;
-            case R.id.details_add_edit:
-                ((DetailsFragment)fragments[page]).edit_add_word();
-                break;
-            case R.id.details_pinned:
-                ((DetailsFragment)fragments[page]).pin_unpin();
-                invalidateOptionsMenu();
-                break;
-            case R.id.details_source:
-                ((DetailsFragment)fragments[page]).change_source();
-                invalidateOptionsMenu();
-                break;
-            default:
-                return false;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.reference_source) {
+            ((DictionaryFragment)fragments[0]).change_source();
+            invalidateOptionsMenu();
+        } else if (itemId == R.id.details_add_edit) {
+            ((DetailsFragment)fragments[page]).edit_add_word();
+        } else if (itemId == R.id.details_pinned) {
+            ((DetailsFragment)fragments[page]).pin_unpin();
+            invalidateOptionsMenu();
+        } else if (itemId == R.id.details_source) {
+            ((DetailsFragment)fragments[page]).change_source();
+            invalidateOptionsMenu();
+        } else {
+            return false;
         }
         return true;
     }

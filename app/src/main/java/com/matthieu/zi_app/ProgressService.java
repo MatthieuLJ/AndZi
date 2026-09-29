@@ -1,6 +1,7 @@
 package com.matthieu.zi_app;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -10,17 +11,19 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class ProgressService extends Service {
     private final static int NOTIFICATION_ID=1;
+    private final static String CHANNEL_ID = "andzi_reminders";
     private final static String TAG="ProgressService";
     @Override
     public void onCreate() {
         super.onCreate();
+        createNotificationChannel();
         Timer timer = new Timer();
         TimerTask task = new TimerTask() {
             @Override
@@ -39,6 +42,20 @@ public class ProgressService extends Service {
 
         timer.scheduleAtFixedRate(task, 30*1000, 2*60*60*1000); // every 2 hours
         //timer.scheduleAtFixedRate(task, 0, 120*1000); // every 2 minutes for test...
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Study Reminders",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.createNotificationChannel(channel);
+            }
+        }
     }
 
     public void update_progress_data() {
@@ -66,9 +83,14 @@ public class ProgressService extends Service {
             Notification notification;
             Intent start_test = new Intent(this, MainMenuActivity.class);
             start_test.putExtra("start_test", true);
-            PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, PendingIntent.FLAG_CANCEL_CURRENT);
+            int flags = PendingIntent.FLAG_CANCEL_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+            PendingIntent pi = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), start_test, flags);
 
-            notification = new NotificationCompat.Builder(this).setContentTitle(getResources().getString(R.string.notification_title))
+            notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle(getResources().getString(R.string.notification_title))
                     .setContentText(getResources().getString(R.string.notification_content, expired))
                     .setSmallIcon(R.drawable.zi_icon_notification).setContentIntent(pi)
                     .setAutoCancel(true).setOnlyAlertOnce(true).build();

@@ -5,18 +5,21 @@ package com.matthieu.zi_app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.*;
-import android.support.v4.view.ViewPager;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.viewpager.widget.ViewPager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.LinearLayout;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.MenuItem;
 import com.matthieu.zi_app.widget.InsideScrollPager;
 import com.matthieu.zi_app.widget.handle_details_request;
 import com.matthieu.zi_app.R;
 import com.viewpagerindicator.PageIndicator;
 
-public class TestActivity extends SherlockFragmentActivity  implements handle_details_request {
+public class TestActivity extends AppCompatActivity implements handle_details_request {
     private Fragment fragments[];
 
     private static final boolean DEBUG = false;
@@ -74,9 +77,11 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
                 pager.setCurrentItem(0, false);
         }
 
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+        }
     }
 
     @Override
@@ -165,10 +170,9 @@ public class TestActivity extends SherlockFragmentActivity  implements handle_de
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
         }
         return false;
     }
