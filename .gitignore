@@ -1,13 +1,40 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
 bin/
 gen/
-/out/
+out/
+build/
+.gradle/
+app/build/
 
-*.pyc
-*.swp
-.idea/workspace.xml
-
+# Local configuration file (sdk path, etc)
 local.properties
 build.properties
 build.xml
 proguard.cfg
 proguard-project.txt
+
+# Python & temporary files
+*.pyc
+*.swp
+*.log
+.DS_Store
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
