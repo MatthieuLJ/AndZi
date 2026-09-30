@@ -62,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
+import com.matthieu.zi_app.ui.theme.buildPinyinToneAnnotatedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -199,7 +200,7 @@ fun DictionaryResultCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val prettyPinyin = PinyinParser.convert_to_pretty_version(word.pinyin)
+    val annotatedPinyin = buildPinyinToneAnnotatedString(word.pinyin, AndZiThemeCustom.toneColors)
 
     Card(
         modifier = modifier
@@ -230,9 +231,8 @@ fun DictionaryResultCard(
             // Pinyin & English
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = prettyPinyin,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary
+                    text = annotatedPinyin,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -270,7 +270,7 @@ fun WordDetailSheetContent(
     onSelectCompound: (Vocabulary) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val prettyPinyin = PinyinParser.convert_to_pretty_version(word.pinyin)
+    val annotatedPinyin = buildPinyinToneAnnotatedString(word.pinyin, AndZiThemeCustom.toneColors)
 
     Column(
         modifier = modifier
@@ -305,9 +305,8 @@ fun WordDetailSheetContent(
 
                 // Pinyin directly below the Chinese word
                 Text(
-                    text = prettyPinyin,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary
+                    text = annotatedPinyin,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
 
                 if (currentBox != null) {
@@ -489,9 +488,8 @@ fun WordDetailSheetContent(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = PinyinParser.convert_to_pretty_version(compound.pinyin),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
+                                text = buildPinyinToneAnnotatedString(compound.pinyin, AndZiThemeCustom.toneColors),
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }

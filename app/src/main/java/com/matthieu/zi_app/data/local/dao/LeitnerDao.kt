@@ -100,6 +100,18 @@ interface LeitnerDao {
     """)
     fun getNumExpiredFlow(now: Long): Flow<Int>
 
-    @Query("SELECT box, COUNT(*) as count FROM leitner GROUP BY box")
+    @Query("""
+        SELECT box, COUNT(*) as count FROM (
+            SELECT all_items.chinese AS chinese, IFNULL(leitner.box, 0) AS box FROM (
+                SELECT leitner.hanzi AS chinese FROM leitner
+                UNION
+                SELECT cword.chinese AS chinese FROM cword
+                UNION
+                SELECT char_pinyin.hanzi AS chinese FROM char_pinyin
+            ) AS all_items
+            LEFT JOIN leitner ON leitner.hanzi = all_items.chinese
+            GROUP BY all_items.chinese
+        ) GROUP BY box
+    """)
     suspend fun getBoxCounts(): List<BoxCount>
 }

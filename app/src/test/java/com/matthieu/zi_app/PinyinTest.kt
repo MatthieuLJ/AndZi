@@ -1,5 +1,7 @@
 package com.matthieu.zi_app
 
+import com.matthieu.zi_app.ui.theme.PinyinToneColors
+import com.matthieu.zi_app.ui.theme.buildPinyinToneAnnotatedString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -7,6 +9,41 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PinyinTest {
+
+    @Test
+    fun testBuildPinyinToneAnnotatedString() {
+        val toneColors = PinyinToneColors()
+
+        // 1. Multi-syllable continuous compound word: ming2tian1 (ming=2, tian=1)
+        val annotatedCompound = buildPinyinToneAnnotatedString("ming2tian1", toneColors)
+        assertEquals("míngtiān", annotatedCompound.text)
+        assertEquals(2, annotatedCompound.spanStyles.size)
+        assertEquals(toneColors.colorForTone(2), annotatedCompound.spanStyles[0].item.color)
+        assertEquals(0, annotatedCompound.spanStyles[0].start)
+        assertEquals(4, annotatedCompound.spanStyles[0].end)
+        assertEquals(toneColors.colorForTone(1), annotatedCompound.spanStyles[1].item.color)
+        assertEquals(4, annotatedCompound.spanStyles[1].start)
+        assertEquals(8, annotatedCompound.spanStyles[1].end)
+
+        // 2. Space separated words: tu2 shu1 guan3 (tu=2, shu=1, guan=3)
+        val annotatedSpaced = buildPinyinToneAnnotatedString("tu2 shu1 guan3", toneColors)
+        assertEquals("tú shū guǎn", annotatedSpaced.text)
+        assertEquals(3, annotatedSpaced.spanStyles.size)
+        assertEquals(toneColors.colorForTone(2), annotatedSpaced.spanStyles[0].item.color)
+        assertEquals(toneColors.colorForTone(1), annotatedSpaced.spanStyles[1].item.color)
+        assertEquals(toneColors.colorForTone(3), annotatedSpaced.spanStyles[2].item.color)
+
+        // 3. Single syllable
+        val annotatedSingle = buildPinyinToneAnnotatedString("shui3", toneColors)
+        assertEquals("shuǐ", annotatedSingle.text)
+        assertEquals(1, annotatedSingle.spanStyles.size)
+        assertEquals(toneColors.colorForTone(3), annotatedSingle.spanStyles[0].item.color)
+
+        // 4. Blank string
+        val annotatedEmpty = buildPinyinToneAnnotatedString("", toneColors)
+        assertEquals("", annotatedEmpty.text)
+        assertTrue(annotatedEmpty.spanStyles.isEmpty())
+    }
 
     @Test
     fun testNumericTones() {

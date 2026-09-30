@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,9 +46,11 @@ import androidx.compose.ui.unit.sp
 import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.ui.study.QuizType
 import com.matthieu.zi_app.ui.study.SessionStats
 import com.matthieu.zi_app.ui.study.StudyCard
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
+import com.matthieu.zi_app.ui.theme.buildPinyinToneAnnotatedString
 
 @Composable
 fun ToneKeypad(
@@ -235,75 +238,162 @@ fun EnglishMcqView(
 
 @Composable
 fun ClozeAssemblyView(
+    quizType: QuizType,
     wordSlots: List<String>,
     clozeTargetIndex: Int,
+    assembledChars: List<String>,
+    usedTileIndices: List<Int>,
     tiles: List<String>,
     isRevealed: Boolean,
-    onTileSelected: (String) -> Unit,
+    isCorrect: Boolean?,
+    onTileSelected: (Int, String) -> Unit,
+    onUndoTile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isAssembly = (quizType == QuizType.WORD_ASSEMBLY)
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Word slot boxes
+        // 1. Word Slot Boxes (Target / Assembling word)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            wordSlots.forEachIndexed { index, char ->
-                val isBlank = (index == clozeTargetIndex)
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isBlank) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                            else MaterialTheme.colorScheme.surfaceVariant
+            wordSlots.forEachIndexed { index, solutionChar ->
+                if (isAssembly) {
+                    val hasChar = index < assembledChars.size
+                    val displayChar = when {
+                        isRevealed -> solutionChar
+                        hasChar -> assembledChars[index]
+                        else -> ""
+                    }
+                    val isNextActiveSlot = (index == assembledChars.size && !isRevealed)
+
+                    val borderColor = when {
+                        isRevealed && isCorrect == true -> Color(0xFF10B981)
+                        isRevealed && isCorrect == false -> Color(0xFFEF4444)
+                        isNextActiveSlot -> MaterialTheme.colorScheme.primary
+                        hasChar -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        else -> Color.Transparent
+                    }
+
+                    val bgColor = when {
+                        isRevealed && isCorrect == true -> Color(0xFF10B981).copy(alpha = 0.15f)
+                        isRevealed && isCorrect == false -> Color(0xFFEF4444).copy(alpha = 0.15f)
+                        hasChar -> MaterialTheme.colorScheme.surfaceVariant
+                        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(bgColor)
+                            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
+                            .clickable(enabled = !isRevealed && hasChar) {
+                                onUndoTile()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = displayChar,
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = when {
+                                isRevealed && isCorrect == true -> Color(0xFF10B981)
+                                isRevealed && isCorrect == false -> Color(0xFFEF4444)
+                                else -> MaterialTheme.colorScheme.onSurface
+                            }
                         )
-                        .border(
-                            2.dp,
-                            if (isBlank) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (isBlank && !isRevealed) "?" else char,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = if (isBlank && !isRevealed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
+                    }
+                } else {
+                    // CLOZE Mode: One missing slot
+                    val isBlank = (index == clozeTargetIndex)
+                    val displayChar = when {
+                        !isBlank -> solutionChar
+                        isRevealed -> solutionChar
+                        else -> "?"
+                    }
+
+                    val borderColor = when {
+                        isBlank && isRevealed && isCorrect == true -> Color(0xFF10B981)
+                        isBlank && isRevealed && isCorrect == false -> Color(0xFFEF4444)
+                        isBlank -> MaterialTheme.colorScheme.primary
+                        else -> Color.Transparent
+                    }
+
+                    val bgColor = when {
+                        isBlank && isRevealed && isCorrect == true -> Color(0xFF10B981).copy(alpha = 0.15f)
+                        isBlank && isRevealed && isCorrect == false -> Color(0xFFEF4444).copy(alpha = 0.15f)
+                        isBlank -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(bgColor)
+                            .border(2.dp, borderColor, RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = displayChar,
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = when {
+                                isBlank && isRevealed && isCorrect == true -> Color(0xFF10B981)
+                                isBlank && isRevealed && isCorrect == false -> Color(0xFFEF4444)
+                                isBlank && !isRevealed -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                    }
                 }
             }
         }
 
-        // Candidate Character Tiles
-        Row(
+        // 2. Candidate Character Tiles (Chunked into rows of up to 4 tiles)
+        val chunkedTiles = tiles.mapIndexed { idx, char -> idx to char }.chunked(4)
+
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            tiles.forEach { tile ->
-                Card(
-                    modifier = Modifier
-                        .padding(horizontal = 6.dp)
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable(enabled = !isRevealed) { onTileSelected(tile) },
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            chunkedTiles.forEach { rowTiles ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = tile,
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                    rowTiles.forEach { (tileIndex, tileChar) ->
+                        val isUsed = (tileIndex in usedTileIndices)
+                        val isEnabled = !isRevealed && !isUsed
+
+                        Card(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable(enabled = isEnabled) { onTileSelected(tileIndex, tileChar) },
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isUsed) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = if (isUsed) 0.dp else 3.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = tileChar,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = if (isUsed) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                                    else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -320,8 +410,7 @@ fun RevealedFeedbackCard(
     modifier: Modifier = Modifier
 ) {
     val toneColors = AndZiThemeCustom.toneColors
-    val prettyPinyin = PinyinParser.convert_to_pretty_version(card.pinyin)
-    val toneColor = toneColors.colorForTone(card.tone)
+    val annotatedPinyin = buildPinyinToneAnnotatedString(card.pinyin, toneColors)
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -356,11 +445,11 @@ fun RevealedFeedbackCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Pinyin with Tone Color
+            // Pinyin with Tone Color per syllable
             Text(
-                text = prettyPinyin,
+                text = annotatedPinyin,
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = toneColor
+                textAlign = TextAlign.Center
             )
 
             // English Meanings

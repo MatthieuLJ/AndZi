@@ -49,7 +49,7 @@ class AnalyticsViewModel(
                     boxMap[bc.box] = bc.count
                 }
 
-                val totalWords = allRecords.size
+                val totalWords = boxMap.values.sum()
                 val totalTested = allRecords.sumOf { it.numTested }
                 val totalWrong = allRecords.sumOf { it.numWrong }
                 val accuracy = if (totalTested > 0) {
@@ -61,11 +61,11 @@ class AnalyticsViewModel(
                 // Check if progress history exists; if empty, record a baseline snapshot
                 var history = progressRepository.getAllProgress()
                 if (history.isEmpty() && totalWords > 0) {
-                    val b0 = allRecords.count { it.box == 0 }
-                    val b1 = allRecords.count { it.box == 1 }
-                    val b2 = allRecords.count { it.box == 2 }
-                    val b3 = allRecords.count { it.box == 3 }
-                    val b4Plus = allRecords.count { it.box >= 4 }
+                    val b0 = boxMap[0] ?: 0
+                    val b1 = boxMap[1] ?: 0
+                    val b2 = boxMap[2] ?: 0
+                    val b3 = boxMap[3] ?: 0
+                    val b4Plus = (4..9).sumOf { boxMap[it] ?: 0 }
 
                     val exp2 = allRecords.count { it.box == 1 && it.expTime < now }
                     val exp3 = allRecords.count { it.box == 2 && it.expTime < now }

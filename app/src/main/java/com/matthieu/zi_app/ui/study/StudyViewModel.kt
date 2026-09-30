@@ -43,6 +43,26 @@ class StudyViewModel(
                     queueHanzis = allVoc.map { it.chinese }
                 }
 
+                // Gather all characters and English translations from the user's active study list
+                val studyChars = (
+                    vocabularyRepository.getAllDistinctHanzi() +
+                    queueHanzis.flatMap { h ->
+                        var idx = 0
+                        val chars = mutableListOf<String>()
+                        while (idx < h.length) {
+                            val cp = h.codePointAt(idx)
+                            chars.add(String(Character.toChars(cp)))
+                            idx += Character.charCount(cp)
+                        }
+                        chars
+                    }
+                ).distinct().toSet()
+
+                val allStudyEnglish = vocabularyRepository.search("", limit = 100)
+                    .flatMap { it.english }
+                    .distinct()
+                    .toSet()
+
                 val cards = mutableListOf<StudyCard>()
                 for ((index, hanzi) in queueHanzis.withIndex()) {
                     var vocList = vocabularyRepository.getVocabularyForChinese(hanzi)
@@ -81,9 +101,13 @@ class StudyViewModel(
                         !isSingleChar -> {
                             // Multi-character words NEVER use Tone quiz!
                             when {
-                                voc.english.isNotEmpty() && index % 3 == 0 -> QuizType.ENGLISH
-                                index % 2 == 0 -> QuizType.CLOZE
-                                else -> QuizType.WORD_ASSEMBLY
+                                voc.english.isNotEmpty() -> when (index % 3) {
+                                    0 -> QuizType.WORD_ASSEMBLY
+                                    1 -> QuizType.CLOZE
+                                    else -> QuizType.ENGLISH
+                                }
+                                index % 2 == 0 -> QuizType.WORD_ASSEMBLY
+                                else -> QuizType.CLOZE
                             }
                         }
                         hasValidNonNeutralTone && (voc.english.isEmpty() || index % 2 == 0) -> {
@@ -124,7 +148,7 @@ class StudyViewModel(
                     // 3. Generate MCQ distractors for English or Cloze
                     val mcqOptions = if (quizType == QuizType.ENGLISH) {
                         val correct = voc.english.firstOrNull() ?: "Meaning"
-                        generateEnglishDistractors(correct)
+                        generateEnglishDistractors(correct, allStudyEnglish)
                     } else emptyList()
 
                     // 4. Generate Cloze / Assembly slots
@@ -138,12 +162,14 @@ class StudyViewModel(
                             val ch = String(Character.toChars(codePoint))
                             wordSlots.add(ch)
                         }
+                        val distractorCount = getDistractorCountForBox(box, quizType)
                         if (quizType == QuizType.CLOZE && wordSlots.isNotEmpty()) {
                             targetIdx = (0 until wordSlots.size).random()
                             val correctChar = wordSlots[targetIdx]
-                            scrambledTiles.addAll(generateCharDistractors(correctChar))
+                            scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
                         } else {
-                            scrambledTiles.addAll(wordSlots.shuffled())
+                            val distractors = generateCharDistractorsForWord(wordSlots.toSet(), distractorCount, studyChars)
+                            scrambledTiles.addAll((wordSlots + distractors).shuffled())
                         }
                     }
 
@@ -172,6 +198,8 @@ class StudyViewModel(
                         isAnswerRevealed = false,
                         isCorrect = null,
                         selectedOption = null,
+                        assembledChars = emptyList(),
+                        usedTileIndices = emptyList(),
                         isSessionFinished = cards.isEmpty(),
                         sessionStats = SessionStats(),
                         isLoading = false
@@ -216,6 +244,39 @@ class StudyViewModel(
         processAnswer(card, isCorrect, selectedChar)
     }
 
+    fun selectAssemblyTile(tileIndex: Int, tileChar: String) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+        val currentUsed = _uiState.value.usedTileIndices
+        if (tileIndex in currentUsed) return
+
+        val updatedAssembled = _uiState.value.assembledChars + tileChar
+        val updatedUsed = currentUsed + tileIndex
+
+        if (updatedAssembled.size >= card.wordSlots.size) {
+            val assembledWord = updatedAssembled.joinToString("")
+            val isCorrect = (assembledWord == card.hanzi)
+            _uiState.update { it.copy(assembledChars = updatedAssembled, usedTileIndices = updatedUsed) }
+            processAnswer(card, isCorrect, assembledWord)
+        } else {
+            _uiState.update { it.copy(assembledChars = updatedAssembled, usedTileIndices = updatedUsed) }
+        }
+    }
+
+    fun undoAssemblyTile() {
+        if (_uiState.value.isAnswerRevealed) return
+        val currentAssembled = _uiState.value.assembledChars
+        val currentUsed = _uiState.value.usedTileIndices
+        if (currentAssembled.isNotEmpty() && currentUsed.isNotEmpty()) {
+            _uiState.update {
+                it.copy(
+                    assembledChars = currentAssembled.dropLast(1),
+                    usedTileIndices = currentUsed.dropLast(1)
+                )
+            }
+        }
+    }
+
     private fun processAnswer(card: StudyCard, isCorrect: Boolean, selectedInput: String) {
         viewModelScope.launch {
             val grade = if (isCorrect) ReviewGrade.GOOD else ReviewGrade.AGAIN
@@ -254,35 +315,67 @@ class StudyViewModel(
                     currentIndex = nextIdx,
                     isAnswerRevealed = false,
                     isCorrect = null,
-                    selectedOption = null
+                    selectedOption = null,
+                    assembledChars = emptyList(),
+                    usedTileIndices = emptyList()
                 )
             } else {
                 state.copy(
                     isSessionFinished = true,
-                    isAnswerRevealed = false
+                    isAnswerRevealed = false,
+                    assembledChars = emptyList(),
+                    usedTileIndices = emptyList()
                 )
             }
         }
     }
 
-    private fun generateEnglishDistractors(correct: String): List<String> {
-        val fallbackDistractors = listOf(
-            "water, liquid", "to learn, to study", "bright, clear",
-            "friend, companion", "to eat, food", "large, big",
-            "person, human", "time, hour", "to speak, words"
-        ).filter { !it.equals(correct, ignoreCase = true) }
+    private fun getDistractorCountForBox(box: Int, quizType: QuizType): Int {
+        return when (quizType) {
+            QuizType.CLOZE -> when {
+                box <= 0 -> 2
+                box <= 2 -> 3
+                box <= 4 -> 4
+                else -> 5
+            }
+            QuizType.WORD_ASSEMBLY -> when {
+                box <= 0 -> 2
+                box <= 2 -> 3
+                box <= 4 -> 4
+                else -> 5
+            }
+            else -> 3
+        }
+    }
 
-        val distractors = fallbackDistractors.shuffled().take(3).toMutableList()
+    private fun generateEnglishDistractors(
+        correct: String,
+        allStudyEnglish: Set<String> = emptySet()
+    ): List<String> {
+        val candidates = allStudyEnglish.filter { !it.equals(correct, ignoreCase = true) }.shuffled()
+        val distractors = candidates.take(3).toMutableList()
         distractors.add(correct)
         return distractors.shuffled()
     }
 
-    private fun generateCharDistractors(correct: String): List<String> {
-        val fallbackChars = listOf("学", "字", "明", "大", "中", "国", "人", "水", "火", "木", "天", "地")
-            .filter { it != correct }
-        val distractors = fallbackChars.shuffled().take(3).toMutableList()
+    private fun generateCharDistractors(
+        correct: String,
+        count: Int = 3,
+        studyChars: Set<String> = emptySet()
+    ): List<String> {
+        val candidates = studyChars.filter { it != correct }.shuffled()
+        val distractors = candidates.take(count).toMutableList()
         distractors.add(correct)
         return distractors.shuffled()
+    }
+
+    private fun generateCharDistractorsForWord(
+        existingChars: Set<String>,
+        count: Int = 3,
+        studyChars: Set<String> = emptySet()
+    ): List<String> {
+        val candidates = studyChars.filter { !existingChars.contains(it) }.shuffled()
+        return candidates.take(count)
     }
 
     companion object {

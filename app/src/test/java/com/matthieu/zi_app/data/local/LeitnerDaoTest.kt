@@ -96,8 +96,24 @@ class LeitnerDaoTest {
         leitnerDao.insertOrUpdateRecord(LeitnerRecordEntity(hanzi = "B", box = 1, expTime = 0))
         leitnerDao.insertOrUpdateRecord(LeitnerRecordEntity(hanzi = "C", box = 3, expTime = 0))
 
-        val counts = leitnerDao.getBoxCounts().associate { it.box to it.count }
+        var counts = leitnerDao.getBoxCounts().associate { it.box to it.count }
         assertEquals(2, counts[1])
         assertEquals(1, counts[3])
+
+        // Add unstudied characters and words to vocabulary (should appear in Box 0)
+        vocDao.insertCharPinyin(CharPinyinEntity(hanzi = "D", pinyin = "de5"))
+        vocDao.insertWord(ChineseWordEntity(chinese = "EF", pinyin = "e1f1", length = 2))
+
+        counts = leitnerDao.getBoxCounts().associate { it.box to it.count }
+        assertEquals(2, counts[0]) // D and EF are unstudied -> Box 0
+        assertEquals(2, counts[1]) // A and B -> Box 1
+        assertEquals(1, counts[3]) // C -> Box 3
+
+        // Reset all scores: delete all leitner records, everything falls back to Box 0
+        leitnerDao.deleteAllRecords()
+        counts = leitnerDao.getBoxCounts().associate { it.box to it.count }
+        assertEquals(2, counts[0]) // D and EF in Box 0
+        assertEquals(0, counts[1] ?: 0)
+        assertEquals(0, counts[3] ?: 0)
     }
 }

@@ -41,7 +41,9 @@ data class StudyUiState(
     val isSessionFinished: Boolean = false,
     val sessionStats: SessionStats = SessionStats(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val assembledChars: List<String> = emptyList(),
+    val usedTileIndices: List<Int> = emptyList()
 ) {
     val currentCard: StudyCard?
         get() = queue.getOrNull(currentIndex)

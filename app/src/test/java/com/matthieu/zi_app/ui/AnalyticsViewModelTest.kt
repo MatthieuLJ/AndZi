@@ -78,7 +78,7 @@ class AnalyticsViewModelTest {
         // Select 7D range
         viewModel.selectTimeRange(TimeRange.DAYS_7)
         val rangeState = withTimeout(3000) {
-            viewModel.uiState.filter { it.selectedTimeRange == TimeRange.DAYS_7 }.first()
+            viewModel.uiState.filter { it.selectedTimeRange == TimeRange.DAYS_7 && !it.isLoading }.first()
         }
         assertEquals(TimeRange.DAYS_7, rangeState.selectedTimeRange)
     }

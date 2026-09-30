@@ -150,6 +150,10 @@ class VocabularyRepository(
         }
     }
 
+    suspend fun getAllDistinctHanzi(): List<String> = withContext(Dispatchers.IO) {
+        vocabularyDao.getAllDistinctHanzi()
+    }
+
     suspend fun getDistinctHanziCount(): Int = withContext(Dispatchers.IO) {
         vocabularyDao.getDistinctHanziCount()
     }

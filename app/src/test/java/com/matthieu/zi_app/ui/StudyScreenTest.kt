@@ -76,21 +76,26 @@ class StudyScreenTest {
     }
 
     @Test
-    fun testWordAssemblyQuiz_showsEnglishTranslationOnTop() {
+    fun testWordAssemblyQuiz_showsEnglishTranslationOnTop_andHidesSolution() {
         val card = StudyCard(
             hanzi = "明天",
             pinyin = "ming2tian1",
             english = listOf("tomorrow"),
             quizType = QuizType.WORD_ASSEMBLY,
             wordSlots = listOf("明", "天"),
-            scrambledTiles = listOf("天", "明")
+            scrambledTiles = listOf("天", "月", "明", "昨")
         )
         val state = StudyUiState(
             queue = listOf(card),
             currentIndex = 0,
             isLoading = false,
-            isAnswerRevealed = false
+            isAnswerRevealed = false,
+            assembledChars = emptyList(),
+            usedTileIndices = emptyList()
         )
+
+        var selectedIndex: Int? = null
+        var selectedTile: String? = null
 
         composeTestRule.setContent {
             AndZiTheme {
@@ -100,6 +105,10 @@ class StudyScreenTest {
                     onToneSelected = {},
                     onEnglishSelected = {},
                     onClozeSelected = {},
+                    onAssemblyTileSelected = { idx, tile ->
+                        selectedIndex = idx
+                        selectedTile = tile
+                    },
                     onRateGrade = {},
                     onNextCard = {}
                 )
@@ -109,6 +118,15 @@ class StudyScreenTest {
         // Verify English translation is shown on top for Word Assembly
         composeTestRule.onNodeWithText("tomorrow").assertExists()
         composeTestRule.onNodeWithText("Assemble the compound word").assertExists()
+
+        // Verify distractors are shown as tiles
+        composeTestRule.onNodeWithText("月").assertExists()
+        composeTestRule.onNodeWithText("昨").assertExists()
+
+        // Tap a tile and verify assembly selection callback
+        composeTestRule.onNodeWithText("明").performClick()
+        org.junit.Assert.assertEquals(2, selectedIndex)
+        org.junit.Assert.assertEquals("明", selectedTile)
     }
 
     @Test

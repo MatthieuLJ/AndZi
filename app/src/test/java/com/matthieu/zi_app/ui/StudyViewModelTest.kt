@@ -257,4 +257,195 @@ class StudyViewModelTest {
         assertTrue(card.contextWords.all { it.length > 1 })
         assertTrue(card.contextWords.contains("长度") || card.contextWords.contains("长城"))
     }
+
+    @Test
+    fun testWordAssemblyTileSelectionAndUndo() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf()))
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        vocRepo.addVocabulary(Vocabulary("火", "huo3", arrayListOf("fire")))
+        vocRepo.addVocabulary(Vocabulary("木", "mu4", arrayListOf("wood")))
+
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "明天",
+                box = 0,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        val targetIndex = state.queue.indexOfFirst { it.quizType == QuizType.WORD_ASSEMBLY }
+        while (viewModel.uiState.value.currentIndex < targetIndex) {
+            viewModel.nextCard()
+        }
+
+        val card = viewModel.uiState.value.currentCard!!
+        assertEquals("明天", card.hanzi)
+        assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
+        // Verify tiles have distractors from the study list
+        assertTrue(card.scrambledTiles.size >= 4)
+        assertTrue(card.scrambledTiles.contains("明"))
+        assertTrue(card.scrambledTiles.contains("天"))
+
+        // Find tile indices for '明' and '天'
+        val mingIdx = card.scrambledTiles.indexOf("明")
+        val tianIdx = card.scrambledTiles.indexOf("天")
+
+        // 1. Select first tile
+        viewModel.selectAssemblyTile(mingIdx, "明")
+        var current = viewModel.uiState.value
+        assertEquals(listOf("明"), current.assembledChars)
+        assertEquals(listOf(mingIdx), current.usedTileIndices)
+        assertFalse(current.isAnswerRevealed)
+
+        // 2. Test Undo
+        viewModel.undoAssemblyTile()
+        current = viewModel.uiState.value
+        assertTrue(current.assembledChars.isEmpty())
+        assertTrue(current.usedTileIndices.isEmpty())
+
+        // 3. Complete assembly correctly: '明' then '天'
+        viewModel.selectAssemblyTile(mingIdx, "明")
+        viewModel.selectAssemblyTile(tianIdx, "天")
+
+        val completedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(completedState.isAnswerRevealed)
+        assertEquals(true, completedState.isCorrect)
+    }
+
+    @Test
+    fun testDistractorCountScalesWithLeitnerBox() = runBlocking {
+        // Box 0 word
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "明天",
+                box = 0,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        // Box 5 word
+        vocRepo.addVocabulary(Vocabulary("学习", "xue2xi2", arrayListOf("to study")))
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "学习",
+                box = 5,
+                expTime = 0L,
+                numTested = 10,
+                numWrong = 1,
+                streak = 5,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        // Additional study characters so higher box can pull more distractors from the study list
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        vocRepo.addVocabulary(Vocabulary("火", "huo3", arrayListOf("fire")))
+        vocRepo.addVocabulary(Vocabulary("木", "mu4", arrayListOf("wood")))
+        vocRepo.addVocabulary(Vocabulary("金", "jin1", arrayListOf("gold")))
+        vocRepo.addVocabulary(Vocabulary("土", "tu3", arrayListOf("earth")))
+        vocRepo.addVocabulary(Vocabulary("人", "ren2", arrayListOf("person")))
+        vocRepo.addVocabulary(Vocabulary("大", "da4", arrayListOf("big")))
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        val box0Card = state.queue.first { it.hanzi == "明天" }
+        val box5Card = state.queue.first { it.hanzi == "学习" }
+
+        // Box 5 card should have more tiles/distractors than Box 0 card
+        assertTrue(box5Card.scrambledTiles.size > box0Card.scrambledTiles.size)
+    }
+
+    @Test
+    fun testDistractorsAreSourcedFromStudyListCharacters() = runBlocking {
+        // Study list containing specific words and characters
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        vocRepo.addVocabulary(Vocabulary("火", "huo3", arrayListOf("fire")))
+        vocRepo.addVocabulary(Vocabulary("木", "mu4", arrayListOf("wood")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "明天",
+                box = 0,
+                expTime = now - 1000L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = now
+            )
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "水", box = 1, expTime = now + 100_000L))
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "火", box = 1, expTime = now + 100_000L))
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "木", box = 1, expTime = now + 100_000L))
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "明", box = 1, expTime = now + 100_000L))
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "天", box = 1, expTime = now + 100_000L))
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        val allStudyChars = setOf("明", "天", "水", "火", "木")
+        val assemblyOrClozeCards = state.queue.filter { it.quizType == QuizType.WORD_ASSEMBLY || it.quizType == QuizType.CLOZE }
+        assertTrue(assemblyOrClozeCards.isNotEmpty())
+
+        // Verify all tiles generated for assembly/cloze cards are characters from the study list
+        for (card in assemblyOrClozeCards) {
+            assertTrue(card.scrambledTiles.isNotEmpty())
+            for (tile in card.scrambledTiles) {
+                assertTrue("Expected tile $tile to be from study characters $allStudyChars", allStudyChars.contains(tile))
+            }
+        }
+    }
+
+    @Test
+    fun testWhenNotEnoughStudyCharacters_noExtraDistractorsAreAdded() = runBlocking {
+        // Study list containing ONLY "明天" (no other words/characters in vocabulary)
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "明天",
+                box = 5, // Box 5 normally requests 5 distractors, but study list only has "明" and "天"
+                expTime = now - 1000L,
+                numTested = 10,
+                numWrong = 0,
+                streak = 5,
+                dateAdded = now
+            )
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "明", box = 1, expTime = now + 100_000L))
+        andZiDb.leitnerDao().insertOrUpdateRecord(com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "天", box = 1, expTime = now + 100_000L))
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        val card = state.queue.first { it.hanzi == "明天" }
+        // Because there are no other characters in the study list, NO extra distractors should be added
+        assertEquals(2, card.scrambledTiles.size)
+        assertTrue(card.scrambledTiles.contains("明"))
+        assertTrue(card.scrambledTiles.contains("天"))
+    }
 }

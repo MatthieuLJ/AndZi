@@ -74,6 +74,8 @@ fun StudyScreen(
         onToneSelected = { viewModel.submitToneAnswer(it) },
         onEnglishSelected = { viewModel.submitEnglishAnswer(it) },
         onClozeSelected = { viewModel.submitClozeAnswer(it) },
+        onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
+        onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
         onRateGrade = { viewModel.rateCard(it) },
         onNextCard = { viewModel.nextCard() },
         modifier = modifier
@@ -88,6 +90,8 @@ fun StudyScreenContent(
     onToneSelected: (Int) -> Unit,
     onEnglishSelected: (String) -> Unit,
     onClozeSelected: (String) -> Unit,
+    onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
+    onUndoAssemblyTile: () -> Unit = {},
     onRateGrade: (ReviewGrade) -> Unit,
     onNextCard: () -> Unit,
     modifier: Modifier = Modifier
@@ -310,11 +314,22 @@ fun StudyScreenContent(
                                 }
                                 QuizType.CLOZE, QuizType.WORD_ASSEMBLY -> {
                                     ClozeAssemblyView(
+                                        quizType = card.quizType,
                                         wordSlots = card.wordSlots,
                                         clozeTargetIndex = card.clozeTargetIndex,
+                                        assembledChars = uiState.assembledChars,
+                                        usedTileIndices = uiState.usedTileIndices,
                                         tiles = card.scrambledTiles,
                                         isRevealed = uiState.isAnswerRevealed,
-                                        onTileSelected = { tile -> onClozeSelected(tile) }
+                                        isCorrect = uiState.isCorrect,
+                                        onTileSelected = { index, tile ->
+                                            if (card.quizType == QuizType.CLOZE) {
+                                                onClozeSelected(tile)
+                                            } else {
+                                                onAssemblyTileSelected(index, tile)
+                                            }
+                                        },
+                                        onUndoTile = onUndoAssemblyTile
                                     )
                                 }
                                 QuizType.PINYIN -> {

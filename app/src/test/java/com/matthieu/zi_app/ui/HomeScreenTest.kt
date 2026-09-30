@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.ui.home.DailyReviewCard
+import com.matthieu.zi_app.ui.home.LeitnerDistributionCard
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -70,5 +71,25 @@ class HomeScreenTest {
         composeTestRule.onNodeWithText("Start Review Session (5)")
             .assertExists()
             .assertIsEnabled()
+    }
+
+    @Test
+    fun testLeitnerDistributionCard_displaysBox0CountAndTotal() {
+        val distribution = (0..9).associateWith { 0 }.toMutableMap()
+        distribution[0] = 5
+        distribution[1] = 2
+
+        composeTestRule.setContent {
+            LeitnerDistributionCard(
+                boxDistribution = distribution,
+                totalCards = 7
+            )
+        }
+
+        composeTestRule.onNodeWithText("Leitner Box Distribution").assertExists()
+        composeTestRule.onNodeWithText("7 Total").assertExists()
+        composeTestRule.onNodeWithText("Box 0 (New/Reset)").assertExists()
+        composeTestRule.onNodeWithText("5").assertExists()
+        composeTestRule.onNodeWithText("2").assertExists()
     }
 }

@@ -79,6 +79,39 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun testHomeViewModelLoadsBox0AfterResetOrNewVocabulary() = runBlocking {
+        // Add vocabulary items
+        val voc1 = Vocabulary("你", "ni3", arrayListOf("you"))
+        val voc2 = Vocabulary("好", "hao3", arrayListOf("good"))
+        vocRepo.addVocabulary(voc1)
+        vocRepo.addVocabulary(voc2)
+
+        // Review "你" to Box 1, leave "好" unreviewed (Box 0)
+        studyRepo.recordReviewResult("你", isCorrect = true, now = 1000L)
+
+        val viewModel = HomeViewModel(studyRepo, progressRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertEquals(2, state.totalLearned)
+        assertEquals(1, state.boxDistribution[0]) // "好" is unreviewed -> Box 0
+        assertEquals(1, state.boxDistribution[1]) // "你" is in Box 1
+
+        // Reset all study scores -> everything falls back to Box 0
+        studyRepo.resetAllScores()
+        viewModel.loadDashboardData()
+
+        state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertEquals(2, state.totalLearned)
+        assertEquals(2, state.boxDistribution[0]) // Both "你" and "好" are now in Box 0
+        assertEquals(0, state.boxDistribution[1] ?: 0)
+    }
+
+    @Test
     fun testHomeViewModelLoadsEmptyDashboardWhenNoData() = runBlocking {
         val viewModel = HomeViewModel(studyRepo, progressRepo)
 

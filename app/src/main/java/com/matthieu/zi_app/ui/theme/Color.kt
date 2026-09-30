@@ -3,6 +3,11 @@ package com.matthieu.zi_app.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import com.matthieu.zi_app.PinyinParser
 
 // --- Material 3 Primary & Secondary Accents ---
 val EmeraldPrimaryLight = Color(0xFF059669)
@@ -77,3 +82,28 @@ val DarkToneColors = PinyinToneColors(
 )
 
 val LocalPinyinToneColors = staticCompositionLocalOf { PinyinToneColors() }
+
+fun buildPinyinToneAnnotatedString(
+    pinyinString: String,
+    toneColors: PinyinToneColors
+): AnnotatedString {
+    val clean = pinyinString.trim()
+    if (clean.isEmpty()) return AnnotatedString("")
+
+    val chunks = clean.split(" ")
+    return buildAnnotatedString {
+        chunks.forEachIndexed { chunkIndex, chunk ->
+            if (chunkIndex > 0) append(" ")
+            val pinyins = PinyinParser.parse_string_to_pinyin(chunk)
+            if (!pinyins.isNullOrEmpty()) {
+                pinyins.forEach { p ->
+                    withStyle(SpanStyle(color = toneColors.colorForTone(p.tone))) {
+                        append(p.print)
+                    }
+                }
+            } else {
+                append(PinyinParser.convert_to_pretty_version(chunk))
+            }
+        }
+    }
+}
