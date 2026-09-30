@@ -2,6 +2,7 @@ package com.matthieu.zi_app.ui.home
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onStartStudy: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenVocabulary: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -131,7 +133,8 @@ fun HomeScreen(
                             value = "${uiState.totalLearned}",
                             icon = Icons.Default.CheckCircle,
                             iconTint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            onClick = onOpenVocabulary
                         )
                     }
                 }
@@ -166,10 +169,19 @@ fun SummaryStatCard(
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconTint: androidx.compose.ui.graphics.Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
+    val cardModifier = if (onClick != null) {
+        modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+    } else {
+        modifier
+    }
+
     Card(
-        modifier = modifier,
+        modifier = cardModifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),

@@ -34,6 +34,9 @@ interface VocabularyDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertCharPinyins(entities: List<CharPinyinEntity>): List<Long>
 
+    @Query("DELETE FROM char_pinyin WHERE hanzi = :hanzi")
+    suspend fun deleteCharPinyin(hanzi: String)
+
     // --- Chinese Words ---
     @Query("SELECT * FROM cword WHERE chinese = :chinese AND pinyin = :pinyin LIMIT 1")
     suspend fun getWord(chinese: String, pinyin: String): ChineseWordEntity?
@@ -89,6 +92,10 @@ interface VocabularyDao {
     suspend fun deleteAllTranslationsForWord(cwordId: Long)
 
     // --- Search & Composite Queries ---
+    @Transaction
+    @Query("SELECT * FROM cword ORDER BY cword_id DESC")
+    suspend fun getAllWordsWithDetails(): List<WordWithDetails>
+
     @Transaction
     @Query("SELECT * FROM cword WHERE chinese = :chinese")
     suspend fun getWordsWithDetailsForChinese(chinese: String): List<WordWithDetails>

@@ -1,9 +1,12 @@
 package com.matthieu.zi_app.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.ui.home.DailyReviewCard
 import com.matthieu.zi_app.ui.home.LeitnerDistributionCard
@@ -91,5 +94,24 @@ class HomeScreenTest {
         composeTestRule.onNodeWithText("Box 0 (New/Reset)").assertExists()
         composeTestRule.onNodeWithText("5").assertExists()
         composeTestRule.onNodeWithText("2").assertExists()
+    }
+
+    @Test
+    fun testSummaryStatCard_whenClickable_triggersCallback() {
+        var clicked = false
+        composeTestRule.setContent {
+            com.matthieu.zi_app.ui.home.SummaryStatCard(
+                title = "Active Cards",
+                value = "42",
+                icon = androidx.compose.material.icons.Icons.Default.CheckCircle,
+                iconTint = androidx.compose.ui.graphics.Color.Blue,
+                onClick = { clicked = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("Active Cards").assertExists()
+        composeTestRule.onNodeWithText("42").assertExists()
+        composeTestRule.onNodeWithText("Active Cards").performClick()
+        org.junit.Assert.assertTrue(clicked)
     }
 }

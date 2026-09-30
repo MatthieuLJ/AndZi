@@ -116,6 +116,25 @@ fun MainAppScaffold(
                     },
                     onOpenSettings = {
                         navController.navigate(Screen.Settings.route)
+                    },
+                    onOpenVocabulary = {
+                        navController.navigate(Screen.Vocabulary.route)
+                    }
+                )
+            }
+
+            composable(Screen.Vocabulary.route) {
+                val vocabViewModel: com.matthieu.zi_app.ui.vocabulary.VocabularyListViewModel = viewModel(
+                    factory = com.matthieu.zi_app.ui.vocabulary.VocabularyListViewModel.provideFactory(
+                        localVocabularyRepository = appContainer.vocabularyRepository,
+                        dictionaryRepository = appContainer.dictionaryRepository,
+                        studyRepository = appContainer.studyRepository
+                    )
+                )
+                com.matthieu.zi_app.ui.vocabulary.VocabularyListScreen(
+                    viewModel = vocabViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }

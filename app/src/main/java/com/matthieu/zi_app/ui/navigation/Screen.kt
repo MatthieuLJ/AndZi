@@ -50,6 +50,13 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.School
     )
 
+    data object Vocabulary : Screen(
+        route = "vocabulary",
+        title = "Active Cards",
+        selectedIcon = Icons.Filled.School,
+        unselectedIcon = Icons.Outlined.School
+    )
+
     companion object {
         val bottomNavItems = listOf(Home, Dictionary, Analytics)
     }

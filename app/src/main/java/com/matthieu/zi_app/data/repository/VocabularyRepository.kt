@@ -103,8 +103,21 @@ class VocabularyRepository(
         results.distinctBy { it.word.cwordId }.map { toVocabulary(it) }
     }
 
+    suspend fun getAllVocabulary(): List<Vocabulary> = withContext(Dispatchers.IO) {
+        vocabularyDao.getAllWordsWithDetails()
+            .map { toVocabulary(it) }
+            .filter { it.english.isNotEmpty() }
+    }
+
     suspend fun deleteWord(chinese: String, pinyin: String) = withContext(Dispatchers.IO) {
         vocabularyDao.deleteWord(chinese, pinyin)
+        if (chinese.codePointCount(0, chinese.length) == 1) {
+            vocabularyDao.deleteCharPinyin(chinese)
+        }
+    }
+
+    suspend fun deleteCharacter(hanzi: String) = withContext(Dispatchers.IO) {
+        vocabularyDao.deleteCharPinyin(hanzi)
     }
 
     suspend fun deleteTranslation(cwordId: Long, translation: String) = withContext(Dispatchers.IO) {

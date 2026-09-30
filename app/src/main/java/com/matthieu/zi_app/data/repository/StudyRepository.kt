@@ -82,6 +82,14 @@ class StudyRepository(
         leitnerDao.deleteAllRecords()
     }
 
+    suspend fun deleteRecord(hanzi: String) = withContext(Dispatchers.IO) {
+        leitnerDao.deleteRecord(hanzi)
+    }
+
+    suspend fun getAllRecords(): List<LeitnerState> = withContext(Dispatchers.IO) {
+        leitnerDao.getAllRecords().map { toDomainState(it) }
+    }
+
     private fun toReviewState(entity: LeitnerRecordEntity): ReviewState {
         return ReviewState(
             cardId = entity.hanzi,
