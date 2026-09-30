@@ -13,7 +13,7 @@
         android:theme="@style/Theme_Sherlock">
 
         <activity
-            android:name=".MainMenuActivity"
+            android:name=".MainActivity"
             android:clearTaskOnLaunch="true"
             android:exported="true"
             android:launchMode="singleTask">
@@ -22,6 +22,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainMenuActivity"
+            android:exported="false" />
 
         <activity
             android:name=".TestActivity"

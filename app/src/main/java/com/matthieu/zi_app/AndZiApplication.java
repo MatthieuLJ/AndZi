@@ -36,9 +36,20 @@ public class AndZiApplication extends Application {
     private static final String DEFAULT_DATABASE_NAME = "HANZI_DB";
     private static final String PROGRESS_DB_NAME = "progress_db";
 
+    private com.matthieu.zi_app.data.AppContainer appContainer = null;
+
+    public com.matthieu.zi_app.data.AppContainer getAppContainer() {
+        if (appContainer == null) {
+            appContainer = new com.matthieu.zi_app.data.DefaultAppContainer(this);
+        }
+        return appContainer;
+    }
+
     private static final int this_ref_version = 1;
 
+    @Override
     public void onCreate() {
+        super.onCreate();
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
         
         Intent startServiceIntent = new Intent(this, ProgressService.class);
