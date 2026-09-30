@@ -12,6 +12,12 @@ import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 
+import com.matthieu.zi_app.R
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipInputStream
+
 @Database(
     entities = [
         CharPinyinEntity::class,
@@ -20,7 +26,7 @@ import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
         EnglishTranslationEntity::class,
         LeitnerRecordEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AndZiDatabase : RoomDatabase() {
@@ -31,6 +37,8 @@ abstract class AndZiDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "HANZI_DB"
         const val CEDICT_DATABASE_NAME = "cedict_db"
+        const val DATABASE_VERSION = 7
+        const val ROOM_IDENTITY_HASH = "5f32e97941947e98cdc84cc4c3d894ec"
 
         @Volatile
         private var INSTANCE: AndZiDatabase? = null
@@ -46,7 +54,85 @@ abstract class AndZiDatabase : RoomDatabase() {
 
         fun getDictionaryInstance(context: Context): AndZiDatabase {
             return CEDICT_INSTANCE ?: synchronized(this) {
-                CEDICT_INSTANCE ?: buildDatabase(context, CEDICT_DATABASE_NAME).also { CEDICT_INSTANCE = it }
+                CEDICT_INSTANCE ?: run {
+                    ensureDictionaryExtracted(context.applicationContext)
+                    buildDatabase(context, CEDICT_DATABASE_NAME).also { CEDICT_INSTANCE = it }
+                }
+            }
+        }
+
+        fun ensureDictionaryExtracted(context: Context) {
+            val dbFile = context.getDatabasePath(CEDICT_DATABASE_NAME)
+            if (dbFile.exists() && dbFile.length() > 1_000_000L) {
+                try {
+                    if (dbFile.exists()) {
+                        val sdb = android.database.sqlite.SQLiteDatabase.openDatabase(dbFile.path, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE)
+                        sdb.version = DATABASE_VERSION
+                        sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, PRIMARY KEY(`hanzi`));")
+                        sdb.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT);")
+                        sdb.execSQL("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, '$ROOM_IDENTITY_HASH');")
+                        sdb.close()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                return
+            }
+
+            // If an invalid / empty file exists, clean it up completely
+            if (dbFile.exists()) {
+                context.deleteDatabase(CEDICT_DATABASE_NAME)
+            }
+
+            dbFile.parentFile?.mkdirs()
+            val tempFile = File(dbFile.parentFile, "$CEDICT_DATABASE_NAME.tmp")
+            try {
+                context.resources.openRawResource(R.raw.cedict_db).use { rawInput ->
+                    ZipInputStream(BufferedInputStream(rawInput)).use { zis ->
+                        val entry = zis.nextEntry
+                        if (entry != null) {
+                            FileOutputStream(tempFile).use { fos ->
+                                val buffer = ByteArray(8192)
+                                var len: Int
+                                while (zis.read(buffer).also { len = it } != -1) {
+                                    fos.write(buffer, 0, len)
+                                }
+                                fos.flush()
+                            }
+                            zis.closeEntry()
+                        }
+                    }
+                }
+                if (tempFile.exists() && tempFile.length() > 1_000_000L) {
+                    if (dbFile.exists()) {
+                        context.deleteDatabase(CEDICT_DATABASE_NAME)
+                    }
+                    if (!tempFile.renameTo(dbFile)) {
+                        tempFile.inputStream().use { input ->
+                            dbFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                        tempFile.delete()
+                    }
+                    if (dbFile.exists()) {
+                        try {
+                            val sdb = android.database.sqlite.SQLiteDatabase.openDatabase(dbFile.path, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE)
+                            sdb.version = DATABASE_VERSION
+                            sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, PRIMARY KEY(`hanzi`));")
+                            sdb.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT);")
+                            sdb.execSQL("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, '$ROOM_IDENTITY_HASH');")
+                            sdb.close()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                }
             }
         }
 

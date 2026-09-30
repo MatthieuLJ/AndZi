@@ -77,4 +77,19 @@ class HomeViewModelTest {
         assertEquals(2, state.totalLearned)
         assertEquals(2, state.boxDistribution[1])
     }
+
+    @Test
+    fun testHomeViewModelLoadsEmptyDashboardWhenNoData() = runBlocking {
+        val viewModel = HomeViewModel(studyRepo, progressRepo)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertNotNull(state)
+        assertEquals(0, state.totalLearned)
+        assertEquals(0, state.dueCount)
+        assertEquals(0, state.streakDays)
+        assertEquals(0, state.boxDistribution[0])
+    }
 }

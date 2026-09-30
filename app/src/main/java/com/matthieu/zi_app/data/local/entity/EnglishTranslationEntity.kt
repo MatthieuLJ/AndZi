@@ -17,7 +17,6 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index(value = ["cword_id", "translation"], unique = true),
         Index(value = ["cword_id"])
     ]
 )

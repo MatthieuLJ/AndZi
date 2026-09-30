@@ -61,6 +61,17 @@ public class AndZiApplication extends Application {
         registerReceiver(screenReceiver, filter);
 
         Pinyin.prepare_pinyin_process();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    com.matthieu.zi_app.data.local.AndZiDatabase.Companion.ensureDictionaryExtracted(getApplicationContext());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     private void update_dbs_in_details_populator() {
@@ -70,9 +81,15 @@ public class AndZiApplication extends Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
-        prog.close();
-        myDB.close();
-        refDB.close();
+        if (prog != null) {
+            prog.close();
+        }
+        if (myDB != null) {
+            myDB.close();
+        }
+        if (refDB != null) {
+            refDB.close();
+        }
     }
 
     public HanziDB getMyDB() {

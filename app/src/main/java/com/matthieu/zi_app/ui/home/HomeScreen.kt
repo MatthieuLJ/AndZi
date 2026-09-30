@@ -218,6 +218,7 @@ fun DailyReviewCard(
     onStartReview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isEnabled = dueCount > 0
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -270,6 +271,7 @@ fun DailyReviewCard(
 
             Button(
                 onClick = onStartReview,
+                enabled = isEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),

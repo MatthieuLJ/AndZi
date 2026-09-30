@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "cword",
     indices = [
-        Index(value = ["chinese", "pinyin"], unique = true),
+        Index(value = ["cword_id"], name = "cword_id"),
         Index(value = ["chinese"], name = "cword_chinese"),
         Index(value = ["pinyin"], name = "cword_pinyin")
     ]
@@ -25,5 +25,5 @@ data class ChineseWordEntity(
     val pinyin: String,
 
     @ColumnInfo(name = "length", defaultValue = "0")
-    val length: Int = 0
+    val length: Int? = 0
 )

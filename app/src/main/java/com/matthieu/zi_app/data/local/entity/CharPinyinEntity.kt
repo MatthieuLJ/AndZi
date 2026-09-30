@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "char_pinyin",
     indices = [
-        Index(value = ["hanzi", "pinyin"], unique = true),
+        Index(value = ["char_pinyin_id"], name = "char_pinyin_id"),
         Index(value = ["hanzi"], name = "char_pinyin_hanzi"),
         Index(value = ["pinyin"], name = "char_pinyin_pinyin")
     ]

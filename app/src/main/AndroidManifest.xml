@@ -71,6 +71,10 @@
             android:exported="false"
             android:theme="@android:style/Theme.NoDisplay" />
 
+        <activity
+            android:name=".ComposeTestActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".BootBroadcastReceiver"
             android:exported="true">
