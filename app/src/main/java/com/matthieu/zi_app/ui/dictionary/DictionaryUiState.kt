@@ -11,6 +11,7 @@ data class DictionaryUiState(
     val constituentCharacters: List<String> = emptyList(),
     val isInStudyQueue: Boolean = false,
     val currentBox: Int? = null,
+    val selectedTranslations: Set<String> = emptySet(),
     val isSearching: Boolean = false,
     val errorMessage: String? = null
 )

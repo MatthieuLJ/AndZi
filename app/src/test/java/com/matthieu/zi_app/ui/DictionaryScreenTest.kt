@@ -35,6 +35,7 @@ class DictionaryScreenTest {
         )
 
         var studyClicked = false
+        var toggledTranslation: String? = null
 
         composeTestRule.setContent {
             AndZiTheme {
@@ -45,7 +46,9 @@ class DictionaryScreenTest {
                     compounds = emptyList(),
                     isInStudy = false,
                     currentBox = null,
+                    selectedTranslations = setOf("Mandarin Chinese"),
                     onToggleStudy = { studyClicked = true },
+                    onToggleTranslation = { toggledTranslation = it },
                     onSelectConstituent = {},
                     onSelectCompound = {}
                 )
@@ -56,7 +59,12 @@ class DictionaryScreenTest {
         composeTestRule.onNodeWithText("普通话").assertExists()
         composeTestRule.onNodeWithText("pǔtōnghuà").assertExists()
         composeTestRule.onNodeWithText("1. Mandarin Chinese").assertExists()
+        composeTestRule.onNodeWithText("In Study").assertExists()
         composeTestRule.onNodeWithText("2. Standard Chinese").assertExists()
+
+        // Verify clicking translation triggers onToggleTranslation
+        composeTestRule.onNodeWithText("2. Standard Chinese").performClick()
+        org.junit.Assert.assertEquals("Standard Chinese", toggledTranslation)
 
         // Verify Study button exists and can be clicked
         val studyButton = composeTestRule.onNodeWithText("Study").assertExists()
@@ -81,7 +89,9 @@ class DictionaryScreenTest {
                     compounds = emptyList(),
                     isInStudy = true,
                     currentBox = 3,
+                    selectedTranslations = setOf("library"),
                     onToggleStudy = {},
+                    onToggleTranslation = {},
                     onSelectConstituent = {},
                     onSelectCompound = {}
                 )

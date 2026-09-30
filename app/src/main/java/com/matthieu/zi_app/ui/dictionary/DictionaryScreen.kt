@@ -1,5 +1,6 @@
 package com.matthieu.zi_app.ui.dictionary
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -179,7 +181,9 @@ fun DictionaryScreen(
                     compounds = uiState.containingCompounds,
                     isInStudy = uiState.isInStudyQueue,
                     currentBox = uiState.currentBox,
+                    selectedTranslations = uiState.selectedTranslations,
                     onToggleStudy = { viewModel.toggleAddToStudy(uiState.selectedWord!!) },
+                    onToggleTranslation = { viewModel.toggleTranslationForStudy(it) },
                     onSelectConstituent = { viewModel.selectCharacterFromConstituent(it) },
                     onSelectCompound = { viewModel.selectWord(it) },
                     modifier = Modifier.padding(bottom = 32.dp)
@@ -259,7 +263,9 @@ fun WordDetailSheetContent(
     compounds: List<Vocabulary>,
     isInStudy: Boolean,
     currentBox: Int?,
+    selectedTranslations: Set<String>,
     onToggleStudy: () -> Unit,
+    onToggleTranslation: (String) -> Unit,
     onSelectConstituent: (String) -> Unit,
     onSelectCompound: (Vocabulary) -> Unit,
     modifier: Modifier = Modifier
@@ -345,19 +351,80 @@ fun WordDetailSheetContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         // English Definitions
-        Text(
-            text = "Definitions",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        word.english.forEachIndexed { index, def ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = "${index + 1}. $def",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(vertical = 2.dp)
+                text = "Definitions",
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Text(
+                text = "Tap definition to add/remove",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        word.english.forEachIndexed { index, def ->
+            val isSelected = selectedTranslations.contains(def)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                },
+                border = BorderStroke(
+                    width = if (isSelected) 1.5.dp else 1.dp,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onToggleTranslation(def) }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.Add,
+                        contentDescription = if (isSelected) "Included in study" else "Tap to include in study",
+                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "${index + 1}. $def",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        ),
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isSelected) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "In Study",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         // Constituent Characters (for multi-character compound words)

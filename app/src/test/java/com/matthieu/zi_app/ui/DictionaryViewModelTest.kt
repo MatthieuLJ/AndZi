@@ -86,4 +86,56 @@ class DictionaryViewModelTest {
         }
         assertTrue(studiedState.isInStudyQueue)
     }
+
+    @Test
+    fun testToggleTranslationForStudy() = runBlocking {
+        val word = Vocabulary(
+            "照顾",
+            "zhao4gu5",
+            arrayListOf("to take care of", "to look after", "to attend to")
+        )
+        dictRepo.addVocabulary(word)
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+        viewModel.selectWord(word)
+
+        val initialSelectedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "照顾" }.first()
+        }
+        assertEquals(emptySet<String>(), initialSelectedState.selectedTranslations)
+
+        // 1. Toggle "to take care of" to add it
+        viewModel.toggleTranslationForStudy("to take care of")
+        val state1 = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedTranslations.contains("to take care of") }.first()
+        }
+        assertTrue(state1.isInStudyQueue)
+        assertEquals(setOf("to take care of"), state1.selectedTranslations)
+
+        // Verify in user DB
+        val userVoc1 = userVocRepo.getVocabularyForChinese("照顾").first()
+        assertEquals(listOf("to take care of"), userVoc1.english)
+
+        // 2. Toggle "to look after" to also add it
+        viewModel.toggleTranslationForStudy("to look after")
+        val state2 = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedTranslations.contains("to look after") }.first()
+        }
+        assertEquals(setOf("to take care of", "to look after"), state2.selectedTranslations)
+
+        val userVoc2 = userVocRepo.getVocabularyForChinese("照顾").first()
+        assertEquals(2, userVoc2.english.size)
+        assertTrue(userVoc2.english.contains("to take care of"))
+        assertTrue(userVoc2.english.contains("to look after"))
+
+        // 3. Toggle "to take care of" again to remove it
+        viewModel.toggleTranslationForStudy("to take care of")
+        val state3 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.selectedTranslations.contains("to take care of") }.first()
+        }
+        assertEquals(setOf("to look after"), state3.selectedTranslations)
+
+        val userVoc3 = userVocRepo.getVocabularyForChinese("照顾").first()
+        assertEquals(listOf("to look after"), userVoc3.english)
+    }
 }

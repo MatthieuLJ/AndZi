@@ -38,3 +38,4 @@ proguard-project.txt
 captures/
 .externalNativeBuild/
 .cxx/
+.idea/

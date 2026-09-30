@@ -111,6 +111,45 @@ class VocabularyRepository(
         vocabularyDao.deleteTranslation(cwordId, translation)
     }
 
+    suspend fun addTranslation(chinese: String, pinyin: String, translation: String): Long = withContext(Dispatchers.IO) {
+        val cleanTrans = translation.trim()
+        if (cleanTrans.isEmpty()) return@withContext -1L
+
+        val word = vocabularyDao.getWord(chinese.trim(), pinyin.trim())
+        val wordId = if (word == null) {
+            addVocabulary(Vocabulary(chinese = chinese, pinyin = pinyin, english = arrayListOf(cleanTrans)))
+        } else {
+            val existing = vocabularyDao.getTranslationsForWord(word.cwordId)
+            if (existing.none { it.translation == cleanTrans }) {
+                vocabularyDao.insertTranslation(EnglishTranslationEntity(cwordId = word.cwordId, translation = cleanTrans))
+            }
+            word.cwordId
+        }
+        wordId
+    }
+
+    suspend fun removeTranslation(chinese: String, pinyin: String, translation: String) = withContext(Dispatchers.IO) {
+        val word = vocabularyDao.getWord(chinese.trim(), pinyin.trim()) ?: return@withContext
+        vocabularyDao.deleteTranslation(word.cwordId, translation.trim())
+    }
+
+    suspend fun setTranslations(chinese: String, pinyin: String, translations: List<String>) = withContext(Dispatchers.IO) {
+        val word = vocabularyDao.getWord(chinese.trim(), pinyin.trim())
+        if (word == null) {
+            if (translations.isNotEmpty()) {
+                addVocabulary(Vocabulary(chinese = chinese, pinyin = pinyin, english = ArrayList(translations)))
+            }
+            return@withContext
+        }
+        vocabularyDao.deleteAllTranslationsForWord(word.cwordId)
+        for (trans in translations) {
+            val clean = trans.trim()
+            if (clean.isNotEmpty()) {
+                vocabularyDao.insertTranslation(EnglishTranslationEntity(cwordId = word.cwordId, translation = clean))
+            }
+        }
+    }
+
     suspend fun getDistinctHanziCount(): Int = withContext(Dispatchers.IO) {
         vocabularyDao.getDistinctHanziCount()
     }

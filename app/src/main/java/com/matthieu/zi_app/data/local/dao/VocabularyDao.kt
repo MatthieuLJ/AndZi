@@ -85,6 +85,9 @@ interface VocabularyDao {
     @Query("DELETE FROM eword WHERE cword_id = :cwordId AND translation = :translation")
     suspend fun deleteTranslation(cwordId: Long, translation: String)
 
+    @Query("DELETE FROM eword WHERE cword_id = :cwordId")
+    suspend fun deleteAllTranslationsForWord(cwordId: Long)
+
     // --- Search & Composite Queries ---
     @Transaction
     @Query("SELECT * FROM cword WHERE chinese = :chinese")

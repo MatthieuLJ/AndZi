@@ -94,6 +94,18 @@ class DictionaryViewModel(
             // Check if word is already tracked in Leitner study
             val leitnerState = studyRepository.getLeitnerState(hanzi)
 
+            // Check existing local translations
+            val localVocabs = localVocabularyRepository.getVocabularyForChinese(hanzi)
+            val localMatching = localVocabs.find { it.pinyin == vocabulary.pinyin } ?: localVocabs.firstOrNull()
+
+            val selectedTranslations = if (localMatching != null && localMatching.english.isNotEmpty()) {
+                localMatching.english.toSet()
+            } else if (leitnerState != null) {
+                vocabulary.english.toSet()
+            } else {
+                emptySet()
+            }
+
             _uiState.update {
                 it.copy(
                     selectedWord = vocabulary,
@@ -101,7 +113,8 @@ class DictionaryViewModel(
                     containingCompounds = containingCompounds,
                     constituentCharacters = constituents,
                     isInStudyQueue = leitnerState != null,
-                    currentBox = leitnerState?.box
+                    currentBox = leitnerState?.box,
+                    selectedTranslations = selectedTranslations
                 )
             }
         }
@@ -121,8 +134,51 @@ class DictionaryViewModel(
                 selectedWord = null,
                 selectedCharReadings = emptyList(),
                 containingCompounds = emptyList(),
-                constituentCharacters = emptyList()
+                constituentCharacters = emptyList(),
+                selectedTranslations = emptySet()
             )
+        }
+    }
+
+    fun toggleTranslationForStudy(translation: String) {
+        val word = _uiState.value.selectedWord ?: return
+        viewModelScope.launch {
+            val cleanTrans = translation.trim()
+            if (cleanTrans.isEmpty()) return@launch
+
+            val currentSelected = _uiState.value.selectedTranslations
+            val isSelected = currentSelected.contains(cleanTrans)
+
+            val newSelected = if (isSelected) {
+                currentSelected - cleanTrans
+            } else {
+                currentSelected + cleanTrans
+            }
+
+            // Sync with local repository
+            if (isSelected) {
+                localVocabularyRepository.removeTranslation(word.chinese, word.pinyin, cleanTrans)
+            } else {
+                localVocabularyRepository.addTranslation(word.chinese, word.pinyin, cleanTrans)
+            }
+
+            // Ensure card is in Leitner study queue if selecting
+            var isInStudy = _uiState.value.isInStudyQueue
+            var box = _uiState.value.currentBox
+            if (!isSelected && !isInStudy) {
+                studyRepository.recordReviewGrade(word.chinese, ReviewGrade.AGAIN)
+                val newState = studyRepository.getLeitnerState(word.chinese)
+                isInStudy = true
+                box = newState?.box ?: 0
+            }
+
+            _uiState.update {
+                it.copy(
+                    selectedTranslations = newSelected,
+                    isInStudyQueue = isInStudy,
+                    currentBox = box
+                )
+            }
         }
     }
 
@@ -132,15 +188,24 @@ class DictionaryViewModel(
             val currentState = studyRepository.getLeitnerState(hanzi)
 
             if (currentState == null) {
-                // Add to local vocabulary and initialize in Leitner study
-                localVocabularyRepository.addVocabulary(vocabulary)
+                // Determine translations: if some are already selected, use them; otherwise add all CEDICT translations
+                val translationsToUse = if (_uiState.value.selectedTranslations.isNotEmpty()) {
+                    _uiState.value.selectedTranslations.toList()
+                } else {
+                    vocabulary.english
+                }
+
+                localVocabularyRepository.addVocabulary(
+                    Vocabulary(chinese = vocabulary.chinese, pinyin = vocabulary.pinyin, english = ArrayList(translationsToUse))
+                )
                 studyRepository.recordReviewGrade(hanzi, ReviewGrade.AGAIN)
                 val newState = studyRepository.getLeitnerState(hanzi)
 
                 _uiState.update {
                     it.copy(
                         isInStudyQueue = true,
-                        currentBox = newState?.box ?: 0
+                        currentBox = newState?.box ?: 0,
+                        selectedTranslations = translationsToUse.toSet()
                     )
                 }
             } else {
