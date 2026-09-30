@@ -19,7 +19,8 @@ data class StudyCard(
     val mcqOptions: List<String> = emptyList(),
     val wordSlots: List<String> = emptyList(),
     val scrambledTiles: List<String> = emptyList(),
-    val clozeTargetIndex: Int = -1
+    val clozeTargetIndex: Int = -1,
+    val contextWords: List<String> = emptyList()
 )
 
 data class SessionStats(

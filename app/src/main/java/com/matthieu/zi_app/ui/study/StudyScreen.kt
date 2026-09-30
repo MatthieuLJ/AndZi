@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -192,7 +193,7 @@ fun StudyScreenContent(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
+                                .heightIn(min = 220.dp)
                                 .detectToneGestures(
                                     enabled = !uiState.isAnswerRevealed && card.quizType == QuizType.TONE,
                                     onToneDetected = { tone -> onToneSelected(tone) }
@@ -205,7 +206,8 @@ fun StudyScreenContent(
                         ) {
                             Column(
                                 modifier = Modifier
-                                    .fillMaxSize()
+                                    .fillMaxWidth()
+                                    .heightIn(min = 220.dp)
                                     .padding(20.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
@@ -237,6 +239,22 @@ fun StudyScreenContent(
                                         color = MaterialTheme.colorScheme.onSurface,
                                         textAlign = TextAlign.Center
                                     )
+                                }
+
+                                if (card.quizType == QuizType.TONE && card.contextWords.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "In words: ${card.contextWords.joinToString(", ")}",
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))

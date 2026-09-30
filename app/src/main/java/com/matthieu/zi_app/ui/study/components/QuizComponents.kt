@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -191,7 +192,7 @@ fun EnglishMcqView(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .defaultMinSize(minHeight = 52.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
                     .clickable(enabled = !isRevealed) { onOptionSelected(option) },

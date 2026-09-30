@@ -71,22 +71,63 @@ class StudyViewModel(
                     val tone = firstPinyin?.tone ?: 1
                     val syllable = firstPinyin?.radical ?: (if (voc.pinyin.isNotBlank()) voc.pinyin else hanzi)
 
-                    // Alternate quiz formats based on card index and character length
                     val charCount = hanzi.codePointCount(0, hanzi.length)
+                    val isSingleChar = (charCount == 1)
+                    val hasValidNonNeutralTone = isSingleChar && (tone in 1..4)
+
+                    // 1. Determine Quiz Type:
+                    // Tone test is ONLY for single characters with non-neutral tone (tones 1..4)
                     val quizType = when {
-                        charCount > 1 && index % 3 == 0 -> QuizType.CLOZE
-                        charCount > 1 && index % 3 == 1 -> QuizType.WORD_ASSEMBLY
-                        voc.english.isNotEmpty() && index % 2 == 1 -> QuizType.ENGLISH
-                        else -> QuizType.TONE
+                        !isSingleChar -> {
+                            // Multi-character words NEVER use Tone quiz!
+                            when {
+                                voc.english.isNotEmpty() && index % 3 == 0 -> QuizType.ENGLISH
+                                index % 2 == 0 -> QuizType.CLOZE
+                                else -> QuizType.WORD_ASSEMBLY
+                            }
+                        }
+                        hasValidNonNeutralTone && (voc.english.isEmpty() || index % 2 == 0) -> {
+                            QuizType.TONE
+                        }
+                        voc.english.isNotEmpty() -> {
+                            QuizType.ENGLISH
+                        }
+                        hasValidNonNeutralTone -> {
+                            QuizType.TONE
+                        }
+                        else -> {
+                            QuizType.ENGLISH
+                        }
                     }
 
-                    // Generate MCQ distractors for English or Cloze
+                    // 2. If Tone Quiz on a polyphonic character, find compound words demonstrating this tone
+                    var contextWords = emptyList<String>()
+                    if (quizType == QuizType.TONE) {
+                        val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
+                        val dictChars = if (dictionaryRepository != null) {
+                            dictionaryRepository.getCharPinyinsForHanzi(hanzi)
+                        } else emptyList()
+                        val allChars = (localChars + dictChars).distinctBy { it.pinyin }
+                        val distinctTones = allChars.mapNotNull {
+                            PinyinParser.parse_string_to_pinyin(it.pinyin)?.firstOrNull()?.tone
+                        }.filter { it in 1..4 }.distinct()
+
+                        if (distinctTones.size > 1 || allChars.size > 1) {
+                            var exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
+                            if (exampleWords.isEmpty() && dictionaryRepository != null) {
+                                exampleWords = dictionaryRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
+                            }
+                            contextWords = exampleWords.filter { it.codePointCount(0, it.length) > 1 }
+                        }
+                    }
+
+                    // 3. Generate MCQ distractors for English or Cloze
                     val mcqOptions = if (quizType == QuizType.ENGLISH) {
                         val correct = voc.english.firstOrNull() ?: "Meaning"
                         generateEnglishDistractors(correct)
                     } else emptyList()
 
-                    // Generate Cloze / Assembly slots
+                    // 4. Generate Cloze / Assembly slots
                     val wordSlots = mutableListOf<String>()
                     val scrambledTiles = mutableListOf<String>()
                     var targetIdx = -1
@@ -118,7 +159,8 @@ class StudyViewModel(
                             mcqOptions = mcqOptions,
                             wordSlots = wordSlots,
                             scrambledTiles = scrambledTiles,
-                            clozeTargetIndex = targetIdx
+                            clozeTargetIndex = targetIdx,
+                            contextWords = contextWords
                         )
                     )
                 }

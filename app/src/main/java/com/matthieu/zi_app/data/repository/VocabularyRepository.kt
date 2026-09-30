@@ -158,6 +158,21 @@ class VocabularyRepository(
         vocabularyDao.getWordCount()
     }
 
+    suspend fun getCompoundWordsForCharPinyin(hanzi: String, pinyin: String, limit: Int = 4): List<String> = withContext(Dispatchers.IO) {
+        val direct = vocabularyDao.getCompoundWordsForCharPinyin(hanzi, pinyin, limit)
+        if (direct.isNotEmpty()) return@withContext direct
+
+        // Fallback: search words containing the character and match pinyin syllables
+        val containing = vocabularyDao.getWordsContainingCharacter(hanzi)
+        val cleanPinyin = pinyin.trim().lowercase()
+        val radicalOnly = cleanPinyin.filter { !it.isDigit() }
+        containing
+            .filter { (it.word.length ?: 0) > 1 && (it.word.pinyin.contains(cleanPinyin) || it.word.pinyin.contains(radicalOnly)) }
+            .map { it.word.chinese }
+            .distinct()
+            .take(limit)
+    }
+
     private fun toVocabulary(details: WordWithDetails): Vocabulary {
         val engList = ArrayList(details.translations.map { it.translation })
         return Vocabulary(

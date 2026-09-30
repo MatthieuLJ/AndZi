@@ -113,4 +113,13 @@ interface VocabularyDao {
         LIMIT :limit
     """)
     suspend fun searchByEnglish(query: String, limit: Int = 50): List<WordWithDetails>
+
+    @Query("""
+        SELECT DISTINCT c.chinese FROM cword c
+        INNER JOIN cword_segment cs ON cs.cword_id = c.cword_id
+        INNER JOIN char_pinyin cp ON cp.char_pinyin_id = cs.char_pinyin_id
+        WHERE cp.hanzi = :hanzi AND (cp.pinyin = :pinyin OR cp.pinyin LIKE :pinyin || '%') AND c.length > 1
+        LIMIT :limit
+    """)
+    suspend fun getCompoundWordsForCharPinyin(hanzi: String, pinyin: String, limit: Int = 4): List<String>
 }

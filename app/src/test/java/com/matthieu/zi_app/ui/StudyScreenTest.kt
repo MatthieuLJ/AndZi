@@ -184,4 +184,85 @@ class StudyScreenTest {
         composeTestRule.onNodeWithText("Correct!").assertExists()
         composeTestRule.onNodeWithText("Good").assertExists().assertHasClickAction()
     }
+
+    @Test
+    fun testEnglishMcqQuiz_multiLineOptions_renderAndCanBeSelected() {
+        val longOption1 = "to take care of someone or something thoroughly in daily life"
+        val longOption2 = "to look after children, patients or elderly people with great care"
+        val card = StudyCard(
+            hanzi = "照顾",
+            pinyin = "zhao4gu5",
+            english = listOf(longOption1),
+            quizType = QuizType.ENGLISH,
+            mcqOptions = listOf(longOption1, longOption2, "water, liquid", "to learn, to study")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false
+        )
+
+        var selectedMeaning: String? = null
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = { selectedMeaning = it },
+                    onClozeSelected = {},
+                    onRateGrade = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Verify Hanzi is on top
+        composeTestRule.onNodeWithText("照顾").assertExists()
+
+        // Verify long multi-line option is rendered and clickable
+        composeTestRule.onNodeWithText(longOption2).assertExists().performClick()
+        org.junit.Assert.assertEquals(longOption2, selectedMeaning)
+    }
+
+    @Test
+    fun testToneQuiz_withContextWords_displaysContextWords() {
+        val card = StudyCard(
+            hanzi = "长",
+            pinyin = "chang2",
+            tone = 2,
+            english = listOf("long"),
+            quizType = QuizType.TONE,
+            contextWords = listOf("长度", "长城")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onRateGrade = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Verify Hanzi is on top
+        composeTestRule.onNodeWithText("长").assertExists()
+        // Verify Context words are rendered
+        composeTestRule.onNodeWithText("In words: 长度, 长城").assertExists()
+        // Verify tone prompt
+        composeTestRule.onNodeWithText("Swipe or tap the correct tone").assertExists()
+    }
 }
