@@ -2,31 +2,26 @@ package com.matthieu.zi_app.data.repository
 
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
-import com.matthieu.zi_app.data.local.dao.LessonDao
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
-import com.matthieu.zi_app.data.local.entity.LessonWordCrossRef
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 import com.matthieu.zi_app.data.local.model.WordWithDetails
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class VocabularyRepository(
-    private val vocabularyDao: VocabularyDao,
-    private val lessonDao: LessonDao
+    private val vocabularyDao: VocabularyDao
 ) {
 
-    suspend fun addVocabulary(vocabulary: Vocabulary, lessonName: String? = null): Long = withContext(Dispatchers.IO) {
+    suspend fun addVocabulary(vocabulary: Vocabulary): Long = withContext(Dispatchers.IO) {
         val ch = vocabulary.chinese.trim()
         val pi = vocabulary.pinyin.trim()
         if (ch.isEmpty() || pi.isEmpty()) return@withContext -1L
 
         // 1. Ensure or insert Chinese word
-        var word = vocabularyDao.getWord(ch, pi)
+        val word = vocabularyDao.getWord(ch, pi)
         val wordId = if (word == null) {
             val length = ch.codePointCount(0, ch.length)
             val newId = vocabularyDao.insertWord(ChineseWordEntity(chinese = ch, pinyin = pi, length = length))
@@ -41,12 +36,10 @@ class VocabularyRepository(
                     val pinyinSyllable = pinyins[pos].lame
 
                     // Ensure char_pinyin entry
-                    var charPinyin = vocabularyDao.getCharPinyin(hanzi, pinyinSyllable)
-                    val charPinyinId = if (charPinyin == null) {
-                        vocabularyDao.insertCharPinyin(CharPinyinEntity(hanzi = hanzi, pinyin = pinyinSyllable))
-                    } else {
-                        charPinyin.charPinyinId
-                    }
+                    val charPinyin = vocabularyDao.getCharPinyin(hanzi, pinyinSyllable)
+                    val charPinyinId = charPinyin?.charPinyinId ?: vocabularyDao.insertCharPinyin(
+                        CharPinyinEntity(hanzi = hanzi, pinyin = pinyinSyllable)
+                    )
 
                     vocabularyDao.insertSegments(
                         listOf(WordSegmentEntity(cwordId = newId, charPinyinId = charPinyinId, pos = pos))
@@ -60,25 +53,16 @@ class VocabularyRepository(
             word.cwordId
         }
 
-        // 2. Insert English translations and optional lesson link
-        var lessonId: Long? = null
-        if (!lessonName.isNullOrEmpty()) {
-            val lesson = lessonDao.getLessonByName(lessonName)
-            lessonId = lesson?.lessonId ?: lessonDao.insertLesson(
-                com.matthieu.zi_app.data.local.entity.LessonEntity(name = lessonName)
-            )
-        }
-
+        // 2. Insert English translations
         for (en in vocabulary.english) {
             val cleanEn = en.trim()
             if (cleanEn.isEmpty()) continue
             val existingTranslations = vocabularyDao.getTranslationsForWord(wordId)
             val existing = existingTranslations.find { it.translation == cleanEn }
-            val engId = existing?.engId ?: vocabularyDao.insertTranslation(
-                EnglishTranslationEntity(cwordId = wordId, translation = cleanEn)
-            )
-            if (lessonId != null && engId > 0) {
-                lessonDao.assignWordToLesson(LessonWordCrossRef(engId = engId, lessonId = lessonId))
+            if (existing == null) {
+                vocabularyDao.insertTranslation(
+                    EnglishTranslationEntity(cwordId = wordId, translation = cleanEn)
+                )
             }
         }
 
@@ -93,20 +77,6 @@ class VocabularyRepository(
     suspend fun getWordsContainingCharacter(hanzi: String): List<Vocabulary> = withContext(Dispatchers.IO) {
         val details = vocabularyDao.getWordsContainingCharacter(hanzi)
         details.map { toVocabulary(it) }
-    }
-
-    fun getVocabularyInLessonFlow(lessonId: Long): Flow<List<Vocabulary>> {
-        return vocabularyDao.getWordsInLessonFlow(lessonId).map { list ->
-            list.map { toVocabulary(it) }
-        }
-    }
-
-    suspend fun getVocabularyInLessons(lessonIds: List<Long>): List<Vocabulary> = withContext(Dispatchers.IO) {
-        vocabularyDao.getWordsInLessons(lessonIds).map { toVocabulary(it) }
-    }
-
-    suspend fun getVocabularyWithoutLesson(): List<Vocabulary> = withContext(Dispatchers.IO) {
-        vocabularyDao.getWordsWithoutLesson().map { toVocabulary(it) }
     }
 
     suspend fun search(query: String, limit: Int = 50): List<Vocabulary> = withContext(Dispatchers.IO) {

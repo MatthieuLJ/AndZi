@@ -62,7 +62,6 @@ public class MainMenuActivity extends AppCompatActivity {
 
         setContentView(R.layout.main_menu);
         Typeface main_menu_font = Typeface.createFromAsset(getAssets(), "fonts/Dunkin_Sans.ttf");
-        ((Button)findViewById(R.id.main_menu_add_voc)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_test)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_ref)).setTypeface(main_menu_font);
         ((Button)findViewById(R.id.main_menu_help)).setTypeface(main_menu_font);
@@ -95,12 +94,6 @@ public class MainMenuActivity extends AppCompatActivity {
             else
                 start_it();
         }
-    }
-
-    public void handle_add_vocabulary(View v) {
-        Intent intent = new Intent(this, VocabularyEditorActivity.class);
-        intent.setAction(Intent.ACTION_EDIT);
-        startActivity(intent);
     }
 
     public void handle_prefs(View v) {

@@ -8,7 +8,6 @@ import com.matthieu.zi_app.data.local.ProgressDatabase
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -21,7 +20,6 @@ class RepositoriesTest {
     private lateinit var andZiDb: AndZiDatabase
     private lateinit var progressDb: ProgressDatabase
     private lateinit var vocRepo: VocabularyRepository
-    private lateinit var lessonRepo: LessonRepository
     private lateinit var studyRepo: StudyRepository
     private lateinit var progressRepo: ProgressRepository
 
@@ -31,8 +29,7 @@ class RepositoriesTest {
         andZiDb = AndZiDatabase.createInMemory(context)
         progressDb = ProgressDatabase.createInMemory(context)
 
-        vocRepo = VocabularyRepository(andZiDb.vocabularyDao(), andZiDb.lessonDao())
-        lessonRepo = LessonRepository(andZiDb.lessonDao())
+        vocRepo = VocabularyRepository(andZiDb.vocabularyDao())
         studyRepo = StudyRepository(andZiDb.leitnerDao())
         progressRepo = ProgressRepository(progressDb.progressDao(), andZiDb.leitnerDao())
     }
@@ -46,7 +43,7 @@ class RepositoriesTest {
     @Test
     fun testVocabularyRepositoryAddAndSearch() = runBlocking {
         val voc = Vocabulary("谢谢", "xie4xie5", arrayListOf("thanks", "thank you"))
-        val wordId = vocRepo.addVocabulary(voc, "Daily Greetings")
+        val wordId = vocRepo.addVocabulary(voc)
         assertTrue(wordId > 0)
 
         val retrieved = vocRepo.getVocabularyForChinese("谢谢")
@@ -59,12 +56,6 @@ class RepositoriesTest {
         val searchRes = vocRepo.search("thanks")
         assertEquals(1, searchRes.size)
         assertEquals("谢谢", searchRes[0].chinese)
-
-        // Verify lesson was created and assigned
-        val lesson = lessonRepo.getLessonByName("Daily Greetings")
-        assertNotNull(lesson)
-        val wordCount = lessonRepo.getWordCountForLesson(lesson!!.lessonId)
-        assertEquals(1, wordCount)
     }
 
     @Test

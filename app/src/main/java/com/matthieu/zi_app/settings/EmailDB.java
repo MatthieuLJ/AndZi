@@ -16,7 +16,6 @@ import android.preference.PreferenceManager;
 import com.matthieu.zi_app.AndZiApplication;
 import com.matthieu.zi_app.HanziDB;
 import com.matthieu.zi_app.R;
-import com.matthieu.zi_app.VocabularyEditorActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,21 +35,6 @@ public class EmailDB extends PreferenceActivity {
         editor.commit();
 
         addPreferencesFromResource(R.xml.settings_email_db);
-
-        Preference select_lesson = findPreference("selected_lessons");
-        select_lesson.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                boolean select = sp.getBoolean("selected_lessons", false);
-                if (!select) { // this is called before it is actually called, let's go select some lessons
-                    Intent i = new Intent(EmailDB.this, VocabularyEditorActivity.class);
-                    i.setAction(Intent.ACTION_PICK);
-                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivityForResult(i, 0);
-                }
-                return true;
-            }
-        });
 
         Preference email = findPreference("do_email");
         email.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

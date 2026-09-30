@@ -15,25 +15,6 @@
             android:layout_weight="2"
             >
         <com.matthieu.zi_app.widget.ButtonAutomaticSize
-                android:id="@+id/main_menu_add_voc"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_margin="5dp"
-                android:background="@drawable/main_menu_button"
-                android:textColor="@drawable/main_menu_text_color"
-                android:text="@string/main_menu_add_voc"
-                android:textSize="@dimen/xlarge_test_text"
-                android:onClick="handle_add_vocabulary"
-                android:singleLine="true"
-                app:max_size="@dimen/xlarge_text"/>
-    </TableRow>
-
-    <TableRow
-            android:layout_height="0dp"
-            android:layout_weight="2"
-            >
-        <com.matthieu.zi_app.widget.ButtonAutomaticSize
                 android:id="@+id/main_menu_test"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"

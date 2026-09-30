@@ -16,7 +16,6 @@ import android.widget.Toast;
 import com.matthieu.zi_app.AndZiApplication;
 import com.matthieu.zi_app.HanziDB;
 import com.matthieu.zi_app.R;
-import com.matthieu.zi_app.VocabularyEditorActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,21 +51,6 @@ public class ExportDB extends PreferenceActivity {
         });
         path.setText(file_path);
         path.setSummary(getString(R.string.settings_export_destination,file_path));
-
-        Preference select_lesson = findPreference("selected_lessons");
-        select_lesson.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                boolean select = sp.getBoolean("selected_lessons", false);
-                if (!select) { // this is called before it is actually called, let's go select some lessons
-                    Intent i = new Intent(ExportDB.this, VocabularyEditorActivity.class);
-                    i.setAction(Intent.ACTION_PICK);
-                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivityForResult(i, 0);
-                }
-                return true;
-            }
-        });
 
         Preference export = findPreference("do_export");
         export.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

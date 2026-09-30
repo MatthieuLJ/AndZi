@@ -95,32 +95,6 @@ interface VocabularyDao {
     suspend fun getWordsContainingCharacter(hanzi: String): List<WordWithDetails>
 
     @Transaction
-    @Query("""
-        SELECT DISTINCT c.* FROM cword c
-        INNER JOIN eword e ON e.cword_id = c.cword_id
-        INNER JOIN lesson_word lw ON lw.eng_id = e.eng_id
-        WHERE lw.lesson_id = :lessonId
-    """)
-    fun getWordsInLessonFlow(lessonId: Long): Flow<List<WordWithDetails>>
-
-    @Transaction
-    @Query("""
-        SELECT DISTINCT c.* FROM cword c
-        INNER JOIN eword e ON e.cword_id = c.cword_id
-        INNER JOIN lesson_word lw ON lw.eng_id = e.eng_id
-        WHERE lw.lesson_id IN (:lessonIds)
-    """)
-    suspend fun getWordsInLessons(lessonIds: List<Long>): List<WordWithDetails>
-
-    @Transaction
-    @Query("""
-        SELECT DISTINCT c.* FROM cword c
-        INNER JOIN eword e ON e.cword_id = c.cword_id
-        WHERE e.eng_id NOT IN (SELECT eng_id FROM lesson_word)
-    """)
-    suspend fun getWordsWithoutLesson(): List<WordWithDetails>
-
-    @Transaction
     @Query("SELECT * FROM cword WHERE chinese LIKE :prefix || '%' LIMIT :limit")
     suspend fun searchByChinesePrefix(prefix: String, limit: Int = 50): List<WordWithDetails>
 

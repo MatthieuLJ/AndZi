@@ -5,14 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.matthieu.zi_app.data.local.dao.LeitnerDao
-import com.matthieu.zi_app.data.local.dao.LessonDao
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity
-import com.matthieu.zi_app.data.local.entity.LessonEntity
-import com.matthieu.zi_app.data.local.entity.LessonWordCrossRef
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 
 @Database(
@@ -21,8 +18,6 @@ import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
         ChineseWordEntity::class,
         WordSegmentEntity::class,
         EnglishTranslationEntity::class,
-        LessonEntity::class,
-        LessonWordCrossRef::class,
         LeitnerRecordEntity::class
     ],
     version = 6,
@@ -31,7 +26,6 @@ import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 abstract class AndZiDatabase : RoomDatabase() {
 
     abstract fun vocabularyDao(): VocabularyDao
-    abstract fun lessonDao(): LessonDao
     abstract fun leitnerDao(): LeitnerDao
 
     companion object {
