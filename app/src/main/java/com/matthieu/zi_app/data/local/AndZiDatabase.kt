@@ -61,6 +61,7 @@ abstract class AndZiDatabase : RoomDatabase() {
             }
         }
 
+        @Synchronized
         fun ensureDictionaryExtracted(context: Context) {
             val dbFile = context.getDatabasePath(CEDICT_DATABASE_NAME)
             if (dbFile.exists() && dbFile.length() > 1_000_000L) {
@@ -85,7 +86,7 @@ abstract class AndZiDatabase : RoomDatabase() {
             }
 
             dbFile.parentFile?.mkdirs()
-            val tempFile = File(dbFile.parentFile, "$CEDICT_DATABASE_NAME.tmp")
+            val tempFile = File(dbFile.parentFile, "$CEDICT_DATABASE_NAME.${System.nanoTime()}.tmp")
             try {
                 context.resources.openRawResource(R.raw.cedict_db).use { rawInput ->
                     ZipInputStream(BufferedInputStream(rawInput)).use { zis ->
