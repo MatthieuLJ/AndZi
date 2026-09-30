@@ -44,32 +44,41 @@ interface LeitnerDao {
 
     @Query("""
         SELECT chinese FROM (
-            SELECT char_pinyin.hanzi AS chinese, 
-                   IFNULL(leitner.exp_time, 0) AS exp_time, 
-                   IFNULL(leitner.box, 0) AS forced_box 
-            FROM char_pinyin 
-            LEFT JOIN leitner ON leitner.hanzi = char_pinyin.hanzi 
-            WHERE (leitner.box IS NULL) OR (leitner.box = 0) OR (leitner.exp_time < :now) 
-            UNION 
-            SELECT cword.chinese AS chinese,
-                   IFNULL(leitner.exp_time, 0) AS exp_time, 
-                   IFNULL(leitner.box, 0) AS forced_box 
-            FROM cword 
-            LEFT JOIN leitner ON leitner.hanzi = cword.chinese 
+            SELECT leitner.hanzi AS chinese,
+                   leitner.exp_time AS exp_time,
+                   leitner.box AS forced_box
+            FROM leitner
+            WHERE (leitner.box = 0) OR (leitner.exp_time < :now)
+            UNION
+            SELECT char_pinyin.hanzi AS chinese,
+                   IFNULL(leitner.exp_time, 0) AS exp_time,
+                   IFNULL(leitner.box, 0) AS forced_box
+            FROM char_pinyin
+            LEFT JOIN leitner ON leitner.hanzi = char_pinyin.hanzi
             WHERE (leitner.box IS NULL) OR (leitner.box = 0) OR (leitner.exp_time < :now)
-        ) 
+            UNION
+            SELECT cword.chinese AS chinese,
+                   IFNULL(leitner.exp_time, 0) AS exp_time,
+                   IFNULL(leitner.box, 0) AS forced_box
+            FROM cword
+            LEFT JOIN leitner ON leitner.hanzi = cword.chinese
+            WHERE (leitner.box IS NULL) OR (leitner.box = 0) OR (leitner.exp_time < :now)
+        )
         GROUP BY chinese ORDER BY forced_box DESC, exp_time ASC LIMIT :limit
     """)
     suspend fun getStudyQueue(now: Long, limit: Int): List<String>
 
     @Query("""
         SELECT COUNT(DISTINCT chinese) FROM (
-            SELECT cword.chinese AS chinese FROM cword 
-            LEFT JOIN leitner ON leitner.hanzi = cword.chinese 
-            WHERE (leitner.exp_time < :now) OR (leitner.box IS NULL) OR (leitner.box = 0) 
-            UNION 
-            SELECT char_pinyin.hanzi AS chinese FROM char_pinyin 
-            LEFT JOIN leitner ON leitner.hanzi = char_pinyin.hanzi 
+            SELECT leitner.hanzi AS chinese FROM leitner
+            WHERE (leitner.exp_time < :now) OR (leitner.box = 0)
+            UNION
+            SELECT cword.chinese AS chinese FROM cword
+            LEFT JOIN leitner ON leitner.hanzi = cword.chinese
+            WHERE (leitner.exp_time < :now) OR (leitner.box IS NULL) OR (leitner.box = 0)
+            UNION
+            SELECT char_pinyin.hanzi AS chinese FROM char_pinyin
+            LEFT JOIN leitner ON leitner.hanzi = char_pinyin.hanzi
             WHERE (leitner.exp_time < :now) OR (leitner.box IS NULL) OR (leitner.box = 0)
         )
     """)
@@ -77,12 +86,15 @@ interface LeitnerDao {
 
     @Query("""
         SELECT COUNT(DISTINCT chinese) FROM (
-            SELECT cword.chinese AS chinese FROM cword 
-            LEFT JOIN leitner ON leitner.hanzi = cword.chinese 
-            WHERE (leitner.exp_time < :now) OR (leitner.box IS NULL) OR (leitner.box = 0) 
-            UNION 
-            SELECT char_pinyin.hanzi AS chinese FROM char_pinyin 
-            LEFT JOIN leitner ON leitner.hanzi = char_pinyin.hanzi 
+            SELECT leitner.hanzi AS chinese FROM leitner
+            WHERE (leitner.exp_time < :now) OR (leitner.box = 0)
+            UNION
+            SELECT cword.chinese AS chinese FROM cword
+            LEFT JOIN leitner ON leitner.hanzi = cword.chinese
+            WHERE (leitner.exp_time < :now) OR (leitner.box IS NULL) OR (leitner.box = 0)
+            UNION
+            SELECT char_pinyin.hanzi AS chinese FROM char_pinyin
+            LEFT JOIN leitner ON leitner.hanzi = char_pinyin.hanzi
             WHERE (leitner.exp_time < :now) OR (leitner.box IS NULL) OR (leitner.box = 0)
         )
     """)

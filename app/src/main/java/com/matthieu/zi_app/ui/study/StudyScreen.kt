@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.ui.study.components.ClozeAssemblyView
 import com.matthieu.zi_app.ui.study.components.EnglishMcqView
 import com.matthieu.zi_app.ui.study.components.RevealedFeedbackCard
@@ -53,7 +55,6 @@ import com.matthieu.zi_app.ui.study.components.ToneKeypad
 import com.matthieu.zi_app.ui.study.components.detectToneGestures
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyScreen(
     viewModel: StudyViewModel,
@@ -62,6 +63,34 @@ fun StudyScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.startStudySession()
+    }
+
+    StudyScreenContent(
+        uiState = uiState,
+        onNavigateBack = onNavigateBack,
+        onToneSelected = { viewModel.submitToneAnswer(it) },
+        onEnglishSelected = { viewModel.submitEnglishAnswer(it) },
+        onClozeSelected = { viewModel.submitClozeAnswer(it) },
+        onRateGrade = { viewModel.rateCard(it) },
+        onNextCard = { viewModel.nextCard() },
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StudyScreenContent(
+    uiState: StudyUiState,
+    onNavigateBack: () -> Unit,
+    onToneSelected: (Int) -> Unit,
+    onEnglishSelected: (String) -> Unit,
+    onClozeSelected: (String) -> Unit,
+    onRateGrade: (ReviewGrade) -> Unit,
+    onNextCard: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -166,7 +195,7 @@ fun StudyScreen(
                                 .height(220.dp)
                                 .detectToneGestures(
                                     enabled = !uiState.isAnswerRevealed && card.quizType == QuizType.TONE,
-                                    onToneDetected = { tone -> viewModel.submitToneAnswer(tone) }
+                                    onToneDetected = { tone -> onToneSelected(tone) }
                                 ),
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(
@@ -181,13 +210,34 @@ fun StudyScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                // Large Hanzi glyph
-                                Text(
-                                    text = card.hanzi,
-                                    style = AndZiThemeCustom.chineseTypography.hanziCard,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center
-                                )
+                                val showEnglishOnTop = !uiState.isAnswerRevealed &&
+                                        (card.quizType == QuizType.CLOZE || card.quizType == QuizType.WORD_ASSEMBLY)
+
+                                if (showEnglishOnTop) {
+                                    val englishText = if (card.english.isNotEmpty()) {
+                                        card.english.joinToString("; ")
+                                    } else "Complete the word"
+
+                                    Text(
+                                        text = englishText,
+                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                } else {
+                                    val hanziStyle = when {
+                                        card.hanzi.length <= 1 -> AndZiThemeCustom.chineseTypography.hanziCard
+                                        card.hanzi.length <= 3 -> AndZiThemeCustom.chineseTypography.hanziLarge
+                                        else -> AndZiThemeCustom.chineseTypography.hanziMedium
+                                    }
+                                    Text(
+                                        text = card.hanzi,
+                                        style = hanziStyle,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -216,8 +266,8 @@ fun StudyScreen(
                             RevealedFeedbackCard(
                                 card = card,
                                 isCorrect = uiState.isCorrect,
-                                onRateGrade = { grade -> viewModel.rateCard(grade) },
-                                onNextCard = { viewModel.nextCard() }
+                                onRateGrade = { grade -> onRateGrade(grade) },
+                                onNextCard = { onNextCard() }
                             )
                         }
                     } else {
@@ -227,7 +277,7 @@ fun StudyScreen(
                                 QuizType.TONE -> {
                                     ToneKeypad(
                                         enabled = !uiState.isAnswerRevealed,
-                                        onToneSelected = { tone -> viewModel.submitToneAnswer(tone) }
+                                        onToneSelected = { tone -> onToneSelected(tone) }
                                     )
                                 }
                                 QuizType.ENGLISH -> {
@@ -237,7 +287,7 @@ fun StudyScreen(
                                         correctMeaning = correct,
                                         selectedOption = uiState.selectedOption,
                                         isRevealed = uiState.isAnswerRevealed,
-                                        onOptionSelected = { option -> viewModel.submitEnglishAnswer(option) }
+                                        onOptionSelected = { option -> onEnglishSelected(option) }
                                     )
                                 }
                                 QuizType.CLOZE, QuizType.WORD_ASSEMBLY -> {
@@ -246,13 +296,13 @@ fun StudyScreen(
                                         clozeTargetIndex = card.clozeTargetIndex,
                                         tiles = card.scrambledTiles,
                                         isRevealed = uiState.isAnswerRevealed,
-                                        onTileSelected = { tile -> viewModel.submitClozeAnswer(tile) }
+                                        onTileSelected = { tile -> onClozeSelected(tile) }
                                     )
                                 }
                                 QuizType.PINYIN -> {
                                     ToneKeypad(
                                         enabled = !uiState.isAnswerRevealed,
-                                        onToneSelected = { tone -> viewModel.submitToneAnswer(tone) }
+                                        onToneSelected = { tone -> onToneSelected(tone) }
                                     )
                                 }
                             }

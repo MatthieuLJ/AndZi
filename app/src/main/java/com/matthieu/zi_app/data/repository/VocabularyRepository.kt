@@ -79,20 +79,23 @@ class VocabularyRepository(
         details.map { toVocabulary(it) }
     }
 
+    suspend fun getCharPinyinsForHanzi(hanzi: String): List<CharPinyinEntity> = withContext(Dispatchers.IO) {
+        vocabularyDao.getCharPinyinsForHanzi(hanzi)
+    }
+
     suspend fun search(query: String, limit: Int = 50): List<Vocabulary> = withContext(Dispatchers.IO) {
         val cleanQuery = query.trim()
-        if (cleanQuery.isEmpty()) return@withContext emptyList()
 
         val results = mutableListOf<WordWithDetails>()
         val byChinese = vocabularyDao.searchByChinesePrefix(cleanQuery, limit)
         results.addAll(byChinese)
 
-        if (results.size < limit) {
+        if (results.size < limit && cleanQuery.isNotEmpty()) {
             val byPinyin = vocabularyDao.searchByPinyinPrefix(cleanQuery, limit - results.size)
             results.addAll(byPinyin)
         }
 
-        if (results.size < limit) {
+        if (results.size < limit && cleanQuery.isNotEmpty()) {
             val byEnglish = vocabularyDao.searchByEnglish(cleanQuery, limit - results.size)
             results.addAll(byEnglish)
         }

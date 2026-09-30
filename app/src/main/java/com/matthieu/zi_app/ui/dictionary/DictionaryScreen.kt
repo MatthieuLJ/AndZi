@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -215,9 +216,9 @@ fun DictionaryResultCard(
             // Chinese Character / Word
             Text(
                 text = word.chinese,
-                style = AndZiThemeCustom.chineseTypography.hanziMedium,
+                style = if (word.chinese.length > 3) AndZiThemeCustom.chineseTypography.hanziMedium.copy(fontSize = 20.sp) else AndZiThemeCustom.chineseTypography.hanziMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.width(72.dp)
+                modifier = Modifier.widthIn(min = 60.dp, max = 110.dp)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -270,29 +271,41 @@ fun WordDetailSheetContent(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
-        // Top Overview Row
+        // Top Overview Row: Hanzi + Pinyin stacked vertically on the left, Study button on the right
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Big Hanzi
-            Text(
-                text = word.chinese,
-                style = AndZiThemeCustom.chineseTypography.hanziCard,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp)
+            ) {
+                val hanziStyle = when {
+                    word.chinese.length <= 1 -> AndZiThemeCustom.chineseTypography.hanziCard
+                    word.chinese.length <= 3 -> AndZiThemeCustom.chineseTypography.hanziLarge
+                    else -> AndZiThemeCustom.chineseTypography.hanziMedium
+                }
 
-            Spacer(modifier = Modifier.width(20.dp))
+                // Chinese Characters
+                Text(
+                    text = word.chinese,
+                    style = hanziStyle,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
 
-            Column(modifier = Modifier.weight(1f)) {
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Pinyin directly below the Chinese word
                 Text(
                     text = prettyPinyin,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary
                 )
 
                 if (currentBox != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.primaryContainer
@@ -314,7 +327,8 @@ fun WordDetailSheetContent(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isInStudy) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
                     contentColor = if (isInStudy) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
-                )
+                ),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
             ) {
                 Icon(
                     imageVector = if (isInStudy) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,

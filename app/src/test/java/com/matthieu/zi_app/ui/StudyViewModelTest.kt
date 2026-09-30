@@ -85,4 +85,69 @@ class StudyViewModelTest {
         assertEquals(1, finishedState.sessionStats.totalReviewed)
         assertEquals(1, finishedState.sessionStats.correctCount)
     }
+
+    @Test
+    fun testStudySessionWithCardsOnlyInCharPinyinOrDictionary() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dictDb = AndZiDatabase.createInMemory(context)
+        val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
+
+        // Add word in dictionary DB
+        dictRepo.addVocabulary(Vocabulary("你好", "ni3hao3", arrayListOf("hello")))
+
+        // Add character in local char_pinyin & leitner (due now)
+        andZiDb.vocabularyDao().insertCharPinyin(
+            com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "你", pinyin = "ni3")
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "你",
+                box = 0,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, dictRepo)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+        assertFalse(state.isLoading)
+        assertFalse(state.isSessionFinished)
+        assertEquals(1, state.queue.size)
+        assertEquals("你", state.currentCard?.hanzi)
+        assertEquals("ni3", state.currentCard?.pinyin)
+
+        dictDb.close()
+    }
+
+    @Test
+    fun testStudySessionFallbackWhenNoEntryInCwordOrDictionary() = runBlocking {
+        // Insert only Leitner record directly without any vocabulary or dictionary entry
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "字",
+                box = 0,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, null)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+        assertFalse(state.isLoading)
+        assertFalse(state.isSessionFinished)
+        assertEquals(1, state.queue.size)
+        assertEquals("字", state.currentCard?.hanzi)
+    }
 }

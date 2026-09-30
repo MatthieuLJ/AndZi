@@ -146,7 +146,8 @@ fun MainAppScaffold(
                 val studyViewModel: com.matthieu.zi_app.ui.study.StudyViewModel = viewModel(
                     factory = com.matthieu.zi_app.ui.study.StudyViewModel.provideFactory(
                         studyRepository = appContainer.studyRepository,
-                        vocabularyRepository = appContainer.vocabularyRepository
+                        vocabularyRepository = appContainer.vocabularyRepository,
+                        dictionaryRepository = appContainer.dictionaryRepository
                     )
                 )
                 StudyScreen(

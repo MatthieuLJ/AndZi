@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.PinyinParser
+import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
 
 class StudyViewModel(
     private val studyRepository: StudyRepository,
-    private val vocabularyRepository: VocabularyRepository
+    private val vocabularyRepository: VocabularyRepository,
+    private val dictionaryRepository: VocabularyRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudyUiState(isLoading = true))
@@ -35,21 +37,39 @@ class StudyViewModel(
 
                 // Fallback: If no cards are overdue, fetch search sample from dictionary/vocab
                 if (queueHanzis.isEmpty()) {
-                    val allVoc = vocabularyRepository.search("", limit = limit)
+                    val allVoc = vocabularyRepository.search("", limit = limit).ifEmpty {
+                        dictionaryRepository?.search("", limit = limit) ?: emptyList()
+                    }
                     queueHanzis = allVoc.map { it.chinese }
                 }
 
                 val cards = mutableListOf<StudyCard>()
                 for ((index, hanzi) in queueHanzis.withIndex()) {
-                    val vocList = vocabularyRepository.getVocabularyForChinese(hanzi)
-                    val voc = vocList.firstOrNull() ?: continue
+                    var vocList = vocabularyRepository.getVocabularyForChinese(hanzi)
+                    if (vocList.isEmpty() && dictionaryRepository != null) {
+                        vocList = dictionaryRepository.getVocabularyForChinese(hanzi)
+                    }
+
+                    val voc = if (vocList.isNotEmpty()) {
+                        vocList.first()
+                    } else {
+                        val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
+                        val dictChars = if (localChars.isEmpty() && dictionaryRepository != null) {
+                            dictionaryRepository.getCharPinyinsForHanzi(hanzi)
+                        } else emptyList()
+                        val pinyin = (localChars.firstOrNull() ?: dictChars.firstOrNull())?.pinyin ?: ""
+                        Vocabulary(chinese = hanzi, pinyin = pinyin, english = ArrayList())
+                    }
+
                     val leitnerState = studyRepository.getLeitnerState(hanzi)
                     val box = leitnerState?.box ?: 0
 
-                    val pinyins = PinyinParser.parse_string_to_pinyin(voc.pinyin) ?: emptyList()
+                    val pinyins = if (voc.pinyin.isNotBlank()) {
+                        PinyinParser.parse_string_to_pinyin(voc.pinyin) ?: emptyList()
+                    } else emptyList()
                     val firstPinyin = pinyins.firstOrNull()
                     val tone = firstPinyin?.tone ?: 1
-                    val syllable = firstPinyin?.radical ?: voc.pinyin
+                    val syllable = firstPinyin?.radical ?: (if (voc.pinyin.isNotBlank()) voc.pinyin else hanzi)
 
                     // Alternate quiz formats based on card index and character length
                     val charCount = hanzi.codePointCount(0, hanzi.length)
@@ -226,11 +246,12 @@ class StudyViewModel(
     companion object {
         fun provideFactory(
             studyRepository: StudyRepository,
-            vocabularyRepository: VocabularyRepository
+            vocabularyRepository: VocabularyRepository,
+            dictionaryRepository: VocabularyRepository? = null
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return StudyViewModel(studyRepository, vocabularyRepository) as T
+                return StudyViewModel(studyRepository, vocabularyRepository, dictionaryRepository) as T
             }
         }
     }

@@ -51,7 +51,7 @@ public class AndZiApplication extends Application {
     public void onCreate() {
         super.onCreate();
         prog = new ProgressDB(getApplicationContext(), PROGRESS_DB_NAME);
-        
+
         Intent startServiceIntent = new Intent(this, ProgressService.class);
         this.startService(startServiceIntent);
 
@@ -152,7 +152,7 @@ public class AndZiApplication extends Application {
             return true;
         }
     }
-    
+
     public boolean initialize_ref_db(ProgressHandler progress) {
         synchronized(this) {
             if (ref_initialized)

@@ -26,7 +26,7 @@ public class ExportDB extends PreferenceActivity {
     String file_path= Environment.getExternalStorageDirectory().getPath()+"/AndZiDB-"+ (1+Calendar.getInstance().get(Calendar.MONTH))+"-"+Calendar.getInstance().get(Calendar.DAY_OF_MONTH)+".azdb";
     ArrayList<String> lesson_selection;
     HanziDB.export_task running_task;
-        
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

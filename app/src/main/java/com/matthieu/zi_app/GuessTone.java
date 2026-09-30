@@ -254,7 +254,7 @@ public class GuessTone extends Test implements GestureOverlayView.OnGesturePerfo
             }
             tone = 3;
         }
-        
+
         CheckBox cb=null;
         switch (tone) {
             case 1:
