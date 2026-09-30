@@ -4,6 +4,7 @@
 import sqlite3
 import sys
 import os
+from functools import reduce
 
 class HanziDB:
     """A class that can manage an Hanzi SQLite database"""
@@ -11,7 +12,7 @@ class HanziDB:
     def create_database(self):
         self.connection = sqlite3.connect(self.filename)
 
-        print "creating database"
+        print("creating database")
         self.connection.execute("CREATE TABLE android_metadata (locale TEXT DEFAULT 'en_US');")
         self.connection.execute("INSERT INTO android_metadata VALUES ('en_US');")
 
@@ -66,11 +67,11 @@ class HanziDB:
         self.english_index=0
     
     def __del__(self):
-        print "closing database"
+        print("closing database")
         #self.connection.close()
 
     def add_pinyin(self, chinese, pinyin):
-        if self.pinyin_list.has_key((chinese,pinyin)):
+        if (chinese,pinyin) in self.pinyin_list:
             return self.pinyin_list[(chinese, pinyin)]
         self.pinyin_index += 1
         self.connection.execute("INSERT INTO char_pinyin (char_pinyin_id, hanzi, pinyin) VALUES(?,?,?)", (self.pinyin_index, chinese, pinyin))
@@ -83,7 +84,7 @@ class HanziDB:
         complete_chinese=reduce(add, chinese)
         complete_pinyin=reduce(add, pinyin)
 
-        if self.word_list.has_key((complete_chinese, complete_pinyin)):
+        if (complete_chinese, complete_pinyin) in self.word_list:
             return self.word_list[(complete_chinese, complete_pinyin)]
         self.word_index += 1
         self.connection.execute("INSERT INTO cword (cword_id, chinese, pinyin, length) VALUES(?,?,?,?)", (self.word_index, complete_chinese, complete_pinyin, len(complete_chinese)))
@@ -97,7 +98,7 @@ class HanziDB:
 
     def add_english(self, cword, translations):
         for tr in translations:
-            if self.english_list.has_key((cword, tr)):
+            if (cword, tr) in self.english_list:
                 continue
             self.english_index += 1
             self.connection.execute("INSERT INTO eword (eng_id, cword_id, translation) VALUES(?,?,?)", (self.english_index, cword, tr))
@@ -107,7 +108,7 @@ class HanziDB:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print "not enough argument (give me the name of the database)"
+        print("not enough argument (give me the name of the database)")
         sys.exit()
     db = HanziDB(sys.argv[1])
     cw=db.add_cword([u"一",u"下"], ["yi1", "xia4"])

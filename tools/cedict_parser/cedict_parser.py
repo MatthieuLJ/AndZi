@@ -3,7 +3,6 @@
 
 import sys
 import re
-import codecs
 
 pinyin_radicals=("a", "ba", "pa", "ma", "fa", "da", "ta", "na", "la", "za", "ca", "sa", "zha", "cha", "sha", "ga", "ka", "ha",
         "o", "bo", "po", "mo", "fo",
@@ -114,7 +113,7 @@ def check_translations(translations):
         m = re.match("see also (.).+", t)
         if (m is not None) and check_chinese_character(m.groups()[0]):
             continue
-        RE=re.compile(u'(.*)\|([⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]+)([^⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎].*)', re.UNICODE) # matches Chinese|Chinese
+        RE=re.compile(r'(.*)\|([\u4e00-\u9fff\u3400-\u4dbf\u3007]+)([^\u4e00-\u9fff\u3400-\u4dbf\u3007].*)', re.UNICODE) # matches Chinese characters
         while RE.match(t) is not None:
             t=RE.sub(replace_chinese_in_translation, t,re.UNICODE)
         new_t.append(t)
@@ -142,9 +141,9 @@ class CedictParser:
     def __init__(self, filename):
         self.filename=filename
         try:
-            self.file = codecs.open(filename, "r", "utf-8")
+            self.file = open(filename, "r", encoding="utf-8")
         except IOError:
-            print "cannot open file ",filename
+            print("cannot open file ",filename)
             sys.exit()
         self.current_line=0
 
@@ -160,11 +159,14 @@ class CedictParser:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         # match a line
         while True:
             while True:
-                m=re.match(r".+ (.+) \[([^\[\]]+)\] (.+)", self.file.next())
+                line = self.file.readline()
+                if line == "":
+                    raise StopIteration
+                m=re.match(r".+ (.+) \[([^\[\]]+)\] (.+)", line)
                 self.current_line += 1
                 if m is not None:
                      break
@@ -186,11 +188,11 @@ class CedictParser:
     
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print "not enough argument (give me the name of the cedict file)"
+        print("not enough argument (give me the name of the cedict file)")
         sys.exit()
     parser = CedictParser(sys.argv[1])
     total_lines = parser.total_lines()
     for voc in parser:
-        #sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
-        print voc
-    print ""
+        sys.stdout.write("progress : "+ str(parser.get_current_line())+ " / "+ str(total_lines)+ "\r")
+        #print(voc)
+    print("")
