@@ -17,9 +17,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Clear any old notification
-        ProgressService.clear_notification(applicationContext)
-
         val app = application as AndZiApplication
         val userPreferences = app.appContainer.userPreferences
 

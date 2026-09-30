@@ -49,11 +49,11 @@ class PinyinParserTest {
         val res = PinyinParser.parse_string_to_elements("zènfajian2")
         assertNotNull(res)
         assertEquals(3, res!!.size)
-        assertEquals(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, res[0].type)
+        assertEquals(ParsedElementType.PINYIN_WITH_TONE, res[0].type)
         assertEquals("zen4", res[0].content)
-        assertEquals(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, res[1].type)
+        assertEquals(ParsedElementType.PINYIN_WITHOUT_TONE, res[1].type)
         assertEquals("fa", res[1].content)
-        assertEquals(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, res[2].type)
+        assertEquals(ParsedElementType.PINYIN_WITH_TONE, res[2].type)
         assertEquals("jian2", res[2].content)
     }
 
@@ -62,13 +62,13 @@ class PinyinParserTest {
         val res = PinyinParser.parse_mixed_string("中guo2不见dianhuazuiting不dong3fengfe")
         assertNotNull(res)
         assertEquals(12, res!!.size)
-        assertEquals(HanziDB.StringElement.type_t.CHINESE, res[0].type)
+        assertEquals(ParsedElementType.CHINESE, res[0].type)
         assertEquals("中", res[0].content)
-        assertEquals(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, res[5].type)
+        assertEquals(ParsedElementType.PINYIN_WITHOUT_TONE, res[5].type)
         assertEquals("hua", res[5].content)
-        assertEquals(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, res[9].type)
+        assertEquals(ParsedElementType.PINYIN_WITH_TONE, res[9].type)
         assertEquals("dong3", res[9].content)
-        assertEquals(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, res[11].type)
+        assertEquals(ParsedElementType.INCOMPLETE_PINYIN, res[11].type)
         assertEquals("fe", res[11].content)
     }
 

@@ -11,12 +11,24 @@ import androidx.core.content.ContextCompat
 import java.util.Locale
 import java.util.WeakHashMap
 
+enum class ParsedElementType {
+    CHINESE,
+    PINYIN_WITH_TONE,
+    PINYIN_WITHOUT_TONE,
+    INCOMPLETE_PINYIN
+}
+
+data class ParsedElement(
+    val type: ParsedElementType,
+    val content: String
+)
+
 object PinyinParser {
     private const val DEBUG = false
     private const val TAG = "PinyinParser"
     private const val pinyin_chars = "[bpmfdtnlgkhzcsrjqxaoeiuvwyāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜ\'0-5]*"
 
-    private val cache = WeakHashMap<String, ArrayList<HanziDB.StringElement>>()
+    private val cache = WeakHashMap<String, ArrayList<ParsedElement>>()
 
     @JvmStatic
     fun parse_string(pinyin_string: String): ArrayList<String>? {
@@ -134,7 +146,7 @@ object PinyinParser {
         return null
     }
 
-    private fun add_to_cache(entry: String, result: ArrayList<HanziDB.StringElement>) {
+    private fun add_to_cache(entry: String, result: ArrayList<ParsedElement>) {
         synchronized(cache) {
             if (!cache.containsKey(entry)) {
                 cache[entry] = ArrayList(result)
@@ -143,7 +155,7 @@ object PinyinParser {
         }
     }
 
-    private fun query_cache(entry: String): ArrayList<HanziDB.StringElement>? {
+    private fun query_cache(entry: String): ArrayList<ParsedElement>? {
         synchronized(cache) {
             return if (cache.containsKey(entry)) {
                 if (DEBUG) Log.d(TAG, "Found entry for $entry in cache")
@@ -155,7 +167,7 @@ object PinyinParser {
     }
 
     @JvmStatic
-    fun parse_string_to_elements(pinyin_string: String): ArrayList<HanziDB.StringElement>? {
+    fun parse_string_to_elements(pinyin_string: String): ArrayList<ParsedElement>? {
         val cached = query_cache(pinyin_string)
         if (cached != null) return cached
 
@@ -171,7 +183,7 @@ object PinyinParser {
                 return parse_string_to_elements(pinyin_string.substring(0, pinyin_string.length - 1))
             }
             val temp1 = parse_string_to_elements(pinyin_string.substring(0, splitIndex))
-            if (temp1 == null || temp1.lastOrNull()?.type == HanziDB.StringElement.type_t.INCOMPLETE_PINYIN) {
+            if (temp1 == null || temp1.lastOrNull()?.type == ParsedElementType.INCOMPLETE_PINYIN) {
                 return null
             }
             val temp2 = parse_string_to_elements(pinyin_string.substring(splitIndex + 1)) ?: return null
@@ -204,7 +216,7 @@ object PinyinParser {
         for (k in maxLen downTo 1) {
             val tryPinyin = Pinyin(pinyin_string.substring(0, k))
             if (tryPinyin.lame.isNotEmpty()) {
-                val result: ArrayList<HanziDB.StringElement>
+                val result: ArrayList<ParsedElement>
                 if (k < pinyin_string.length) {
                     val nextStep = pinyin_string.substring(k)
                     val temp = parse_string_to_elements(nextStep) ?: continue
@@ -214,9 +226,9 @@ object PinyinParser {
                 }
 
                 if (tryPinyin.tone_is_given()) {
-                    result.add(0, HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITH_TONE, tryPinyin.lame))
+                    result.add(0, ParsedElement(ParsedElementType.PINYIN_WITH_TONE, tryPinyin.lame))
                 } else {
-                    result.add(0, HanziDB.StringElement(HanziDB.StringElement.type_t.PINYIN_WITHOUT_TONE, tryPinyin.radical))
+                    result.add(0, ParsedElement(ParsedElementType.PINYIN_WITHOUT_TONE, tryPinyin.radical))
                 }
                 add_to_cache(pinyin_string, result)
                 return result
@@ -226,8 +238,8 @@ object PinyinParser {
         if (pinyin_string.length < 7) {
             val incompletePinyin = Pinyin(pinyin_string, true)
             if (incompletePinyin.lame.isNotEmpty()) {
-                val result = ArrayList<HanziDB.StringElement>()
-                result.add(HanziDB.StringElement(HanziDB.StringElement.type_t.INCOMPLETE_PINYIN, incompletePinyin.lame))
+                val result = ArrayList<ParsedElement>()
+                result.add(ParsedElement(ParsedElementType.INCOMPLETE_PINYIN, incompletePinyin.lame))
                 add_to_cache(pinyin_string, result)
                 return result
             }
@@ -237,11 +249,11 @@ object PinyinParser {
     }
 
     @JvmStatic
-    fun parse_mixed_string(input: String): ArrayList<HanziDB.StringElement>? {
+    fun parse_mixed_string(input: String): ArrayList<ParsedElement>? {
         val cached = query_cache(input)
         if (cached != null) return cached
 
-        val res = ArrayList<HanziDB.StringElement>()
+        val res = ArrayList<ParsedElement>()
         var idx = 0
         while (idx < input.length) {
             val codePoint = input.codePointAt(idx)
@@ -251,7 +263,7 @@ object PinyinParser {
                 (codePoint in 0x2E00..0x31FF) ||
                 (codePoint in 0x3400..0x4DBF)
             ) {
-                res.add(HanziDB.StringElement(HanziDB.StringElement.type_t.CHINESE, input.substring(idx, idx + charCount)))
+                res.add(ParsedElement(ParsedElementType.CHINESE, input.substring(idx, idx + charCount)))
                 idx += charCount
             } else {
                 val singleChar = input.substring(idx, idx + 1).lowercase(Locale.ENGLISH)
