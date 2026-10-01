@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -405,9 +405,9 @@ fun ClozeAssemblyView(
 fun RevealedFeedbackCard(
     card: StudyCard,
     isCorrect: Boolean?,
-    onRateGrade: (ReviewGrade) -> Unit,
     onNextCard: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRateGrade: ((ReviewGrade) -> Unit)? = null
 ) {
     val toneColors = AndZiThemeCustom.toneColors
     val annotatedPinyin = buildPinyinToneAnnotatedString(card.pinyin, toneColors)
@@ -463,63 +463,32 @@ fun RevealedFeedbackCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // SRS Rating Buttons: Again, Hard, Good, Easy
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            // Prominent Continue Button
+            Button(
+                onClick = onNextCard,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                RatingGradeButton(
-                    label = "Again",
-                    color = toneColors.toneAgain,
-                    onClick = { onRateGrade(ReviewGrade.AGAIN) },
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = "Continue",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
-                RatingGradeButton(
-                    label = "Hard",
-                    color = toneColors.toneHard,
-                    onClick = { onRateGrade(ReviewGrade.HARD) },
-                    modifier = Modifier.weight(1f)
-                )
-                RatingGradeButton(
-                    label = "Good",
-                    color = toneColors.toneGood,
-                    onClick = { onRateGrade(ReviewGrade.GOOD) },
-                    modifier = Modifier.weight(1f)
-                )
-                RatingGradeButton(
-                    label = "Easy",
-                    color = toneColors.toneEasy,
-                    onClick = { onRateGrade(ReviewGrade.EASY) },
-                    modifier = Modifier.weight(1f)
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
-    }
-}
-
-@Composable
-fun RatingGradeButton(
-    label: String,
-    color: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(44.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = color.copy(alpha = 0.18f),
-            contentColor = color
-        ),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-        )
     }
 }
 

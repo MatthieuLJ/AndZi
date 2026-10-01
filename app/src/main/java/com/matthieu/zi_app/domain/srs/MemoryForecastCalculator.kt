@@ -161,6 +161,7 @@ object MemoryForecastCalculator {
     }
 
     private fun calculateRecallAtFutureOffset(state: ReviewState, futureOffsetMillis: Long, now: Long): Double {
+        if (state.box == 0) return 0.0
         val custom = state.customData
         val alpha = custom[EbisuSpacedRepetitionEngine.KEY_ALPHA]?.toDoubleOrNull() ?: EbisuMath.DEFAULT_ALPHA
         val beta = custom[EbisuSpacedRepetitionEngine.KEY_BETA]?.toDoubleOrNull() ?: EbisuMath.DEFAULT_BETA

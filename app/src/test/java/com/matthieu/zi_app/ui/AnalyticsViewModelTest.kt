@@ -82,4 +82,35 @@ class AnalyticsViewModelTest {
         }
         assertEquals(TimeRange.DAYS_7, rangeState.selectedTimeRange)
     }
+
+    @Test
+    fun testUnstudiedVocabularyAnalytics() = runBlocking {
+        // Add vocabulary items without reviewing them
+        vocRepo.addVocabulary(Vocabulary("猫", "mao1", arrayListOf("cat")))
+        vocRepo.addVocabulary(Vocabulary("狗", "gou3", arrayListOf("dog")))
+
+        val viewModel = AnalyticsViewModel(progressRepo, studyRepo, andZiDb.leitnerDao())
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertFalse(state.isLoading)
+        // 2 vocabulary words + 2 constituent char_pinyin
+        assertEquals(2, state.totalWordsStudied)
+        assertEquals(2, state.cardsDueToday)
+        assertEquals(2, state.boxDistribution[0])
+        assertEquals(0f, state.overallAccuracy)
+        assertEquals(0, state.totalReviewsCount)
+
+        // Memory health should accurately reflect 2 active words all in Due state
+        assertEquals(2, state.memoryHealth.totalActiveWords)
+        assertEquals(2, state.memoryHealth.dueCount)
+        assertEquals(0, state.memoryHealth.strongCount)
+
+        // Forecast should have 2 total cards
+        assertEquals(2, state.forecastData.totalCards)
+        assertFalse(state.forecastData.points.isEmpty())
+        assertFalse(state.progressRecords.isEmpty())
+    }
 }

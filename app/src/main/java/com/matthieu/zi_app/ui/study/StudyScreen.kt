@@ -92,7 +92,7 @@ fun StudyScreenContent(
     onClozeSelected: (String) -> Unit,
     onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
     onUndoAssemblyTile: () -> Unit = {},
-    onRateGrade: (ReviewGrade) -> Unit,
+    onRateGrade: (ReviewGrade) -> Unit = {},
     onNextCard: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -288,7 +288,6 @@ fun StudyScreenContent(
                             RevealedFeedbackCard(
                                 card = card,
                                 isCorrect = uiState.isCorrect,
-                                onRateGrade = { grade -> onRateGrade(grade) },
                                 onNextCard = { onNextCard() }
                             )
                         }

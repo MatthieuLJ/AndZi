@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.ui.study.QuizType
@@ -165,7 +166,7 @@ class StudyScreenTest {
     }
 
     @Test
-    fun testRevealedCard_showsFullChineseWordAndRatingButtons() {
+    fun testRevealedCard_showsFullChineseWordAndContinueButton() {
         val card = StudyCard(
             hanzi = "图书馆",
             pinyin = "tu2shu1guan3",
@@ -183,6 +184,8 @@ class StudyScreenTest {
             isCorrect = true
         )
 
+        var nextClicked = false
+
         composeTestRule.setContent {
             AndZiTheme {
                 StudyScreenContent(
@@ -191,8 +194,7 @@ class StudyScreenTest {
                     onToneSelected = {},
                     onEnglishSelected = {},
                     onClozeSelected = {},
-                    onRateGrade = {},
-                    onNextCard = {}
+                    onNextCard = { nextClicked = true }
                 )
             }
         }
@@ -200,7 +202,8 @@ class StudyScreenTest {
         // When revealed, full word is shown on top
         composeTestRule.onNodeWithText("图书馆").assertExists()
         composeTestRule.onNodeWithText("Correct!").assertExists()
-        composeTestRule.onNodeWithText("Good").assertExists().assertHasClickAction()
+        composeTestRule.onNodeWithText("Continue").assertExists().performScrollTo().assertHasClickAction().performClick()
+        assertTrue(nextClicked)
     }
 
     @Test

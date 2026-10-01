@@ -40,7 +40,7 @@ class AnalyticsViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val now = System.currentTimeMillis()
-                val allRecords = leitnerDao.getAllRecords()
+                val allRecords = leitnerDao.getAllStudyRecords()
                 val dueCount = studyRepository.getNumExpired(now)
                 val boxCounts = studyRepository.getBoxCounts()
 
@@ -54,24 +54,35 @@ class AnalyticsViewModel(
                 val totalWrong = allRecords.sumOf { it.numWrong }
                 val accuracy = if (totalTested > 0) {
                     ((totalTested - totalWrong).toFloat() / totalTested.toFloat()) * 100f
-                } else 100f
+                } else 0f
                 val streak = allRecords.maxOfOrNull { it.streak } ?: 0
                 val mastered = allRecords.count { it.box >= 5 }
 
-                // Check if progress history exists; if empty, record a baseline snapshot
+                // Check if progress history exists; if empty or if state changed, record a snapshot
                 var history = progressRepository.getAllProgress()
-                if (history.isEmpty() && totalWords > 0) {
-                    val b0 = boxMap[0] ?: 0
-                    val b1 = boxMap[1] ?: 0
-                    val b2 = boxMap[2] ?: 0
-                    val b3 = boxMap[3] ?: 0
-                    val b4Plus = (4..9).sumOf { boxMap[it] ?: 0 }
+                val b0 = boxMap[0] ?: 0
+                val b1 = boxMap[1] ?: 0
+                val b2 = boxMap[2] ?: 0
+                val b3 = boxMap[3] ?: 0
+                val b4Plus = (4..9).sumOf { boxMap[it] ?: 0 }
 
-                    val exp2 = allRecords.count { it.box == 1 && it.expTime < now }
-                    val exp3 = allRecords.count { it.box == 2 && it.expTime < now }
-                    val exp4 = allRecords.count { it.box == 3 && it.expTime < now }
-                    val exp5 = allRecords.count { it.box >= 4 && it.expTime < now }
+                val exp2 = allRecords.count { it.box == 1 && it.expTime < now }
+                val exp3 = allRecords.count { it.box == 2 && it.expTime < now }
+                val exp4 = allRecords.count { it.box == 3 && it.expTime < now }
+                val exp5 = allRecords.count { it.box >= 4 && it.expTime < now }
 
+                val latest = history.maxByOrNull { it.date }
+                val shouldRecordSnapshot = totalWords > 0 && (
+                    latest == null ||
+                    (now - latest.date >= 15 * 60 * 1000L) ||
+                    latest.b1 != b0 ||
+                    latest.b2 != b1 ||
+                    latest.b3 != b2 ||
+                    latest.b4 != b3 ||
+                    latest.b5 != b4Plus
+                )
+
+                if (shouldRecordSnapshot) {
                     progressRepository.recordProgressSnapshot(
                         totalBox1 = b0,
                         totalBox2 = b1,
@@ -94,6 +105,7 @@ class AnalyticsViewModel(
                 val currentRange = _uiState.value.selectedTimeRange
                 val filteredHistory = filterHistoryByRange(history, currentRange, now)
 
+                android.util.Log.d("AnalyticsViewModel", "Loaded analytics: totalWords=$totalWords, memoryHealth=$memoryHealth, historyCount=${history.size}")
                 _uiState.update {
                     it.copy(
                         progressRecords = filteredHistory,
@@ -111,6 +123,7 @@ class AnalyticsViewModel(
                     )
                 }
             } catch (e: Exception) {
+                android.util.Log.e("AnalyticsViewModel", "Failed to load analytics", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -141,7 +154,11 @@ class AnalyticsViewModel(
     ): List<ProgressRecordEntity> {
         if (timeRange == TimeRange.ALL) return records
         val minDate = now - timeRange.durationMillis
-        return records.filter { it.date >= minDate }
+        val filtered = records.filter { it.date >= minDate }
+        if (filtered.isEmpty() && records.isNotEmpty()) {
+            return listOf(records.last())
+        }
+        return filtered
     }
 
     companion object {

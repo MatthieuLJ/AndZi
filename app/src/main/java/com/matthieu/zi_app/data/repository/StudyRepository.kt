@@ -87,11 +87,11 @@ class StudyRepository(
     }
 
     suspend fun getAllRecords(): List<LeitnerState> = withContext(Dispatchers.IO) {
-        leitnerDao.getAllRecords().map { toDomainState(it) }
+        leitnerDao.getAllStudyRecords().map { toDomainState(it) }
     }
 
     suspend fun getAllReviewStates(): List<ReviewState> = withContext(Dispatchers.IO) {
-        leitnerDao.getAllRecords().map { toReviewState(it) }
+        leitnerDao.getAllStudyRecords().map { toReviewState(it) }
     }
 
     private fun toReviewState(entity: LeitnerRecordEntity): ReviewState {

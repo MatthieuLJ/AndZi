@@ -80,11 +80,17 @@ class ProgressSyncWorker(
             val expiredCount = studyRepo.getNumExpired(now)
             val boxCounts = studyRepo.getBoxCounts().associate { it.box to it.count }
 
-            val totalBox1 = boxCounts[1] ?: 0
-            val totalBox2 = boxCounts[2] ?: 0
-            val totalBox3 = boxCounts[3] ?: 0
-            val totalBox4 = boxCounts[4] ?: 0
-            val totalBox5 = boxCounts[5] ?: 0
+            val totalBox1 = boxCounts[0] ?: 0
+            val totalBox2 = boxCounts[1] ?: 0
+            val totalBox3 = boxCounts[2] ?: 0
+            val totalBox4 = boxCounts[3] ?: 0
+            val totalBox5 = (4..9).sumOf { boxCounts[it] ?: 0 }
+
+            val allRecords = andZiDb.leitnerDao().getAllStudyRecords()
+            val exp2 = allRecords.count { it.box == 1 && it.expTime < now }
+            val exp3 = allRecords.count { it.box == 2 && it.expTime < now }
+            val exp4 = allRecords.count { it.box == 3 && it.expTime < now }
+            val exp5 = allRecords.count { it.box >= 4 && it.expTime < now }
 
             if (totalBox1 + totalBox2 + totalBox3 + totalBox4 + totalBox5 > 0) {
                 progressRepo.recordProgressSnapshot(
@@ -93,10 +99,10 @@ class ProgressSyncWorker(
                     totalBox3 = totalBox3,
                     totalBox4 = totalBox4,
                     totalBox5 = totalBox5,
-                    expiredBox2 = 0,
-                    expiredBox3 = 0,
-                    expiredBox4 = 0,
-                    expiredBox5 = 0,
+                    expiredBox2 = exp2,
+                    expiredBox3 = exp3,
+                    expiredBox4 = exp4,
+                    expiredBox5 = exp5,
                     date = now
                 )
             }

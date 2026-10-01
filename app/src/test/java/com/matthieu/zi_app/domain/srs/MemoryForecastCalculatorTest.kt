@@ -49,7 +49,8 @@ class MemoryForecastCalculatorTest {
         assertEquals(2, health.totalActiveWords)
         assertEquals(1, health.strongCount)
         assertEquals(1, health.dueCount)
-        assertTrue(health.totalRetainedWords > 1.0f)
+        assertEquals(1.0f, health.totalRetainedWords, 0.01f)
+        assertEquals(50.0f, health.retentionPercentage, 0.1f)
     }
 
     @Test

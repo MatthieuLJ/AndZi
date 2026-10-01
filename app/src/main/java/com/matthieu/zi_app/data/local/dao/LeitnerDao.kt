@@ -27,6 +27,26 @@ interface LeitnerDao {
     @Query("SELECT * FROM leitner")
     fun getAllRecordsFlow(): Flow<List<LeitnerRecordEntity>>
 
+    @Query("""
+        SELECT all_items.chinese AS hanzi,
+               IFNULL(leitner.box, 0) AS box,
+               IFNULL(leitner.exp_time, 0) AS exp_time,
+               IFNULL(leitner.num_tested, 0) AS num_tested,
+               IFNULL(leitner.num_wrong, 0) AS num_wrong,
+               IFNULL(leitner.streak, 0) AS streak,
+               IFNULL(leitner.date_added, 0) AS date_added
+        FROM (
+            SELECT leitner.hanzi AS chinese FROM leitner
+            UNION
+            SELECT cword.chinese AS chinese FROM cword
+            UNION
+            SELECT char_pinyin.hanzi AS chinese FROM char_pinyin
+        ) AS all_items
+        LEFT JOIN leitner ON leitner.hanzi = all_items.chinese
+        GROUP BY all_items.chinese
+    """)
+    suspend fun getAllStudyRecords(): List<LeitnerRecordEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateRecord(record: LeitnerRecordEntity)
 

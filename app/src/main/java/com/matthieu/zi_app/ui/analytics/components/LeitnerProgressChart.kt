@@ -99,7 +99,7 @@ fun LeitnerProgressChart(
 
                 // 1. Compute totals per record
                 val pointTotals = records.map {
-                    val sum = it.totalBox1 + it.totalBox2 + it.totalBox3 + it.totalBox4 + it.totalBox5
+                    val sum = it.b1 + it.b2 + it.b3 + it.b4 + it.b5
                     max(sum, 1)
                 }
                 val maxTotal = max(pointTotals.maxOrNull() ?: 10, 5)
@@ -164,11 +164,11 @@ fun LeitnerProgressChart(
                 // Tier 1: totalBox1+2
                 // Tier 0: totalBox1
                 val cumulativeSeries = listOf(
-                    records.map { (it.totalBox1 + it.totalBox2 + it.totalBox3 + it.totalBox4 + it.totalBox5).toFloat() },
-                    records.map { (it.totalBox1 + it.totalBox2 + it.totalBox3 + it.totalBox4).toFloat() },
-                    records.map { (it.totalBox1 + it.totalBox2 + it.totalBox3).toFloat() },
-                    records.map { (it.totalBox1 + it.totalBox2).toFloat() },
-                    records.map { it.totalBox1.toFloat() }
+                    records.map { (it.b1 + it.b2 + it.b3 + it.b4 + it.b5).toFloat() },
+                    records.map { (it.b1 + it.b2 + it.b3 + it.b4).toFloat() },
+                    records.map { (it.b1 + it.b2 + it.b3).toFloat() },
+                    records.map { (it.b1 + it.b2).toFloat() },
+                    records.map { it.b1.toFloat() }
                 )
 
                 // Render in reverse order (Tier 4+ background down to Tier 0 foreground)
@@ -187,22 +187,31 @@ fun LeitnerProgressChart(
                     path.lineTo(firstX, firstY)
                     linePath.moveTo(firstX, firstY)
 
-                    for (i in 1 until records.size) {
-                        val prevX = leftPadding + ((i - 1).toFloat() / (records.size - 1)) * chartWidth
-                        val prevY = chartHeight - (series[i - 1] / maxTotal.toFloat()) * chartHeight * anim
+                    if (records.size == 1) {
+                        val lastX = leftPadding + chartWidth
+                        path.lineTo(lastX, firstY)
+                        path.lineTo(lastX, chartHeight)
+                        path.close()
 
-                        val curX = leftPadding + (i.toFloat() / (records.size - 1)) * chartWidth
-                        val curY = chartHeight - (series[i] / maxTotal.toFloat()) * chartHeight * anim
+                        linePath.lineTo(lastX, firstY)
+                    } else {
+                        for (i in 1 until records.size) {
+                            val prevX = leftPadding + ((i - 1).toFloat() / (records.size - 1)) * chartWidth
+                            val prevY = chartHeight - (series[i - 1] / maxTotal.toFloat()) * chartHeight * anim
 
-                        // Smooth cubic bezier
-                        val midX = (prevX + curX) / 2f
-                        path.cubicTo(midX, prevY, midX, curY, curX, curY)
-                        linePath.cubicTo(midX, prevY, midX, curY, curX, curY)
+                            val curX = leftPadding + (i.toFloat() / (records.size - 1)) * chartWidth
+                            val curY = chartHeight - (series[i] / maxTotal.toFloat()) * chartHeight * anim
+
+                            // Smooth cubic bezier
+                            val midX = (prevX + curX) / 2f
+                            path.cubicTo(midX, prevY, midX, curY, curX, curY)
+                            linePath.cubicTo(midX, prevY, midX, curY, curX, curY)
+                        }
+
+                        val lastX = leftPadding + chartWidth
+                        path.lineTo(lastX, chartHeight)
+                        path.close()
                     }
-
-                    val lastX = if (records.size == 1) leftPadding + chartWidth else leftPadding + chartWidth
-                    path.lineTo(lastX, chartHeight)
-                    path.close()
 
                     // Fill stacked gradient
                     drawPath(
