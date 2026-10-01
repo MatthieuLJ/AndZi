@@ -448,4 +448,67 @@ class StudyViewModelTest {
         assertTrue(card.scrambledTiles.contains("明"))
         assertTrue(card.scrambledTiles.contains("天"))
     }
+
+    @Test
+    fun testConstituentSubCharactersWithoutTranslationsNeverGetEnglishQuiz() = runBlocking {
+        // User added compound word "明天" with translation "tomorrow", which adds "明" and "天" to char_pinyin
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+
+        val now = System.currentTimeMillis()
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.size == 3 }.first()
+        }
+
+        assertEquals(3, state.queue.size)
+
+        // Find cards for subcharacters "明" and "天"
+        val mingCard = state.queue.first { it.hanzi == "明" }
+        val tianCard = state.queue.first { it.hanzi == "天" }
+
+        // Neither sub-character card should have QuizType.ENGLISH
+        assertTrue("Sub-character '明' should not be ENGLISH quiz", mingCard.quizType != QuizType.ENGLISH)
+        assertTrue("Sub-character '天' should not be ENGLISH quiz", tianCard.quizType != QuizType.ENGLISH)
+
+        // Sub-characters should be TONE or CLOZE
+        assertTrue(mingCard.quizType in listOf(QuizType.TONE, QuizType.CLOZE))
+        assertTrue(tianCard.quizType in listOf(QuizType.TONE, QuizType.CLOZE))
+
+        // If TONE quiz, english is empty; if CLOZE quiz, english provides compound word context ("tomorrow")
+        if (mingCard.quizType == QuizType.TONE) {
+            assertTrue(mingCard.english.isEmpty())
+        } else {
+            assertEquals(listOf("tomorrow"), mingCard.english)
+        }
+
+        if (tianCard.quizType == QuizType.TONE) {
+            assertTrue(tianCard.english.isEmpty())
+        } else {
+            assertEquals(listOf("tomorrow"), tianCard.english)
+        }
+    }
+
+    @Test
+    fun testNeutralToneConstituentSubCharacterGetsClozeQuizInContainingWord() = runBlocking {
+        // Compound word with neutral tone sub-character "子" (zi5)
+        vocRepo.addVocabulary(Vocabulary("桌子", "zhuo1zi5", arrayListOf("table", "desk")))
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.size == 3 }.first()
+        }
+
+        // Sub-character "子" has neutral tone 5 and no user translations
+        val ziCard = state.queue.first { it.hanzi == "子" }
+        assertFalse("Neutral tone sub-character cannot be TONE quiz", ziCard.quizType == QuizType.TONE)
+        assertFalse("Sub-character without user translations cannot be ENGLISH quiz", ziCard.quizType == QuizType.ENGLISH)
+
+        // Should be CLOZE quiz inside the containing compound word "桌子"
+        assertEquals(QuizType.CLOZE, ziCard.quizType)
+        assertEquals(listOf("table", "desk"), ziCard.english)
+        assertEquals(2, ziCard.wordSlots.size)
+        assertEquals("桌", ziCard.wordSlots[0])
+        assertEquals("子", ziCard.wordSlots[1])
+        assertEquals(1, ziCard.clozeTargetIndex)
+    }
 }

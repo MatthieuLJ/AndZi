@@ -186,8 +186,9 @@ class DictionaryViewModel(
         viewModelScope.launch {
             val hanzi = vocabulary.chinese
             val currentState = studyRepository.getLeitnerState(hanzi)
+            val isCurrentlyStudying = _uiState.value.isInStudyQueue || currentState != null
 
-            if (currentState == null) {
+            if (!isCurrentlyStudying) {
                 // Determine translations: if some are already selected, use them; otherwise add all CEDICT translations
                 val translationsToUse = if (_uiState.value.selectedTranslations.isNotEmpty()) {
                     _uiState.value.selectedTranslations.toList()
@@ -209,12 +210,18 @@ class DictionaryViewModel(
                     )
                 }
             } else {
-                // Restart / reset card
-                studyRepository.restartStudy(hanzi)
+                // Remove from study and deselect all translations
+                studyRepository.deleteRecord(hanzi)
+                localVocabularyRepository.deleteWord(hanzi, vocabulary.pinyin)
+                if (hanzi.codePointCount(0, hanzi.length) == 1) {
+                    localVocabularyRepository.deleteCharacter(hanzi)
+                }
+
                 _uiState.update {
                     it.copy(
-                        isInStudyQueue = true,
-                        currentBox = 0
+                        isInStudyQueue = false,
+                        currentBox = null,
+                        selectedTranslations = emptySet()
                     )
                 }
             }

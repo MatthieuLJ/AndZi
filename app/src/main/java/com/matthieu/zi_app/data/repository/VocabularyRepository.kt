@@ -109,8 +109,12 @@ class VocabularyRepository(
             .filter { it.english.isNotEmpty() }
     }
 
-    suspend fun deleteWord(chinese: String, pinyin: String) = withContext(Dispatchers.IO) {
-        vocabularyDao.deleteWord(chinese, pinyin)
+    suspend fun deleteWord(chinese: String, pinyin: String? = null) = withContext(Dispatchers.IO) {
+        if (pinyin.isNullOrBlank()) {
+            vocabularyDao.deleteWordsForChinese(chinese)
+        } else {
+            vocabularyDao.deleteWord(chinese, pinyin)
+        }
         if (chinese.codePointCount(0, chinese.length) == 1) {
             vocabularyDao.deleteCharPinyin(chinese)
         }

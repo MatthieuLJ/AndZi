@@ -189,7 +189,7 @@ class EndToEndStudyFlowTest {
         assertTrue(analyticsState.progressRecords.isNotEmpty())
         assertEquals(3, analyticsState.totalWordsStudied)
         assertEquals(1, analyticsState.boxDistribution[1])
-        assertEquals(2, analyticsState.boxDistribution[0])
+        assertEquals(2, analyticsState.boxDistribution[0] ?: 0)
     }
 
     @Test

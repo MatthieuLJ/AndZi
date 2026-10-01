@@ -65,6 +65,9 @@ interface VocabularyDao {
     @Query("DELETE FROM cword WHERE chinese = :chinese AND pinyin = :pinyin")
     suspend fun deleteWord(chinese: String, pinyin: String)
 
+    @Query("DELETE FROM cword WHERE chinese = :chinese")
+    suspend fun deleteWordsForChinese(chinese: String)
+
     // --- Word Segments ---
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSegments(segments: List<WordSegmentEntity>)

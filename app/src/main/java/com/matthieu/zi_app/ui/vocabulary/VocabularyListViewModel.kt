@@ -261,8 +261,9 @@ class VocabularyListViewModel(
         viewModelScope.launch {
             val hanzi = vocabulary.chinese
             val currentState = studyRepository.getLeitnerState(hanzi)
+            val isCurrentlyStudying = _uiState.value.isInStudyQueue || currentState != null
 
-            if (currentState == null) {
+            if (!isCurrentlyStudying) {
                 val translationsToUse = if (_uiState.value.selectedTranslations.isNotEmpty()) {
                     _uiState.value.selectedTranslations.toList()
                 } else {
@@ -283,14 +284,21 @@ class VocabularyListViewModel(
                     )
                 }
             } else {
-                // Restart / reset SRS score
-                studyRepository.restartStudy(hanzi)
-                _uiState.update {
-                    it.copy(
-                        isInStudyQueue = true,
-                        currentBox = 0
-                    )
-                }
+                removeFromStudy(vocabulary)
+            }
+            loadActiveVocabulary()
+        }
+    }
+
+    fun resetSrsScore(vocabulary: Vocabulary) {
+        viewModelScope.launch {
+            val hanzi = vocabulary.chinese
+            studyRepository.restartStudy(hanzi)
+            _uiState.update {
+                it.copy(
+                    isInStudyQueue = true,
+                    currentBox = 0
+                )
             }
             loadActiveVocabulary()
         }

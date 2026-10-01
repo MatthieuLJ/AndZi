@@ -65,13 +65,12 @@ class StudyViewModel(
 
                 val cards = mutableListOf<StudyCard>()
                 for ((index, hanzi) in queueHanzis.withIndex()) {
-                    var vocList = vocabularyRepository.getVocabularyForChinese(hanzi)
-                    if (vocList.isEmpty() && dictionaryRepository != null) {
-                        vocList = dictionaryRepository.getVocabularyForChinese(hanzi)
-                    }
+                    val localVocList = vocabularyRepository.getVocabularyForChinese(hanzi)
+                    val localVoc = localVocList.firstOrNull { it.english.isNotEmpty() } ?: localVocList.firstOrNull()
 
-                    val voc = if (vocList.isNotEmpty()) {
-                        vocList.first()
+                    val hasUserEnglish = localVoc != null && localVoc.english.isNotEmpty()
+                    val voc = if (localVoc != null) {
+                        localVoc
                     } else {
                         val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
                         val dictChars = if (localChars.isEmpty() && dictionaryRepository != null) {
@@ -95,32 +94,44 @@ class StudyViewModel(
                     val isSingleChar = (charCount == 1)
                     val hasValidNonNeutralTone = isSingleChar && (tone in 1..4)
 
+                    val containingWords = if (isSingleChar) {
+                        vocabularyRepository.getWordsContainingCharacter(hanzi).filter { it.chinese.length > 1 }
+                    } else emptyList()
+
                     // 1. Determine Quiz Type:
-                    // Tone test is ONLY for single characters with non-neutral tone (tones 1..4)
                     val quizType = when {
                         !isSingleChar -> {
-                            // Multi-character words NEVER use Tone quiz!
-                            when {
-                                voc.english.isNotEmpty() -> when (index % 3) {
+                            // Multi-character words NEVER use Tone quiz
+                            if (hasUserEnglish) {
+                                when (index % 3) {
                                     0 -> QuizType.WORD_ASSEMBLY
                                     1 -> QuizType.CLOZE
                                     else -> QuizType.ENGLISH
                                 }
-                                index % 2 == 0 -> QuizType.WORD_ASSEMBLY
-                                else -> QuizType.CLOZE
+                            } else {
+                                if (index % 2 == 0) QuizType.WORD_ASSEMBLY else QuizType.CLOZE
                             }
                         }
-                        hasValidNonNeutralTone && (voc.english.isEmpty() || index % 2 == 0) -> {
-                            QuizType.TONE
-                        }
-                        voc.english.isNotEmpty() -> {
-                            QuizType.ENGLISH
-                        }
-                        hasValidNonNeutralTone -> {
-                            QuizType.TONE
+                        !hasUserEnglish -> {
+                            // Single character from char_pinyin (without user English translations)
+                            // MUST NEVER use QuizType.ENGLISH!
+                            when {
+                                hasValidNonNeutralTone && containingWords.isNotEmpty() -> {
+                                    if (index % 2 == 0) QuizType.TONE else QuizType.CLOZE
+                                }
+                                hasValidNonNeutralTone -> QuizType.TONE
+                                containingWords.isNotEmpty() -> QuizType.CLOZE
+                                else -> QuizType.TONE
+                            }
                         }
                         else -> {
-                            QuizType.ENGLISH
+                            // Single character WITH user English translations
+                            when {
+                                hasValidNonNeutralTone -> {
+                                    if (index % 2 == 0) QuizType.TONE else QuizType.ENGLISH
+                                }
+                                else -> QuizType.ENGLISH
+                            }
                         }
                     }
 
@@ -145,32 +156,58 @@ class StudyViewModel(
                         }
                     }
 
-                    // 3. Generate MCQ distractors for English or Cloze
+                    // 3. Generate MCQ distractors for English
                     val mcqOptions = if (quizType == QuizType.ENGLISH) {
                         val correct = voc.english.firstOrNull() ?: "Meaning"
                         generateEnglishDistractors(correct, allStudyEnglish)
                     } else emptyList()
 
                     // 4. Generate Cloze / Assembly slots
+                    var cardEnglish = voc.english
                     val wordSlots = mutableListOf<String>()
                     val scrambledTiles = mutableListOf<String>()
                     var targetIdx = -1
 
-                    if (quizType == QuizType.CLOZE || quizType == QuizType.WORD_ASSEMBLY) {
+                    val distractorCount = getDistractorCountForBox(box, quizType)
+
+                    if (quizType == QuizType.CLOZE) {
+                        if (isSingleChar && containingWords.isNotEmpty()) {
+                            // Test filling the single character within a larger compound word!
+                            val comp = containingWords[index % containingWords.size]
+                            val compHanzi = comp.chinese
+                            var charIdx = 0
+                            while (charIdx < compHanzi.length) {
+                                val cp = compHanzi.codePointAt(charIdx)
+                                wordSlots.add(String(Character.toChars(cp)))
+                                charIdx += Character.charCount(cp)
+                            }
+                            val idxInWord = wordSlots.indexOf(hanzi)
+                            targetIdx = if (idxInWord >= 0) idxInWord else 0
+                            val correctChar = wordSlots[targetIdx]
+                            scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
+                            if (comp.english.isNotEmpty()) {
+                                cardEnglish = comp.english
+                            }
+                        } else {
+                            for (i in 0 until charCount) {
+                                val codePoint = hanzi.codePointAt(i)
+                                val ch = String(Character.toChars(codePoint))
+                                wordSlots.add(ch)
+                            }
+                            if (wordSlots.isNotEmpty()) {
+                                targetIdx = (0 until wordSlots.size).random()
+                                val correctChar = wordSlots[targetIdx]
+                                scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
+                            }
+                        }
+                    } else if (quizType == QuizType.WORD_ASSEMBLY) {
                         for (i in 0 until charCount) {
                             val codePoint = hanzi.codePointAt(i)
                             val ch = String(Character.toChars(codePoint))
                             wordSlots.add(ch)
                         }
-                        val distractorCount = getDistractorCountForBox(box, quizType)
-                        if (quizType == QuizType.CLOZE && wordSlots.isNotEmpty()) {
-                            targetIdx = (0 until wordSlots.size).random()
-                            val correctChar = wordSlots[targetIdx]
-                            scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
-                        } else {
-                            val distractors = generateCharDistractorsForWord(wordSlots.toSet(), distractorCount, studyChars)
-                            scrambledTiles.addAll((wordSlots + distractors).shuffled())
-                        }
+                        val distractors = generateCharDistractorsForWord(wordSlots.toSet(), distractorCount, studyChars)
+                        scrambledTiles.addAll((wordSlots + distractors).shuffled())
                     }
 
                     cards.add(
@@ -179,7 +216,7 @@ class StudyViewModel(
                             pinyin = voc.pinyin,
                             syllable = syllable,
                             tone = tone,
-                            english = voc.english,
+                            english = cardEnglish,
                             currentBox = box,
                             quizType = quizType,
                             mcqOptions = mcqOptions,

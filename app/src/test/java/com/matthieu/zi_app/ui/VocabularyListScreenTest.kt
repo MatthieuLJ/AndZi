@@ -71,10 +71,11 @@ class VocabularyListScreenTest {
                 isInStudy = true,
                 currentBox = 2,
                 selectedTranslations = setOf("apple"),
-                onToggleStudy = { resetSRS = true },
+                onToggleStudy = {},
                 onToggleTranslation = { toggledTrans = it },
                 onSelectConstituent = {},
                 onSelectCompound = {},
+                onResetSrs = { resetSRS = true },
                 onRemoveFromStudy = { removed = true }
             )
         }

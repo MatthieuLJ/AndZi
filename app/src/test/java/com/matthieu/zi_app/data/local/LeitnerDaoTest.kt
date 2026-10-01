@@ -67,9 +67,9 @@ class LeitnerDaoTest {
     fun testStudyQueueOrdering() = runBlocking {
         val now = 1_000_000L
 
-        // Add characters to vocabulary
-        vocDao.insertCharPinyin(CharPinyinEntity(hanzi = "一", pinyin = "yi1"))
-        vocDao.insertCharPinyin(CharPinyinEntity(hanzi = "二", pinyin = "er4"))
+        // Add words to vocabulary
+        vocDao.insertWord(ChineseWordEntity(chinese = "一", pinyin = "yi1", length = 1))
+        vocDao.insertWord(ChineseWordEntity(chinese = "二", pinyin = "er4", length = 1))
         vocDao.insertWord(ChineseWordEntity(chinese = "三", pinyin = "san1", length = 1))
 
         // 一 has box 0 (due now)
@@ -100,12 +100,12 @@ class LeitnerDaoTest {
         assertEquals(2, counts[1])
         assertEquals(1, counts[3])
 
-        // Add unstudied characters and words to vocabulary (should appear in Box 0)
+        // Add unstudied characters (char_pinyin) and words to vocabulary (should appear in Box 0)
         vocDao.insertCharPinyin(CharPinyinEntity(hanzi = "D", pinyin = "de5"))
         vocDao.insertWord(ChineseWordEntity(chinese = "EF", pinyin = "e1f1", length = 2))
 
         counts = leitnerDao.getBoxCounts().associate { it.box to it.count }
-        assertEquals(2, counts[0]) // D and EF are unstudied -> Box 0
+        assertEquals(2, counts[0]) // D (from char_pinyin) and EF (from cword) are unstudied -> Box 0
         assertEquals(2, counts[1]) // A and B -> Box 1
         assertEquals(1, counts[3]) // C -> Box 3
 

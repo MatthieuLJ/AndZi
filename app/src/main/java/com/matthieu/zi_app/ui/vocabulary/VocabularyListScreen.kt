@@ -227,6 +227,7 @@ fun VocabularyListScreen(
                     onToggleTranslation = { viewModel.toggleTranslationForStudy(it) },
                     onSelectConstituent = { viewModel.selectCharacterFromConstituent(it) },
                     onSelectCompound = { viewModel.selectWordFromCompound(it) },
+                    onResetSrs = { viewModel.resetSrsScore(uiState.selectedWord!!) },
                     onRemoveFromStudy = { viewModel.removeFromStudy(uiState.selectedWord!!) },
                     modifier = Modifier.padding(bottom = 32.dp)
                 )
@@ -348,6 +349,7 @@ fun ActiveWordDetailSheetContent(
     onSelectConstituent: (String) -> Unit,
     onSelectCompound: (Vocabulary) -> Unit,
     onRemoveFromStudy: () -> Unit,
+    onResetSrs: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val annotatedPinyin = buildPinyinToneAnnotatedString(word.pinyin, AndZiThemeCustom.toneColors)
@@ -534,7 +536,7 @@ fun ActiveWordDetailSheetContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
-                onClick = onToggleStudy,
+                onClick = onResetSrs,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             ) {

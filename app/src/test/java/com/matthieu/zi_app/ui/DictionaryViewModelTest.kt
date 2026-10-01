@@ -18,6 +18,8 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -137,5 +139,97 @@ class DictionaryViewModelTest {
 
         val userVoc3 = userVocRepo.getVocabularyForChinese("照顾").first()
         assertEquals(listOf("to look after"), userVoc3.english)
+    }
+
+    @Test
+    fun testToggleAddToStudyRemovesWordAndDeselectsTranslationsWhenAlreadyStudying() = runBlocking {
+        val word = Vocabulary(
+            "学习",
+            "xue2xi2",
+            arrayListOf("to study", "to learn")
+        )
+        dictRepo.addVocabulary(word)
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+        viewModel.selectWord(word)
+
+        // 1. Initial State: not in study
+        val initialSelectedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "学习" }.first()
+        }
+        assertFalse(initialSelectedState.isInStudyQueue)
+        assertEquals(emptySet<String>(), initialSelectedState.selectedTranslations)
+
+        // 2. Click "Study" button -> added to study, all translations selected
+        viewModel.toggleAddToStudy(word)
+        val addedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isInStudyQueue }.first()
+        }
+        assertTrue(addedState.isInStudyQueue)
+        assertEquals(setOf("to study", "to learn"), addedState.selectedTranslations)
+        assertEquals(0, addedState.currentBox)
+
+        // Verify in DB
+        val userVoc = userVocRepo.getVocabularyForChinese("学习")
+        assertEquals(1, userVoc.size)
+        assertEquals(listOf("to study", "to learn"), userVoc.first().english)
+        val leitner = studyRepo.getLeitnerState("学习")
+        assertEquals(0, leitner?.box)
+
+        // 3. Click "Studying" button -> removed from study, all translations deselected
+        viewModel.toggleAddToStudy(word)
+        val removedState = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isInStudyQueue }.first()
+        }
+        assertFalse(removedState.isInStudyQueue)
+        assertNull(removedState.currentBox)
+        assertEquals(emptySet<String>(), removedState.selectedTranslations)
+
+        // Verify removed in DB
+        val userVocAfter = userVocRepo.getVocabularyForChinese("学习")
+        assertTrue(userVocAfter.isEmpty())
+        val leitnerAfter = studyRepo.getLeitnerState("学习")
+        assertNull(leitnerAfter)
+    }
+
+    @Test
+    fun testAddingMultiCharacterWordAddsWordAndSubCharactersToStudyQueueWithoutEnglishTranslations() = runBlocking {
+        val word = Vocabulary(
+            "明天",
+            "ming2tian1",
+            arrayListOf("tomorrow")
+        )
+        dictRepo.addVocabulary(word)
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+        viewModel.selectWord(word)
+        viewModel.toggleAddToStudy(word)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { it.isInStudyQueue }.first()
+        }
+        assertTrue(state.isInStudyQueue)
+
+        // Verify compound word has translation in user DB
+        val wordInUserDb = userVocRepo.getVocabularyForChinese("明天")
+        assertEquals(1, wordInUserDb.size)
+        assertEquals(listOf("tomorrow"), wordInUserDb.first().english)
+
+        // Verify individual sub-characters do NOT have translations in user DB
+        val mingInUserDb = userVocRepo.getVocabularyForChinese("明")
+        assertTrue(mingInUserDb.isEmpty() || mingInUserDb.all { it.english.isEmpty() })
+        val tianInUserDb = userVocRepo.getVocabularyForChinese("天")
+        assertTrue(tianInUserDb.isEmpty() || tianInUserDb.all { it.english.isEmpty() })
+
+        // Check study queue in studyRepo: includes "明天", "明", and "天"
+        val queue = studyRepo.getStudyQueue(limit = 10, now = System.currentTimeMillis() + 1000L)
+        assertTrue(queue.contains("明天"))
+        assertTrue(queue.contains("明"))
+        assertTrue(queue.contains("天"))
+        assertEquals(3, queue.size)
+
+        // Verify box counts: 3 items in Box 0
+        val boxCounts = studyRepo.getBoxCounts().associate { it.box to it.count }
+        assertEquals(3, boxCounts[0])
     }
 }
