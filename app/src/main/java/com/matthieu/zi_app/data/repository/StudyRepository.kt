@@ -4,7 +4,7 @@ import com.matthieu.zi_app.LeitnerState
 import com.matthieu.zi_app.data.local.dao.BoxCount
 import com.matthieu.zi_app.data.local.dao.LeitnerDao
 import com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity
-import com.matthieu.zi_app.domain.srs.LeitnerSpacedRepetitionEngine
+import com.matthieu.zi_app.domain.srs.EbisuSpacedRepetitionEngine
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.domain.srs.ReviewState
 import com.matthieu.zi_app.domain.srs.SpacedRepetitionEngine
@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 
 class StudyRepository(
     private val leitnerDao: LeitnerDao,
-    private val srsEngine: SpacedRepetitionEngine = LeitnerSpacedRepetitionEngine()
+    private val srsEngine: SpacedRepetitionEngine = EbisuSpacedRepetitionEngine()
 ) {
 
     suspend fun getStudyQueue(limit: Int = 30, now: Long = System.currentTimeMillis()): List<String> = withContext(Dispatchers.IO) {
@@ -88,6 +88,10 @@ class StudyRepository(
 
     suspend fun getAllRecords(): List<LeitnerState> = withContext(Dispatchers.IO) {
         leitnerDao.getAllRecords().map { toDomainState(it) }
+    }
+
+    suspend fun getAllReviewStates(): List<ReviewState> = withContext(Dispatchers.IO) {
+        leitnerDao.getAllRecords().map { toReviewState(it) }
     }
 
     private fun toReviewState(entity: LeitnerRecordEntity): ReviewState {

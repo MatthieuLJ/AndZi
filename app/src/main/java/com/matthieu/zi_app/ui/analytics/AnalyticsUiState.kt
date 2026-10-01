@@ -1,6 +1,8 @@
 package com.matthieu.zi_app.ui.analytics
 
 import com.matthieu.zi_app.data.local.entity.ProgressRecordEntity
+import com.matthieu.zi_app.domain.srs.MemoryForecastData
+import com.matthieu.zi_app.domain.srs.MemoryHealthData
 
 enum class TimeRange(val label: String, val durationMillis: Long) {
     DAYS_7("7D", 7L * 24 * 60 * 60 * 1000L),
@@ -12,6 +14,8 @@ enum class TimeRange(val label: String, val durationMillis: Long) {
 data class AnalyticsUiState(
     val selectedTimeRange: TimeRange = TimeRange.DAYS_30,
     val progressRecords: List<ProgressRecordEntity> = emptyList(),
+    val memoryHealth: MemoryHealthData = MemoryHealthData(),
+    val forecastData: MemoryForecastData = MemoryForecastData(),
     val totalWordsStudied: Int = 0,
     val cardsDueToday: Int = 0,
     val overallAccuracy: Float = 0f,

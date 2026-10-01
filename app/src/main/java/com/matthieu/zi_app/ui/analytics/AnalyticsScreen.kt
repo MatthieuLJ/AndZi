@@ -156,7 +156,23 @@ fun AnalyticsScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 2. Historical Progress Chart Card
+                // 2. Real-time Bayesian Memory Health
+                com.matthieu.zi_app.ui.analytics.components.MemoryHealthCard(
+                    memoryHealth = uiState.memoryHealth,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 3. Option B: Logarithmic Memory Retention & Review Workload Forecast Chart
+                com.matthieu.zi_app.ui.analytics.components.RetentionForecastChart(
+                    forecastData = uiState.forecastData,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 4. Historical Progress Growth Chart Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -171,12 +187,12 @@ fun AnalyticsScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "Mastery Progress",
+                                    text = "Historical Growth",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Cumulative card growth over time",
+                                    text = "Cumulative vocabulary over time",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -218,38 +234,6 @@ fun AnalyticsScreen(
                         LeitnerProgressChart(
                             records = uiState.progressRecords,
                             modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // 3. Leitner Box Distribution (Boxes 0 to 9)
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Leitner Box Distribution",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Cards across SRS mastery tiers (Box 0 = New / Lapse, Box 9 = Mastered)",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        BoxDistributionBarGraph(
-                            distribution = uiState.boxDistribution,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
                         )
                     }
                 }

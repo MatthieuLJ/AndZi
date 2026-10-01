@@ -147,11 +147,10 @@ fun HomeScreen(
                     )
                 }
 
-                // Leitner Mastery Box Distribution
+                // Real-time Memory Health
                 item {
-                    LeitnerDistributionCard(
-                        boxDistribution = uiState.boxDistribution,
-                        totalCards = uiState.totalLearned
+                    com.matthieu.zi_app.ui.analytics.components.MemoryHealthCard(
+                        memoryHealth = uiState.memoryHealth
                     )
                 }
 

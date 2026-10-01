@@ -87,12 +87,18 @@ class AnalyticsViewModel(
                     history = progressRepository.getAllProgress()
                 }
 
+                val reviewStates = studyRepository.getAllReviewStates()
+                val memoryHealth = com.matthieu.zi_app.domain.srs.MemoryForecastCalculator.calculateMemoryHealth(reviewStates, now)
+                val forecastData = com.matthieu.zi_app.domain.srs.MemoryForecastCalculator.calculateForecast(reviewStates, now)
+
                 val currentRange = _uiState.value.selectedTimeRange
                 val filteredHistory = filterHistoryByRange(history, currentRange, now)
 
                 _uiState.update {
                     it.copy(
                         progressRecords = filteredHistory,
+                        memoryHealth = memoryHealth,
+                        forecastData = forecastData,
                         totalWordsStudied = totalWords,
                         cardsDueToday = dueCount,
                         overallAccuracy = accuracy,
