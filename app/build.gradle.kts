@@ -24,6 +24,10 @@ android {
         compose = true
     }
 
+    androidResources {
+        noCompress += "zip"
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -53,6 +57,15 @@ android {
             isIncludeAndroidResources = true
         }
     }
+
+    sourceSets {
+        getByName("androidTest").assets.srcDirs("$projectDir/schemas")
+        getByName("test").assets.srcDirs("$projectDir/schemas")
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {

@@ -3,6 +3,7 @@ package com.matthieu.zi_app.ui
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.LeitnerState
 import com.matthieu.zi_app.Vocabulary
@@ -99,5 +100,62 @@ class VocabularyListScreenTest {
         // Test Reset SRS button click
         composeTestRule.onNodeWithText("Reset SRS").performClick()
         assertTrue(resetSRS)
+    }
+
+    @Test
+    fun testActiveWordDetailSheetContent_withManyTranslations_canScrollAndInteract() {
+        val word = Vocabulary(
+            "等",
+            "deng3",
+            arrayListOf(
+                "class; rank; grade",
+                "equal to; same as",
+                "to wait for; to await",
+                "et cetera; and so on",
+                "after (a condition is satisfied); once",
+                "plural suffix for pronouns and nouns"
+            )
+        )
+        var toggledTrans = ""
+        var removed = false
+
+        composeTestRule.setContent {
+            ActiveWordDetailSheetContent(
+                word = word,
+                polyReadings = emptyList(),
+                constituents = emptyList(),
+                compounds = listOf(Vocabulary("等等", "deng3deng3", arrayListOf("etc."))),
+                isInStudy = true,
+                currentBox = 0,
+                selectedTranslations = setOf("class; rank; grade"),
+                onToggleStudy = {},
+                onToggleTranslation = { toggledTrans = it },
+                onSelectConstituent = {},
+                onSelectCompound = {},
+                onResetSrs = {},
+                onRemoveFromStudy = { removed = true }
+            )
+        }
+
+        composeTestRule.onNodeWithText("等").assertExists()
+        composeTestRule.onNodeWithText("SRS: Box 0").assertExists()
+
+        // Scroll to and click the 6th translation
+        val lastDef = composeTestRule.onNodeWithText("6. plural suffix for pronouns and nouns")
+        lastDef.performScrollTo()
+        lastDef.assertExists()
+        lastDef.performClick()
+        org.junit.Assert.assertEquals("plural suffix for pronouns and nouns", toggledTrans)
+
+        // Scroll to Remove button and click
+        val removeButton = composeTestRule.onNodeWithText("Remove")
+        removeButton.performScrollTo()
+        removeButton.performClick()
+        assertTrue(removed)
+
+        // Verify compound words are reachable via scroll
+        val compound = composeTestRule.onNodeWithText("等等")
+        compound.performScrollTo()
+        compound.assertExists()
     }
 }

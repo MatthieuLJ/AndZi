@@ -9,6 +9,7 @@ import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
+import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 
@@ -18,16 +19,20 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
 @Database(
     entities = [
         CharPinyinEntity::class,
         ChineseWordEntity::class,
         WordSegmentEntity::class,
         EnglishTranslationEntity::class,
-        LeitnerRecordEntity::class
+        LeitnerRecordEntity::class,
+        HskVocabEntity::class
     ],
-    version = 7,
-    exportSchema = false
+    version = 8,
+    exportSchema = true
 )
 abstract class AndZiDatabase : RoomDatabase() {
 
@@ -37,8 +42,8 @@ abstract class AndZiDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "HANZI_DB"
         const val CEDICT_DATABASE_NAME = "cedict_db"
-        const val DATABASE_VERSION = 7
-        const val ROOM_IDENTITY_HASH = "5f32e97941947e98cdc84cc4c3d894ec"
+        const val DATABASE_VERSION = 8
+        const val ROOM_IDENTITY_HASH = "c126eeb78f3c642921694315aa5cc180"
 
         @Volatile
         private var INSTANCE: AndZiDatabase? = null
@@ -66,18 +71,26 @@ abstract class AndZiDatabase : RoomDatabase() {
             val dbFile = context.getDatabasePath(CEDICT_DATABASE_NAME)
             if (dbFile.exists() && dbFile.length() > 1_000_000L) {
                 try {
-                    if (dbFile.exists()) {
-                        val sdb = android.database.sqlite.SQLiteDatabase.openDatabase(dbFile.path, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE)
-                        sdb.version = DATABASE_VERSION
+                    val sdb = android.database.sqlite.SQLiteDatabase.openDatabase(
+                        dbFile.path,
+                        null,
+                        android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
+                    )
+                    val currentVer = sdb.version
+                    if (currentVer >= DATABASE_VERSION) {
                         sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, PRIMARY KEY(`hanzi`));")
                         sdb.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT);")
                         sdb.execSQL("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, '$ROOM_IDENTITY_HASH');")
                         sdb.close()
+                        return
                     }
+                    sdb.close()
+                    // Outdated version on device, clean up and re-extract
+                    context.deleteDatabase(CEDICT_DATABASE_NAME)
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    context.deleteDatabase(CEDICT_DATABASE_NAME)
                 }
-                return
             }
 
             // If an invalid / empty file exists, clean it up completely
@@ -137,6 +150,148 @@ abstract class AndZiDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Drop legacy lesson tables
+                db.execSQL("DROP TABLE IF EXISTS `lesson_word`")
+                db.execSQL("DROP TABLE IF EXISTS `lessons`")
+
+                // Ensure char_pinyin table and indexes
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `char_pinyin_new` (
+                        `char_pinyin_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `hanzi` TEXT NOT NULL,
+                        `pinyin` TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                val charPinyinTableExists = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='char_pinyin'").use { it.count > 0 }
+                if (charPinyinTableExists) {
+                    db.execSQL("INSERT OR IGNORE INTO `char_pinyin_new` (`char_pinyin_id`, `hanzi`, `pinyin`) SELECT `char_pinyin_id`, `hanzi`, `pinyin` FROM `char_pinyin`")
+                    db.execSQL("DROP TABLE `char_pinyin`")
+                }
+                db.execSQL("ALTER TABLE `char_pinyin_new` RENAME TO `char_pinyin`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `char_pinyin_id` ON `char_pinyin` (`char_pinyin_id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `char_pinyin_hanzi` ON `char_pinyin` (`hanzi`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `char_pinyin_pinyin` ON `char_pinyin` (`pinyin`)")
+
+                // Ensure cword table and indexes
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `cword_new` (
+                        `cword_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `chinese` TEXT NOT NULL,
+                        `pinyin` TEXT NOT NULL,
+                        `length` INTEGER DEFAULT 0
+                    )
+                    """.trimIndent()
+                )
+                val cwordTableExists = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='cword'").use { it.count > 0 }
+                if (cwordTableExists) {
+                    db.execSQL("INSERT OR IGNORE INTO `cword_new` (`cword_id`, `chinese`, `pinyin`, `length`) SELECT `cword_id`, `chinese`, `pinyin`, IFNULL(`length`, 0) FROM `cword`")
+                    db.execSQL("DROP TABLE `cword`")
+                }
+                db.execSQL("ALTER TABLE `cword_new` RENAME TO `cword`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `cword_id` ON `cword` (`cword_id`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `cword_chinese` ON `cword` (`chinese`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `cword_pinyin` ON `cword` (`pinyin`)")
+
+                // Recreate cword_segment to align composite primary keys and foreign keys with Room schema
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `cword_segment_new` (
+                        `cword_id` INTEGER NOT NULL,
+                        `char_pinyin_id` INTEGER NOT NULL,
+                        `pos` INTEGER NOT NULL,
+                        PRIMARY KEY(`cword_id`, `pos`),
+                        FOREIGN KEY(`cword_id`) REFERENCES `cword`(`cword_id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(`char_pinyin_id`) REFERENCES `char_pinyin`(`char_pinyin_id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                val segmentTableExists = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='cword_segment'").use { it.count > 0 }
+                if (segmentTableExists) {
+                    db.execSQL("INSERT OR IGNORE INTO `cword_segment_new` (`cword_id`, `char_pinyin_id`, `pos`) SELECT `cword_id`, `char_pinyin_id`, `pos` FROM `cword_segment`")
+                    db.execSQL("DROP TABLE `cword_segment`")
+                }
+                db.execSQL("ALTER TABLE `cword_segment_new` RENAME TO `cword_segment`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `cword_segment_pos` ON `cword_segment` (`pos`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_cword_segment_char_pinyin_id` ON `cword_segment` (`char_pinyin_id`)")
+
+                // Recreate eword to align foreign keys with Room schema
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `eword_new` (
+                        `eng_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `cword_id` INTEGER NOT NULL,
+                        `translation` TEXT NOT NULL,
+                        FOREIGN KEY(`cword_id`) REFERENCES `cword`(`cword_id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                val ewordTableExists = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='eword'").use { it.count > 0 }
+                if (ewordTableExists) {
+                    db.execSQL("INSERT OR IGNORE INTO `eword_new` (`eng_id`, `cword_id`, `translation`) SELECT `eng_id`, `cword_id`, `translation` FROM `eword`")
+                    db.execSQL("DROP TABLE `eword`")
+                }
+                db.execSQL("ALTER TABLE `eword_new` RENAME TO `eword`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_eword_cword_id` ON `eword` (`cword_id`)")
+
+                // Recreate leitner table to ensure notNull constraints on all integer fields match Room schema
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `leitner_new` (
+                        `hanzi` TEXT NOT NULL,
+                        `box` INTEGER NOT NULL,
+                        `exp_time` INTEGER NOT NULL,
+                        `num_tested` INTEGER NOT NULL DEFAULT 0,
+                        `num_wrong` INTEGER NOT NULL DEFAULT 0,
+                        `streak` INTEGER NOT NULL DEFAULT 0,
+                        `date_added` INTEGER NOT NULL,
+                        PRIMARY KEY(`hanzi`)
+                    )
+                    """.trimIndent()
+                )
+                val leitnerTableExists = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='leitner'").use { it.count > 0 }
+                if (leitnerTableExists) {
+                    db.execSQL(
+                        """
+                        INSERT OR IGNORE INTO `leitner_new` (`hanzi`, `box`, `exp_time`, `num_tested`, `num_wrong`, `streak`, `date_added`)
+                        SELECT `hanzi`, `box`, `exp_time`, IFNULL(`num_tested`, 0), IFNULL(`num_wrong`, 0), IFNULL(`streak`, 0), IFNULL(`date_added`, 0)
+                        FROM `leitner`
+                        """.trimIndent()
+                    )
+                    db.execSQL("DROP TABLE `leitner`")
+                }
+                db.execSQL("ALTER TABLE `leitner_new` RENAME TO `leitner`")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `hsk_vocab` (
+                        `hanzi` TEXT NOT NULL,
+                        `hsk_level` INTEGER NOT NULL,
+                        `hsk2_level` INTEGER NOT NULL DEFAULT 0,
+                        `freq_rank` INTEGER NOT NULL DEFAULT 999999,
+                        `is_char` INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(`hanzi`)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_hsk_level` ON `hsk_vocab` (`hsk_level`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_hsk_freq` ON `hsk_vocab` (`freq_rank`)")
+            }
+        }
+
+        val ALL_MIGRATIONS: Array<Migration> = arrayOf(
+            MIGRATION_6_7,
+            MIGRATION_7_8
+        )
+
         fun createInMemory(context: Context): AndZiDatabase {
             return Room.inMemoryDatabaseBuilder(
                 context.applicationContext,
@@ -150,7 +305,7 @@ abstract class AndZiDatabase : RoomDatabase() {
                 AndZiDatabase::class.java,
                 dbName
             )
-                .fallbackToDestructiveMigration()
+                .addMigrations(*ALL_MIGRATIONS)
                 .build()
         }
     }

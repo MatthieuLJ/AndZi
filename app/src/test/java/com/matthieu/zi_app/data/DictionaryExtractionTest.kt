@@ -55,12 +55,12 @@ class DictionaryExtractionTest {
             sdb.execSQL("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, 'aba1735d8769cb27cae008884489bff2');")
             sdb.close()
 
-            // Now open with Room (which is at DATABASE_VERSION = 7)
+            // Now open with Room using registered migrations
             val db = androidx.room.Room.databaseBuilder(
                 context,
                 AndZiDatabase::class.java,
                 dbName
-            ).fallbackToDestructiveMigration().build()
+            ).addMigrations(*AndZiDatabase.ALL_MIGRATIONS).build()
 
             val leitnerState = db.leitnerDao().getRecord("你")
             // Leitner state should be null since it's empty, and no IllegalStateException should be thrown
@@ -90,6 +90,24 @@ class DictionaryExtractionTest {
             val leitnerState = userDb.leitnerDao().getRecord(niWord.chinese)
             // Should succeed without exception
             userDb.close()
+            dictDb.close()
+        }
+    }
+
+    @Test
+    fun testHskVocabExtractionAndQuerying() {
+        runBlocking {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val dictDb = AndZiDatabase.getDictionaryInstance(context)
+            val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
+
+            val hsk1Candidates = dictRepo.getHskCandidates(maxLevel = 1, limit = 10)
+            assertFalse("Expected HSK 1 candidates to be present in extracted dictionary", hsk1Candidates.isEmpty())
+
+            val niHsk = dictRepo.getHskVocabForWord("你")
+            assertNotNull("Expected '你' to be present in hsk_vocab", niHsk)
+            assertTrue("Expected '你' to be HSK 1", niHsk!!.hskLevel == 1)
+
             dictDb.close()
         }
     }

@@ -6,6 +6,7 @@ import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
+import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 import com.matthieu.zi_app.data.local.model.WordWithDetails
 import kotlinx.coroutines.Dispatchers
@@ -192,6 +193,26 @@ class VocabularyRepository(
             .map { it.word.chinese }
             .distinct()
             .take(limit)
+    }
+
+    suspend fun getComposedWords(knownChars: List<String>, limit: Int = 200): List<ChineseWordEntity> = withContext(Dispatchers.IO) {
+        if (knownChars.isEmpty()) emptyList() else vocabularyDao.getComposedWords(knownChars, limit)
+    }
+
+    suspend fun getHskCandidates(maxLevel: Int, limit: Int = 300): List<HskVocabEntity> = withContext(Dispatchers.IO) {
+        vocabularyDao.getHskCandidates(maxLevel, limit)
+    }
+
+    suspend fun getHskVocabForWords(words: List<String>): List<HskVocabEntity> = withContext(Dispatchers.IO) {
+        if (words.isEmpty()) emptyList() else vocabularyDao.getHskVocabForWords(words)
+    }
+
+    suspend fun getHskVocabForWord(hanzi: String): HskVocabEntity? = withContext(Dispatchers.IO) {
+        vocabularyDao.getHskVocabForWord(hanzi)
+    }
+
+    suspend fun insertHskVocab(entities: List<HskVocabEntity>) = withContext(Dispatchers.IO) {
+        vocabularyDao.insertHskVocab(entities)
     }
 
     private fun toVocabulary(details: WordWithDetails): Vocabulary {

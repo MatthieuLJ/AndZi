@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
+import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 import com.matthieu.zi_app.data.local.model.WordWithDetails
 import kotlinx.coroutines.flow.Flow
@@ -132,4 +133,33 @@ interface VocabularyDao {
         LIMIT :limit
     """)
     suspend fun getCompoundWordsForCharPinyin(hanzi: String, pinyin: String, limit: Int = 4): List<String>
+
+    // --- Recommendation & HSK Vocabulary Queries ---
+    @Query("""
+        SELECT c.* FROM cword c
+        JOIN cword_segment cs ON c.cword_id = cs.cword_id
+        JOIN char_pinyin cp ON cs.char_pinyin_id = cp.char_pinyin_id
+        WHERE cp.hanzi IN (:knownChars) AND c.length > 1 AND c.length <= 4
+        GROUP BY c.cword_id
+        HAVING count(DISTINCT cs.pos) = c.length
+        LIMIT :limit
+    """)
+    suspend fun getComposedWords(knownChars: List<String>, limit: Int = 200): List<ChineseWordEntity>
+
+    @Query("""
+        SELECT * FROM hsk_vocab
+        WHERE hsk_level <= :maxLevel
+        ORDER BY hsk_level ASC, freq_rank ASC
+        LIMIT :limit
+    """)
+    suspend fun getHskCandidates(maxLevel: Int, limit: Int = 300): List<HskVocabEntity>
+
+    @Query("SELECT * FROM hsk_vocab WHERE hanzi IN (:words)")
+    suspend fun getHskVocabForWords(words: List<String>): List<HskVocabEntity>
+
+    @Query("SELECT * FROM hsk_vocab WHERE hanzi = :hanzi LIMIT 1")
+    suspend fun getHskVocabForWord(hanzi: String): HskVocabEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHskVocab(entities: List<HskVocabEntity>)
 }

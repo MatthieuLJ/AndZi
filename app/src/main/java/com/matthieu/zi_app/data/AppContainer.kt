@@ -15,6 +15,7 @@ interface AppContainer {
     val databaseBackupRepository: com.matthieu.zi_app.data.repository.DatabaseBackupRepository
     val userPreferences: com.matthieu.zi_app.data.preferences.UserPreferences
     val leitnerDao: com.matthieu.zi_app.data.local.dao.LeitnerDao
+    val wordRecommendationEngine: com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine
 }
 
 class DefaultAppContainer(private val context: Context) : AppContainer {
@@ -48,5 +49,9 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
 
     override val databaseBackupRepository: com.matthieu.zi_app.data.repository.DatabaseBackupRepository by lazy {
         com.matthieu.zi_app.data.repository.DatabaseBackupRepository(context, andZiDb, progressDb)
+    }
+
+    override val wordRecommendationEngine: com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine by lazy {
+        com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine(dictionaryRepository)
     }
 }

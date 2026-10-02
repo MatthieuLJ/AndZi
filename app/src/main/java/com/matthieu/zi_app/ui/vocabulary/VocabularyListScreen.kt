@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -228,8 +230,7 @@ fun VocabularyListScreen(
                     onSelectConstituent = { viewModel.selectCharacterFromConstituent(it) },
                     onSelectCompound = { viewModel.selectWordFromCompound(it) },
                     onResetSrs = { viewModel.resetSrsScore(uiState.selectedWord!!) },
-                    onRemoveFromStudy = { viewModel.removeFromStudy(uiState.selectedWord!!) },
-                    modifier = Modifier.padding(bottom = 32.dp)
+                    onRemoveFromStudy = { viewModel.removeFromStudy(uiState.selectedWord!!) }
                 )
             }
         }
@@ -357,7 +358,8 @@ fun ActiveWordDetailSheetContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(start = 24.dp, end = 24.dp, bottom = 32.dp)
     ) {
         // Top Overview Row: Hanzi + Pinyin stacked vertically on the left, Study button on the right
         Row(

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.AndZiDatabase
+import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.ui.dictionary.DictionaryViewModel
@@ -19,6 +20,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -231,5 +233,85 @@ class DictionaryViewModelTest {
         // Verify box counts: 3 items in Box 0
         val boxCounts = studyRepo.getBoxCounts().associate { it.box to it.count }
         assertEquals(3, boxCounts[0])
+    }
+
+    @Test
+    fun testInitialWordSuggestionLoadsAndExecutesSearch() = runBlocking {
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("你", hskLevel = 1, freqRank = 1, isChar = 1)
+            )
+        )
+        dictRepo.addVocabulary(Vocabulary("你", "ni3", arrayListOf("you")))
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested && it.query.isNotEmpty() && !it.isSearching && it.results.isNotEmpty() }.first()
+        }
+
+        assertEquals("你", state.query)
+        assertEquals("你", state.suggestedWord)
+        assertTrue(state.isAutoSuggested)
+        assertNotNull(state.suggestionReason)
+        assertEquals(1, state.results.size)
+        assertEquals("你", state.results[0].chinese)
+    }
+
+    @Test
+    fun testRefreshSuggestionUpdatesQueryAndReason() = runBlocking {
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("你", hskLevel = 1, freqRank = 1, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("好", hskLevel = 1, freqRank = 2, isChar = 1)
+            )
+        )
+        dictRepo.addVocabulary(Vocabulary("你", "ni3", arrayListOf("you")))
+        dictRepo.addVocabulary(Vocabulary("好", "hao3", arrayListOf("good")))
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        // Wait for initial suggestion
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested && it.query.isNotEmpty() }.first()
+        }
+
+        // Trigger refresh and wait for suggested query and search to complete
+        viewModel.refreshSuggestion()
+
+        val refreshedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested && it.query in listOf("你", "好") && !it.isSearching && it.results.isNotEmpty() }.first()
+        }
+
+        assertTrue(refreshedState.query in listOf("你", "好"))
+        assertTrue(refreshedState.isAutoSuggested)
+        assertNotNull(refreshedState.suggestionReason)
+    }
+
+    @Test
+    fun testManualSearchClearsAutoSuggestedFlag() = runBlocking {
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("你", hskLevel = 1, freqRank = 1, isChar = 1)
+            )
+        )
+        dictRepo.addVocabulary(Vocabulary("你", "ni3", arrayListOf("you")))
+        dictRepo.addVocabulary(Vocabulary("他", "ta1", arrayListOf("he", "him")))
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        // Wait for initial suggestion
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested }.first()
+        }
+
+        // User manually types "他"
+        viewModel.onSearchQueryChanged("他")
+        val manualState = withTimeout(3000) {
+            viewModel.uiState.filter { it.query == "他" && !it.isSearching }.first()
+        }
+
+        assertFalse(manualState.isAutoSuggested)
+        assertNull(manualState.suggestionReason)
     }
 }

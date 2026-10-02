@@ -13,5 +13,8 @@ data class DictionaryUiState(
     val currentBox: Int? = null,
     val selectedTranslations: Set<String> = emptySet(),
     val isSearching: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val suggestedWord: String? = null,
+    val suggestionReason: String? = null,
+    val isAutoSuggested: Boolean = false
 )

@@ -2,28 +2,46 @@ package com.matthieu.zi_app.ui
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.ui.dictionary.DictionaryResultCard
 import com.matthieu.zi_app.ui.dictionary.WordDetailSheetContent
 import com.matthieu.zi_app.ui.theme.AndZiTheme
+import org.junit.After
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class DictionaryScreenTest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComposeTestActivity>()
 
-    @org.junit.Before
+    private val testDispatcher = UnconfinedTestDispatcher()
+
+    @Before
     fun setUp() {
+        Dispatchers.setMain(testDispatcher)
         com.matthieu.zi_app.Pinyin.prepare_pinyin_process()
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -132,5 +150,94 @@ class DictionaryScreenTest {
 
         composeTestRule.onNodeWithText("对不起").performClick()
         assertTrue(cardClicked)
+    }
+
+    @Test
+    fun testDictionaryScreen_showsSuggestionBannerAndShuffleButton() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val dictDb = com.matthieu.zi_app.data.local.AndZiDatabase.createInMemory(context)
+        val userDb = com.matthieu.zi_app.data.local.AndZiDatabase.createInMemory(context)
+        val dictRepo = com.matthieu.zi_app.data.repository.VocabularyRepository(dictDb.vocabularyDao())
+        val userVocRepo = com.matthieu.zi_app.data.repository.VocabularyRepository(userDb.vocabularyDao())
+        val studyRepo = com.matthieu.zi_app.data.repository.StudyRepository(userDb.leitnerDao())
+
+        kotlinx.coroutines.runBlocking {
+            dictRepo.insertHskVocab(
+                listOf(
+                    com.matthieu.zi_app.data.local.entity.HskVocabEntity("学生", hskLevel = 1, freqRank = 100, isChar = 0)
+                )
+            )
+            dictRepo.addVocabulary(Vocabulary("学生", "xue2sheng1", arrayListOf("student")))
+        }
+
+        val viewModel = com.matthieu.zi_app.ui.dictionary.DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                com.matthieu.zi_app.ui.dictionary.DictionaryScreen(viewModel = viewModel)
+            }
+        }
+
+        composeTestRule.waitUntil(3000) {
+            viewModel.uiState.value.isAutoSuggested && viewModel.uiState.value.suggestedWord != null
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("✨ Suggested for you").assertExists()
+        composeTestRule.onNodeWithContentDescription("Suggest another word").assertExists().assertHasClickAction()
+
+        dictDb.close()
+        userDb.close()
+    }
+
+    @Test
+    fun testWordDetailSheetContent_withManyTranslations_canScrollAndSelect() {
+        val word = Vocabulary(
+            "等",
+            "deng3",
+            arrayListOf(
+                "class; rank; grade",
+                "equal to; same as",
+                "to wait for; to await",
+                "et cetera; and so on",
+                "after (a condition is satisfied); once",
+                "plural suffix for pronouns and nouns"
+            )
+        )
+        var toggledTranslation: String? = null
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                WordDetailSheetContent(
+                    word = word,
+                    polyReadings = emptyList(),
+                    constituents = emptyList(),
+                    compounds = listOf(Vocabulary("等等", "deng3deng3", arrayListOf("etc."))),
+                    isInStudy = true,
+                    currentBox = 0,
+                    selectedTranslations = setOf("to wait for; to await", "class; rank; grade"),
+                    onToggleStudy = {},
+                    onToggleTranslation = { toggledTranslation = it },
+                    onSelectConstituent = {},
+                    onSelectCompound = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("等").assertExists()
+        composeTestRule.onNodeWithText("děng").assertExists()
+        composeTestRule.onNodeWithText("SRS: Box 0").assertExists()
+
+        // Verify last definition exists and can be scrolled to and clicked
+        val lastDef = composeTestRule.onNodeWithText("6. plural suffix for pronouns and nouns")
+        lastDef.performScrollTo()
+        lastDef.assertExists()
+        lastDef.performClick()
+        org.junit.Assert.assertEquals("plural suffix for pronouns and nouns", toggledTranslation)
+
+        // Verify compound words are also reachable via scroll
+        val compoundNode = composeTestRule.onNodeWithText("等等")
+        compoundNode.performScrollTo()
+        compoundNode.assertExists()
     }
 }

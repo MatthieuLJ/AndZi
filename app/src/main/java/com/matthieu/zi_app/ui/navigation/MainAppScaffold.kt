@@ -144,7 +144,8 @@ fun MainAppScaffold(
                     factory = com.matthieu.zi_app.ui.dictionary.DictionaryViewModel.provideFactory(
                         dictionaryRepository = appContainer.dictionaryRepository,
                         localVocabularyRepository = appContainer.vocabularyRepository,
-                        studyRepository = appContainer.studyRepository
+                        studyRepository = appContainer.studyRepository,
+                        wordRecommendationEngine = appContainer.wordRecommendationEngine
                     )
                 )
                 DictionaryScreen(viewModel = dictViewModel)

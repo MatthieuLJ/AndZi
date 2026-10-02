@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
+import com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +21,7 @@ class DictionaryViewModel(
     private val dictionaryRepository: VocabularyRepository,
     private val localVocabularyRepository: VocabularyRepository,
     private val studyRepository: StudyRepository,
+    private val wordRecommendationEngine: WordRecommendationEngine = WordRecommendationEngine(dictionaryRepository),
     private val debounceMillis: Long = 150L
 ) : ViewModel() {
 
@@ -26,24 +29,91 @@ class DictionaryViewModel(
     val uiState: StateFlow<DictionaryUiState> = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
+    private var suggestionJob: Job? = null
 
     init {
-        // Initial search for common characters
-        onSearchQueryChanged("你")
+        loadInitialSuggestion()
+    }
+
+    fun loadInitialSuggestion() {
+        suggestionJob?.cancel()
+        suggestionJob = viewModelScope.launch {
+            try {
+                val knownChars = localVocabularyRepository.getAllDistinctHanzi().toSet()
+                val deckRecords = studyRepository.getAllRecords().map { it.hanzi }.toSet()
+                val allUserVoc = localVocabularyRepository.getAllVocabulary().map { it.chinese }.toSet()
+                val deckWords = deckRecords + allUserVoc
+
+                val recommendation = wordRecommendationEngine.recommendNextWord(knownChars, deckWords)
+                _uiState.update {
+                    it.copy(
+                        query = recommendation.word,
+                        suggestedWord = recommendation.word,
+                        suggestionReason = recommendation.reason.formatDisplay(),
+                        isAutoSuggested = true
+                    )
+                }
+                executeSearch(recommendation.word, skipDebounce = true)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Fallback to "你" if recommendation fails
+                onSearchQueryChanged("你")
+            }
+        }
+    }
+
+    fun refreshSuggestion() {
+        suggestionJob?.cancel()
+        suggestionJob = viewModelScope.launch {
+            try {
+                val knownChars = localVocabularyRepository.getAllDistinctHanzi().toSet()
+                val deckRecords = studyRepository.getAllRecords().map { it.hanzi }.toSet()
+                val allUserVoc = localVocabularyRepository.getAllVocabulary().map { it.chinese }.toSet()
+                val deckWords = deckRecords + allUserVoc
+
+                val recommendation = wordRecommendationEngine.recommendNextWord(knownChars, deckWords)
+                _uiState.update {
+                    it.copy(
+                        query = recommendation.word,
+                        suggestedWord = recommendation.word,
+                        suggestionReason = recommendation.reason.formatDisplay(),
+                        isAutoSuggested = true
+                    )
+                }
+                executeSearch(recommendation.word, skipDebounce = true)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Keep current state if refresh fails
+            }
+        }
     }
 
     fun onSearchQueryChanged(newQuery: String) {
-        _uiState.update { it.copy(query = newQuery) }
+        suggestionJob?.cancel()
+        val isSuggested = newQuery == _uiState.value.suggestedWord && _uiState.value.suggestedWord != null
+        _uiState.update {
+            it.copy(
+                query = newQuery,
+                isAutoSuggested = isSuggested,
+                suggestionReason = if (isSuggested) it.suggestionReason else null
+            )
+        }
+        executeSearch(newQuery, skipDebounce = false)
+    }
+
+    private fun executeSearch(searchQuery: String, skipDebounce: Boolean) {
         searchJob?.cancel()
 
-        val trimmed = newQuery.trim()
+        val trimmed = searchQuery.trim()
         if (trimmed.isEmpty()) {
             _uiState.update { it.copy(results = emptyList(), isSearching = false) }
             return
         }
 
         searchJob = viewModelScope.launch {
-            if (debounceMillis > 0) {
+            if (!skipDebounce && debounceMillis > 0) {
                 delay(debounceMillis)
             }
             _uiState.update { it.copy(isSearching = true) }
@@ -232,14 +302,16 @@ class DictionaryViewModel(
         fun provideFactory(
             dictionaryRepository: VocabularyRepository,
             localVocabularyRepository: VocabularyRepository,
-            studyRepository: StudyRepository
+            studyRepository: StudyRepository,
+            wordRecommendationEngine: WordRecommendationEngine = WordRecommendationEngine(dictionaryRepository)
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return DictionaryViewModel(
                     dictionaryRepository,
                     localVocabularyRepository,
-                    studyRepository
+                    studyRepository,
+                    wordRecommendationEngine = wordRecommendationEngine
                 ) as T
             }
         }
