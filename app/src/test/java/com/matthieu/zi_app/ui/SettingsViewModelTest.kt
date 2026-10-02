@@ -6,6 +6,7 @@ import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.AndZiDatabase
 import com.matthieu.zi_app.data.local.ProgressDatabase
 import com.matthieu.zi_app.data.preferences.UserPreferences
+import com.matthieu.zi_app.data.repository.DatabaseBackupRepository
 import com.matthieu.zi_app.data.repository.ProgressRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
@@ -22,6 +23,8 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -38,6 +41,7 @@ class SettingsViewModelTest {
     private lateinit var vocRepo: VocabularyRepository
     private lateinit var studyRepo: StudyRepository
     private lateinit var progressRepo: ProgressRepository
+    private lateinit var backupRepo: DatabaseBackupRepository
     private lateinit var userPrefs: UserPreferences
     private lateinit var context: Context
 
@@ -51,6 +55,7 @@ class SettingsViewModelTest {
         vocRepo = VocabularyRepository(andZiDb.vocabularyDao())
         studyRepo = StudyRepository(andZiDb.leitnerDao())
         progressRepo = ProgressRepository(progressDb.progressDao(), andZiDb.leitnerDao())
+        backupRepo = DatabaseBackupRepository(context, andZiDb, progressDb)
         userPrefs = UserPreferences(context)
     }
 
@@ -63,7 +68,7 @@ class SettingsViewModelTest {
 
     @Test
     fun testSettingsThemeAndResetFlow() = runBlocking {
-        val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, context)
+        val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, backupRepo, context)
 
         // Test theme toggling
         viewModel.setThemeMode(AppThemeMode.DARK)
@@ -91,5 +96,33 @@ class SettingsViewModelTest {
 
         val allRecords = andZiDb.leitnerDao().getAllRecords()
         assertTrue(allRecords.isEmpty())
+    }
+
+    @Test
+    fun testBackupDialogToggles() = runBlocking {
+        val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, backupRepo, context)
+
+        viewModel.showExportStudyDialog(true)
+        assertTrue(viewModel.uiState.value.showExportStudyDialog)
+
+        viewModel.setExportIncludeScores(false)
+        assertFalse(viewModel.uiState.value.exportIncludeScores)
+
+        viewModel.showExportStudyDialog(false)
+        assertFalse(viewModel.uiState.value.showExportStudyDialog)
+
+        viewModel.showExportProgressDialog(true)
+        assertTrue(viewModel.uiState.value.showExportProgressDialog)
+
+        viewModel.showExportProgressDialog(false)
+        assertFalse(viewModel.uiState.value.showExportProgressDialog)
+    }
+
+    @Test
+    fun testCancelImportInspection() = runBlocking {
+        val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, backupRepo, context)
+
+        viewModel.cancelImportInspection()
+        assertNull(viewModel.uiState.value.pendingImportInspection)
     }
 }

@@ -183,6 +183,7 @@ fun MainAppScaffold(
                         userPreferences = appContainer.userPreferences,
                         studyRepository = appContainer.studyRepository,
                         progressRepository = appContainer.progressRepository,
+                        databaseBackupRepository = appContainer.databaseBackupRepository,
                         context = context
                     )
                 )
