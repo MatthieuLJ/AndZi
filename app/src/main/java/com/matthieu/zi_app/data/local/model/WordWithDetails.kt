@@ -6,6 +6,7 @@ import androidx.room.Relation
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
+import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 
 /**

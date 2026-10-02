@@ -10,13 +10,15 @@ import kotlinx.parcelize.Parcelize
 data class Vocabulary @JvmOverloads constructor(
     @JvmField var chinese: String = "",
     @JvmField var pinyin: String = "",
-    @JvmField var english: ArrayList<String> = ArrayList()
+    @JvmField var english: ArrayList<String> = ArrayList(),
+    @JvmField var hskLevel: Int = 0
 ) : Parcelable {
 
     constructor(ch: String, pi: String, en: String) : this(
         chinese = ch,
         pinyin = pi,
-        english = arrayListOf(en)
+        english = arrayListOf(en),
+        hskLevel = 0
     )
 
     fun same_word(other: Vocabulary?): Boolean {

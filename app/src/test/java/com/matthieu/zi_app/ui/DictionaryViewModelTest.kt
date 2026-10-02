@@ -314,4 +314,35 @@ class DictionaryViewModelTest {
         assertFalse(manualState.isAutoSuggested)
         assertNull(manualState.suggestionReason)
     }
+
+    @Test
+    fun testDictionarySearchSortsByHskAndFrequency() = runBlocking {
+        // Insert words in CEDICT repository
+        dictRepo.addVocabulary(Vocabulary("打字", "da3zi4", arrayListOf("to type")))
+        dictRepo.addVocabulary(Vocabulary("大", "da4", arrayListOf("big", "large")))
+        dictRepo.addVocabulary(Vocabulary("大家", "da4jia1", arrayListOf("everyone", "all")))
+        dictRepo.addVocabulary(Vocabulary("大意", "da4yi4", arrayListOf("general idea; careless")))
+
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("大", hskLevel = 1, freqRank = 20, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("大家", hskLevel = 1, freqRank = 45, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("打字", hskLevel = 3, freqRank = 800, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("大意", hskLevel = 5, freqRank = 2500, isChar = 0)
+            )
+        )
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        // Search for "大"
+        viewModel.onSearchQueryChanged("大")
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { it.query == "大" && !it.isSearching && it.results.size == 3 }.first()
+        }
+
+        // Exact match ("大") comes first, then "大家" (HSK 1, freq 45), then "大意" (HSK 5, freq 2500)
+        assertEquals("大", state.results[0].chinese)
+        assertEquals("大家", state.results[1].chinese)
+        assertEquals("大意", state.results[2].chinese)
+    }
 }

@@ -59,6 +59,45 @@ class RepositoriesTest {
     }
 
     @Test
+    fun testVocabularyRepositorySearchSortedByHskAndFrequency() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("他", "ta1", arrayListOf("he", "him")))
+        vocRepo.addVocabulary(Vocabulary("塌", "ta1", arrayListOf("to collapse", "to fall down")))
+        vocRepo.addVocabulary(Vocabulary("她", "ta1", arrayListOf("she", "her")))
+        vocRepo.addVocabulary(Vocabulary("它们", "ta1men5", arrayListOf("they (for inanimate things)")))
+
+        vocRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "他", hskLevel = 1, freqRank = 10, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "她", hskLevel = 1, freqRank = 15, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "它们", hskLevel = 3, freqRank = 500, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "塌", hskLevel = 6, freqRank = 3000, isChar = 1)
+            )
+        )
+
+        // Search with exact 1-syllable tone "ta1" (exact pinyin matches before multi-syllable prefix)
+        val res1 = vocRepo.search("ta1")
+        assertEquals(4, res1.size)
+        assertEquals("他", res1[0].chinese) // exact "ta1", HSK 1, freq 10
+        assertEquals("她", res1[1].chinese) // exact "ta1", HSK 1, freq 15
+        assertEquals("塌", res1[2].chinese) // exact "ta1", HSK 6
+        assertEquals("它们", res1[3].chinese) // prefix "ta1men5", HSK 3
+
+        // Search with toneless prefix "ta" (all match prefix, sorted by HSK and frequency)
+        val res2 = vocRepo.search("ta")
+        assertEquals(4, res2.size)
+        assertEquals("他", res2[0].chinese) // HSK 1, freq 10
+        assertEquals("她", res2[1].chinese) // HSK 1, freq 15
+        assertEquals("它们", res2[2].chinese) // HSK 3, freq 500
+        assertEquals("塌", res2[3].chinese) // HSK 6, freq 3000
+
+        // Search with tone mark "tā"
+        val res3 = vocRepo.search("tā")
+        assertEquals(4, res3.size)
+        assertEquals("他", res3[0].chinese)
+        assertEquals("她", res3[1].chinese)
+    }
+
+    @Test
     fun testStudyRepositoryFlow() = runBlocking {
         val now = 100_000L
 

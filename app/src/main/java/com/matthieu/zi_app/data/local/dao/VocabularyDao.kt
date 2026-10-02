@@ -105,22 +105,67 @@ interface VocabularyDao {
     suspend fun getWordsWithDetailsForChinese(chinese: String): List<WordWithDetails>
 
     @Transaction
-    @Query("SELECT * FROM cword WHERE chinese LIKE '%' || :hanzi || '%' AND chinese != :hanzi")
+    @Query("""
+        SELECT c.* FROM cword c
+        LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
+        WHERE c.chinese LIKE '%' || :hanzi || '%' AND c.chinese != :hanzi
+        ORDER BY
+            COALESCE(h.hsk_level, 99) ASC,
+            COALESCE(h.freq_rank, 999999) ASC,
+            c.length ASC,
+            c.cword_id ASC
+    """)
     suspend fun getWordsContainingCharacter(hanzi: String): List<WordWithDetails>
 
     @Transaction
-    @Query("SELECT * FROM cword WHERE chinese LIKE :prefix || '%' LIMIT :limit")
+    @Query("""
+        SELECT c.* FROM cword c
+        LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
+        WHERE c.chinese LIKE :prefix || '%'
+        ORDER BY
+            CASE WHEN c.chinese = :prefix THEN 0 ELSE 1 END,
+            COALESCE(h.hsk_level, 99) ASC,
+            COALESCE(h.freq_rank, 999999) ASC,
+            c.length ASC,
+            c.cword_id ASC
+        LIMIT :limit
+    """)
     suspend fun searchByChinesePrefix(prefix: String, limit: Int = 50): List<WordWithDetails>
 
     @Transaction
-    @Query("SELECT * FROM cword WHERE pinyin LIKE :prefix || '%' LIMIT :limit")
+    @Query("""
+        SELECT c.* FROM cword c
+        LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
+        WHERE c.pinyin LIKE :prefix || '%'
+        ORDER BY
+            CASE WHEN c.pinyin = :prefix THEN 0 ELSE 1 END,
+            COALESCE(h.hsk_level, 99) ASC,
+            COALESCE(h.freq_rank, 999999) ASC,
+            c.length ASC,
+            c.cword_id ASC
+        LIMIT :limit
+    """)
     suspend fun searchByPinyinPrefix(prefix: String, limit: Int = 50): List<WordWithDetails>
 
     @Transaction
     @Query("""
-        SELECT DISTINCT c.* FROM cword c
+        SELECT c.* FROM cword c
         INNER JOIN eword e ON e.cword_id = c.cword_id
+        LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
         WHERE e.translation LIKE '%' || :query || '%'
+        GROUP BY c.cword_id
+        ORDER BY
+            MIN(
+                CASE
+                    WHEN LOWER(e.translation) = LOWER(:query) THEN 0
+                    WHEN LOWER(e.translation) LIKE LOWER(:query) || '%' THEN 1
+                    ELSE 2
+                END
+            ) ASC,
+            COALESCE(h.hsk_level, 99) ASC,
+            COALESCE(h.freq_rank, 999999) ASC,
+            c.length ASC,
+            c.cword_id ASC
         LIMIT :limit
     """)
     suspend fun searchByEnglish(query: String, limit: Int = 50): List<WordWithDetails>
@@ -129,7 +174,12 @@ interface VocabularyDao {
         SELECT DISTINCT c.chinese FROM cword c
         INNER JOIN cword_segment cs ON cs.cword_id = c.cword_id
         INNER JOIN char_pinyin cp ON cp.char_pinyin_id = cs.char_pinyin_id
+        LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
         WHERE cp.hanzi = :hanzi AND (cp.pinyin = :pinyin OR cp.pinyin LIKE :pinyin || '%') AND c.length > 1
+        ORDER BY
+            COALESCE(h.hsk_level, 99) ASC,
+            COALESCE(h.freq_rank, 999999) ASC,
+            c.length ASC
         LIMIT :limit
     """)
     suspend fun getCompoundWordsForCharPinyin(hanzi: String, pinyin: String, limit: Int = 4): List<String>

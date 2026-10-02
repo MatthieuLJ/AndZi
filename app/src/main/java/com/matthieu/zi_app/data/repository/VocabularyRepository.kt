@@ -92,8 +92,14 @@ class VocabularyRepository(
         results.addAll(byChinese)
 
         if (results.size < limit && cleanQuery.isNotEmpty()) {
-            val byPinyin = vocabularyDao.searchByPinyinPrefix(cleanQuery, limit - results.size)
+            val lameQuery = PinyinParser.convert_to_lame_version(cleanQuery)
+            val pinyinQuery = if (lameQuery.isNotEmpty()) lameQuery else cleanQuery
+            val byPinyin = vocabularyDao.searchByPinyinPrefix(pinyinQuery, limit - results.size)
             results.addAll(byPinyin)
+            if (pinyinQuery != cleanQuery && results.size < limit) {
+                val byPinyinRaw = vocabularyDao.searchByPinyinPrefix(cleanQuery, limit - results.size)
+                results.addAll(byPinyinRaw)
+            }
         }
 
         if (results.size < limit && cleanQuery.isNotEmpty()) {

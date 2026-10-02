@@ -96,6 +96,80 @@ class VocabularyDaoTest {
     }
 
     @Test
+    fun testSearchSortingByHskAndFrequency() = runBlocking {
+        // Insert words in arbitrary insertion order
+        val idObscure = dao.insertWord(ChineseWordEntity(chinese = "学究", pinyin = "xue2jiu1", length = 2))
+        val idHsk3 = dao.insertWord(ChineseWordEntity(chinese = "学院", pinyin = "xue2yuan4", length = 2))
+        val idHsk1HighFreq = dao.insertWord(ChineseWordEntity(chinese = "学习", pinyin = "xue2xi2", length = 2))
+        val idHsk1Exact = dao.insertWord(ChineseWordEntity(chinese = "学", pinyin = "xue2", length = 1))
+        val idHsk1MedFreq = dao.insertWord(ChineseWordEntity(chinese = "学生", pinyin = "xue2sheng1", length = 2))
+
+        dao.insertTranslation(EnglishTranslationEntity(cwordId = idObscure, translation = "pedant; bookworm"))
+        dao.insertTranslation(EnglishTranslationEntity(cwordId = idHsk3, translation = "college; institute; academy"))
+        dao.insertTranslation(EnglishTranslationEntity(cwordId = idHsk1HighFreq, translation = "to learn; to study"))
+        dao.insertTranslation(EnglishTranslationEntity(cwordId = idHsk1Exact, translation = "to learn; to study; science"))
+        dao.insertTranslation(EnglishTranslationEntity(cwordId = idHsk1MedFreq, translation = "student; pupil"))
+
+        // Insert HSK and frequency metadata
+        dao.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "学", hskLevel = 1, freqRank = 50, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "学习", hskLevel = 1, freqRank = 80, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "学生", hskLevel = 1, freqRank = 120, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "学院", hskLevel = 3, freqRank = 1500, isChar = 0)
+                // "学究" is non-HSK (defaults to hskLevel = 99, freqRank = 999999)
+            )
+        )
+
+        // 1. Search by Chinese prefix "学":
+        // Order: Exact match ("学") -> HSK 1 freq 80 ("学习") -> HSK 1 freq 120 ("学生") -> HSK 3 ("学院") -> Non-HSK ("学究")
+        val chineseResults = dao.searchByChinesePrefix("学")
+        assertEquals(5, chineseResults.size)
+        assertEquals("学", chineseResults[0].word.chinese)
+        assertEquals("学习", chineseResults[1].word.chinese)
+        assertEquals("学生", chineseResults[2].word.chinese)
+        assertEquals("学院", chineseResults[3].word.chinese)
+        assertEquals("学究", chineseResults[4].word.chinese)
+
+        // 2. Search by Pinyin prefix "xue2":
+        val pinyinResults = dao.searchByPinyinPrefix("xue2")
+        assertEquals(5, pinyinResults.size)
+        assertEquals("学", pinyinResults[0].word.chinese) // Exact pinyin match "xue2"
+        assertEquals("学习", pinyinResults[1].word.chinese)
+        assertEquals("学生", pinyinResults[2].word.chinese)
+        assertEquals("学院", pinyinResults[3].word.chinese)
+        assertEquals("学究", pinyinResults[4].word.chinese)
+
+        // 3. Search by English "study":
+        val engResults = dao.searchByEnglish("study")
+        assertEquals(2, engResults.size)
+        // Both "学" and "学习" are HSK 1, "学" has freqRank 50 (higher frequency than "学习" at 80)
+        assertEquals("学", engResults[0].word.chinese)
+        assertEquals("学习", engResults[1].word.chinese)
+    }
+
+    @Test
+    fun testWordsContainingCharacterSortedByHsk() = runBlocking {
+        val id1 = dao.insertWord(ChineseWordEntity(chinese = "大体", pinyin = "da4ti3", length = 2))
+        val id2 = dao.insertWord(ChineseWordEntity(chinese = "大人", pinyin = "da4ren2", length = 2))
+        val id3 = dao.insertWord(ChineseWordEntity(chinese = "大家", pinyin = "da4jia1", length = 2))
+
+        dao.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "大家", hskLevel = 1, freqRank = 30, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "大人", hskLevel = 3, freqRank = 500, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "大体", hskLevel = 5, freqRank = 2000, isChar = 0)
+            )
+        )
+
+        val containing = dao.getWordsContainingCharacter("大")
+        assertEquals(3, containing.size)
+        assertEquals("大家", containing[0].word.chinese)
+        assertEquals("大人", containing[1].word.chinese)
+        assertEquals("大体", containing[2].word.chinese)
+    }
+
+    @Test
     fun testCascadeDeletion() = runBlocking {
         val wordId = dao.insertWord(ChineseWordEntity(chinese = "大", pinyin = "da4", length = 1))
         dao.insertTranslation(EnglishTranslationEntity(cwordId = wordId, translation = "big"))
