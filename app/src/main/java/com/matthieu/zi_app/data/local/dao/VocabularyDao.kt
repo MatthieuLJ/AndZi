@@ -150,6 +150,32 @@ interface VocabularyDao {
     @Transaction
     @Query("""
         SELECT c.* FROM cword c
+        LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
+        WHERE c.pinyin GLOB :rawPrefixGlob OR (:syllablePrefix != '' AND c.pinyin GLOB :syllablePrefix)
+        ORDER BY
+            CASE
+                WHEN c.length = 1 AND (:exactSingle != '' AND c.pinyin GLOB :exactSingle) THEN 0
+                WHEN c.length > 1 AND (:exactWord != '' AND c.pinyin GLOB :exactWord) THEN 1
+                WHEN :syllablePrefix != '' AND c.pinyin GLOB :syllablePrefix THEN 2
+                ELSE 3
+            END ASC,
+            COALESCE(h.hsk_level, 99) ASC,
+            COALESCE(h.freq_rank, 999999) ASC,
+            c.length ASC,
+            c.cword_id ASC
+        LIMIT :limit
+    """)
+    suspend fun searchByPinyin(
+        exactSingle: String,
+        exactWord: String,
+        syllablePrefix: String,
+        rawPrefixGlob: String,
+        limit: Int = 50
+    ): List<WordWithDetails>
+
+    @Transaction
+    @Query("""
+        SELECT c.* FROM cword c
         INNER JOIN eword e ON e.cword_id = c.cword_id
         LEFT JOIN hsk_vocab h ON h.hanzi = c.chinese
         WHERE e.translation LIKE '%' || :query || '%'

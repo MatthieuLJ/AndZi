@@ -1,5 +1,6 @@
 package com.matthieu.zi_app.data.repository
 
+import com.matthieu.zi_app.ParsedElementType
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
@@ -11,6 +12,102 @@ import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 import com.matthieu.zi_app.data.local.model.WordWithDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
+
+data class PinyinSearchParams(
+    val exactSingle: String = "",
+    val exactWord: String = "",
+    val syllablePrefix: String = "",
+    val rawPrefixGlob: String = ""
+) {
+    companion object {
+        fun fromQuery(query: String): PinyinSearchParams {
+            val clean = query.trim().lowercase(Locale.ROOT)
+            if (clean.isEmpty()) return PinyinSearchParams()
+
+            val normalized = clean.replace(Regex("\\s+"), "'")
+            val elements = PinyinParser.parse_string_to_elements(normalized)
+                ?: PinyinParser.parse_mixed_string(normalized)
+
+            if (elements.isNullOrEmpty()) {
+                val raw = clean.replace("'", "").replace(" ", "")
+                return PinyinSearchParams(
+                    exactSingle = "",
+                    exactWord = "",
+                    syllablePrefix = "",
+                    rawPrefixGlob = if (raw.isNotEmpty()) "$raw*" else ""
+                )
+            }
+
+            // 1. exactSingle (only valid if single syllable)
+            val exactSingle = if (elements.size == 1) {
+                val elem = elements[0]
+                when (elem.type) {
+                    ParsedElementType.PINYIN_WITHOUT_TONE -> "${elem.content}[1-5]"
+                    ParsedElementType.PINYIN_WITH_TONE -> elem.content
+                    else -> ""
+                }
+            } else ""
+
+            // 2. exactWord (valid if all syllables are complete pinyin)
+            val hasIncomplete = elements.any {
+                it.type == ParsedElementType.INCOMPLETE_PINYIN || it.type == ParsedElementType.CHINESE
+            }
+            val exactWord = if (hasIncomplete) {
+                ""
+            } else {
+                elements.joinToString("") { elem ->
+                    when (elem.type) {
+                        ParsedElementType.PINYIN_WITHOUT_TONE -> "${elem.content}[1-5]"
+                        ParsedElementType.PINYIN_WITH_TONE -> elem.content
+                        else -> ""
+                    }
+                }
+            }
+
+            // 3. syllablePrefix
+            val syllablePrefix = buildString {
+                for (i in elements.indices) {
+                    val elem = elements[i]
+                    val isLast = (i == elements.size - 1)
+                    when (elem.type) {
+                        ParsedElementType.PINYIN_WITHOUT_TONE -> {
+                            append(elem.content)
+                            if (isLast) append("[1-5]*") else append("[1-5]")
+                        }
+                        ParsedElementType.PINYIN_WITH_TONE -> {
+                            append(elem.content)
+                            if (isLast) append("*")
+                        }
+                        ParsedElementType.INCOMPLETE_PINYIN -> {
+                            append(elem.content)
+                            append("*")
+                        }
+                        ParsedElementType.CHINESE -> {
+                            append(elem.content)
+                        }
+                    }
+                }
+            }
+
+            // 4. rawPrefixGlob
+            val first = elements[0]
+            val rawPrefixGlob = when (first.type) {
+                ParsedElementType.PINYIN_WITHOUT_TONE -> "${first.content}*"
+                ParsedElementType.PINYIN_WITH_TONE -> "${first.content}*"
+                ParsedElementType.INCOMPLETE_PINYIN -> "${first.content}*"
+                else -> "${clean.replace("'", "").replace(" ", "")}*"
+            }
+
+            return PinyinSearchParams(
+                exactSingle = exactSingle,
+                exactWord = exactWord,
+                syllablePrefix = syllablePrefix,
+                rawPrefixGlob = rawPrefixGlob
+            )
+        }
+    }
+}
 
 class VocabularyRepository(
     private val vocabularyDao: VocabularyDao
@@ -86,23 +183,27 @@ class VocabularyRepository(
 
     suspend fun search(query: String, limit: Int = 50): List<Vocabulary> = withContext(Dispatchers.IO) {
         val cleanQuery = query.trim()
+        if (cleanQuery.isEmpty()) return@withContext emptyList()
 
         val results = mutableListOf<WordWithDetails>()
         val byChinese = vocabularyDao.searchByChinesePrefix(cleanQuery, limit)
         results.addAll(byChinese)
 
-        if (results.size < limit && cleanQuery.isNotEmpty()) {
-            val lameQuery = PinyinParser.convert_to_lame_version(cleanQuery)
-            val pinyinQuery = if (lameQuery.isNotEmpty()) lameQuery else cleanQuery
-            val byPinyin = vocabularyDao.searchByPinyinPrefix(pinyinQuery, limit - results.size)
-            results.addAll(byPinyin)
-            if (pinyinQuery != cleanQuery && results.size < limit) {
-                val byPinyinRaw = vocabularyDao.searchByPinyinPrefix(cleanQuery, limit - results.size)
-                results.addAll(byPinyinRaw)
+        if (results.size < limit) {
+            val params = PinyinSearchParams.fromQuery(cleanQuery)
+            if (params.rawPrefixGlob.isNotEmpty() || params.syllablePrefix.isNotEmpty()) {
+                val byPinyin = vocabularyDao.searchByPinyin(
+                    exactSingle = params.exactSingle,
+                    exactWord = params.exactWord,
+                    syllablePrefix = params.syllablePrefix,
+                    rawPrefixGlob = params.rawPrefixGlob,
+                    limit = limit - results.size
+                )
+                results.addAll(byPinyin)
             }
         }
 
-        if (results.size < limit && cleanQuery.isNotEmpty()) {
+        if (results.size < limit) {
             val byEnglish = vocabularyDao.searchByEnglish(cleanQuery, limit - results.size)
             results.addAll(byEnglish)
         }

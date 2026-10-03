@@ -149,6 +149,40 @@ class VocabularyDaoTest {
     }
 
     @Test
+    fun testSearchByPinyinRanking() = runBlocking {
+        dao.insertWord(ChineseWordEntity(chinese = "行", pinyin = "xing2", length = 1))
+        dao.insertWord(ChineseWordEntity(chinese = "先", pinyin = "xian1", length = 1))
+        dao.insertWord(ChineseWordEntity(chinese = "西", pinyin = "xi1", length = 1))
+        dao.insertWord(ChineseWordEntity(chinese = "系", pinyin = "xi4", length = 1))
+        dao.insertWord(ChineseWordEntity(chinese = "喜欢", pinyin = "xi3huan5", length = 2))
+
+        dao.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "行", hskLevel = 1, freqRank = 9, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "先", hskLevel = 1, freqRank = 42, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "喜欢", hskLevel = 1, freqRank = 46, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "系", hskLevel = 1, freqRank = 65, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "西", hskLevel = 1, freqRank = 165, isChar = 1)
+            )
+        )
+
+        // Exact single "xi[1-5]" characters come first (系, 西), then compound "xi[1-5]*" (喜欢), then others (行, 先)
+        val results = dao.searchByPinyin(
+            exactSingle = "xi[1-5]",
+            exactWord = "xi[1-5]",
+            syllablePrefix = "xi[1-5]*",
+            rawPrefixGlob = "xi*",
+            limit = 10
+        )
+        assertEquals(5, results.size)
+        assertEquals("系", results[0].word.chinese)
+        assertEquals("西", results[1].word.chinese)
+        assertEquals("喜欢", results[2].word.chinese)
+        assertEquals("行", results[3].word.chinese)
+        assertEquals("先", results[4].word.chinese)
+    }
+
+    @Test
     fun testWordsContainingCharacterSortedByHsk() = runBlocking {
         val id1 = dao.insertWord(ChineseWordEntity(chinese = "大体", pinyin = "da4ti3", length = 2))
         val id2 = dao.insertWord(ChineseWordEntity(chinese = "大人", pinyin = "da4ren2", length = 2))

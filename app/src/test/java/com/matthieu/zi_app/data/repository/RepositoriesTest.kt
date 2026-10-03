@@ -82,19 +82,86 @@ class RepositoriesTest {
         assertEquals("塌", res1[2].chinese) // exact "ta1", HSK 6
         assertEquals("它们", res1[3].chinese) // prefix "ta1men5", HSK 3
 
-        // Search with toneless prefix "ta" (all match prefix, sorted by HSK and frequency)
+        // Search with toneless prefix "ta" (exact 1-syllable "ta1" matches before multi-syllable "ta1men5")
         val res2 = vocRepo.search("ta")
         assertEquals(4, res2.size)
-        assertEquals("他", res2[0].chinese) // HSK 1, freq 10
-        assertEquals("她", res2[1].chinese) // HSK 1, freq 15
-        assertEquals("它们", res2[2].chinese) // HSK 3, freq 500
-        assertEquals("塌", res2[3].chinese) // HSK 6, freq 3000
+        assertEquals("他", res2[0].chinese) // exact "ta1", HSK 1, freq 10
+        assertEquals("她", res2[1].chinese) // exact "ta1", HSK 1, freq 15
+        assertEquals("塌", res2[2].chinese) // exact "ta1", HSK 6, freq 3000
+        assertEquals("它们", res2[3].chinese) // prefix "ta1men5", HSK 3, freq 500
 
         // Search with tone mark "tā"
         val res3 = vocRepo.search("tā")
         assertEquals(4, res3.size)
         assertEquals("他", res3[0].chinese)
         assertEquals("她", res3[1].chinese)
+        assertEquals("塌", res3[2].chinese)
+        assertEquals("它们", res3[3].chinese)
+    }
+
+    @Test
+    fun testPinyinExactMatchBeforeDifferentPinyinSyllables() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("西", "xi1", arrayListOf("west")))
+        vocRepo.addVocabulary(Vocabulary("系", "xi4", arrayListOf("system; department")))
+        vocRepo.addVocabulary(Vocabulary("喜欢", "xi3huan5", arrayListOf("to like")))
+        vocRepo.addVocabulary(Vocabulary("行", "xing2", arrayListOf("all right; capable")))
+        vocRepo.addVocabulary(Vocabulary("先", "xian1", arrayListOf("early; first")))
+        vocRepo.addVocabulary(Vocabulary("想", "xiang3", arrayListOf("to think")))
+        vocRepo.addVocabulary(Vocabulary("下", "xia4", arrayListOf("down; below")))
+
+        vocRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "行", hskLevel = 1, freqRank = 9, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "想", hskLevel = 1, freqRank = 18, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "下", hskLevel = 1, freqRank = 40, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "先", hskLevel = 1, freqRank = 45, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "喜欢", hskLevel = 1, freqRank = 46, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "系", hskLevel = 1, freqRank = 65, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "西", hskLevel = 1, freqRank = 165, isChar = 1)
+            )
+        )
+
+        // Searching "xi" must return exact "xi" characters first (系, 西), then compound "xi..." (喜欢), then other syllables (行, 想, 下, 先)
+        val results = vocRepo.search("xi")
+        assertEquals(7, results.size)
+        assertEquals("系", results[0].chinese)
+        assertEquals("西", results[1].chinese)
+        assertEquals("喜欢", results[2].chinese)
+        assertEquals("行", results[3].chinese)
+        assertEquals("想", results[4].chinese)
+        assertEquals("下", results[5].chinese)
+        assertEquals("先", results[6].chinese)
+    }
+
+    @Test
+    fun testMultiSyllablePinyinSearch() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("学习", "xue2xi2", arrayListOf("to study")))
+        vocRepo.addVocabulary(Vocabulary("学生", "xue2sheng5", arrayListOf("student")))
+        vocRepo.addVocabulary(Vocabulary("西安", "xi1an1", arrayListOf("Xi'an")))
+
+        vocRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "学生", hskLevel = 1, freqRank = 122, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "学习", hskLevel = 1, freqRank = 124, isChar = 0),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "西安", hskLevel = 99, freqRank = 2360, isChar = 0)
+            )
+        )
+
+        // Searching "xuexi" without tones should rank "学习" first
+        val xuexiResults = vocRepo.search("xuexi")
+        assertEquals(2, xuexiResults.size)
+        assertEquals("学习", xuexiResults[0].chinese)
+        assertEquals("学生", xuexiResults[1].chinese)
+
+        // Searching "xi'an" should rank "西安" first
+        val xianResults = vocRepo.search("xi'an")
+        assertEquals(1, xianResults.size)
+        assertEquals("西安", xianResults[0].chinese)
+
+        // Searching "xi an" with spaces should also rank "西安" first
+        val xiSpaceAnResults = vocRepo.search("xi an")
+        assertEquals(1, xiSpaceAnResults.size)
+        assertEquals("西安", xiSpaceAnResults[0].chinese)
     }
 
     @Test
