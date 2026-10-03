@@ -95,6 +95,9 @@ interface VocabularyDao {
     @Query("DELETE FROM eword WHERE cword_id = :cwordId")
     suspend fun deleteAllTranslationsForWord(cwordId: Long)
 
+    @Query("SELECT DISTINCT translation FROM eword ORDER BY RANDOM() LIMIT :limit")
+    suspend fun getRandomTranslations(limit: Int): List<String>
+
     // --- Search & Composite Queries ---
     @Transaction
     @Query("SELECT * FROM cword ORDER BY cword_id DESC")

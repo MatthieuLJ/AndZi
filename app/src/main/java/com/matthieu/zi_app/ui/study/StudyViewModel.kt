@@ -35,12 +35,19 @@ class StudyViewModel(
                 val now = System.currentTimeMillis()
                 var queueHanzis = studyRepository.getStudyQueue(limit, now)
 
-                // Fallback: If no cards are overdue, fetch search sample from dictionary/vocab
+                // Fallback: If no cards are overdue, fetch sample from user vocabulary or dictionary
                 if (queueHanzis.isEmpty()) {
-                    val allVoc = vocabularyRepository.search("", limit = limit).ifEmpty {
-                        dictionaryRepository?.search("", limit = limit) ?: emptyList()
+                    val allVoc = vocabularyRepository.getAllVocabulary()
+                    queueHanzis = if (allVoc.isNotEmpty()) {
+                        allVoc.map { it.chinese }.take(limit)
+                    } else {
+                        val distinctUser = vocabularyRepository.getAllDistinctHanzi()
+                        if (distinctUser.isNotEmpty()) {
+                            distinctUser.take(limit)
+                        } else {
+                            dictionaryRepository?.getAllDistinctHanzi()?.take(limit) ?: emptyList()
+                        }
                     }
-                    queueHanzis = allVoc.map { it.chinese }
                 }
 
                 // Gather all characters and English translations from the user's active study list
@@ -58,10 +65,17 @@ class StudyViewModel(
                     }
                 ).distinct().toSet()
 
-                val allStudyEnglish = vocabularyRepository.search("", limit = 100)
+                val userEnglish = vocabularyRepository.getAllVocabulary()
                     .flatMap { it.english }
-                    .distinct()
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
                     .toSet()
+
+                val dictEnglish = if (userEnglish.size < 20 && dictionaryRepository != null) {
+                    dictionaryRepository.getRandomTranslations(limit = 40)
+                } else emptyList()
+
+                val allStudyEnglish = (userEnglish + dictEnglish).distinct().toSet()
 
                 val cards = mutableListOf<StudyCard>()
                 for ((index, hanzi) in queueHanzis.withIndex()) {
@@ -389,8 +403,20 @@ class StudyViewModel(
         correct: String,
         allStudyEnglish: Set<String> = emptySet()
     ): List<String> {
-        val candidates = allStudyEnglish.filter { !it.equals(correct, ignoreCase = true) }.shuffled()
-        val distractors = candidates.take(3).toMutableList()
+        val candidates = allStudyEnglish
+            .filter { !it.equals(correct, ignoreCase = true) && it.isNotBlank() }
+            .toMutableList()
+
+        if (candidates.size < 3) {
+            val fallback = DEFAULT_FALLBACK_ENGLISH_DISTRACTORS.filter {
+                !it.equals(correct, ignoreCase = true) &&
+                candidates.none { c -> c.equals(it, ignoreCase = true) } &&
+                it.isNotBlank()
+            }.shuffled()
+            candidates.addAll(fallback)
+        }
+
+        val distractors = candidates.shuffled().take(3).toMutableList()
         distractors.add(correct)
         return distractors.shuffled()
     }
@@ -416,6 +442,29 @@ class StudyViewModel(
     }
 
     companion object {
+        val DEFAULT_FALLBACK_ENGLISH_DISTRACTORS = listOf(
+            "to see; to look",
+            "water",
+            "person; people",
+            "big; large",
+            "small; tiny",
+            "to eat",
+            "to go",
+            "good; well",
+            "friend",
+            "book; letter",
+            "sun; day",
+            "moon; month",
+            "mountain",
+            "heart; mind",
+            "tree; wood",
+            "fire",
+            "to speak; to say",
+            "time; hour",
+            "sky; heaven",
+            "home; family"
+        )
+
         fun provideFactory(
             studyRepository: StudyRepository,
             vocabularyRepository: VocabularyRepository,

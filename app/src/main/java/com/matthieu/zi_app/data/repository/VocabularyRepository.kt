@@ -279,6 +279,10 @@ class VocabularyRepository(
         vocabularyDao.getAllDistinctHanzi()
     }
 
+    suspend fun getRandomTranslations(limit: Int = 30): List<String> = withContext(Dispatchers.IO) {
+        vocabularyDao.getRandomTranslations(limit)
+    }
+
     suspend fun getDistinctHanziCount(): Int = withContext(Dispatchers.IO) {
         vocabularyDao.getDistinctHanziCount()
     }

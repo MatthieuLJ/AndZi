@@ -289,6 +289,44 @@ class DictionaryViewModelTest {
     }
 
     @Test
+    fun testMultipleRefreshSuggestionsProvideDifferentWords() = runBlocking {
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("你", hskLevel = 1, freqRank = 1, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("好", hskLevel = 1, freqRank = 2, isChar = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity("他", hskLevel = 1, freqRank = 3, isChar = 1)
+            )
+        )
+        dictRepo.addVocabulary(Vocabulary("你", "ni3", arrayListOf("you")))
+        dictRepo.addVocabulary(Vocabulary("好", "hao3", arrayListOf("good")))
+        dictRepo.addVocabulary(Vocabulary("他", "ta1", arrayListOf("he")))
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        // 1. Initial suggestion
+        val s1 = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested && it.query.isNotEmpty() && !it.isSearching }.first()
+        }
+        val firstWord = s1.query
+
+        // 2. First refresh -> must be different from firstWord
+        viewModel.refreshSuggestion()
+        val s2 = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested && it.query != firstWord && !it.isSearching }.first()
+        }
+        val secondWord = s2.query
+        assertTrue(secondWord != firstWord)
+
+        // 3. Second refresh -> must be different from both firstWord and secondWord
+        viewModel.refreshSuggestion()
+        val s3 = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAutoSuggested && it.query != firstWord && it.query != secondWord && !it.isSearching }.first()
+        }
+        val thirdWord = s3.query
+        assertTrue(thirdWord != firstWord && thirdWord != secondWord)
+    }
+
+    @Test
     fun testManualSearchClearsAutoSuggestedFlag() = runBlocking {
         dictRepo.insertHskVocab(
             listOf(

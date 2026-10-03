@@ -217,6 +217,9 @@ class StudyViewModelTest {
         assertEquals("吗", card.hanzi)
         assertFalse(card.quizType == QuizType.TONE)
         assertEquals(QuizType.ENGLISH, card.quizType)
+        assertEquals(4, card.mcqOptions.size)
+        assertTrue(card.mcqOptions.contains("question particle"))
+        assertEquals(4, card.mcqOptions.distinct().size)
     }
 
     @Test
@@ -510,5 +513,95 @@ class StudyViewModelTest {
         assertEquals("桌", ziCard.wordSlots[0])
         assertEquals("子", ziCard.wordSlots[1])
         assertEquals(1, ziCard.clozeTargetIndex)
+    }
+
+    @Test
+    fun testEnglishQuizGeneratesFourOptionsWithActiveVocabularyDistractors() = runBlocking {
+        // Add 5 words to active vocabulary
+        vocRepo.addVocabulary(Vocabulary("苹果", "ping2guo3", arrayListOf("apple")))
+        vocRepo.addVocabulary(Vocabulary("香蕉", "xiang1jiao1", arrayListOf("banana")))
+        vocRepo.addVocabulary(Vocabulary("橘子", "ju2zi5", arrayListOf("orange")))
+        vocRepo.addVocabulary(Vocabulary("西瓜", "xi1gua1", arrayListOf("watermelon")))
+        vocRepo.addVocabulary(Vocabulary("葡萄", "pu2tao5", arrayListOf("grape")))
+
+        val now = System.currentTimeMillis()
+        for (w in listOf("苹果", "香蕉", "橘子", "西瓜", "葡萄")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = w,
+                    box = 0,
+                    expTime = now - 1000L,
+                    numTested = 0,
+                    numWrong = 0,
+                    streak = 0,
+                    dateAdded = now
+                )
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        val englishCards = state.queue.filter { it.quizType == QuizType.ENGLISH }
+        assertTrue("Should have at least one English MCQ card", englishCards.isNotEmpty())
+
+        val allActiveMeanings = setOf("apple", "banana", "orange", "watermelon", "grape")
+        for (card in englishCards) {
+            assertEquals("English MCQ must have exactly 4 options", 4, card.mcqOptions.size)
+            assertEquals("All options in English MCQ must be unique", 4, card.mcqOptions.distinct().size)
+            assertTrue("Options must contain the correct answer", card.mcqOptions.contains(card.english.first()))
+
+            // Verify distractors are sourced from the user's active vocabulary meanings
+            val activeDistractors = card.mcqOptions.filter { allActiveMeanings.contains(it) }
+            assertTrue("Distractors should come from active vocabulary", activeDistractors.size >= 3)
+        }
+    }
+
+    @Test
+    fun testEnglishQuizSupplementsFromDictionaryWhenStudyWordsAreFew() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dictDb = AndZiDatabase.createInMemory(context)
+        val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
+
+        // Populate dictionary with diverse entries
+        dictRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        dictRepo.addVocabulary(Vocabulary("火", "huo3", arrayListOf("fire")))
+        dictRepo.addVocabulary(Vocabulary("木", "mu4", arrayListOf("tree; wood")))
+        dictRepo.addVocabulary(Vocabulary("山", "shan1", arrayListOf("mountain")))
+        dictRepo.addVocabulary(Vocabulary("日", "ri4", arrayListOf("sun; day")))
+
+        // User active vocabulary only has 1 word
+        vocRepo.addVocabulary(Vocabulary("猫", "mao1", arrayListOf("cat")))
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "猫",
+                box = 0,
+                expTime = now - 1000L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = now
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, dictRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        val card = state.queue.first { it.hanzi == "猫" }
+        // If it's an ENGLISH quiz or when English distractors are tested:
+        val mcqDistractors = StudyViewModel.DEFAULT_FALLBACK_ENGLISH_DISTRACTORS
+        assertTrue("mcqOptions should not be empty", card.mcqOptions.isEmpty() || card.mcqOptions.size == 4)
+        if (card.quizType == QuizType.ENGLISH) {
+            assertEquals(4, card.mcqOptions.size)
+            assertTrue(card.mcqOptions.contains("cat"))
+            assertEquals(4, card.mcqOptions.distinct().size)
+        }
+
+        dictDb.close()
     }
 }

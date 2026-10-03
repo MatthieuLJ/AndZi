@@ -30,6 +30,7 @@ class DictionaryViewModel(
 
     private var searchJob: Job? = null
     private var suggestionJob: Job? = null
+    private val recentSuggestions = ArrayDeque<String>()
 
     init {
         loadInitialSuggestion()
@@ -43,8 +44,18 @@ class DictionaryViewModel(
                 val deckRecords = studyRepository.getAllRecords().map { it.hanzi }.toSet()
                 val allUserVoc = localVocabularyRepository.getAllVocabulary().map { it.chinese }.toSet()
                 val deckWords = deckRecords + allUserVoc
+                val excluded = (recentSuggestions + listOfNotNull(_uiState.value.suggestedWord)).toSet()
 
-                val recommendation = wordRecommendationEngine.recommendNextWord(knownChars, deckWords)
+                val recommendation = wordRecommendationEngine.recommendNextWord(
+                    knownCharacters = knownChars,
+                    deckWords = deckWords,
+                    excludedWords = excluded
+                )
+                recentSuggestions.addLast(recommendation.word)
+                while (recentSuggestions.size > 25) {
+                    recentSuggestions.removeFirst()
+                }
+
                 _uiState.update {
                     it.copy(
                         query = recommendation.word,
@@ -71,8 +82,18 @@ class DictionaryViewModel(
                 val deckRecords = studyRepository.getAllRecords().map { it.hanzi }.toSet()
                 val allUserVoc = localVocabularyRepository.getAllVocabulary().map { it.chinese }.toSet()
                 val deckWords = deckRecords + allUserVoc
+                val excluded = (recentSuggestions + listOfNotNull(_uiState.value.suggestedWord)).toSet()
 
-                val recommendation = wordRecommendationEngine.recommendNextWord(knownChars, deckWords)
+                val recommendation = wordRecommendationEngine.recommendNextWord(
+                    knownCharacters = knownChars,
+                    deckWords = deckWords,
+                    excludedWords = excluded
+                )
+                recentSuggestions.addLast(recommendation.word)
+                while (recentSuggestions.size > 25) {
+                    recentSuggestions.removeFirst()
+                }
+
                 _uiState.update {
                     it.copy(
                         query = recommendation.word,
