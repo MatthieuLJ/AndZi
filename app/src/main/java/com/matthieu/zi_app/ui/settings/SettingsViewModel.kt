@@ -10,6 +10,7 @@ import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.DatabaseBackupRepository
 import com.matthieu.zi_app.data.repository.ProgressRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
+import com.matthieu.zi_app.work.ProgressSyncWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,7 @@ class SettingsViewModel(
     private val studyRepository: StudyRepository,
     private val progressRepository: ProgressRepository,
     private val databaseBackupRepository: DatabaseBackupRepository,
-    context: Context
+    private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -62,6 +63,16 @@ class SettingsViewModel(
 
     fun setNotificationEnabled(enabled: Boolean) {
         userPreferences.setNotificationEnabled(enabled)
+        if (enabled) {
+            ProgressSyncWorker.schedulePeriodicWork(context)
+            ProgressSyncWorker.triggerImmediateCheck(context)
+        } else {
+            ProgressSyncWorker.cancelNotification(context)
+        }
+    }
+
+    fun showFeedbackMessage(message: String) {
+        _uiState.update { it.copy(actionFeedbackMessage = message) }
     }
 
     fun showResetConfirmation(show: Boolean) {

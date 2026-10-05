@@ -114,4 +114,15 @@ class HomeScreenTest {
         composeTestRule.onNodeWithText("Active Cards").performClick()
         org.junit.Assert.assertTrue(clicked)
     }
+
+    @Test
+    fun testScreenRoutesAndBottomNavItemsAreNotNull() {
+        val items = com.matthieu.zi_app.ui.navigation.Screen.bottomNavItems
+        org.junit.Assert.assertEquals(3, items.size)
+        items.forEach { screen ->
+            org.junit.Assert.assertNotNull(screen)
+            org.junit.Assert.assertNotNull(screen.route)
+            org.junit.Assert.assertTrue(screen.route.isNotEmpty())
+        }
+    }
 }

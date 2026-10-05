@@ -1,9 +1,13 @@
 package com.matthieu.zi_app.ui.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -109,6 +113,36 @@ fun SettingsScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let { viewModel.importProgressDatabaseFromUri(it, context) }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.setNotificationEnabled(isGranted)
+        if (!isGranted) {
+            viewModel.showFeedbackMessage("Notification permission is required to receive study reminders.")
+        }
+    }
+
+    val onToggleNotifications: (Boolean) -> Unit = { isChecked ->
+        if (isChecked) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+
+                if (!hasPermission) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    viewModel.setNotificationEnabled(true)
+                }
+            } else {
+                viewModel.setNotificationEnabled(true)
+            }
+        } else {
+            viewModel.setNotificationEnabled(false)
+        }
     }
 
     LaunchedEffect(uiState.actionFeedbackMessage) {
@@ -236,7 +270,10 @@ fun SettingsScreen(
             SettingsSectionHeader(title = "Reminders")
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onToggleNotifications(!uiState.notificationsEnabled) },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -271,7 +308,7 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = uiState.notificationsEnabled,
-                        onCheckedChange = { viewModel.setNotificationEnabled(it) }
+                        onCheckedChange = onToggleNotifications
                     )
                 }
             }

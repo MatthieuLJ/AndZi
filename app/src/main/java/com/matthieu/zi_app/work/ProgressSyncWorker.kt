@@ -7,10 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -18,6 +20,7 @@ import com.matthieu.zi_app.MainActivity
 import com.matthieu.zi_app.R
 import com.matthieu.zi_app.data.local.AndZiDatabase
 import com.matthieu.zi_app.data.local.ProgressDatabase
+import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.ProgressRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import java.util.concurrent.TimeUnit
@@ -39,7 +42,6 @@ class ProgressSyncWorker(
             try {
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .setRequiresBatteryNotLow(true)
                     .build()
 
                 val workRequest = PeriodicWorkRequestBuilder<ProgressSyncWorker>(
@@ -51,9 +53,18 @@ class ProgressSyncWorker(
 
                 WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                     WORK_NAME,
-                    ExistingPeriodicWorkPolicy.KEEP,
+                    ExistingPeriodicWorkPolicy.UPDATE,
                     workRequest
                 )
+            } catch (_: Exception) {
+                // Ignore in unit test environments where WorkManager is not initialized
+            }
+        }
+
+        fun triggerImmediateCheck(context: Context) {
+            try {
+                val workRequest = OneTimeWorkRequestBuilder<ProgressSyncWorker>().build()
+                WorkManager.getInstance(context).enqueue(workRequest)
             } catch (_: Exception) {
                 // Ignore in unit test environments where WorkManager is not initialized
             }
@@ -66,6 +77,15 @@ class ProgressSyncWorker(
                 // Ignore in unit test environments where WorkManager is not initialized
             }
         }
+
+        fun cancelNotification(context: Context) {
+            try {
+                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                nm?.cancel(NOTIFICATION_ID)
+            } catch (_: Exception) {
+                // Ignore in environments where notification manager is unavailable
+            }
+        }
     }
 
     override suspend fun doWork(): Result {
@@ -74,7 +94,7 @@ class ProgressSyncWorker(
             val progressDb = ProgressDatabase.getInstance(context)
 
             val studyRepo = StudyRepository(andZiDb.leitnerDao())
-            val progressRepo = ProgressRepository(progressDb.progressDao())
+            val progressRepo = ProgressRepository(progressDb.progressDao(), andZiDb.leitnerDao())
 
             val now = System.currentTimeMillis()
             val expiredCount = studyRepo.getNumExpired(now)
@@ -117,13 +137,15 @@ class ProgressSyncWorker(
     }
 
     private fun checkAndPostNotification(expiredCount: Int) {
-        val prefs = context.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
-        val notificationsEnabled = prefs.getBoolean("notification_enabled", true)
+        val userPreferences = UserPreferences(context)
+        val notificationsEnabled = userPreferences.notificationEnabled.value
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
 
         createNotificationChannel(nm)
 
-        if (notificationsEnabled && expiredCount > 25) {
+        val systemNotificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+
+        if (notificationsEnabled && systemNotificationsEnabled && expiredCount > 0) {
             val intent = Intent(context, MainActivity::class.java).apply {
                 putExtra("start_test", true)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -136,10 +158,16 @@ class ProgressSyncWorker(
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+            val contentText = if (expiredCount == 1) {
+                "You have 1 card due for review"
+            } else {
+                context.getString(R.string.notification_content, expiredCount)
+            }
+
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.zi_icon_notification)
                 .setContentTitle(context.getString(R.string.notification_title))
-                .setContentText(context.getString(R.string.notification_content, expiredCount))
+                .setContentText(contentText)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)

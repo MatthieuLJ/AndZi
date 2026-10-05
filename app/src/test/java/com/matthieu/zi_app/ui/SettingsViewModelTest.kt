@@ -119,6 +119,36 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun testNotificationToggling() = runBlocking {
+        val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, backupRepo, context)
+
+        viewModel.setNotificationEnabled(false)
+        val disabledState = withTimeout(3000) {
+            viewModel.uiState.filter { !it.notificationsEnabled }.first()
+        }
+        assertFalse(disabledState.notificationsEnabled)
+        assertFalse(userPrefs.notificationEnabled.value)
+
+        viewModel.setNotificationEnabled(true)
+        val enabledState = withTimeout(3000) {
+            viewModel.uiState.filter { it.notificationsEnabled }.first()
+        }
+        assertTrue(enabledState.notificationsEnabled)
+        assertTrue(userPrefs.notificationEnabled.value)
+    }
+
+    @Test
+    fun testShowFeedbackMessage() = runBlocking {
+        val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, backupRepo, context)
+
+        viewModel.showFeedbackMessage("Test notification feedback")
+        assertEquals("Test notification feedback", viewModel.uiState.value.actionFeedbackMessage)
+
+        viewModel.clearFeedbackMessage()
+        assertNull(viewModel.uiState.value.actionFeedbackMessage)
+    }
+
+    @Test
     fun testCancelImportInspection() = runBlocking {
         val viewModel = SettingsViewModel(userPrefs, studyRepo, progressRepo, backupRepo, context)
 

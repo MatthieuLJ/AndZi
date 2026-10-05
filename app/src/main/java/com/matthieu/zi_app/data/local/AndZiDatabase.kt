@@ -51,6 +51,10 @@ abstract class AndZiDatabase : RoomDatabase() {
         @Volatile
         private var CEDICT_INSTANCE: AndZiDatabase? = null
 
+        fun setTestInstance(instance: AndZiDatabase?) {
+            INSTANCE = instance
+        }
+
         fun getInstance(context: Context): AndZiDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: buildDatabase(context, DATABASE_NAME).also { INSTANCE = it }
@@ -98,13 +102,13 @@ abstract class AndZiDatabase : RoomDatabase() {
                 context.deleteDatabase(CEDICT_DATABASE_NAME)
             }
 
-            dbFile.parentFile?.mkdirs()
             val tempFile = File(dbFile.parentFile, "$CEDICT_DATABASE_NAME.${System.nanoTime()}.tmp")
             try {
                 context.resources.openRawResource(R.raw.cedict_db).use { rawInput ->
                     ZipInputStream(BufferedInputStream(rawInput)).use { zis ->
                         val entry = zis.nextEntry
                         if (entry != null) {
+                            tempFile.parentFile?.mkdirs()
                             FileOutputStream(tempFile).use { fos ->
                                 val buffer = ByteArray(8192)
                                 var len: Int

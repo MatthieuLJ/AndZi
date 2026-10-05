@@ -47,6 +47,10 @@ abstract class ProgressDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: ProgressDatabase? = null
 
+        fun setTestInstance(instance: ProgressDatabase?) {
+            INSTANCE = instance
+        }
+
         fun getInstance(context: Context): ProgressDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(

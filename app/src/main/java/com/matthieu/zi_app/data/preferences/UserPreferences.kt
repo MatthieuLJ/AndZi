@@ -45,9 +45,9 @@ class UserPreferences(context: Context) {
     }
 
     companion object {
-        private const val PREFS_NAME = "andzi_user_preferences"
-        private const val KEY_THEME_MODE = "app_theme_mode"
-        private const val KEY_COLOR_PINYIN = "color_pinyin"
-        private const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
+        const val PREFS_NAME = "andzi_user_preferences"
+        const val KEY_THEME_MODE = "app_theme_mode"
+        const val KEY_COLOR_PINYIN = "color_pinyin"
+        const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
     }
 }
