@@ -100,46 +100,36 @@ fun StudyScreenContent(
         topBar = {
             TopAppBar(
                 title = {
-                    if (!uiState.isSessionFinished && uiState.queue.isNotEmpty()) {
-                        val current = uiState.currentIndex + 1
-                        val total = uiState.queue.size
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Card $current / $total",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                                )
-                                uiState.currentCard?.let { card ->
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant,
-                                        modifier = Modifier.padding(end = 16.dp)
-                                    ) {
-                                        Text(
-                                            text = "Box ${card.currentBox}",
-                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                    if (!uiState.isSessionFinished && uiState.currentCard != null) {
+                        val reviewed = uiState.sessionStats.totalReviewed
+                        val statusText = if (uiState.remainingDueCount > 0) {
+                            "Reviewed: $reviewed • ${uiState.remainingDueCount} due"
+                        } else {
+                            "Reviewed: $reviewed"
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = statusText,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            uiState.currentCard?.let { card ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier.padding(end = 16.dp)
+                                ) {
+                                    Text(
+                                        text = "Box ${card.currentBox}",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
-                            LinearProgressIndicator(
-                                progress = { current.toFloat() / total },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(end = 16.dp)
-                                    .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                strokeCap = StrokeCap.Round
-                            )
                         }
                     }
                 },

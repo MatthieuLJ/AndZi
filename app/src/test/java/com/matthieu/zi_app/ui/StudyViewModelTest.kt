@@ -152,6 +152,22 @@ class StudyViewModelTest {
         assertEquals("字", state.currentCard?.hanzi)
     }
 
+    private suspend fun collectPresentedCards(viewModel: StudyViewModel, maxSteps: Int = 20): List<com.matthieu.zi_app.ui.study.StudyCard> {
+        val collected = mutableListOf<com.matthieu.zi_app.ui.study.StudyCard>()
+        var steps = 0
+        while (steps < maxSteps) {
+            val state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading }.first()
+            }
+            if (state.isSessionFinished || state.currentCard == null) break
+            val card = state.currentCard!!
+            collected.add(card)
+            viewModel.rateCard(ReviewGrade.GOOD)
+            steps++
+        }
+        return collected
+    }
+
     @Test
     fun testMultiCharacterWordNeverGetsToneQuiz() = runBlocking {
         vocRepo.addVocabulary(Vocabulary("你好", "ni3hao3", arrayListOf("hello")))
@@ -182,11 +198,9 @@ class StudyViewModelTest {
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
-        val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
-        }
+        val presentedCards = collectPresentedCards(viewModel)
 
-        val multiCharCards = state.queue.filter { it.hanzi.length > 1 }
+        val multiCharCards = presentedCards.filter { it.hanzi.length > 1 }
         assertTrue(multiCharCards.isNotEmpty())
         assertTrue(multiCharCards.none { it.quizType == QuizType.TONE })
         assertTrue(multiCharCards.all { it.quizType in listOf(QuizType.CLOZE, QuizType.WORD_ASSEMBLY, QuizType.ENGLISH) })
@@ -234,25 +248,25 @@ class StudyViewModelTest {
             com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "长", pinyin = "zhang3")
         )
 
-        // Leitner due for 长
+        // Prioritize 长 as highest box due so it is presented first (index = 0 -> TONE quiz)
         andZiDb.leitnerDao().insertOrUpdateRecord(
             com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
                 hanzi = "长",
-                box = 0,
+                box = 3,
                 expTime = 0L,
-                numTested = 0,
+                numTested = 3,
                 numWrong = 0,
-                streak = 0,
+                streak = 3,
                 dateAdded = System.currentTimeMillis()
             )
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
         val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
 
-        val card = state.queue.first { it.hanzi == "长" }
+        val card = state.currentCard!!
         assertEquals("长", card.hanzi)
         assertEquals(QuizType.TONE, card.quizType)
         // Check that contextWords are populated with multi-character words
@@ -268,10 +282,11 @@ class StudyViewModelTest {
         vocRepo.addVocabulary(Vocabulary("火", "huo3", arrayListOf("fire")))
         vocRepo.addVocabulary(Vocabulary("木", "mu4", arrayListOf("wood")))
 
+        // Prioritize "明天" as highest box due so it is presented first (index = 0 -> WORD_ASSEMBLY)
         andZiDb.leitnerDao().insertOrUpdateRecord(
             com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
                 hanzi = "明天",
-                box = 0,
+                box = 1,
                 expTime = 0L,
                 numTested = 0,
                 numWrong = 0,
@@ -282,15 +297,10 @@ class StudyViewModelTest {
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
         val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
 
-        val targetIndex = state.queue.indexOfFirst { it.quizType == QuizType.WORD_ASSEMBLY }
-        while (viewModel.uiState.value.currentIndex < targetIndex) {
-            viewModel.nextCard()
-        }
-
-        val card = viewModel.uiState.value.currentCard!!
+        val card = state.currentCard!!
         assertEquals("明天", card.hanzi)
         assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
         // Verify tiles have distractors from the study list
@@ -328,12 +338,12 @@ class StudyViewModelTest {
 
     @Test
     fun testDistractorCountScalesWithLeitnerBox() = runBlocking {
-        // Box 0 word
-        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+        // Box 0 word (no English so index % 2 == 0 gives WORD_ASSEMBLY)
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf()))
         andZiDb.leitnerDao().insertOrUpdateRecord(
             com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
                 hanzi = "明天",
-                box = 0,
+                box = 2,
                 expTime = 0L,
                 numTested = 0,
                 numWrong = 0,
@@ -343,7 +353,7 @@ class StudyViewModelTest {
         )
 
         // Box 5 word
-        vocRepo.addVocabulary(Vocabulary("学习", "xue2xi2", arrayListOf("to study")))
+        vocRepo.addVocabulary(Vocabulary("学习", "xue2xi2", arrayListOf()))
         andZiDb.leitnerDao().insertOrUpdateRecord(
             com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
                 hanzi = "学习",
@@ -366,15 +376,13 @@ class StudyViewModelTest {
         vocRepo.addVocabulary(Vocabulary("大", "da4", arrayListOf("big")))
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
-        val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
-        }
+        val presented = collectPresentedCards(viewModel, maxSteps = 5)
 
-        val box0Card = state.queue.first { it.hanzi == "明天" }
-        val box5Card = state.queue.first { it.hanzi == "学习" }
+        val box2Card = presented.first { it.hanzi == "明天" }
+        val box5Card = presented.first { it.hanzi == "学习" }
 
-        // Box 5 card should have more tiles/distractors than Box 0 card
-        assertTrue(box5Card.scrambledTiles.size > box0Card.scrambledTiles.size)
+        // Box 5 card should have more tiles/distractors than Box 2 card
+        assertTrue(box5Card.scrambledTiles.size > box2Card.scrambledTiles.size)
     }
 
     @Test
@@ -457,17 +465,14 @@ class StudyViewModelTest {
         // User added compound word "明天" with translation "tomorrow", which adds "明" and "天" to char_pinyin
         vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
 
-        val now = System.currentTimeMillis()
         val viewModel = StudyViewModel(studyRepo, vocRepo)
-        val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.size == 3 }.first()
-        }
+        val presentedCards = collectPresentedCards(viewModel)
 
-        assertEquals(3, state.queue.size)
+        assertEquals(3, presentedCards.size)
 
         // Find cards for subcharacters "明" and "天"
-        val mingCard = state.queue.first { it.hanzi == "明" }
-        val tianCard = state.queue.first { it.hanzi == "天" }
+        val mingCard = presentedCards.first { it.hanzi == "明" }
+        val tianCard = presentedCards.first { it.hanzi == "天" }
 
         // Neither sub-character card should have QuizType.ENGLISH
         assertTrue("Sub-character '明' should not be ENGLISH quiz", mingCard.quizType != QuizType.ENGLISH)
@@ -497,12 +502,10 @@ class StudyViewModelTest {
         vocRepo.addVocabulary(Vocabulary("桌子", "zhuo1zi5", arrayListOf("table", "desk")))
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
-        val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.size == 3 }.first()
-        }
+        val presentedCards = collectPresentedCards(viewModel)
 
         // Sub-character "子" has neutral tone 5 and no user translations
-        val ziCard = state.queue.first { it.hanzi == "子" }
+        val ziCard = presentedCards.first { it.hanzi == "子" }
         assertFalse("Neutral tone sub-character cannot be TONE quiz", ziCard.quizType == QuizType.TONE)
         assertFalse("Sub-character without user translations cannot be ENGLISH quiz", ziCard.quizType == QuizType.ENGLISH)
 
@@ -529,7 +532,7 @@ class StudyViewModelTest {
             andZiDb.leitnerDao().insertOrUpdateRecord(
                 com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
                     hanzi = w,
-                    box = 0,
+                    box = 1,
                     expTime = now - 1000L,
                     numTested = 0,
                     numWrong = 0,
@@ -540,11 +543,9 @@ class StudyViewModelTest {
         }
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
-        val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
-        }
+        val presentedCards = collectPresentedCards(viewModel, maxSteps = 15)
 
-        val englishCards = state.queue.filter { it.quizType == QuizType.ENGLISH }
+        val englishCards = presentedCards.filter { it.quizType == QuizType.ENGLISH }
         assertTrue("Should have at least one English MCQ card", englishCards.isNotEmpty())
 
         val allActiveMeanings = setOf("apple", "banana", "orange", "watermelon", "grape")
@@ -593,8 +594,6 @@ class StudyViewModelTest {
         }
 
         val card = state.queue.first { it.hanzi == "猫" }
-        // If it's an ENGLISH quiz or when English distractors are tested:
-        val mcqDistractors = StudyViewModel.DEFAULT_FALLBACK_ENGLISH_DISTRACTORS
         assertTrue("mcqOptions should not be empty", card.mcqOptions.isEmpty() || card.mcqOptions.size == 4)
         if (card.quizType == QuizType.ENGLISH) {
             assertEquals(4, card.mcqOptions.size)
@@ -603,5 +602,53 @@ class StudyViewModelTest {
         }
 
         dictDb.close()
+    }
+
+    @Test
+    fun testContinuousStudyWithoutBatchLimit_andDynamicNextCardSelection() = runBlocking {
+        // Insert 35 distinct due items (exceeding the old 30-card batch limit)
+        val now = System.currentTimeMillis()
+        for (i in 1..35) {
+            val hanzi = (0x4E00 + i).toChar().toString()
+            andZiDb.vocabularyDao().insertCharPinyin(
+                com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = hanzi, pinyin = "yi1")
+            )
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = hanzi,
+                    box = 1,
+                    expTime = now - (1000L * i),
+                    numTested = 1,
+                    numWrong = 0,
+                    streak = 1,
+                    dateAdded = now - 100_000L
+                )
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+
+        // Verify only 1 card is loaded at a time (no pre-fetched batch of 30)
+        val initialState = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        assertEquals(1, initialState.queue.size)
+        assertEquals(35, initialState.remainingDueCount)
+
+        // Fail the first card: it should remain due and be re-tested before session finishes
+        val firstCardHanzi = initialState.currentCard!!.hanzi
+        viewModel.submitToneAnswer(4) // Wrong tone (correct is 1)
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        viewModel.nextCard()
+
+        // Answer all remaining cards (35 total items, including the 1 failed card that gets re-tested)
+        val allPresented = collectPresentedCards(viewModel, maxSteps = 50)
+
+        // We failed 1 card initially and then passed all 35 cards -> 35 more presentations
+        assertEquals(35, allPresented.size)
+        assertTrue("Failed card must be dynamically re-queued and tested again", allPresented.any { it.hanzi == firstCardHanzi })
+        assertTrue("Session should only finish after all 35 due cards are passed", viewModel.uiState.value.isSessionFinished)
     }
 }

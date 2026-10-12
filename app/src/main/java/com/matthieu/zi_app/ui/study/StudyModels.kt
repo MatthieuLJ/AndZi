@@ -35,6 +35,7 @@ data class SessionStats(
 data class StudyUiState(
     val queue: List<StudyCard> = emptyList(),
     val currentIndex: Int = 0,
+    val remainingDueCount: Int = 0,
     val isAnswerRevealed: Boolean = false,
     val isCorrect: Boolean? = null,
     val selectedOption: String? = null,

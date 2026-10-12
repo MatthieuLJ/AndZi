@@ -24,247 +24,287 @@ class StudyViewModel(
     private val _uiState = MutableStateFlow(StudyUiState(isLoading = true))
     val uiState: StateFlow<StudyUiState> = _uiState.asStateFlow()
 
+    private var testStepIndex = 0
+    private var lastTestedHanzi: String? = null
+
     init {
         startStudySession()
     }
 
-    fun startStudySession(limit: Int = 30) {
+    fun startStudySession() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            try {
-                val now = System.currentTimeMillis()
-                var queueHanzis = studyRepository.getStudyQueue(limit, now)
+            testStepIndex = 0
+            lastTestedHanzi = null
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    sessionStats = SessionStats(),
+                    isSessionFinished = false
+                )
+            }
+            loadNextCard(isInitialLoad = true)
+        }
+    }
 
-                // Fallback: If no cards are overdue, fetch sample from user vocabulary or dictionary
-                if (queueHanzis.isEmpty()) {
+    private suspend fun loadNextCard(isInitialLoad: Boolean) {
+        try {
+            val now = System.currentTimeMillis()
+            val dueCandidates = studyRepository.getStudyQueue(limit = 5, now = now)
+
+            val nextHanzi: String? = when {
+                dueCandidates.isNotEmpty() -> {
+                    dueCandidates.firstOrNull { it != lastTestedHanzi } ?: dueCandidates.first()
+                }
+                isInitialLoad -> {
                     val allVoc = vocabularyRepository.getAllVocabulary()
-                    queueHanzis = if (allVoc.isNotEmpty()) {
-                        allVoc.map { it.chinese }.take(limit)
+                    if (allVoc.isNotEmpty()) {
+                        allVoc.first().chinese
                     } else {
                         val distinctUser = vocabularyRepository.getAllDistinctHanzi()
                         if (distinctUser.isNotEmpty()) {
-                            distinctUser.take(limit)
+                            distinctUser.first()
                         } else {
-                            dictionaryRepository?.getAllDistinctHanzi()?.take(limit) ?: emptyList()
+                            dictionaryRepository?.getAllDistinctHanzi()?.firstOrNull()
                         }
                     }
                 }
+                else -> null
+            }
 
-                // Gather all characters and English translations from the user's active study list
-                val studyChars = (
-                    vocabularyRepository.getAllDistinctHanzi() +
-                    queueHanzis.flatMap { h ->
-                        var idx = 0
-                        val chars = mutableListOf<String>()
-                        while (idx < h.length) {
-                            val cp = h.codePointAt(idx)
-                            chars.add(String(Character.toChars(cp)))
-                            idx += Character.charCount(cp)
-                        }
-                        chars
-                    }
-                ).distinct().toSet()
-
-                val userEnglish = vocabularyRepository.getAllVocabulary()
-                    .flatMap { it.english }
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
-                    .toSet()
-
-                val dictEnglish = if (userEnglish.size < 20 && dictionaryRepository != null) {
-                    dictionaryRepository.getRandomTranslations(limit = 40)
-                } else emptyList()
-
-                val allStudyEnglish = (userEnglish + dictEnglish).distinct().toSet()
-
-                val cards = mutableListOf<StudyCard>()
-                for ((index, hanzi) in queueHanzis.withIndex()) {
-                    val localVocList = vocabularyRepository.getVocabularyForChinese(hanzi)
-                    val localVoc = localVocList.firstOrNull { it.english.isNotEmpty() } ?: localVocList.firstOrNull()
-
-                    val hasUserEnglish = localVoc != null && localVoc.english.isNotEmpty()
-                    val voc = if (localVoc != null) {
-                        localVoc
-                    } else {
-                        val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
-                        val dictChars = if (localChars.isEmpty() && dictionaryRepository != null) {
-                            dictionaryRepository.getCharPinyinsForHanzi(hanzi)
-                        } else emptyList()
-                        val pinyin = (localChars.firstOrNull() ?: dictChars.firstOrNull())?.pinyin ?: ""
-                        Vocabulary(chinese = hanzi, pinyin = pinyin, english = ArrayList())
-                    }
-
-                    val leitnerState = studyRepository.getLeitnerState(hanzi)
-                    val box = leitnerState?.box ?: 0
-
-                    val pinyins = if (voc.pinyin.isNotBlank()) {
-                        PinyinParser.parse_string_to_pinyin(voc.pinyin) ?: emptyList()
-                    } else emptyList()
-                    val firstPinyin = pinyins.firstOrNull()
-                    val tone = firstPinyin?.tone ?: 1
-                    val syllable = firstPinyin?.radical ?: (if (voc.pinyin.isNotBlank()) voc.pinyin else hanzi)
-
-                    val charCount = hanzi.codePointCount(0, hanzi.length)
-                    val isSingleChar = (charCount == 1)
-                    val hasValidNonNeutralTone = isSingleChar && (tone in 1..4)
-
-                    val containingWords = if (isSingleChar) {
-                        vocabularyRepository.getWordsContainingCharacter(hanzi).filter { it.chinese.length > 1 }
-                    } else emptyList()
-
-                    // 1. Determine Quiz Type:
-                    val quizType = when {
-                        !isSingleChar -> {
-                            // Multi-character words NEVER use Tone quiz
-                            if (hasUserEnglish) {
-                                when (index % 3) {
-                                    0 -> QuizType.WORD_ASSEMBLY
-                                    1 -> QuizType.CLOZE
-                                    else -> QuizType.ENGLISH
-                                }
-                            } else {
-                                if (index % 2 == 0) QuizType.WORD_ASSEMBLY else QuizType.CLOZE
-                            }
-                        }
-                        !hasUserEnglish -> {
-                            // Single character from char_pinyin (without user English translations)
-                            // MUST NEVER use QuizType.ENGLISH!
-                            when {
-                                hasValidNonNeutralTone && containingWords.isNotEmpty() -> {
-                                    if (index % 2 == 0) QuizType.TONE else QuizType.CLOZE
-                                }
-                                hasValidNonNeutralTone -> QuizType.TONE
-                                containingWords.isNotEmpty() -> QuizType.CLOZE
-                                else -> QuizType.TONE
-                            }
-                        }
-                        else -> {
-                            // Single character WITH user English translations
-                            when {
-                                hasValidNonNeutralTone -> {
-                                    if (index % 2 == 0) QuizType.TONE else QuizType.ENGLISH
-                                }
-                                else -> QuizType.ENGLISH
-                            }
-                        }
-                    }
-
-                    // 2. If Tone Quiz on a polyphonic character, find compound words demonstrating this tone
-                    var contextWords = emptyList<String>()
-                    if (quizType == QuizType.TONE) {
-                        val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
-                        val dictChars = if (dictionaryRepository != null) {
-                            dictionaryRepository.getCharPinyinsForHanzi(hanzi)
-                        } else emptyList()
-                        val allChars = (localChars + dictChars).distinctBy { it.pinyin }
-                        val distinctTones = allChars.mapNotNull {
-                            PinyinParser.parse_string_to_pinyin(it.pinyin)?.firstOrNull()?.tone
-                        }.filter { it in 1..4 }.distinct()
-
-                        if (distinctTones.size > 1 || allChars.size > 1) {
-                            var exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
-                            if (exampleWords.isEmpty() && dictionaryRepository != null) {
-                                exampleWords = dictionaryRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
-                            }
-                            contextWords = exampleWords.filter { it.codePointCount(0, it.length) > 1 }
-                        }
-                    }
-
-                    // 3. Generate MCQ distractors for English
-                    val mcqOptions = if (quizType == QuizType.ENGLISH) {
-                        val correct = voc.english.firstOrNull() ?: "Meaning"
-                        generateEnglishDistractors(correct, allStudyEnglish)
-                    } else emptyList()
-
-                    // 4. Generate Cloze / Assembly slots
-                    var cardEnglish = voc.english
-                    val wordSlots = mutableListOf<String>()
-                    val scrambledTiles = mutableListOf<String>()
-                    var targetIdx = -1
-
-                    val distractorCount = getDistractorCountForBox(box, quizType)
-
-                    if (quizType == QuizType.CLOZE) {
-                        if (isSingleChar && containingWords.isNotEmpty()) {
-                            // Test filling the single character within a larger compound word!
-                            val comp = containingWords[index % containingWords.size]
-                            val compHanzi = comp.chinese
-                            var charIdx = 0
-                            while (charIdx < compHanzi.length) {
-                                val cp = compHanzi.codePointAt(charIdx)
-                                wordSlots.add(String(Character.toChars(cp)))
-                                charIdx += Character.charCount(cp)
-                            }
-                            val idxInWord = wordSlots.indexOf(hanzi)
-                            targetIdx = if (idxInWord >= 0) idxInWord else 0
-                            val correctChar = wordSlots[targetIdx]
-                            scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
-                            if (comp.english.isNotEmpty()) {
-                                cardEnglish = comp.english
-                            }
-                        } else {
-                            for (i in 0 until charCount) {
-                                val codePoint = hanzi.codePointAt(i)
-                                val ch = String(Character.toChars(codePoint))
-                                wordSlots.add(ch)
-                            }
-                            if (wordSlots.isNotEmpty()) {
-                                targetIdx = (0 until wordSlots.size).random()
-                                val correctChar = wordSlots[targetIdx]
-                                scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
-                            }
-                        }
-                    } else if (quizType == QuizType.WORD_ASSEMBLY) {
-                        for (i in 0 until charCount) {
-                            val codePoint = hanzi.codePointAt(i)
-                            val ch = String(Character.toChars(codePoint))
-                            wordSlots.add(ch)
-                        }
-                        val distractors = generateCharDistractorsForWord(wordSlots.toSet(), distractorCount, studyChars)
-                        scrambledTiles.addAll((wordSlots + distractors).shuffled())
-                    }
-
-                    cards.add(
-                        StudyCard(
-                            hanzi = hanzi,
-                            pinyin = voc.pinyin,
-                            syllable = syllable,
-                            tone = tone,
-                            english = cardEnglish,
-                            currentBox = box,
-                            quizType = quizType,
-                            mcqOptions = mcqOptions,
-                            wordSlots = wordSlots,
-                            scrambledTiles = scrambledTiles,
-                            clozeTargetIndex = targetIdx,
-                            contextWords = contextWords
-                        )
-                    )
-                }
-
+            if (nextHanzi == null) {
                 _uiState.update {
                     it.copy(
-                        queue = cards,
+                        queue = emptyList(),
                         currentIndex = 0,
+                        remainingDueCount = 0,
                         isAnswerRevealed = false,
                         isCorrect = null,
                         selectedOption = null,
                         assembledChars = emptyList(),
                         usedTileIndices = emptyList(),
-                        isSessionFinished = cards.isEmpty(),
-                        sessionStats = SessionStats(),
+                        isSessionFinished = true,
                         isLoading = false
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = e.localizedMessage ?: "Failed to load study cards"
-                    )
+                return
+            }
+
+            val card = buildStudyCard(nextHanzi, testStepIndex)
+            testStepIndex++
+            lastTestedHanzi = nextHanzi
+            val dueCount = studyRepository.getNumExpired(now)
+
+            _uiState.update {
+                it.copy(
+                    queue = listOf(card),
+                    currentIndex = 0,
+                    remainingDueCount = dueCount,
+                    isAnswerRevealed = false,
+                    isCorrect = null,
+                    selectedOption = null,
+                    assembledChars = emptyList(),
+                    usedTileIndices = emptyList(),
+                    isSessionFinished = false,
+                    isLoading = false
+                )
+            }
+        } catch (e: Exception) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMessage = e.localizedMessage ?: "Failed to load study card"
+                )
+            }
+        }
+    }
+
+    private suspend fun buildStudyCard(hanzi: String, index: Int): StudyCard {
+        val studyChars = (
+            vocabularyRepository.getAllDistinctHanzi() +
+            run {
+                var idx = 0
+                val chars = mutableListOf<String>()
+                while (idx < hanzi.length) {
+                    val cp = hanzi.codePointAt(idx)
+                    chars.add(String(Character.toChars(cp)))
+                    idx += Character.charCount(cp)
+                }
+                chars
+            }
+        ).distinct().toSet()
+
+        val userEnglish = vocabularyRepository.getAllVocabulary()
+            .flatMap { it.english }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
+
+        val dictEnglish = if (userEnglish.size < 20 && dictionaryRepository != null) {
+            dictionaryRepository.getRandomTranslations(limit = 40)
+        } else emptyList()
+
+        val allStudyEnglish = (userEnglish + dictEnglish).distinct().toSet()
+
+        val localVocList = vocabularyRepository.getVocabularyForChinese(hanzi)
+        val localVoc = localVocList.firstOrNull { it.english.isNotEmpty() } ?: localVocList.firstOrNull()
+
+        val hasUserEnglish = localVoc != null && localVoc.english.isNotEmpty()
+        val voc = if (localVoc != null) {
+            localVoc
+        } else {
+            val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
+            val dictChars = if (localChars.isEmpty() && dictionaryRepository != null) {
+                dictionaryRepository.getCharPinyinsForHanzi(hanzi)
+            } else emptyList()
+            val pinyin = (localChars.firstOrNull() ?: dictChars.firstOrNull())?.pinyin ?: ""
+            Vocabulary(chinese = hanzi, pinyin = pinyin, english = ArrayList())
+        }
+
+        val leitnerState = studyRepository.getLeitnerState(hanzi)
+        val box = leitnerState?.box ?: 0
+
+        val pinyins = if (voc.pinyin.isNotBlank()) {
+            PinyinParser.parse_string_to_pinyin(voc.pinyin) ?: emptyList()
+        } else emptyList()
+        val firstPinyin = pinyins.firstOrNull()
+        val tone = firstPinyin?.tone ?: 1
+        val syllable = firstPinyin?.radical ?: (if (voc.pinyin.isNotBlank()) voc.pinyin else hanzi)
+
+        val charCount = hanzi.codePointCount(0, hanzi.length)
+        val isSingleChar = (charCount == 1)
+        val hasValidNonNeutralTone = isSingleChar && (tone in 1..4)
+
+        val containingWords = if (isSingleChar) {
+            vocabularyRepository.getWordsContainingCharacter(hanzi).filter { it.chinese.length > 1 }
+        } else emptyList()
+
+        // 1. Determine Quiz Type:
+        val quizType = when {
+            !isSingleChar -> {
+                // Multi-character words NEVER use Tone quiz
+                if (hasUserEnglish) {
+                    when (index % 3) {
+                        0 -> QuizType.WORD_ASSEMBLY
+                        1 -> QuizType.CLOZE
+                        else -> QuizType.ENGLISH
+                    }
+                } else {
+                    if (index % 2 == 0) QuizType.WORD_ASSEMBLY else QuizType.CLOZE
+                }
+            }
+            !hasUserEnglish -> {
+                // Single character from char_pinyin (without user English translations)
+                // MUST NEVER use QuizType.ENGLISH!
+                when {
+                    hasValidNonNeutralTone && containingWords.isNotEmpty() -> {
+                        if (index % 2 == 0) QuizType.TONE else QuizType.CLOZE
+                    }
+                    hasValidNonNeutralTone -> QuizType.TONE
+                    containingWords.isNotEmpty() -> QuizType.CLOZE
+                    else -> QuizType.TONE
+                }
+            }
+            else -> {
+                // Single character WITH user English translations
+                when {
+                    hasValidNonNeutralTone -> {
+                        if (index % 2 == 0) QuizType.TONE else QuizType.ENGLISH
+                    }
+                    else -> QuizType.ENGLISH
                 }
             }
         }
+
+        // 2. If Tone Quiz on a polyphonic character, find compound words demonstrating this tone
+        var contextWords = emptyList<String>()
+        if (quizType == QuizType.TONE) {
+            val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
+            val dictChars = if (dictionaryRepository != null) {
+                dictionaryRepository.getCharPinyinsForHanzi(hanzi)
+            } else emptyList()
+            val allChars = (localChars + dictChars).distinctBy { it.pinyin }
+            val distinctTones = allChars.mapNotNull {
+                PinyinParser.parse_string_to_pinyin(it.pinyin)?.firstOrNull()?.tone
+            }.filter { it in 1..4 }.distinct()
+
+            if (distinctTones.size > 1 || allChars.size > 1) {
+                var exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
+                if (exampleWords.isEmpty() && dictionaryRepository != null) {
+                    exampleWords = dictionaryRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
+                }
+                contextWords = exampleWords.filter { it.codePointCount(0, it.length) > 1 }
+            }
+        }
+
+        // 3. Generate MCQ distractors for English
+        val mcqOptions = if (quizType == QuizType.ENGLISH) {
+            val correct = voc.english.firstOrNull() ?: "Meaning"
+            generateEnglishDistractors(correct, allStudyEnglish)
+        } else emptyList()
+
+        // 4. Generate Cloze / Assembly slots
+        var cardEnglish = voc.english
+        val wordSlots = mutableListOf<String>()
+        val scrambledTiles = mutableListOf<String>()
+        var targetIdx = -1
+
+        val distractorCount = getDistractorCountForBox(box, quizType)
+
+        if (quizType == QuizType.CLOZE) {
+            if (isSingleChar && containingWords.isNotEmpty()) {
+                // Test filling the single character within a larger compound word!
+                val comp = containingWords[index % containingWords.size]
+                val compHanzi = comp.chinese
+                var charIdx = 0
+                while (charIdx < compHanzi.length) {
+                    val cp = compHanzi.codePointAt(charIdx)
+                    wordSlots.add(String(Character.toChars(cp)))
+                    charIdx += Character.charCount(cp)
+                }
+                val idxInWord = wordSlots.indexOf(hanzi)
+                targetIdx = if (idxInWord >= 0) idxInWord else 0
+                val correctChar = wordSlots[targetIdx]
+                scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
+                if (comp.english.isNotEmpty()) {
+                    cardEnglish = comp.english
+                }
+            } else {
+                for (i in 0 until charCount) {
+                    val codePoint = hanzi.codePointAt(i)
+                    val ch = String(Character.toChars(codePoint))
+                    wordSlots.add(ch)
+                }
+                if (wordSlots.isNotEmpty()) {
+                    targetIdx = (0 until wordSlots.size).random()
+                    val correctChar = wordSlots[targetIdx]
+                    scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
+                }
+            }
+        } else if (quizType == QuizType.WORD_ASSEMBLY) {
+            for (i in 0 until charCount) {
+                val codePoint = hanzi.codePointAt(i)
+                val ch = String(Character.toChars(codePoint))
+                wordSlots.add(ch)
+            }
+            val distractors = generateCharDistractorsForWord(wordSlots.toSet(), distractorCount, studyChars)
+            scrambledTiles.addAll((wordSlots + distractors).shuffled())
+        }
+
+        return StudyCard(
+            hanzi = hanzi,
+            pinyin = voc.pinyin,
+            syllable = syllable,
+            tone = tone,
+            english = cardEnglish,
+            currentBox = box,
+            quizType = quizType,
+            mcqOptions = mcqOptions,
+            wordSlots = wordSlots,
+            scrambledTiles = scrambledTiles,
+            clozeTargetIndex = targetIdx,
+            contextWords = contextWords
+        )
     }
 
     fun submitToneAnswer(selectedTone: Int) {
@@ -330,8 +370,10 @@ class StudyViewModel(
 
     private fun processAnswer(card: StudyCard, isCorrect: Boolean, selectedInput: String) {
         viewModelScope.launch {
+            val now = System.currentTimeMillis()
             val grade = if (isCorrect) ReviewGrade.GOOD else ReviewGrade.AGAIN
-            studyRepository.recordReviewGrade(card.hanzi, grade)
+            studyRepository.recordReviewGrade(card.hanzi, grade, now)
+            val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { state ->
                 val prevStats = state.sessionStats
@@ -341,6 +383,7 @@ class StudyViewModel(
                     lapseCount = prevStats.lapseCount + if (!isCorrect) 1 else 0
                 )
                 state.copy(
+                    remainingDueCount = dueCount,
                     isAnswerRevealed = true,
                     isCorrect = isCorrect,
                     selectedOption = selectedInput,
@@ -352,32 +395,17 @@ class StudyViewModel(
 
     fun rateCard(grade: ReviewGrade) {
         val card = _uiState.value.currentCard ?: return
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             studyRepository.recordReviewGrade(card.hanzi, grade)
-            nextCard()
+            loadNextCard(isInitialLoad = false)
         }
     }
 
     fun nextCard() {
-        _uiState.update { state ->
-            val nextIdx = state.currentIndex + 1
-            if (nextIdx < state.queue.size) {
-                state.copy(
-                    currentIndex = nextIdx,
-                    isAnswerRevealed = false,
-                    isCorrect = null,
-                    selectedOption = null,
-                    assembledChars = emptyList(),
-                    usedTileIndices = emptyList()
-                )
-            } else {
-                state.copy(
-                    isSessionFinished = true,
-                    isAnswerRevealed = false,
-                    assembledChars = emptyList(),
-                    usedTileIndices = emptyList()
-                )
-            }
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            loadNextCard(isInitialLoad = false)
         }
     }
 
