@@ -77,6 +77,7 @@ fun StudyScreen(
         onClozeSelected = { viewModel.submitClozeAnswer(it) },
         onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
         onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
+        onAcceptAnswer = { viewModel.markAnswerAsAcceptable() },
         onRateGrade = { viewModel.rateCard(it) },
         onNextCard = { viewModel.nextCard() },
         modifier = modifier
@@ -93,6 +94,7 @@ fun StudyScreenContent(
     onClozeSelected: (String) -> Unit,
     onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
     onUndoAssemblyTile: () -> Unit = {},
+    onAcceptAnswer: () -> Unit = {},
     onRateGrade: (ReviewGrade) -> Unit = {},
     onNextCard: () -> Unit,
     modifier: Modifier = Modifier
@@ -284,6 +286,8 @@ fun StudyScreenContent(
                                 RevealedFeedbackCard(
                                     card = card,
                                     isCorrect = uiState.isCorrect,
+                                    selectedOption = uiState.selectedOption,
+                                    onAcceptAnswer = onAcceptAnswer,
                                     onNextCard = { onNextCard() }
                                 )
                                 if (card.quizType == QuizType.CLOZE && card.relatedStudyWords.isNotEmpty()) {
@@ -309,6 +313,7 @@ fun StudyScreenContent(
                                     EnglishMcqView(
                                         options = card.mcqOptions,
                                         correctMeaning = correct,
+                                        correctMeanings = card.english,
                                         selectedOption = uiState.selectedOption,
                                         isRevealed = uiState.isAnswerRevealed,
                                         onOptionSelected = { option -> onEnglishSelected(option) }

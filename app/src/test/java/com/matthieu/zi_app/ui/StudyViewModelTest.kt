@@ -669,4 +669,100 @@ class StudyViewModelTest {
         assertTrue("Failed card must be dynamically re-queued and tested again", allPresented.any { it.hanzi == firstCardHanzi })
         assertTrue("Session should only finish after all 35 due cards are passed", viewModel.uiState.value.isSessionFinished)
     }
+
+    @Test
+    fun testEnglishQuizRandomizesTranslationsAndExcludesSameWordTranslationsFromDistractors() = runBlocking {
+        val meanings = arrayListOf("alpha meaning", "beta meaning", "gamma meaning")
+        // Neutral tone single character with English translations always gets QuizType.ENGLISH
+        vocRepo.addVocabulary(Vocabulary("吗", "ma5", meanings))
+
+        val pickedMeanings = mutableSetOf<String>()
+        repeat(25) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = "吗",
+                    box = 0,
+                    expTime = 0L,
+                    numTested = 0,
+                    numWrong = 0,
+                    streak = 0,
+                    dateAdded = System.currentTimeMillis()
+                )
+            )
+            val viewModel = StudyViewModel(studyRepo, vocRepo)
+            val state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            val card = state.currentCard!!
+            assertEquals(QuizType.ENGLISH, card.quizType)
+
+            val matchingOptions = card.mcqOptions.filter { it in meanings }
+            assertEquals(
+                "Exactly one of the word's translations should appear in mcqOptions",
+                1,
+                matchingOptions.size
+            )
+            pickedMeanings.add(matchingOptions.first())
+        }
+
+        assertTrue(
+            "English quiz should pick translations other than just the first one",
+            pickedMeanings.any { it != "alpha meaning" }
+        )
+    }
+
+    @Test
+    fun testMarkAnswerAsAcceptableOverridesFailedEnglishQuizToCorrect() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("吗", "ma5", arrayListOf("question particle")))
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "吗",
+                box = 2,
+                expTime = now - 10_000L,
+                numTested = 2,
+                numWrong = 0,
+                streak = 2,
+                dateAdded = now - 100_000L
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        assertEquals(QuizType.ENGLISH, state.currentCard?.quizType)
+
+        // Submit a synonym answer that wasn't the exact stored translation
+        viewModel.submitEnglishAnswer("interrogative particle")
+
+        val wrongState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed && it.isCorrect == false }.first()
+        }
+        assertEquals(false, wrongState.isCorrect)
+        assertEquals(1, wrongState.sessionStats.totalReviewed)
+        assertEquals(0, wrongState.sessionStats.correctCount)
+        assertEquals(1, wrongState.sessionStats.lapseCount)
+
+        val demotedLeitner = studyRepo.getLeitnerState("吗")!!
+        assertEquals(0, demotedLeitner.box)
+        assertEquals(1, demotedLeitner.numWrong)
+
+        // User marks their answer as acceptable
+        viewModel.markAnswerAsAcceptable()
+
+        val acceptedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed && it.isCorrect == true }.first()
+        }
+        assertEquals(true, acceptedState.isCorrect)
+        assertEquals(1, acceptedState.sessionStats.totalReviewed)
+        assertEquals(1, acceptedState.sessionStats.correctCount)
+        assertEquals(0, acceptedState.sessionStats.lapseCount)
+
+        val promotedLeitner = studyRepo.getLeitnerState("吗")!!
+        assertEquals(3, promotedLeitner.box)
+        assertEquals(0, promotedLeitner.numWrong)
+        assertEquals(3, promotedLeitner.streak)
+    }
 }
+

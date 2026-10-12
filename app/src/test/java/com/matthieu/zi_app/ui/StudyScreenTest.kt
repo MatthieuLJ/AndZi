@@ -335,4 +335,50 @@ class StudyScreenTest {
         composeTestRule.onNodeWithText("聪明").performScrollTo().assertExists()
         composeTestRule.onNodeWithText("intelligent; clever").assertExists()
     }
+
+    @Test
+    fun testEnglishQuizWrongAnswer_showsAcceptButtonAndInvokesCallback() {
+        val card = StudyCard(
+            hanzi = "高兴",
+            pinyin = "gao1xing4",
+            english = listOf("happy", "cheerful"),
+            quizType = QuizType.ENGLISH,
+            mcqOptions = listOf("cheerful", "glad", "water", "mountain")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = true,
+            isCorrect = false,
+            selectedOption = "glad"
+        )
+
+        var acceptClicked = false
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onAcceptAnswer = { acceptClicked = true },
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Needs Review").assertExists()
+        composeTestRule.onNodeWithText("Your answer: glad").assertExists()
+        composeTestRule.onNodeWithText("My answer was acceptable")
+            .performScrollTo()
+            .assertExists()
+            .assertHasClickAction()
+            .performClick()
+
+        assertTrue(acceptClicked)
+    }
 }
+

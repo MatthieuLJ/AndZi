@@ -35,6 +35,28 @@ class StudyRepository(
         scheduleResult.updatedState
     }
 
+    suspend fun overrideReviewGrade(
+        hanzi: String,
+        previousState: LeitnerState?,
+        grade: ReviewGrade,
+        now: Long = System.currentTimeMillis()
+    ): ReviewState = withContext(Dispatchers.IO) {
+        val baseState = previousState?.let {
+            ReviewState(
+                cardId = it.hanzi,
+                box = it.box,
+                nextReviewTimestamp = it.expTime,
+                reviewCount = it.numTested,
+                lapseCount = it.numWrong,
+                streak = it.streak,
+                dateAdded = it.dateAdded
+            )
+        }
+        val scheduleResult = srsEngine.calculateNextReview(hanzi, baseState, grade, now)
+        leitnerDao.insertOrUpdateRecord(toEntity(scheduleResult.updatedState))
+        scheduleResult.updatedState
+    }
+
     suspend fun recordReviewResult(
         hanzi: String,
         isCorrect: Boolean,

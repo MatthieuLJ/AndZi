@@ -168,7 +168,8 @@ fun EnglishMcqView(
     selectedOption: String?,
     isRevealed: Boolean,
     onOptionSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    correctMeanings: List<String> = listOf(correctMeaning)
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -176,7 +177,8 @@ fun EnglishMcqView(
     ) {
         options.forEach { option ->
             val isSelected = (selectedOption == option)
-            val isCorrect = option.equals(correctMeaning, ignoreCase = true)
+            val isCorrect = option.equals(correctMeaning, ignoreCase = true) ||
+                    correctMeanings.any { it.equals(option, ignoreCase = true) }
 
             val backgroundColor by animateColorAsState(
                 targetValue = when {
@@ -410,6 +412,8 @@ fun RevealedFeedbackCard(
     isCorrect: Boolean?,
     onNextCard: () -> Unit,
     modifier: Modifier = Modifier,
+    selectedOption: String? = null,
+    onAcceptAnswer: (() -> Unit)? = null,
     onRateGrade: ((ReviewGrade) -> Unit)? = null
 ) {
     val toneColors = AndZiThemeCustom.toneColors
@@ -467,7 +471,39 @@ fun RevealedFeedbackCard(
                 )
             }
 
+            if (isCorrect == false && card.quizType == QuizType.ENGLISH && !selectedOption.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Your answer: $selectedOption",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
+
+            if (isCorrect == false && card.quizType == QuizType.ENGLISH && onAcceptAnswer != null) {
+                OutlinedButton(
+                    onClick = onAcceptAnswer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "My answer was acceptable",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
             // Prominent Continue Button
             Button(

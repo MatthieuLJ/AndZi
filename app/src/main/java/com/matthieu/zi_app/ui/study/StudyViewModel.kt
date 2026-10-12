@@ -3,6 +3,7 @@ package com.matthieu.zi_app.ui.study
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.matthieu.zi_app.LeitnerState
 import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
@@ -26,6 +27,7 @@ class StudyViewModel(
 
     private var testStepIndex = 0
     private var lastTestedHanzi: String? = null
+    private var lastPreReviewState: LeitnerState? = null
 
     init {
         startStudySession()
@@ -35,6 +37,7 @@ class StudyViewModel(
         viewModelScope.launch {
             testStepIndex = 0
             lastTestedHanzi = null
+            lastPreReviewState = null
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -239,8 +242,8 @@ class StudyViewModel(
 
         // 3. Generate MCQ distractors for English
         val mcqOptions = if (quizType == QuizType.ENGLISH) {
-            val correct = voc.english.firstOrNull() ?: "Meaning"
-            generateEnglishDistractors(correct, allStudyEnglish)
+            val correct = voc.english.randomOrNull() ?: "Meaning"
+            generateEnglishDistractors(correct, allStudyEnglish, excludedMeanings = voc.english)
         } else emptyList()
 
         // 4. Generate Cloze / Assembly slots
@@ -387,6 +390,7 @@ class StudyViewModel(
     private fun processAnswer(card: StudyCard, isCorrect: Boolean, selectedInput: String) {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
+            lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
             val grade = if (isCorrect) ReviewGrade.GOOD else ReviewGrade.AGAIN
             studyRepository.recordReviewGrade(card.hanzi, grade, now)
             val dueCount = studyRepository.getNumExpired(now)
@@ -403,6 +407,31 @@ class StudyViewModel(
                     isAnswerRevealed = true,
                     isCorrect = isCorrect,
                     selectedOption = selectedInput,
+                    sessionStats = newStats
+                )
+            }
+        }
+    }
+
+    fun markAnswerAsAcceptable() {
+        val state = _uiState.value
+        val card = state.currentCard ?: return
+        if (!state.isAnswerRevealed || state.isCorrect != false) return
+
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            studyRepository.overrideReviewGrade(card.hanzi, lastPreReviewState, ReviewGrade.GOOD, now)
+            val dueCount = studyRepository.getNumExpired(now)
+
+            _uiState.update { current ->
+                val prevStats = current.sessionStats
+                val newStats = prevStats.copy(
+                    correctCount = prevStats.correctCount + 1,
+                    lapseCount = (prevStats.lapseCount - 1).coerceAtLeast(0)
+                )
+                current.copy(
+                    remainingDueCount = dueCount,
+                    isCorrect = true,
                     sessionStats = newStats
                 )
             }
@@ -445,17 +474,19 @@ class StudyViewModel(
 
     private fun generateEnglishDistractors(
         correct: String,
-        allStudyEnglish: Set<String> = emptySet()
+        allStudyEnglish: Set<String> = emptySet(),
+        excludedMeanings: Collection<String> = emptyList()
     ): List<String> {
+        val excludedLower = (excludedMeanings + correct).map { it.trim().lowercase() }.toSet()
         val candidates = allStudyEnglish
-            .filter { !it.equals(correct, ignoreCase = true) && it.isNotBlank() }
+            .filter { it.isNotBlank() && it.trim().lowercase() !in excludedLower }
             .toMutableList()
 
         if (candidates.size < 3) {
             val fallback = DEFAULT_FALLBACK_ENGLISH_DISTRACTORS.filter {
-                !it.equals(correct, ignoreCase = true) &&
-                candidates.none { c -> c.equals(it, ignoreCase = true) } &&
-                it.isNotBlank()
+                it.isNotBlank() &&
+                it.trim().lowercase() !in excludedLower &&
+                candidates.none { c -> c.equals(it, ignoreCase = true) }
             }.shuffled()
             candidates.addAll(fallback)
         }
