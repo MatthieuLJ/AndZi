@@ -764,5 +764,47 @@ class StudyViewModelTest {
         assertEquals(0, promotedLeitner.numWrong)
         assertEquals(3, promotedLeitner.streak)
     }
+
+    @Test
+    fun testToneQuizContextWordsOnlyIncludesStudiedWords_andEmptyWhenNoStudiedCompoundWords() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dictDb = AndZiDatabase.createInMemory(context)
+        val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
+
+        // Dictionary has polyphonic readings and compound words for "长"
+        dictRepo.addVocabulary(Vocabulary("长", "chang2", arrayListOf("long")))
+        dictRepo.addVocabulary(Vocabulary("长", "zhang3", arrayListOf("to grow")))
+        dictRepo.addVocabulary(Vocabulary("长度", "chang2du4", arrayListOf("length")))
+        dictRepo.addVocabulary(Vocabulary("长城", "chang2cheng2", arrayListOf("Great Wall")))
+
+        // User is ONLY studying the character "长" itself (no compound words in vocRepo)
+        vocRepo.addVocabulary(Vocabulary("长", "chang2", arrayListOf("long")))
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "长",
+                box = 1,
+                expTime = 0L,
+                numTested = 1,
+                numWrong = 0,
+                streak = 1,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, dictRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card = state.currentCard!!
+        assertEquals("长", card.hanzi)
+        assertEquals(QuizType.TONE, card.quizType)
+        assertTrue(
+            "When no compound words are being studied, contextWords must be empty (not pulled from dictionary)",
+            card.contextWords.isEmpty()
+        )
+
+        dictDb.close()
+    }
 }
+
 

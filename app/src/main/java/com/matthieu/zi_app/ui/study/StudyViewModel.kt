@@ -219,25 +219,11 @@ class StudyViewModel(
             }
         }
 
-        // 2. If Tone Quiz on a polyphonic character, find compound words demonstrating this tone
+        // 2. If Tone Quiz, find studied compound words demonstrating this character (study stack only)
         var contextWords = emptyList<String>()
         if (quizType == QuizType.TONE) {
-            val localChars = vocabularyRepository.getCharPinyinsForHanzi(hanzi)
-            val dictChars = if (dictionaryRepository != null) {
-                dictionaryRepository.getCharPinyinsForHanzi(hanzi)
-            } else emptyList()
-            val allChars = (localChars + dictChars).distinctBy { it.pinyin }
-            val distinctTones = allChars.mapNotNull {
-                PinyinParser.parse_string_to_pinyin(it.pinyin)?.firstOrNull()?.tone
-            }.filter { it in 1..4 }.distinct()
-
-            if (distinctTones.size > 1 || allChars.size > 1) {
-                var exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
-                if (exampleWords.isEmpty() && dictionaryRepository != null) {
-                    exampleWords = dictionaryRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
-                }
-                contextWords = exampleWords.filter { it.codePointCount(0, it.length) > 1 }
-            }
+            val exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
+            contextWords = exampleWords.filter { it != hanzi && it.codePointCount(0, it.length) > 1 }
         }
 
         // 3. Generate MCQ distractors for English
