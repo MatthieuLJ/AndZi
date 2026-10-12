@@ -498,10 +498,18 @@ class StudyViewModelTest {
 
     @Test
     fun testNeutralToneConstituentSubCharacterGetsClozeQuizInContainingWord() = runBlocking {
-        // Compound word with neutral tone sub-character "子" (zi5)
-        vocRepo.addVocabulary(Vocabulary("桌子", "zhuo1zi5", arrayListOf("table", "desk")))
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dictDb = AndZiDatabase.createInMemory(context)
+        val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
 
-        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        // Word only in the reference dictionary (NOT in user's study stack)
+        dictRepo.addVocabulary(Vocabulary("孩子", "hai2zi5", arrayListOf("child")))
+
+        // Compound words in user's active study stack with neutral tone sub-character "子" (zi5)
+        vocRepo.addVocabulary(Vocabulary("桌子", "zhuo1zi5", arrayListOf("table", "desk")))
+        vocRepo.addVocabulary(Vocabulary("椅子", "yi3zi5", arrayListOf("chair")))
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, dictRepo)
         val presentedCards = collectPresentedCards(viewModel)
 
         // Sub-character "子" has neutral tone 5 and no user translations
@@ -509,13 +517,23 @@ class StudyViewModelTest {
         assertFalse("Neutral tone sub-character cannot be TONE quiz", ziCard.quizType == QuizType.TONE)
         assertFalse("Sub-character without user translations cannot be ENGLISH quiz", ziCard.quizType == QuizType.ENGLISH)
 
-        // Should be CLOZE quiz inside the containing compound word "桌子"
+        // Should be CLOZE quiz inside a containing compound word ("桌子" or "椅子")
         assertEquals(QuizType.CLOZE, ziCard.quizType)
-        assertEquals(listOf("table", "desk"), ziCard.english)
         assertEquals(2, ziCard.wordSlots.size)
-        assertEquals("桌", ziCard.wordSlots[0])
         assertEquals("子", ziCard.wordSlots[1])
         assertEquals(1, ziCard.clozeTargetIndex)
+
+        // Whole word and whole word pinyin must be populated for reveal
+        assertTrue(ziCard.revealedHanzi in listOf("桌子", "椅子"))
+        assertTrue(ziCard.displayPinyin in listOf("zhuo1zi5", "yi3zi5"))
+
+        // Related study words must contain study stack words using "子" ("桌子", "椅子"), and NOT dictionary-only "孩子"
+        val relatedChinese = ziCard.relatedStudyWords.map { it.chinese }
+        assertTrue(relatedChinese.contains("桌子"))
+        assertTrue(relatedChinese.contains("椅子"))
+        assertFalse("Dictionary-only word should not be in relatedStudyWords", relatedChinese.contains("孩子"))
+
+        dictDb.close()
     }
 
     @Test

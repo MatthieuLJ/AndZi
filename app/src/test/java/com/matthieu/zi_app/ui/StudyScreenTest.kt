@@ -286,4 +286,53 @@ class StudyScreenTest {
         // Verify tone prompt
         composeTestRule.onNodeWithText("Swipe or tap the correct tone").assertExists()
     }
+
+    @Test
+    fun testSingleCharClozeRevealed_showsWholeWordAndStudyWordsUsingCharacter() {
+        val card = StudyCard(
+            hanzi = "明",
+            pinyin = "ming2",
+            displayPinyin = "ming2tian1",
+            english = listOf("tomorrow"),
+            quizType = QuizType.CLOZE,
+            wordSlots = listOf("明", "天"),
+            scrambledTiles = listOf("明", "月", "日"),
+            clozeTargetIndex = 0,
+            relatedStudyWords = listOf(
+                com.matthieu.zi_app.Vocabulary("明白", "ming2bai5", arrayListOf("clear", "to understand")),
+                com.matthieu.zi_app.Vocabulary("聪明", "cong1ming5", arrayListOf("intelligent", "clever"))
+            )
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = true,
+            isCorrect = true
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Top card displays the whole word "明天" (not just "明") and its translation "tomorrow" below
+        composeTestRule.onNodeWithText("明天").assertExists()
+        composeTestRule.onNodeWithText("tomorrow").assertExists()
+
+        // Below, dictionary-style view shows study words using "明"
+        composeTestRule.onNodeWithText("Study words using 明").performScrollTo().assertExists()
+        composeTestRule.onNodeWithText("明白").performScrollTo().assertExists()
+        composeTestRule.onNodeWithText("clear; to understand").assertExists()
+        composeTestRule.onNodeWithText("聪明").performScrollTo().assertExists()
+        composeTestRule.onNodeWithText("intelligent; clever").assertExists()
+    }
 }

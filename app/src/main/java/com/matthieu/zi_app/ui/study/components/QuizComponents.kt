@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,10 +42,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.PinyinParser
+import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.ui.study.QuizType
 import com.matthieu.zi_app.ui.study.SessionStats
@@ -410,7 +413,8 @@ fun RevealedFeedbackCard(
     onRateGrade: ((ReviewGrade) -> Unit)? = null
 ) {
     val toneColors = AndZiThemeCustom.toneColors
-    val annotatedPinyin = buildPinyinToneAnnotatedString(card.pinyin, toneColors)
+    val effectivePinyin = card.displayPinyin.ifBlank { card.pinyin }
+    val annotatedPinyin = buildPinyinToneAnnotatedString(effectivePinyin, toneColors)
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -487,6 +491,77 @@ fun RevealedFeedbackCard(
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun StudyWordsUsingCharacterSection(
+    character: String,
+    words: List<Vocabulary>,
+    modifier: Modifier = Modifier
+) {
+    val toneColors = AndZiThemeCustom.toneColors
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Study words using $character",
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        )
+
+        words.forEach { word ->
+            val annotatedPinyin = buildPinyinToneAnnotatedString(word.pinyin, toneColors)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp)),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = word.chinese,
+                        style = if (word.chinese.length > 3) {
+                            AndZiThemeCustom.chineseTypography.hanziMedium.copy(fontSize = 20.sp)
+                        } else {
+                            AndZiThemeCustom.chineseTypography.hanziMedium
+                        },
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.widthIn(min = 60.dp, max = 110.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = annotatedPinyin,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        if (word.english.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = word.english.joinToString("; "),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
             }
         }
     }

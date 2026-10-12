@@ -52,6 +52,7 @@ import com.matthieu.zi_app.ui.study.components.ClozeAssemblyView
 import com.matthieu.zi_app.ui.study.components.EnglishMcqView
 import com.matthieu.zi_app.ui.study.components.RevealedFeedbackCard
 import com.matthieu.zi_app.ui.study.components.StudyFinishedView
+import com.matthieu.zi_app.ui.study.components.StudyWordsUsingCharacterSection
 import com.matthieu.zi_app.ui.study.components.ToneKeypad
 import com.matthieu.zi_app.ui.study.components.detectToneGestures
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
@@ -222,13 +223,14 @@ fun StudyScreenContent(
                                         modifier = Modifier.padding(horizontal = 16.dp)
                                     )
                                 } else {
+                                    val displayedHanzi = if (uiState.isAnswerRevealed) card.revealedHanzi else card.hanzi
                                     val hanziStyle = when {
-                                        card.hanzi.length <= 1 -> AndZiThemeCustom.chineseTypography.hanziCard
-                                        card.hanzi.length <= 3 -> AndZiThemeCustom.chineseTypography.hanziLarge
+                                        displayedHanzi.length <= 1 -> AndZiThemeCustom.chineseTypography.hanziCard
+                                        displayedHanzi.length <= 3 -> AndZiThemeCustom.chineseTypography.hanziLarge
                                         else -> AndZiThemeCustom.chineseTypography.hanziMedium
                                     }
                                     Text(
-                                        text = card.hanzi,
+                                        text = displayedHanzi,
                                         style = hanziStyle,
                                         color = MaterialTheme.colorScheme.onSurface,
                                         textAlign = TextAlign.Center
@@ -275,11 +277,22 @@ fun StudyScreenContent(
                     // Revealed Feedback Card
                     if (uiState.isAnswerRevealed) {
                         item {
-                            RevealedFeedbackCard(
-                                card = card,
-                                isCorrect = uiState.isCorrect,
-                                onNextCard = { onNextCard() }
-                            )
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                RevealedFeedbackCard(
+                                    card = card,
+                                    isCorrect = uiState.isCorrect,
+                                    onNextCard = { onNextCard() }
+                                )
+                                if (card.quizType == QuizType.CLOZE && card.relatedStudyWords.isNotEmpty()) {
+                                    StudyWordsUsingCharacterSection(
+                                        character = card.missingCharacter,
+                                        words = card.relatedStudyWords
+                                    )
+                                }
+                            }
                         }
                     } else {
                         // Interactive Quiz Input

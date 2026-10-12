@@ -1,5 +1,7 @@
 package com.matthieu.zi_app.ui.study
 
+import com.matthieu.zi_app.Vocabulary
+
 enum class QuizType {
     TONE,           // Guess the tone of the character
     PINYIN,         // Syllable / Pinyin recognition
@@ -20,8 +22,24 @@ data class StudyCard(
     val wordSlots: List<String> = emptyList(),
     val scrambledTiles: List<String> = emptyList(),
     val clozeTargetIndex: Int = -1,
-    val contextWords: List<String> = emptyList()
-)
+    val contextWords: List<String> = emptyList(),
+    val displayPinyin: String = pinyin,
+    val relatedStudyWords: List<Vocabulary> = emptyList()
+) {
+    val revealedHanzi: String
+        get() = if (quizType == QuizType.CLOZE && wordSlots.isNotEmpty()) {
+            wordSlots.joinToString("")
+        } else {
+            hanzi
+        }
+
+    val missingCharacter: String
+        get() = if (clozeTargetIndex in wordSlots.indices) {
+            wordSlots[clozeTargetIndex]
+        } else {
+            hanzi
+        }
+}
 
 data class SessionStats(
     val totalReviewed: Int = 0,

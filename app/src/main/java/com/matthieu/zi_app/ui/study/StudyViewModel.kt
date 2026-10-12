@@ -245,6 +245,8 @@ class StudyViewModel(
 
         // 4. Generate Cloze / Assembly slots
         var cardEnglish = voc.english
+        var displayPinyin = voc.pinyin
+        var relatedStudyWords = emptyList<Vocabulary>()
         val wordSlots = mutableListOf<String>()
         val scrambledTiles = mutableListOf<String>()
         var targetIdx = -1
@@ -269,6 +271,9 @@ class StudyViewModel(
                 if (comp.english.isNotEmpty()) {
                     cardEnglish = comp.english
                 }
+                if (comp.pinyin.isNotBlank()) {
+                    displayPinyin = comp.pinyin
+                }
             } else {
                 for (i in 0 until charCount) {
                     val codePoint = hanzi.codePointAt(i)
@@ -281,6 +286,15 @@ class StudyViewModel(
                     scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
                 }
             }
+
+            val missingChar = if (targetIdx in wordSlots.indices) wordSlots[targetIdx] else hanzi
+            val revealedWord = if (wordSlots.isNotEmpty()) wordSlots.joinToString("") else hanzi
+            relatedStudyWords = (
+                vocabularyRepository.getVocabularyForChinese(missingChar).filter { it.english.isNotEmpty() } +
+                vocabularyRepository.getWordsContainingCharacter(missingChar)
+            )
+                .distinctBy { "${it.chinese}_${it.pinyin}" }
+                .sortedBy { if (it.chinese == revealedWord) 1 else 0 }
         } else if (quizType == QuizType.WORD_ASSEMBLY) {
             for (i in 0 until charCount) {
                 val codePoint = hanzi.codePointAt(i)
@@ -303,7 +317,9 @@ class StudyViewModel(
             wordSlots = wordSlots,
             scrambledTiles = scrambledTiles,
             clozeTargetIndex = targetIdx,
-            contextWords = contextWords
+            contextWords = contextWords,
+            displayPinyin = displayPinyin,
+            relatedStudyWords = relatedStudyWords
         )
     }
 
