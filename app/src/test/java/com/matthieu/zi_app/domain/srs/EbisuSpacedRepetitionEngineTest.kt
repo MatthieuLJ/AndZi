@@ -80,4 +80,37 @@ class EbisuSpacedRepetitionEngineTest {
             )
         }
     }
+
+    @Test
+    fun testHigherSuccessRateProducesLongerInterval() {
+        val now = 1_000_000_000L
+
+        val highAccuracyState = ReviewState(
+            cardId = "高",
+            box = 3,
+            nextReviewTimestamp = now,
+            reviewCount = 10,
+            lapseCount = 0,
+            streak = 5,
+            dateAdded = now - 500_000_000L
+        )
+        val lowAccuracyState = ReviewState(
+            cardId = "低",
+            box = 3,
+            nextReviewTimestamp = now,
+            reviewCount = 10,
+            lapseCount = 6,
+            streak = 1,
+            dateAdded = now - 500_000_000L
+        )
+
+        val highRes = engine.calculateNextReview("高", highAccuracyState, ReviewGrade.GOOD, now)
+        val lowRes = engine.calculateNextReview("低", lowAccuracyState, ReviewGrade.GOOD, now)
+
+        assertTrue(
+            "Card with higher test success rate should have a longer review interval",
+            highRes.intervalMillis > lowRes.intervalMillis
+        )
+    }
 }
+

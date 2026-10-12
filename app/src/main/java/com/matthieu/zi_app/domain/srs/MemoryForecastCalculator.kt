@@ -161,15 +161,41 @@ object MemoryForecastCalculator {
     }
 
     private fun calculateRecallAtFutureOffset(state: ReviewState, futureOffsetMillis: Long, now: Long): Double {
-        if (state.box == 0) return 0.0
         val custom = state.customData
         val alpha = custom[EbisuSpacedRepetitionEngine.KEY_ALPHA]?.toDoubleOrNull() ?: EbisuMath.DEFAULT_ALPHA
         val beta = custom[EbisuSpacedRepetitionEngine.KEY_BETA]?.toDoubleOrNull() ?: EbisuMath.DEFAULT_BETA
+
+        if (state.box == 0) {
+            if (state.reviewCount <= 0) return 0.0
+            val correctCount = (state.reviewCount - state.lapseCount).coerceAtLeast(0)
+            val successRate = (correctCount.toDouble() / state.reviewCount.toDouble()).coerceIn(0.0, 1.0)
+            val t0 = EbisuSpacedRepetitionEngine.computeAdaptiveT0(
+                box = 0,
+                reviewCount = state.reviewCount,
+                lapseCount = state.lapseCount,
+                streak = state.streak
+            )
+            val baseRecall = successRate * 0.65
+            return baseRecall * EbisuMath.predictRecall(alpha, beta, t0, max(0L, futureOffsetMillis).toDouble())
+        }
+
         val t0 = custom[EbisuSpacedRepetitionEngine.KEY_T0]?.toDoubleOrNull() ?: run {
-            (12.0 * Math.pow(2.0, state.box.coerceIn(0, 9).toDouble())) * 3600.0 * 1000.0
+            EbisuSpacedRepetitionEngine.computeAdaptiveT0(
+                box = state.box,
+                reviewCount = state.reviewCount,
+                lapseCount = state.lapseCount,
+                streak = state.streak
+            )
         }
         val lastReview = custom[EbisuSpacedRepetitionEngine.KEY_LAST_REVIEW]?.toLongOrNull() ?: run {
-            if (state.dateAdded > 0L) state.dateAdded else (now - 12 * 3600 * 1000L)
+            EbisuSpacedRepetitionEngine.inferLastReviewTimestamp(
+                state = state,
+                alpha = alpha,
+                beta = beta,
+                t0 = t0,
+                targetRecall = EbisuMath.DEFAULT_TARGET_RECALL,
+                now = now
+            )
         }
 
         val totalElapsed = max(0L, (now - lastReview) + futureOffsetMillis).toDouble()

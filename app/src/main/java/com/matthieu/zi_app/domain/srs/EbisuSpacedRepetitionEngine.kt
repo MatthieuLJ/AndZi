@@ -31,28 +31,34 @@ class EbisuSpacedRepetitionEngine(
 
         val (finalT0, virtualBox) = if (currentState == null) {
             when (grade) {
-                ReviewGrade.AGAIN -> Pair(mapBoxToT0(0), 0)
-                ReviewGrade.HARD -> Pair(mapBoxToT0(1), 1)
-                ReviewGrade.GOOD -> Pair(mapBoxToT0(1), 1)
-                ReviewGrade.EASY -> Pair(mapBoxToT0(2), 2)
+                ReviewGrade.AGAIN -> Pair(computeAdaptiveT0(0, 1, 1, 0), 0)
+                ReviewGrade.HARD -> Pair(computeAdaptiveT0(1, 1, 0, 1), 1)
+                ReviewGrade.GOOD -> Pair(computeAdaptiveT0(1, 1, 0, 1), 1)
+                ReviewGrade.EASY -> Pair(computeAdaptiveT0(2, 1, 0, 2), 2)
             }
         } else {
+            val newReviews = currentState.reviewCount + 1
+            val newLapses = currentState.lapseCount + if (isSuccess) 0 else 1
+            val newStreak = if (isSuccess) currentState.streak + 1 else 0
             when (grade) {
                 ReviewGrade.AGAIN -> {
                     val demotedBox = if (currentState.box > 2) currentState.box - 3 else 0
-                    Pair(mapBoxToT0(demotedBox), demotedBox)
+                    Pair(computeAdaptiveT0(demotedBox, newReviews, newLapses, 0), demotedBox)
                 }
                 ReviewGrade.HARD -> {
                     val targetBox = max(1, currentState.box)
-                    Pair(max(mapBoxToT0(targetBox), bayesianUpdated.t0 * 0.8), targetBox)
+                    val adaptiveT0 = computeAdaptiveT0(targetBox, newReviews, newLapses, newStreak)
+                    Pair(max(adaptiveT0, bayesianUpdated.t0 * 0.8), targetBox)
                 }
                 ReviewGrade.GOOD -> {
                     val promotedBox = min(9, currentState.box + 1)
-                    Pair(max(mapBoxToT0(promotedBox), bayesianUpdated.t0), promotedBox)
+                    val adaptiveT0 = computeAdaptiveT0(promotedBox, newReviews, newLapses, newStreak)
+                    Pair(max(adaptiveT0, bayesianUpdated.t0), promotedBox)
                 }
                 ReviewGrade.EASY -> {
                     val promotedBox = min(9, currentState.box + 2)
-                    Pair(max(mapBoxToT0(promotedBox), bayesianUpdated.t0 * 1.25), promotedBox)
+                    val adaptiveT0 = computeAdaptiveT0(promotedBox, newReviews, newLapses, newStreak)
+                    Pair(max(adaptiveT0, bayesianUpdated.t0 * 1.25), promotedBox)
                 }
             }
         }
@@ -143,10 +149,10 @@ class EbisuSpacedRepetitionEngine(
         val alpha = custom[KEY_ALPHA]?.toDoubleOrNull() ?: EbisuMath.DEFAULT_ALPHA
         val beta = custom[KEY_BETA]?.toDoubleOrNull() ?: EbisuMath.DEFAULT_BETA
         val t0 = custom[KEY_T0]?.toDoubleOrNull() ?: run {
-            mapBoxToT0(state.box)
+            computeAdaptiveT0(state.box, state.reviewCount, state.lapseCount, state.streak)
         }
         val lastReview = custom[KEY_LAST_REVIEW]?.toLongOrNull() ?: run {
-            if (state.dateAdded > 0L) state.dateAdded else (now - (12 * 3600 * 1000L))
+            inferLastReviewTimestamp(state, alpha, beta, t0, targetRecall, now)
         }
 
         return EbisuParams(alpha, beta, t0, lastReview)
@@ -159,8 +165,7 @@ class EbisuSpacedRepetitionEngine(
     }
 
     private fun mapBoxToT0(box: Int): Double {
-        val clamped = box.coerceIn(0, 9)
-        return (12.0 * Math.pow(2.0, clamped.toDouble())) * 3600.0 * 1000.0
+        return computeAdaptiveT0(box, 0, 0, 0)
     }
 
     private fun formatInterval(millis: Long): String {
@@ -189,5 +194,44 @@ class EbisuSpacedRepetitionEngine(
         const val KEY_BETA = "ebisu_b"
         const val KEY_T0 = "ebisu_t0"
         const val KEY_LAST_REVIEW = "last_review"
+
+        fun computeAdaptiveT0(
+            box: Int,
+            reviewCount: Int,
+            lapseCount: Int,
+            streak: Int
+        ): Double {
+            val clampedBox = box.coerceIn(0, 9)
+            val multiplicand = if (reviewCount > 0) {
+                val correctCount = (reviewCount - lapseCount).coerceAtLeast(0)
+                val successRate = (correctCount.toDouble() / reviewCount.toDouble()).coerceIn(0.0, 1.0)
+                1.8 + (0.4 * successRate)
+            } else {
+                2.0
+            }
+            val streakBoost = 1.0 + (streak.coerceIn(0, 5) * 0.04)
+            return (12.0 * Math.pow(multiplicand, clampedBox.toDouble()) * streakBoost) * 3600.0 * 1000.0
+        }
+
+        fun inferLastReviewTimestamp(
+            state: ReviewState,
+            alpha: Double,
+            beta: Double,
+            t0: Double,
+            targetRecall: Double = EbisuMath.DEFAULT_TARGET_RECALL,
+            now: Long = System.currentTimeMillis()
+        ): Long {
+            if (state.box > 0 && state.nextReviewTimestamp > 0L) {
+                val scheduledInterval = max(
+                    3600L * 1000L,
+                    EbisuMath.timeForRecall(alpha, beta, t0, targetRecall).toLong()
+                )
+                val inferred = state.nextReviewTimestamp - scheduledInterval
+                if (inferred > 0L) {
+                    return min(now, inferred)
+                }
+            }
+            return if (state.dateAdded > 0L) min(now, state.dateAdded) else (now - 12 * 3600 * 1000L)
+        }
     }
 }

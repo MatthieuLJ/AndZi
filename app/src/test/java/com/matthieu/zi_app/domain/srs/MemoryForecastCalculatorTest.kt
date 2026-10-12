@@ -99,4 +99,53 @@ class MemoryForecastCalculatorTest {
         val lastPoint = forecast.points.last()
         assertTrue(firstPoint.retentionPercentage > lastPoint.retentionPercentage)
     }
+
+    @Test
+    fun testOlderCardJustReviewedWithoutCustomDataHasStrongRetention() {
+        val now = 1_000_000_000L
+        val dayMillis = 24L * 3600 * 1000L
+        val engine = EbisuSpacedRepetitionEngine()
+
+        // Card was added 14 days ago, and just passed a review today (moving from Box 1 to Box 2)
+        val preState = ReviewState(
+            cardId = "明",
+            box = 1,
+            nextReviewTimestamp = now - 1000L,
+            reviewCount = 4,
+            lapseCount = 0,
+            streak = 4,
+            dateAdded = now - (14 * dayMillis)
+        )
+        val scheduled = engine.calculateNextReview("明", preState, ReviewGrade.GOOD, now)
+
+        // Simulate loading from SQLite (where customData is empty, only box/expTime/reviewCount/lapseCount/streak/dateAdded exist)
+        val sqliteLoadedState = scheduled.updatedState.copy(customData = emptyMap())
+
+        val health = MemoryForecastCalculator.calculateMemoryHealth(listOf(sqliteLoadedState), now)
+        assertEquals("Just-reviewed card must be Strong (>90%), not decayed from dateAdded", 1, health.strongCount)
+        assertEquals(0, health.dueCount)
+        assertEquals(100.0f, health.retentionPercentage, 0.5f)
+    }
+
+    @Test
+    fun testHighTestAccuracyAndTestedBoxZeroRetention() {
+        val now = 1_000_000_000L
+
+        // Tested card in Box 0 after 1 lapse out of 10 tests (90% test accuracy)
+        val lapsedCardWith90PercentAccuracy = ReviewState(
+            cardId = "天",
+            box = 0,
+            nextReviewTimestamp = now,
+            reviewCount = 10,
+            lapseCount = 1,
+            streak = 0,
+            dateAdded = now - 86_400_000L
+        )
+
+        val health = MemoryForecastCalculator.calculateMemoryHealth(listOf(lapsedCardWith90PercentAccuracy), now)
+        assertEquals(1, health.dueCount)
+        // Should reflect 90% * 65% = 58.5% rather than 0%
+        assertEquals(58.5f, health.retentionPercentage, 0.5f)
+    }
 }
+
