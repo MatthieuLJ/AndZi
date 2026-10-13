@@ -51,14 +51,20 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -243,6 +249,7 @@ fun DictionaryScreen(
                     selectedTranslations = uiState.selectedTranslations,
                     onToggleStudy = { viewModel.toggleAddToStudy(uiState.selectedWord!!) },
                     onToggleTranslation = { viewModel.toggleTranslationForStudy(it) },
+                    onAddCustomTranslation = { viewModel.addCustomTranslation(it) },
                     onSelectConstituent = { viewModel.selectCharacterFromConstituent(it) },
                     onSelectCompound = { viewModel.selectWord(it) }
                 )
@@ -325,9 +332,11 @@ fun WordDetailSheetContent(
     onToggleTranslation: (String) -> Unit,
     onSelectConstituent: (String) -> Unit,
     onSelectCompound: (Vocabulary) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddCustomTranslation: (String) -> Unit = {}
 ) {
     val annotatedPinyin = buildPinyinToneAnnotatedString(word.pinyin, AndZiThemeCustom.toneColors)
+    var customTranslationInput by remember(word.chinese, word.pinyin) { mutableStateOf("") }
 
     Column(
         modifier = modifier
@@ -481,6 +490,56 @@ fun WordDetailSheetContent(
                         }
                     }
                 }
+            }
+        }
+
+        // Custom English Translation Input
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = customTranslationInput,
+                onValueChange = { customTranslationInput = it },
+                placeholder = {
+                    Text(
+                        text = "Add custom translation...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (customTranslationInput.isNotBlank()) {
+                            onAddCustomTranslation(customTranslationInput)
+                            customTranslationInput = ""
+                        }
+                    }
+                ),
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = {
+                    if (customTranslationInput.isNotBlank()) {
+                        onAddCustomTranslation(customTranslationInput)
+                        customTranslationInput = ""
+                    }
+                },
+                enabled = customTranslationInput.isNotBlank(),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add custom translation",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "Add")
             }
         }
 

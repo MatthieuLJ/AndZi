@@ -160,14 +160,13 @@ class VocabularyListViewModel(
                 emptySet()
             }
 
-            // If local vocabulary had no definitions, fetch from dictionary
-            val displayVoc = if (vocabulary.english.isEmpty()) {
-                val dictVocabs = dictionaryRepository.getVocabularyForChinese(hanzi)
-                val dictMatching = dictVocabs.find { it.pinyin == vocabulary.pinyin } ?: dictVocabs.firstOrNull()
-                dictMatching ?: vocabulary
-            } else {
-                vocabulary
-            }
+            // Merge dictionary definitions and local custom translations so all options are visible
+            val dictVocabs = dictionaryRepository.getVocabularyForChinese(hanzi)
+            val dictMatching = dictVocabs.find { it.pinyin == vocabulary.pinyin } ?: dictVocabs.firstOrNull()
+            val mergedEnglish = ArrayList(
+                ((dictMatching?.english ?: emptyList()) + (localMatching?.english ?: emptyList()) + vocabulary.english).distinct()
+            )
+            val displayVoc = vocabulary.copy(english = mergedEnglish)
 
             _uiState.update {
                 it.copy(
@@ -248,6 +247,47 @@ class VocabularyListViewModel(
 
             _uiState.update {
                 it.copy(
+                    selectedTranslations = newSelected,
+                    isInStudyQueue = isInStudy,
+                    currentBox = box
+                )
+            }
+            loadActiveVocabulary()
+        }
+    }
+
+    /**
+     * Manually adds a custom English translation typed by the user for the currently selected word,
+     * persists it in the local study database, and includes it in the active study translations.
+     */
+    fun addCustomTranslation(customText: String) {
+        val word = _uiState.value.selectedWord ?: return
+        val cleanTrans = customText.trim()
+        if (cleanTrans.isEmpty()) return
+
+        viewModelScope.launch {
+            localVocabularyRepository.addTranslation(word.chinese, word.pinyin, cleanTrans)
+
+            var isInStudy = _uiState.value.isInStudyQueue
+            var box = _uiState.value.currentBox
+            if (!isInStudy) {
+                studyRepository.recordReviewGrade(word.chinese, ReviewGrade.AGAIN)
+                val newState = studyRepository.getLeitnerState(word.chinese)
+                isInStudy = true
+                box = newState?.box ?: 0
+            }
+
+            val updatedEnglish = if (word.english.contains(cleanTrans)) {
+                word.english
+            } else {
+                ArrayList(word.english + cleanTrans)
+            }
+            val updatedWord = word.copy(english = updatedEnglish)
+            val newSelected = _uiState.value.selectedTranslations + cleanTrans
+
+            _uiState.update {
+                it.copy(
+                    selectedWord = updatedWord,
                     selectedTranslations = newSelected,
                     isInStudyQueue = isInStudy,
                     currentBox = box

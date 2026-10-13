@@ -383,4 +383,45 @@ class DictionaryViewModelTest {
         assertEquals("大家", state.results[1].chinese)
         assertEquals("大意", state.results[2].chinese)
     }
+
+    @Test
+    fun testAddCustomTranslationPersistsAndSelectsTranslation() = runBlocking {
+        val word = Vocabulary(
+            "照顾",
+            "zhao4gu5",
+            arrayListOf("to take care of", "to look after")
+        )
+        dictRepo.addVocabulary(word)
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+        viewModel.selectWord(word)
+
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "照顾" }.first()
+        }
+
+        // Add a custom translation manually
+        viewModel.addCustomTranslation("  to care for  ")
+
+        val stateAfterCustom = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedTranslations.contains("to care for") }.first()
+        }
+
+        assertTrue(stateAfterCustom.isInStudyQueue)
+        assertEquals(setOf("to care for"), stateAfterCustom.selectedTranslations)
+        assertTrue(stateAfterCustom.selectedWord!!.english.contains("to care for"))
+
+        // Verify in user DB
+        val userVoc = userVocRepo.getVocabularyForChinese("照顾").first()
+        assertEquals(listOf("to care for"), userVoc.english)
+
+        // Clear selection and re-select the dictionary word -> custom translation should still be merged and selected
+        viewModel.clearSelection()
+        viewModel.selectWord(word)
+        val reselectedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "照顾" }.first()
+        }
+        assertTrue(reselectedState.selectedWord!!.english.contains("to care for"))
+        assertTrue(reselectedState.selectedTranslations.contains("to care for"))
+    }
 }

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.ui.dictionary.DictionaryResultCard
@@ -239,5 +240,45 @@ class DictionaryScreenTest {
         val compoundNode = composeTestRule.onNodeWithText("等等")
         compoundNode.performScrollTo()
         compoundNode.assertExists()
+    }
+
+    @Test
+    fun testWordDetailSheetContent_canTypeAndAddCustomTranslation() {
+        val word = Vocabulary(
+            "照顾",
+            "zhao4gu5",
+            arrayListOf("to take care of")
+        )
+        var addedCustomTranslation: String? = null
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                WordDetailSheetContent(
+                    word = word,
+                    polyReadings = emptyList(),
+                    constituents = listOf("照", "顾"),
+                    compounds = emptyList(),
+                    isInStudy = true,
+                    currentBox = 0,
+                    selectedTranslations = setOf("to take care of"),
+                    onToggleStudy = {},
+                    onToggleTranslation = {},
+                    onSelectConstituent = {},
+                    onSelectCompound = {},
+                    onAddCustomTranslation = { addedCustomTranslation = it }
+                )
+            }
+        }
+
+        val inputField = composeTestRule.onNodeWithText("Add custom translation...")
+        inputField.performScrollTo()
+        inputField.assertExists()
+        inputField.performTextInput("to care for")
+
+        val addButton = composeTestRule.onNodeWithText("Add")
+        addButton.performScrollTo()
+        addButton.performClick()
+
+        org.junit.Assert.assertEquals("to care for", addedCustomTranslation)
     }
 }

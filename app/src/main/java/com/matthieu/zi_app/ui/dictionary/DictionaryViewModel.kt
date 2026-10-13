@@ -197,9 +197,16 @@ class DictionaryViewModel(
                 emptySet()
             }
 
+            val mergedEnglish = ArrayList((vocabulary.english + (localMatching?.english ?: emptyList())).distinct())
+            val displayWord = Vocabulary(
+                chinese = vocabulary.chinese,
+                pinyin = vocabulary.pinyin,
+                english = mergedEnglish
+            )
+
             _uiState.update {
                 it.copy(
-                    selectedWord = vocabulary,
+                    selectedWord = displayWord,
                     selectedCharReadings = polyReadings,
                     containingCompounds = containingCompounds,
                     constituentCharacters = constituents,
@@ -265,6 +272,42 @@ class DictionaryViewModel(
 
             _uiState.update {
                 it.copy(
+                    selectedTranslations = newSelected,
+                    isInStudyQueue = isInStudy,
+                    currentBox = box
+                )
+            }
+        }
+    }
+
+    fun addCustomTranslation(customText: String) {
+        val word = _uiState.value.selectedWord ?: return
+        viewModelScope.launch {
+            val cleanTrans = customText.trim()
+            if (cleanTrans.isEmpty()) return@launch
+
+            localVocabularyRepository.addTranslation(word.chinese, word.pinyin, cleanTrans)
+
+            var isInStudy = _uiState.value.isInStudyQueue
+            var box = _uiState.value.currentBox
+            if (!isInStudy) {
+                studyRepository.recordReviewGrade(word.chinese, ReviewGrade.AGAIN)
+                val newState = studyRepository.getLeitnerState(word.chinese)
+                isInStudy = true
+                box = newState?.box ?: 0
+            }
+
+            val updatedEnglish = ArrayList((word.english + cleanTrans).distinct())
+            val updatedWord = Vocabulary(
+                chinese = word.chinese,
+                pinyin = word.pinyin,
+                english = updatedEnglish
+            )
+            val newSelected = _uiState.value.selectedTranslations + cleanTrans
+
+            _uiState.update {
+                it.copy(
+                    selectedWord = updatedWord,
                     selectedTranslations = newSelected,
                     isInStudyQueue = isInStudy,
                     currentBox = box
