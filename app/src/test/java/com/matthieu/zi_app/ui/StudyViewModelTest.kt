@@ -805,6 +805,138 @@ class StudyViewModelTest {
 
         dictDb.close()
     }
+
+    @Test
+    fun testAreWordsSimilar_correctlyIdentifiesCommonCharacters() {
+        assertTrue(StudyViewModel.areWordsSimilar("明天", "明"))
+        assertTrue(StudyViewModel.areWordsSimilar("明天", "天"))
+        assertTrue(StudyViewModel.areWordsSimilar("明天", "后天"))
+        assertTrue(StudyViewModel.areWordsSimilar("学习", "学校"))
+        assertTrue(StudyViewModel.areWordsSimilar("对不起", "起床"))
+
+        assertFalse(StudyViewModel.areWordsSimilar("明天", "学习"))
+        assertFalse(StudyViewModel.areWordsSimilar("你好", "世界"))
+        assertFalse(StudyViewModel.areWordsSimilar("明", "天"))
+        assertFalse(StudyViewModel.areWordsSimilar(null, "学习"))
+        assertFalse(StudyViewModel.areWordsSimilar("学习", null))
+        assertFalse(StudyViewModel.areWordsSimilar("", "学习"))
+        assertFalse(StudyViewModel.areWordsSimilar("学习", ""))
+    }
+
+    @Test
+    fun testConsecutiveTestsAvoidSimilarWordsWhenAlternativesAvailable() = runBlocking {
+        // Add vocabulary items: "明天", "明", "天", "你好"
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+        vocRepo.addVocabulary(Vocabulary("明", "ming2", arrayListOf("bright")))
+        vocRepo.addVocabulary(Vocabulary("天", "tian1", arrayListOf("sky; day")))
+        vocRepo.addVocabulary(Vocabulary("你好", "ni3hao3", arrayListOf("hello")))
+
+        // Add items to leitner with explicit overdue times:
+        // "明天" is most overdue (1), followed by "明" (2), "天" (3), "你好" (4).
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity("明天", 1, now - 40_000L, 1, 0, 1, now)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity("明", 1, now - 30_000L, 1, 0, 1, now)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity("天", 1, now - 20_000L, 1, 0, 1, now)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity("你好", 1, now - 10_000L, 1, 0, 1, now)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+
+        // Card 1: "明天" is the most overdue card
+        val state1 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card1 = state1.currentCard!!.hanzi
+        assertEquals("明天", card1)
+
+        // Rate Card 1 with AGAIN so it resets to box 0 and stays due
+        viewModel.rateCard(ReviewGrade.AGAIN)
+
+        // Card 2:
+        // Queue candidates order by overdue time: "明" (-30s), "天" (-20s), "你好" (-10s).
+        // Without similarity avoidance, "明" would be picked next because it is most overdue.
+        // With similarity avoidance, both "明" and "天" are skipped because they share characters with "明天".
+        // "你好" MUST be chosen instead!
+        val state2 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard!!.hanzi != card1 }.first()
+        }
+        val card2 = state2.currentCard!!.hanzi
+        assertEquals("你好", card2)
+        assertFalse(
+            "Consecutive card $card2 should not share any character with previous card $card1",
+            StudyViewModel.areWordsSimilar(card1, card2)
+        )
+
+        // Rate Card 2 with AGAIN
+        viewModel.rateCard(ReviewGrade.AGAIN)
+
+        // Card 3: Now last tested was "你好". Candidates: "明" (-30s), "天" (-20s).
+        // Neither shares any characters with "你好", so the most overdue non-similar candidate "明" is picked!
+        val state3 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard!!.hanzi != card2 }.first()
+        }
+        val card3 = state3.currentCard!!.hanzi
+        assertEquals("明", card3)
+        assertFalse(
+            "Consecutive card $card3 should not share any character with previous card $card2",
+            StudyViewModel.areWordsSimilar(card2, card3)
+        )
+
+        // Rate Card 3 with AGAIN
+        viewModel.rateCard(ReviewGrade.AGAIN)
+
+        // Card 4: Now last tested was "明". Candidates: "天" (-20s), "你好", "明天".
+        // "天" shares NO characters with "明", so "天" is picked!
+        val state4 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard!!.hanzi != card3 }.first()
+        }
+        val card4 = state4.currentCard!!.hanzi
+        assertEquals("天", card4)
+        assertFalse(
+            "Consecutive card $card4 should not share any character with previous card $card3",
+            StudyViewModel.areWordsSimilar(card3, card4)
+        )
+    }
+
+    @Test
+    fun testConsecutiveTestsFallBackWhenAllRemainingCandidatesAreSimilar() = runBlocking {
+        // Only "明天" and "明" are in study
+        vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow")))
+        vocRepo.addVocabulary(Vocabulary("明", "ming2", arrayListOf("bright")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity("明天", 1, now - 20_000L, 1, 0, 1, now)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity("明", 1, now - 10_000L, 1, 0, 1, now)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+
+        val state1 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card1 = state1.currentCard!!.hanzi
+        assertEquals("明天", card1)
+
+        // Rate Card 1 with AGAIN
+        viewModel.rateCard(ReviewGrade.AGAIN)
+
+        // Even though "明" shares '明' with "明天", it should still be presented as fallback
+        val state2 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard!!.hanzi != card1 }.first()
+        }
+        val card2 = state2.currentCard!!.hanzi
+        assertEquals("明", card2)
+    }
 }
 
 

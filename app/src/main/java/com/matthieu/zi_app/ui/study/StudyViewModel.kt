@@ -28,6 +28,7 @@ class StudyViewModel(
     private var testStepIndex = 0
     private var lastTestedHanzi: String? = null
     private var lastPreReviewState: LeitnerState? = null
+    private val recentTestedWords = ArrayDeque<String>()
 
     init {
         startStudySession()
@@ -38,6 +39,7 @@ class StudyViewModel(
             testStepIndex = 0
             lastTestedHanzi = null
             lastPreReviewState = null
+            recentTestedWords.clear()
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -53,11 +55,27 @@ class StudyViewModel(
     private suspend fun loadNextCard(isInitialLoad: Boolean) {
         try {
             val now = System.currentTimeMillis()
-            val dueCandidates = studyRepository.getStudyQueue(limit = 5, now = now)
+            val dueCandidates = studyRepository.getStudyQueue(limit = 20, now = now)
 
             val nextHanzi: String? = when {
                 dueCandidates.isNotEmpty() -> {
-                    dueCandidates.firstOrNull { it != lastTestedHanzi } ?: dueCandidates.first()
+                    // Priority 0: Not similar to last tested word AND not similar to recent words in session
+                    val nonSimilarToRecent = dueCandidates.firstOrNull { candidate ->
+                        candidate != lastTestedHanzi &&
+                        !areWordsSimilar(candidate, lastTestedHanzi) &&
+                        recentTestedWords.none { areWordsSimilar(candidate, it) }
+                    }
+
+                    // Priority 1: Not similar to immediately preceding word (consecutive tests do not share any character)
+                    val nonSimilarToLast = dueCandidates.firstOrNull { candidate ->
+                        candidate != lastTestedHanzi && !areWordsSimilar(candidate, lastTestedHanzi)
+                    }
+
+                    // Priority 2: Different word from last tested word
+                    val differentFromLast = dueCandidates.firstOrNull { it != lastTestedHanzi }
+
+                    // Fallback: First candidate in queue
+                    nonSimilarToRecent ?: nonSimilarToLast ?: differentFromLast ?: dueCandidates.first()
                 }
                 isInitialLoad -> {
                     val allVoc = vocabularyRepository.getAllVocabulary()
@@ -96,6 +114,10 @@ class StudyViewModel(
             val card = buildStudyCard(nextHanzi, testStepIndex)
             testStepIndex++
             lastTestedHanzi = nextHanzi
+            recentTestedWords.addLast(nextHanzi)
+            if (recentTestedWords.size > 5) {
+                recentTestedWords.removeFirst()
+            }
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update {
@@ -503,6 +525,24 @@ class StudyViewModel(
     }
 
     companion object {
+        fun extractCharacters(word: String): Set<String> {
+            val chars = mutableSetOf<String>()
+            var idx = 0
+            while (idx < word.length) {
+                val cp = word.codePointAt(idx)
+                chars.add(String(Character.toChars(cp)))
+                idx += Character.charCount(cp)
+            }
+            return chars
+        }
+
+        fun areWordsSimilar(wordA: String?, wordB: String?): Boolean {
+            if (wordA.isNullOrEmpty() || wordB.isNullOrEmpty()) return false
+            val charsA = extractCharacters(wordA)
+            val charsB = extractCharacters(wordB)
+            return charsA.any { it in charsB }
+        }
+
         val DEFAULT_FALLBACK_ENGLISH_DISTRACTORS = listOf(
             "to see; to look",
             "water",
