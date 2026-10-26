@@ -937,6 +937,33 @@ class StudyViewModelTest {
         val card2 = state2.currentCard!!.hanzi
         assertEquals("明", card2)
     }
+
+    @Test
+    fun testStudySessionAnswersRecordDailyStreak() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("猫", "mao1", arrayListOf("cat")))
+        studyRepo.recordReviewGrade("猫", ReviewGrade.AGAIN)
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val userPreferences = com.matthieu.zi_app.data.preferences.UserPreferences(context)
+        userPreferences.resetStreak()
+        assertEquals(0, userPreferences.getStreakDays())
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPreferences)
+
+        withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+
+        // Submit answer (Tone 1)
+        viewModel.submitToneAnswer(1)
+
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+
+        // Daily streak should now be recorded as 1
+        assertEquals(1, userPreferences.getStreakDays())
+    }
 }
 
 

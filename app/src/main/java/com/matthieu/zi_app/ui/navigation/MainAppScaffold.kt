@@ -124,7 +124,8 @@ fun MainAppScaffold(
                 val homeViewModel: HomeViewModel = viewModel(
                     factory = HomeViewModel.provideFactory(
                         studyRepository = appContainer.studyRepository,
-                        progressRepository = appContainer.progressRepository
+                        progressRepository = appContainer.progressRepository,
+                        userPreferences = appContainer.userPreferences
                     )
                 )
                 HomeScreen(
@@ -194,7 +195,8 @@ fun MainAppScaffold(
                     factory = com.matthieu.zi_app.ui.study.StudyViewModel.provideFactory(
                         studyRepository = appContainer.studyRepository,
                         vocabularyRepository = appContainer.vocabularyRepository,
-                        dictionaryRepository = appContainer.dictionaryRepository
+                        dictionaryRepository = appContainer.dictionaryRepository,
+                        userPreferences = appContainer.userPreferences
                     )
                 )
                 StudyScreen(

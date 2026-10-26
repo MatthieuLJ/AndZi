@@ -6,6 +6,10 @@ import com.matthieu.zi_app.ui.settings.AppThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 class UserPreferences(context: Context) {
 
@@ -19,6 +23,9 @@ class UserPreferences(context: Context) {
 
     private val _notificationEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATION_ENABLED, true))
     val notificationEnabled: StateFlow<Boolean> = _notificationEnabled.asStateFlow()
+
+    private val _streakDays = MutableStateFlow(getStreakDays())
+    val streakDays: StateFlow<Int> = _streakDays.asStateFlow()
 
     fun setThemeMode(mode: AppThemeMode) {
         prefs.edit().putString(KEY_THEME_MODE, mode.name).apply()
@@ -35,6 +42,73 @@ class UserPreferences(context: Context) {
         _notificationEnabled.value = enabled
     }
 
+    fun hasNoRecordedStudy(): Boolean = !prefs.contains(KEY_LAST_STUDY_DATE)
+
+    fun recordStudySession(now: Long = System.currentTimeMillis()): Int {
+        val today = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
+        val todayStr = today.toString()
+        val lastDateStr = prefs.getString(KEY_LAST_STUDY_DATE, null)
+        val currentStreak = prefs.getInt(KEY_STREAK_DAYS, 0)
+
+        if (lastDateStr == todayStr) {
+            val validStreak = currentStreak.coerceAtLeast(1)
+            if (currentStreak != validStreak) {
+                prefs.edit().putInt(KEY_STREAK_DAYS, validStreak).apply()
+                _streakDays.value = validStreak
+            }
+            return validStreak
+        }
+
+        val newStreak = if (lastDateStr != null) {
+            try {
+                val lastDate = LocalDate.parse(lastDateStr)
+                val daysBetween = ChronoUnit.DAYS.between(lastDate, today)
+                if (daysBetween == 1L) {
+                    currentStreak + 1
+                } else if (daysBetween <= 0L) {
+                    currentStreak.coerceAtLeast(1)
+                } else {
+                    1
+                }
+            } catch (e: Exception) {
+                1
+            }
+        } else {
+            1
+        }
+
+        prefs.edit()
+            .putInt(KEY_STREAK_DAYS, newStreak)
+            .putString(KEY_LAST_STUDY_DATE, todayStr)
+            .apply()
+        _streakDays.value = newStreak
+        return newStreak
+    }
+
+    fun getStreakDays(now: Long = System.currentTimeMillis()): Int {
+        val lastDateStr = prefs.getString(KEY_LAST_STUDY_DATE, null) ?: return 0
+        val currentStreak = prefs.getInt(KEY_STREAK_DAYS, 0)
+        return try {
+            val today = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
+            val lastDate = LocalDate.parse(lastDateStr)
+            val daysBetween = ChronoUnit.DAYS.between(lastDate, today)
+            when {
+                daysBetween <= 1L -> currentStreak
+                else -> 0
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    fun resetStreak() {
+        prefs.edit()
+            .remove(KEY_STREAK_DAYS)
+            .remove(KEY_LAST_STUDY_DATE)
+            .apply()
+        _streakDays.value = 0
+    }
+
     private fun getSavedThemeMode(): AppThemeMode {
         val saved = prefs.getString(KEY_THEME_MODE, AppThemeMode.SYSTEM.name)
         return try {
@@ -49,5 +123,7 @@ class UserPreferences(context: Context) {
         const val KEY_THEME_MODE = "app_theme_mode"
         const val KEY_COLOR_PINYIN = "color_pinyin"
         const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
+        const val KEY_STREAK_DAYS = "streak_days"
+        const val KEY_LAST_STUDY_DATE = "last_study_date"
     }
 }

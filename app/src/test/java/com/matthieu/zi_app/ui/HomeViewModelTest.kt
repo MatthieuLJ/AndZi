@@ -125,4 +125,23 @@ class HomeViewModelTest {
         assertEquals(0, state.streakDays)
         assertEquals(0, state.boxDistribution[0])
     }
+
+    @Test
+    fun testHomeViewModelWithUserPreferencesStreak() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = com.matthieu.zi_app.data.preferences.UserPreferences(context)
+        prefs.resetStreak()
+
+        val now = System.currentTimeMillis()
+        prefs.recordStudySession(now - 86400000L) // Yesterday
+        prefs.recordStudySession(now) // Today -> streak 2
+
+        val viewModel = HomeViewModel(studyRepo, progressRepo, prefs)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertEquals(2, state.streakDays)
+    }
 }

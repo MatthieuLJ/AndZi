@@ -3,6 +3,7 @@ package com.matthieu.zi_app.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.ProgressRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +14,8 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val studyRepository: StudyRepository,
-    private val progressRepository: ProgressRepository
+    private val progressRepository: ProgressRepository,
+    private val userPreferences: UserPreferences? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
@@ -37,13 +39,22 @@ class HomeViewModel(
                 }
                 val totalLearned = boxMap.values.sum()
 
+                val streakDays = userPreferences?.let { prefs ->
+                    val recorded = prefs.getStreakDays(now)
+                    if (recorded == 0 && prefs.hasNoRecordedStudy() && totalLearned > 0) {
+                        1
+                    } else {
+                        recorded
+                    }
+                } ?: if (totalLearned > 0) 1 else 0
+
                 _uiState.update {
                     it.copy(
                         dueCount = due,
                         totalLearned = totalLearned,
                         memoryHealth = memoryHealth,
                         boxDistribution = boxMap,
-                        streakDays = if (totalLearned > 0) 1 else 0,
+                        streakDays = streakDays,
                         isLoading = false,
                         errorMessage = null
                     )
@@ -62,11 +73,12 @@ class HomeViewModel(
     companion object {
         fun provideFactory(
             studyRepository: StudyRepository,
-            progressRepository: ProgressRepository
+            progressRepository: ProgressRepository,
+            userPreferences: UserPreferences? = null
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return HomeViewModel(studyRepository, progressRepository) as T
+                return HomeViewModel(studyRepository, progressRepository, userPreferences) as T
             }
         }
     }

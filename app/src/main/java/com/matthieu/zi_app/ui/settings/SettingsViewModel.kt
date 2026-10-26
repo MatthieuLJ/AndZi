@@ -329,6 +329,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 studyRepository.resetAllScores()
+                userPreferences.resetStreak()
                 _uiState.update {
                     it.copy(
                         showResetConfirmation = false,

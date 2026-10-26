@@ -7,6 +7,7 @@ import com.matthieu.zi_app.LeitnerState
 import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
@@ -19,7 +20,8 @@ import kotlinx.coroutines.launch
 class StudyViewModel(
     private val studyRepository: StudyRepository,
     private val vocabularyRepository: VocabularyRepository,
-    private val dictionaryRepository: VocabularyRepository? = null
+    private val dictionaryRepository: VocabularyRepository? = null,
+    private val userPreferences: UserPreferences? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudyUiState(isLoading = true))
@@ -401,6 +403,7 @@ class StudyViewModel(
             lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
             val grade = if (isCorrect) ReviewGrade.GOOD else ReviewGrade.AGAIN
             studyRepository.recordReviewGrade(card.hanzi, grade, now)
+            userPreferences?.recordStudySession(now)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { state ->
@@ -429,6 +432,7 @@ class StudyViewModel(
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             studyRepository.overrideReviewGrade(card.hanzi, lastPreReviewState, ReviewGrade.GOOD, now)
+            userPreferences?.recordStudySession(now)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { current ->
@@ -450,7 +454,9 @@ class StudyViewModel(
         val card = _uiState.value.currentCard ?: return
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            studyRepository.recordReviewGrade(card.hanzi, grade)
+            val now = System.currentTimeMillis()
+            studyRepository.recordReviewGrade(card.hanzi, grade, now)
+            userPreferences?.recordStudySession(now)
             loadNextCard(isInitialLoad = false)
         }
     }
@@ -569,11 +575,12 @@ class StudyViewModel(
         fun provideFactory(
             studyRepository: StudyRepository,
             vocabularyRepository: VocabularyRepository,
-            dictionaryRepository: VocabularyRepository? = null
+            dictionaryRepository: VocabularyRepository? = null,
+            userPreferences: UserPreferences? = null
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return StudyViewModel(studyRepository, vocabularyRepository, dictionaryRepository) as T
+                return StudyViewModel(studyRepository, vocabularyRepository, dictionaryRepository, userPreferences) as T
             }
         }
     }
