@@ -291,6 +291,10 @@ class VocabularyRepository(
         vocabularyDao.getWordCount()
     }
 
+    suspend fun getAllDistinctWords(): List<String> = withContext(Dispatchers.IO) {
+        vocabularyDao.getAllDistinctWords()
+    }
+
     suspend fun getCompoundWordsForCharPinyin(hanzi: String, pinyin: String, limit: Int = 4): List<String> = withContext(Dispatchers.IO) {
         val direct = vocabularyDao.getCompoundWordsForCharPinyin(hanzi, pinyin, limit)
         if (direct.isNotEmpty()) return@withContext direct

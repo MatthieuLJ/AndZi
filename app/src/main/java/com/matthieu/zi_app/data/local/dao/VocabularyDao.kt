@@ -51,6 +51,9 @@ interface VocabularyDao {
     @Query("SELECT COUNT(*) FROM cword")
     suspend fun getWordCount(): Int
 
+    @Query("SELECT DISTINCT chinese FROM cword")
+    suspend fun getAllDistinctWords(): List<String>
+
     @Query("SELECT COUNT(*) FROM cword")
     fun getWordCountFlow(): Flow<Int>
 

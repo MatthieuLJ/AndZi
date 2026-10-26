@@ -7,14 +7,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.ui.navigation.MainAppScaffold
-import com.matthieu.zi_app.ui.navigation.Screen
 import com.matthieu.zi_app.ui.settings.AppThemeMode
 import com.matthieu.zi_app.ui.theme.AndZiTheme
 import com.matthieu.zi_app.work.ProgressSyncWorker
 
 class MainActivity : ComponentActivity() {
+
+    private val startTestState = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,10 +25,13 @@ class MainActivity : ComponentActivity() {
         // Clear notification if app was opened
         ProgressSyncWorker.cancelNotification(this)
 
+        if (savedInstanceState == null && intent?.getBooleanExtra("start_test", false) == true) {
+            startTestState.value = true
+            intent?.removeExtra("start_test")
+        }
+
         val app = application as AndZiApplication
         val userPreferences = app.appContainer.userPreferences
-
-        val startTest = intent?.getBooleanExtra("start_test", false) ?: false
 
         setContent {
             val themeMode by userPreferences.themeMode.collectAsStateWithLifecycle()
@@ -36,10 +41,12 @@ class MainActivity : ComponentActivity() {
                 AppThemeMode.LIGHT -> false
                 AppThemeMode.DARK -> true
             }
+            val startTest by startTestState
 
             AndZiTheme(darkTheme = isDarkTheme) {
                 MainAppScaffold(
-                    startDestination = if (startTest) Screen.Study.route else Screen.Home.route
+                    startTest = startTest,
+                    onTestStarted = { startTestState.value = false }
                 )
             }
         }
@@ -49,5 +56,9 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         ProgressSyncWorker.cancelNotification(this)
+        if (intent.getBooleanExtra("start_test", false)) {
+            startTestState.value = true
+            intent.removeExtra("start_test")
+        }
     }
 }

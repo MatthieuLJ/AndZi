@@ -134,4 +134,10 @@ interface LeitnerDao {
         ) GROUP BY box
     """)
     suspend fun getBoxCounts(): List<BoxCount>
+
+    @Query("SELECT DISTINCT chinese FROM cword")
+    suspend fun getAllDistinctCwords(): List<String>
+
+    @Query("SELECT DISTINCT hanzi FROM char_pinyin")
+    suspend fun getAllDistinctCharacters(): List<String>
 }

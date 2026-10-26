@@ -72,6 +72,10 @@ class AnalyticsViewModelTest {
         }
         assertFalse(state.isLoading)
         assertEquals(1, state.totalWordsStudied)
+        assertEquals(1, state.wordsKnown)
+        assertEquals(1, state.totalWords)
+        assertEquals(1, state.distinctCharactersCount)
+        assertEquals(1, state.charactersKnown)
         assertEquals(100f, state.overallAccuracy)
         assertEquals(1, state.currentStreak)
 
@@ -89,7 +93,7 @@ class AnalyticsViewModelTest {
         vocRepo.addVocabulary(Vocabulary("猫", "mao1", arrayListOf("cat")))
         vocRepo.addVocabulary(Vocabulary("狗", "gou3", arrayListOf("dog")))
 
-        val viewModel = AnalyticsViewModel(progressRepo, studyRepo, andZiDb.leitnerDao())
+        val viewModel = AnalyticsViewModel(progressRepo, studyRepo, andZiDb.leitnerDao(), vocRepo)
 
         val state = withTimeout(3000) {
             viewModel.uiState.filter { !it.isLoading }.first()
@@ -98,6 +102,10 @@ class AnalyticsViewModelTest {
         assertFalse(state.isLoading)
         // 2 vocabulary words + 2 constituent char_pinyin
         assertEquals(2, state.totalWordsStudied)
+        assertEquals(0, state.wordsKnown)
+        assertEquals(2, state.totalWords)
+        assertEquals(2, state.distinctCharactersCount)
+        assertEquals(0, state.charactersKnown)
         assertEquals(2, state.cardsDueToday)
         assertEquals(2, state.boxDistribution[0])
         assertEquals(0f, state.overallAccuracy)
@@ -112,5 +120,31 @@ class AnalyticsViewModelTest {
         assertEquals(2, state.forecastData.totalCards)
         assertFalse(state.forecastData.points.isEmpty())
         assertFalse(state.progressRecords.isEmpty())
+    }
+
+    @Test
+    fun testCompoundWordsAndDistinctCharactersCount() = runBlocking {
+        // Add compound words sharing characters: 学习 (学, 习), 学生 (学, 生), 大学 (大, 学)
+        vocRepo.addVocabulary(Vocabulary("学习", "xue2xi2", arrayListOf("study")))
+        vocRepo.addVocabulary(Vocabulary("学生", "xue2sheng1", arrayListOf("student")))
+        vocRepo.addVocabulary(Vocabulary("大学", "da4xue2", arrayListOf("university")))
+
+        // Review 学习 and 学生 to make them known; leave 大学 unstudied (Box 0)
+        studyRepo.recordReviewResult("学习", isCorrect = true)
+        studyRepo.recordReviewResult("学生", isCorrect = true)
+
+        val viewModel = AnalyticsViewModel(progressRepo, studyRepo, andZiDb.leitnerDao(), vocRepo)
+
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertFalse(state.isLoading)
+        // Total words in deck: 3 distinct compound words
+        assertEquals(3, state.totalWords)
+        // Words known (Box >= 1): 2 (学习, 学生)
+        assertEquals(2, state.wordsKnown)
+        // Distinct characters in deck: 4 (学, 习, 生, 大)
+        assertEquals(4, state.distinctCharactersCount)
     }
 }

@@ -61,6 +61,7 @@ import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
 fun StudyScreen(
     viewModel: StudyViewModel,
     onNavigateBack: () -> Unit,
+    onReturnHome: () -> Unit = onNavigateBack,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,6 +73,7 @@ fun StudyScreen(
     StudyScreenContent(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
+        onReturnHome = onReturnHome,
         onToneSelected = { viewModel.submitToneAnswer(it) },
         onEnglishSelected = { viewModel.submitEnglishAnswer(it) },
         onClozeSelected = { viewModel.submitClozeAnswer(it) },
@@ -97,6 +99,7 @@ fun StudyScreenContent(
     onAcceptAnswer: () -> Unit = {},
     onRateGrade: (ReviewGrade) -> Unit = {},
     onNextCard: () -> Unit,
+    onReturnHome: () -> Unit = onNavigateBack,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -166,7 +169,7 @@ fun StudyScreenContent(
             uiState.isSessionFinished || uiState.queue.isEmpty() -> {
                 StudyFinishedView(
                     stats = uiState.sessionStats,
-                    onReturnHome = onNavigateBack,
+                    onReturnHome = onReturnHome,
                     modifier = Modifier.padding(innerPadding)
                 )
             }

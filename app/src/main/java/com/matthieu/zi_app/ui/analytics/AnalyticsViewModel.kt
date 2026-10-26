@@ -13,10 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.matthieu.zi_app.data.repository.VocabularyRepository
+
 class AnalyticsViewModel(
     private val progressRepository: ProgressRepository,
     private val studyRepository: StudyRepository,
-    private val leitnerDao: LeitnerDao
+    private val leitnerDao: LeitnerDao,
+    private val vocabularyRepository: VocabularyRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AnalyticsUiState(isLoading = true))
@@ -102,15 +105,69 @@ class AnalyticsViewModel(
                 val memoryHealth = com.matthieu.zi_app.domain.srs.MemoryForecastCalculator.calculateMemoryHealth(reviewStates, now)
                 val forecastData = com.matthieu.zi_app.domain.srs.MemoryForecastCalculator.calculateForecast(reviewStates, now)
 
+                // Compute distinct words and characters in study stack
+                val allWordsFromDao = leitnerDao.getAllDistinctCwords()
+                val allCharsFromDb = leitnerDao.getAllDistinctCharacters()
+
+                val allWords = if (allWordsFromDao.isNotEmpty()) {
+                    allWordsFromDao
+                } else {
+                    vocabularyRepository?.getAllDistinctWords() ?: emptyList()
+                }
+
+                val distinctChars = allCharsFromDb.toMutableSet()
+                if (vocabularyRepository != null) {
+                    distinctChars.addAll(vocabularyRepository.getAllDistinctHanzi())
+                }
+                for (word in allWords) {
+                    var charIdx = 0
+                    while (charIdx < word.length) {
+                        val cp = word.codePointAt(charIdx)
+                        distinctChars.add(String(Character.toChars(cp)))
+                        charIdx += Character.charCount(cp)
+                    }
+                }
+
+                val leitnerMap = allRecords.associateBy { it.hanzi }
+
+                val (wordsKnown, totalWordsCount) = if (allWords.isNotEmpty()) {
+                    val known = allWords.count { (leitnerMap[it]?.box ?: 0) >= 1 }
+                    Pair(known, allWords.size)
+                } else {
+                    val known = allRecords.count { it.box >= 1 }
+                    Pair(known, allRecords.size)
+                }
+
+                val distinctCharactersCount = if (distinctChars.isNotEmpty()) {
+                    distinctChars.size
+                } else {
+                    allRecords.map { it.hanzi }.flatMap { word ->
+                        val chars = mutableListOf<String>()
+                        var i = 0
+                        while (i < word.length) {
+                            val cp = word.codePointAt(i)
+                            chars.add(String(Character.toChars(cp)))
+                            i += Character.charCount(cp)
+                        }
+                        chars
+                    }.distinct().size
+                }
+
+                val charactersKnown = distinctChars.count { (leitnerMap[it]?.box ?: 0) >= 1 }
+
                 val currentRange = _uiState.value.selectedTimeRange
                 val filteredHistory = filterHistoryByRange(history, currentRange, now)
 
-                android.util.Log.d("AnalyticsViewModel", "Loaded analytics: totalWords=$totalWords, memoryHealth=$memoryHealth, historyCount=${history.size}")
+                android.util.Log.d("AnalyticsViewModel", "Loaded analytics: totalWords=$totalWords, wordsKnown=$wordsKnown, totalWordsCount=$totalWordsCount, distinctCharactersCount=$distinctCharactersCount, memoryHealth=$memoryHealth, historyCount=${history.size}")
                 _uiState.update {
                     it.copy(
                         progressRecords = filteredHistory,
                         memoryHealth = memoryHealth,
                         forecastData = forecastData,
+                        wordsKnown = wordsKnown,
+                        totalWords = totalWordsCount,
+                        distinctCharactersCount = distinctCharactersCount,
+                        charactersKnown = charactersKnown,
                         totalWordsStudied = totalWords,
                         cardsDueToday = dueCount,
                         overallAccuracy = accuracy,
@@ -165,14 +222,16 @@ class AnalyticsViewModel(
         fun provideFactory(
             progressRepository: ProgressRepository,
             studyRepository: StudyRepository,
-            leitnerDao: LeitnerDao
+            leitnerDao: LeitnerDao,
+            vocabularyRepository: VocabularyRepository? = null
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return AnalyticsViewModel(
                     progressRepository,
                     studyRepository,
-                    leitnerDao
+                    leitnerDao,
+                    vocabularyRepository
                 ) as T
             }
         }

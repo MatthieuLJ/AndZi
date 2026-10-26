@@ -13,6 +13,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,14 +31,30 @@ import com.matthieu.zi_app.ui.home.HomeScreen
 import com.matthieu.zi_app.ui.home.HomeViewModel
 import com.matthieu.zi_app.ui.settings.SettingsScreen
 import com.matthieu.zi_app.ui.study.StudyScreen
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun MainAppScaffold(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Home.route
+    startDestination: String = Screen.Home.route,
+    startTest: Boolean = false,
+    onTestStarted: () -> Unit = {}
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(startTest) {
+        if (startTest) {
+            navController.currentBackStackEntryFlow.filterNotNull().first()
+            if (navController.currentDestination?.route != Screen.Study.route) {
+                navController.navigate(Screen.Study.route) {
+                    launchSingleTop = true
+                }
+            }
+            onTestStarted()
+        }
+    }
 
     val isBottomBarVisible = currentRoute in Screen.bottomNavItems.map { it.route }
 
@@ -135,7 +152,15 @@ fun MainAppScaffold(
                 com.matthieu.zi_app.ui.vocabulary.VocabularyListScreen(
                     viewModel = vocabViewModel,
                     onNavigateBack = {
-                        navController.popBackStack()
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     }
                 )
             }
@@ -157,7 +182,8 @@ fun MainAppScaffold(
                     factory = com.matthieu.zi_app.ui.analytics.AnalyticsViewModel.provideFactory(
                         progressRepository = appContainer.progressRepository,
                         studyRepository = appContainer.studyRepository,
-                        leitnerDao = appContainer.leitnerDao
+                        leitnerDao = appContainer.leitnerDao,
+                        vocabularyRepository = appContainer.vocabularyRepository
                     )
                 )
                 AnalyticsScreen(viewModel = analyticsViewModel)
@@ -174,7 +200,23 @@ fun MainAppScaffold(
                 StudyScreen(
                     viewModel = studyViewModel,
                     onNavigateBack = {
-                        navController.popBackStack()
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    onReturnHome = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -192,7 +234,15 @@ fun MainAppScaffold(
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     onNavigateBack = {
-                        navController.popBackStack()
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     }
                 )
             }

@@ -2,6 +2,7 @@ package com.matthieu.zi_app.ui
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -379,6 +380,71 @@ class StudyScreenTest {
             .performClick()
 
         assertTrue(acceptClicked)
+    }
+
+    @Test
+    fun testStudyFinishedView_backToDashboardButtonCallsOnReturnHome() {
+        val state = StudyUiState(
+            queue = emptyList(),
+            isLoading = false,
+            isSessionFinished = true
+        )
+        var returnHomeClicked = false
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onReturnHome = { returnHomeClicked = true },
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Session Completed!").assertExists()
+        composeTestRule.onNodeWithText("Back to Dashboard")
+            .performScrollTo()
+            .assertExists()
+            .assertHasClickAction()
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assertTrue(returnHomeClicked)
+    }
+
+    @Test
+    fun testStudyFinishedView_closeIconCallsOnNavigateBack() {
+        val state = StudyUiState(
+            queue = emptyList(),
+            isLoading = false,
+            isSessionFinished = true
+        )
+        var navigateBackClicked = false
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = { navigateBackClicked = true },
+                    onReturnHome = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription("Close Practice")
+            .assertExists()
+            .assertHasClickAction()
+            .performClick()
+
+        assertTrue(navigateBackClicked)
     }
 }
 
