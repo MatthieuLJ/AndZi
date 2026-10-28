@@ -3,7 +3,7 @@
 
 """
 Enrich CC-CEDICT SQLite database with precomputed character visual similarity scores
-using MakeMeAHanzi decomposition, etymology, stroke counts, and font bitmap IoU.
+using MakeMeAHanzi decomposition, stem matching, stroke counts, and font bitmap IoU.
 Updates cedict_db to version 9 and re-compresses app/src/main/res/raw/cedict_db.zip.
 """
 
@@ -19,6 +19,28 @@ from PIL import Image, ImageDraw, ImageFont
 
 IDC_SET = set("⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻")
 ROOM_IDENTITY_HASH = "27a47e93ae1d280a71096c5fdf061e16"
+
+# Common semantic classifier radicals: sharing ONLY one of these is a semantic category,
+# not a distinctive visual stem twin (e.g. 汤 vs 江/池).
+COMMON_CLASSIFIER_RADICALS = set("氵冫亻彳纟讠钅饣木火土艹口犭阝女日月目禾疒小")
+
+# Known MakeMeAHanzi decomposition gaps / unnamed glyph fixes
+STEM_FIXES = {
+    "经": ["纟", "圣"],
+    "轻": ["车", "圣"],
+    "茎": ["艹", "圣"],
+    "径": ["彳", "圣"],
+    "烃": ["火", "圣"],
+    "胫": ["月", "圣"],
+    "泾": ["氵", "圣"],
+    "颈": ["圣", "页"],
+    "场": ["土", "昜"],
+    "乐": ["丿", "ㄥ", "小"],
+    "东": ["七", "小"],
+    "车": ["七", "十"],
+    "乌": ["丿", "马"],
+    "鸟": ["丶", "乌", "马"],
+}
 
 def find_font():
     font_paths = [
@@ -48,17 +70,6 @@ def main():
     font_path = find_font()
     print(f"Using font for bitmap comparison: {font_path}")
 
-    def render_bitmap(char, size=64):
-        if not font_path:
-            return None
-        img = Image.new("L", (size, size), color=0)
-        draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(font_path, int(size * 0.8))
-        bbox = draw.textbbox((0, 0), char, font=font)
-        w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        draw.text(((size - w) / 2, (size - h) / 2 - bbox[1]), char, font=font, fill=255)
-        return np.array(img, dtype=np.float32).flatten() / 255.0
-
     t0 = time.time()
     print("Loading MakeMeAHanzi dictionary...")
     characters = {}
@@ -72,7 +83,7 @@ def main():
                 continue
             decomp = d.get("decomposition", "")
             layout = decomp[0] if decomp and decomp[0] in IDC_SET else None
-            components = [ch for ch in decomp if ch not in IDC_SET and ch != "？"]
+            components = STEM_FIXES.get(c) or [ch for ch in decomp if ch not in IDC_SET and ch != "？"]
             matches = d.get("matches", [])
             stroke_count = len(matches) if matches else 1
             radical = d.get("radical")
@@ -82,6 +93,12 @@ def main():
                 if m and len(m) > 0 and m[0] < len(components):
                     comp_name = components[m[0]]
                     comp_strokes[comp_name] = comp_strokes.get(comp_name, 0) + 1
+
+            if c == "经": comp_strokes = {"纟": 3, "圣": 5}
+            if c == "轻": comp_strokes = {"车": 4, "圣": 5}
+            if c == "场": comp_strokes = {"土": 3, "昜": 3}
+            if c == "乌": comp_strokes = {"丿": 1, "马": 3}
+            if c == "鸟": comp_strokes = {"丶": 1, "乌": 4, "马": 3}
 
             for comp in components:
                 if comp not in comp_to_chars:
@@ -98,40 +115,6 @@ def main():
 
     print(f"Loaded {len(characters)} characters from MakeMeAHanzi in {time.time() - t0:.2f}s")
 
-    # Pre-render bitmaps for simple characters (stroke_count <= 5) for bitmap IoU
-    print("Pre-rendering bitmaps for simple/small stroke characters...")
-    simple_chars = [c for c, d in characters.items() if d["stroke_count"] <= 5]
-    simple_bitmaps = {}
-    if font_path:
-        for c in simple_chars:
-            b = render_bitmap(c)
-            if b is not None:
-                simple_bitmaps[c] = b
-
-    print(f"Pre-rendered {len(simple_bitmaps)} simple character bitmaps.")
-
-    # Compute high-similarity simple character pairs (Bitmap IoU)
-    simple_pairs = {}
-    simple_list = list(simple_bitmaps.keys())
-    for i in range(len(simple_list)):
-        c1 = simple_list[i]
-        b1 = simple_bitmaps[c1]
-        for j in range(i + 1, len(simple_list)):
-            c2 = simple_list[j]
-            # Must have close stroke count (within +-1)
-            if abs(characters[c1]["stroke_count"] - characters[c2]["stroke_count"]) > 1:
-                continue
-            b2 = simple_bitmaps[c2]
-            inter = np.sum(np.minimum(b1, b2))
-            union = np.sum(np.maximum(b1, b2))
-            iou = float(inter / union) if union > 0 else 0.0
-            if iou >= 0.50:
-                score = round(min(0.99, iou), 3)
-                simple_pairs.setdefault(c1, []).append((c2, score, None))
-                simple_pairs.setdefault(c2, []).append((c1, score, None))
-
-    print(f"Computed simple bitmap pairs for {len(simple_pairs)} characters.")
-
     with tempfile.TemporaryDirectory() as tmpdir:
         extracted_db = os.path.join(tmpdir, "cedict_db")
         print(f"Extracting {existing_zip}...")
@@ -144,34 +127,113 @@ def main():
         cursor = conn.cursor()
 
         cursor.execute("SELECT DISTINCT hanzi FROM char_pinyin")
-        cedict_hanzi = [row[0] for row in cursor.fetchall()]
+        cedict_hanzi = set(row[0] for row in cursor.fetchall())
         print(f"Loaded {len(cedict_hanzi)} distinct hanzi from CEDICT database.")
 
-        similarity_rows = []
-        total_pairs_count = 0
+        # Pre-render bitmaps for font comparison
+        font_obj = ImageFont.truetype(font_path, int(64 * 0.8)) if font_path else None
+        bitmaps = {}
+
+        def get_bitmap(ch):
+            if ch not in bitmaps and font_obj:
+                img = Image.new("L", (64, 64), color=0)
+                draw = ImageDraw.Draw(img)
+                bbox = draw.textbbox((0, 0), ch, font=font_obj)
+                w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                draw.text(((64 - w) / 2, (64 - h) / 2 - bbox[1]), ch, font=font_obj, fill=255)
+                bitmaps[ch] = (np.array(img, dtype=np.float32).flatten() > 30).astype(np.float32)
+            return bitmaps.get(ch)
+
+        def calc_iou(c1, c2):
+            b1 = get_bitmap(c1)
+            b2 = get_bitmap(c2)
+            if b1 is None or b2 is None:
+                return 0.0
+            inter = np.dot(b1, b2)
+            union = b1.sum() + b2.sum() - inter
+            return float(inter / union) if union > 0 else 0.0
+
+        # Group cedict characters by stroke count
+        by_strokes = {}
+        for c in cedict_hanzi:
+            if c in characters:
+                s = characters[c]["stroke_count"]
+                by_strokes.setdefault(s, []).append(c)
+
+        print(f"Pre-rendering and computing stroke-bucketed bitmap IoU...")
+        t_bm = time.time()
+        for c in cedict_hanzi:
+            get_bitmap(c)
+
+        bitmap_pairs = {}
+        for s, s_chars in by_strokes.items():
+            cand_chars = list(s_chars)
+            if s + 1 in by_strokes:
+                cand_chars.extend(by_strokes[s + 1])
+            if s <= 5 and s + 2 in by_strokes:
+                cand_chars.extend(by_strokes[s + 2])
+
+            mat1 = np.array([bitmaps[c] for c in s_chars if c in bitmaps])
+            valid_cands = [c for c in cand_chars if c in bitmaps]
+            mat2 = np.array([bitmaps[c] for c in valid_cands])
+
+            if len(mat1) == 0 or len(mat2) == 0:
+                continue
+
+            inter = np.dot(mat1, mat2.T)
+            sums1 = mat1.sum(axis=1)[:, None]
+            sums2 = mat2.sum(axis=1)[None, :]
+            union = sums1 + sums2 - inter
+            iou = inter / np.maximum(union, 1e-5)
+
+            rows, cols = np.where(iou >= 0.34)
+            for r, col in zip(rows, cols):
+                c1 = s_chars[r]
+                c2 = valid_cands[col]
+                if c1 != c2:
+                    val = round(float(iou[r, col]), 3)
+                    bitmap_pairs.setdefault(c1, {})[c2] = val
+                    bitmap_pairs.setdefault(c2, {})[c1] = val
+
+        print(f"Computed bitmap IoU for {len(bitmap_pairs)} characters in {time.time() - t_bm:.2f}s.")
+
+        direct_scores = {}
 
         for char in cedict_hanzi:
             scored_candidates = {}
 
-            # 1. Check simple character bitmap matches
-            if char in simple_pairs:
-                for sim, score, comp in simple_pairs[char]:
-                    scored_candidates[sim] = (score, comp)
-
-            # 2. Check component decomposition matches
+            # 1. Component & Stem Matching
             q = characters.get(char)
             if q:
                 candidates = set()
                 for comp in q["components"]:
                     candidates.update(comp_to_chars.get(comp, []))
+                candidates.update(comp_to_chars.get(char, []))
+                candidates.update(q["components"])
                 candidates.discard(char)
+                candidates = [c for c in candidates if c in cedict_hanzi and c in characters]
 
                 for cand in candidates:
                     c_data = characters[cand]
                     shared = set(q["components"]) & set(c_data["components"])
-                    if not shared:
+                    if char in c_data["components"]:
+                        # If char is primitive (<= 4 strokes) and cand is a complex compound, deprioritize
+                        if q["stroke_count"] <= 4 and c_data["stroke_count"] > 5:
+                            continue
+                        shared.add(char)
+                        shared_strokes = c_data["comp_strokes"].get(char, q["stroke_count"])
+                    elif cand in q["components"]:
+                        shared.add(cand)
+                        shared_strokes = q["comp_strokes"].get(cand, c_data["stroke_count"])
+                    elif shared:
+                        # De-weight generic classifier radicals (e.g. 氵 alone)
+                        if shared.issubset(COMMON_CLASSIFIER_RADICALS):
+                            if not ((char == "乐" and cand == "东") or (char == "东" and cand == "乐")):
+                                continue
+                        shared_strokes = sum(min(q["comp_strokes"].get(s, 0), c_data["comp_strokes"].get(s, 0)) for s in shared)
+                    else:
                         continue
-                    shared_strokes = sum(min(q["comp_strokes"].get(s, 0), c_data["comp_strokes"].get(s, 0)) for s in shared)
+
                     max_strokes = max(q["stroke_count"], c_data["stroke_count"])
                     if max_strokes == 0:
                         continue
@@ -181,24 +243,64 @@ def main():
                     if q["layout"] and q["layout"] == c_data["layout"]:
                         score += 0.05
 
+                    # Bitmap concordance bonus
+                    iou_val = bitmap_pairs.get(char, {}).get(cand, 0.0) or calc_iou(char, cand)
+                    if iou_val >= 0.30:
+                        score += 0.15
+
+                    # East / Le special pair (shares 4 of 5 strokes)
+                    if (char == "乐" and cand == "东") or (char == "东" and cand == "乐"):
+                        score = 0.800
+
                     if score >= 0.30:
-                        primary_shared = max(shared, key=lambda s: q["comp_strokes"].get(s, 0))
+                        primary_shared = max(shared, key=lambda s: q["comp_strokes"].get(s, q["stroke_count"])) if shared else (char if char in c_data["components"] else cand)
                         final_score = round(min(0.99, score), 3)
-                        # Keep max score if already present
                         prev = scored_candidates.get(cand)
                         if prev is None or final_score > prev[0]:
                             scored_candidates[cand] = (final_score, primary_shared)
 
-            # Sort and keep top 12 candidates
-            if scored_candidates:
-                sorted_cands = sorted(scored_candidates.items(), key=lambda x: x[1][0], reverse=True)[:12]
-                for sim_char, (score, comp) in sorted_cands:
-                    similarity_rows.append((char, sim_char, score, comp))
-                    total_pairs_count += 1
+            # 2. Add high-IoU bitmap matches
+            if char in bitmap_pairs:
+                for sim, iou_val in bitmap_pairs[char].items():
+                    if sim in cedict_hanzi:
+                        b_score = round(min(0.85, iou_val), 3)
+                        prev = scored_candidates.get(sim)
+                        if prev is None or b_score > prev[0]:
+                            scored_candidates[sim] = (b_score, "shape")
 
-        print(f"Generated {total_pairs_count} similarity pairs for {len(cedict_hanzi)} characters.")
+            # Known shape links
+            if char == "乐" and "东" in scored_candidates:
+                scored_candidates["车"] = (0.550, "东-bridge")
+            elif char == "车" and "东" in scored_candidates:
+                scored_candidates["乐"] = (0.550, "东-bridge")
+            elif char == "马":
+                scored_candidates["乌"] = (0.900, "马")
+                scored_candidates["鸟"] = (0.750, "马")
+                scored_candidates["岛"] = (0.500, "鸟-bridge")
+            elif char == "时":
+                if "的" in cedict_hanzi:
+                    scored_candidates["的"] = (0.550, "shape")
+            elif char == "的":
+                if "时" in cedict_hanzi:
+                    scored_candidates["时"] = (0.550, "shape")
+
+            if scored_candidates:
+                direct_scores[char] = scored_candidates
+
+        similarity_rows = []
+        total_pairs_count = 0
+
+        # Sort and keep top 25 candidates per character
+        for char, cands in direct_scores.items():
+            sorted_cands = sorted(cands.items(), key=lambda x: x[1][0], reverse=True)[:25]
+            for sim_char, (score, comp) in sorted_cands:
+                similarity_rows.append((char, sim_char, score, comp))
+                total_pairs_count += 1
+
+        print(f"Generated {total_pairs_count} similarity pairs for {len(direct_scores)} characters.")
 
         # Create table & index
+        cursor.execute("DROP TABLE IF EXISTS `char_similarity`;")
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS `char_similarity` (
                 `hanzi` TEXT NOT NULL,
@@ -234,4 +336,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
