@@ -280,7 +280,8 @@ class StudyViewModel(
                 val idxInWord = wordSlots.indexOf(hanzi)
                 targetIdx = if (idxInWord >= 0) idxInWord else 0
                 val correctChar = wordSlots[targetIdx]
-                scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
+                val missingCharBox = studyRepository.getLeitnerState(correctChar)?.box ?: box
+                scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
                 if (comp.english.isNotEmpty()) {
                     cardEnglish = comp.english
                 }
@@ -296,7 +297,8 @@ class StudyViewModel(
                 if (wordSlots.isNotEmpty()) {
                     targetIdx = (0 until wordSlots.size).random()
                     val correctChar = wordSlots[targetIdx]
-                    scrambledTiles.addAll(generateCharDistractors(correctChar, distractorCount, studyChars))
+                    val missingCharBox = studyRepository.getLeitnerState(correctChar)?.box ?: box
+                    scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
                 }
             }
 
@@ -510,15 +512,56 @@ class StudyViewModel(
         return distractors.shuffled()
     }
 
-    private fun generateCharDistractors(
+    private suspend fun generateClozeDistractors(
         correct: String,
+        missingCharBox: Int,
         count: Int = 3,
         studyChars: Set<String> = emptySet()
     ): List<String> {
-        val candidates = studyChars.filter { it != correct }.shuffled()
-        val distractors = candidates.take(count).toMutableList()
-        distractors.add(correct)
-        return distractors.shuffled()
+        // Query precomputed visual similarities from char_similarity table
+        val similarFromCedict = vocabularyRepository.getSimilarCharacters(correct, limit = 20)
+            .filter { it != correct }
+
+        val knownSimilar = similarFromCedict.filter { it in studyChars }
+        val unstudiedSimilar = similarFromCedict.filter { it !in studyChars }
+        val otherStudyChars = studyChars.filter { it != correct && it !in knownSimilar }.shuffled()
+
+        // The count of similar characters we take should be somewhat random.
+        // For not well known characters (box 0-1), this could even be 0.
+        val numSimilarTarget = when {
+            missingCharBox <= 1 -> (0..minOf(count, if (missingCharBox == 0) 1 else 2)).random()
+            missingCharBox in 2..3 -> (1..minOf(count, 2)).random()
+            missingCharBox == 4 -> (1..minOf(count, 3)).random()
+            else -> (1..count).random()
+        }
+
+        val selectedDistractors = mutableListOf<String>()
+
+        if (missingCharBox >= 5) {
+            // Really well known (Box 5+):
+            // Suggest similar characters, including ones from CEDICT that are not being studied yet!
+            val similarPool = (knownSimilar.shuffled() + unstudiedSimilar.shuffled())
+            selectedDistractors.addAll(similarPool.take(numSimilarTarget))
+            if (selectedDistractors.size < count) {
+                selectedDistractors.addAll(otherStudyChars.take(count - selectedDistractors.size))
+            }
+            // If study list doesn't have enough characters to fill count, backfill with remaining unstudied similar characters
+            if (selectedDistractors.size < count) {
+                val remainingUnstudied = unstudiedSimilar.filter { it !in selectedDistractors }
+                selectedDistractors.addAll(remainingUnstudied.take(count - selectedDistractors.size))
+            }
+        } else {
+            // Lower / intermediate boxes (Box 0-4):
+            // Only suggest known characters from study list
+            selectedDistractors.addAll(knownSimilar.shuffled().take(numSimilarTarget))
+            if (selectedDistractors.size < count) {
+                selectedDistractors.addAll(otherStudyChars.take(count - selectedDistractors.size))
+            }
+        }
+
+        val finalTiles = selectedDistractors.take(count).toMutableList()
+        finalTiles.add(correct)
+        return finalTiles.shuffled()
     }
 
     private fun generateCharDistractorsForWord(

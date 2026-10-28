@@ -964,6 +964,168 @@ class StudyViewModelTest {
         // Daily streak should now be recorded as 1
         assertEquals(1, userPreferences.getStreakDays())
     }
+
+    @Test
+    fun testClozeDistractors_lowBox_onlyKnownStudyCharactersSuggested() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("猫咪", "mao1mi1", arrayListOf("kitty")))
+        vocRepo.addVocabulary(Vocabulary("乐曲", "yue4qu3", arrayListOf("music tune")))
+        vocRepo.addVocabulary(Vocabulary("小狗", "xiao3gou3", arrayListOf("puppy")))
+
+        val now = System.currentTimeMillis()
+        // Low box: Box 1 (not well known)
+        // 猫咪 expires earlier so it is tested first at index 0 (WORD_ASSEMBLY), leaving 乐曲 for index 1 (CLOZE)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "猫咪", box = 1, expTime = now - 2000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐曲", box = 1, expTime = now - 1000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "曲", box = 1, expTime = now + 100_000L)
+        )
+
+        // Add similar characters (unstudied, not in vocabulary) to char_similarity table
+        andZiDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "车",
+                    score = 0.550f,
+                    sharedComponent = "东-bridge"
+                ),
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "曲",
+                    similarHanzi = "田",
+                    score = 0.600f,
+                    sharedComponent = "由"
+                )
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val presented = collectPresentedCards(viewModel, maxSteps = 5)
+        val card = presented.first { it.quizType == QuizType.CLOZE && it.hanzi == "乐曲" }
+
+        // In Box 1, unstudied characters from CEDICT ("车", "田") should NOT be suggested
+        assertFalse(card.scrambledTiles.contains("车"))
+        assertFalse(card.scrambledTiles.contains("田"))
+        // All distractors should be from the known study list
+        val knownChars = setOf("乐", "曲", "猫", "咪", "小", "狗")
+        assertTrue(card.scrambledTiles.all { it in knownChars })
+    }
+
+    @Test
+    fun testClozeDistractors_highBox_suggestsUnstudiedSimilarCharactersFromCedict() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("猫咪", "mao1mi1", arrayListOf("kitty")))
+        vocRepo.addVocabulary(Vocabulary("乐曲", "yue4qu3", arrayListOf("music tune")))
+
+        val now = System.currentTimeMillis()
+        // High box: Box 5 ("really well known")
+        // 猫咪 expires earlier so it is tested first at index 0 (WORD_ASSEMBLY), leaving 乐曲 for index 1 (CLOZE)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "猫咪", box = 5, expTime = now - 2000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐曲", box = 5, expTime = now - 1000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 5, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "曲", box = 5, expTime = now + 100_000L)
+        )
+
+        // Add unstudied similar characters from CEDICT for "乐" and "曲"
+        andZiDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "东",
+                    score = 0.800f,
+                    sharedComponent = "小"
+                ),
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "车",
+                    score = 0.550f,
+                    sharedComponent = "东-bridge"
+                ),
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "曲",
+                    similarHanzi = "田",
+                    score = 0.600f,
+                    sharedComponent = "由"
+                )
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val presented = collectPresentedCards(viewModel, maxSteps = 5)
+        val card = presented.first { it.quizType == QuizType.CLOZE && it.hanzi == "乐曲" }
+
+        // For Box 5 (really well known), unstudied similar characters from CEDICT ("东", "车", or "田") ARE suggested!
+        val suggestedUnstudied = listOf("东", "车", "田")
+        val hasUnstudiedDistractor = card.scrambledTiles.any { it in suggestedUnstudied }
+        assertTrue("Expected scrambled tiles to include unstudied CEDICT similar character, but had: ${card.scrambledTiles}", hasUnstudiedDistractor)
+    }
+
+    @Test
+    fun testClozeDistractors_lowBox_similarCharacterCountCanBeZero() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("猫咪", "mao1mi1", arrayListOf("kitty")))
+        vocRepo.addVocabulary(Vocabulary("乐曲", "yue4qu3", arrayListOf("music tune")))
+        vocRepo.addVocabulary(Vocabulary("东西", "dong1xi1", arrayListOf("thing")))
+        vocRepo.addVocabulary(Vocabulary("小狗", "xiao3gou3", arrayListOf("puppy")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "曲", box = 0, expTime = now + 100_000L)
+        )
+
+        // "东" is in vocabulary ("东西") and is visually similar to "乐"
+        andZiDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "东",
+                    score = 0.800f,
+                    sharedComponent = "小"
+                )
+            )
+        )
+
+        // Across multiple Cloze card trials for Box 0, numSimilarTarget can be 0 or 1
+        var seenZeroSimilar = false
+        var seenOneSimilar = false
+        for (i in 0 until 20) {
+            // Keep both words due for each trial so the queue always yields 乐曲 at index 1 (CLOZE)
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "猫咪", box = 0, expTime = now - 2000L)
+            )
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐曲", box = 0, expTime = now - 1000L)
+            )
+            val viewModel = StudyViewModel(studyRepo, vocRepo)
+            val presented = collectPresentedCards(viewModel, maxSteps = 5)
+            val card = presented.firstOrNull { it.quizType == QuizType.CLOZE && it.hanzi == "乐曲" }
+            if (card != null && card.wordSlots[card.clozeTargetIndex] == "乐") {
+                if (!card.scrambledTiles.contains("东")) {
+                    seenZeroSimilar = true
+                } else {
+                    seenOneSimilar = true
+                }
+                if (seenZeroSimilar && seenOneSimilar) break
+            }
+        }
+        assertTrue("Expected to observe 0 similar characters in at least one Box 0 trial", seenZeroSimilar)
+        assertTrue("Expected to observe 1 similar character in at least one Box 0 trial", seenOneSimilar)
+    }
 }
+
 
 
