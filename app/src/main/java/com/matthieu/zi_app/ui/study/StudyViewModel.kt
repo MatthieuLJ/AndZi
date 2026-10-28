@@ -29,6 +29,7 @@ class StudyViewModel(
 
     private var testStepIndex = 0
     private var lastTestedHanzi: String? = null
+    private var lastTestedWord: String? = null
     private var lastPreReviewState: LeitnerState? = null
     private val recentTestedWords = ArrayDeque<String>()
 
@@ -40,6 +41,7 @@ class StudyViewModel(
         viewModelScope.launch {
             testStepIndex = 0
             lastTestedHanzi = null
+            lastTestedWord = null
             lastPreReviewState = null
             recentTestedWords.clear()
             _uiState.update {
@@ -64,17 +66,24 @@ class StudyViewModel(
                     // Priority 0: Not similar to last tested word AND not similar to recent words in session
                     val nonSimilarToRecent = dueCandidates.firstOrNull { candidate ->
                         candidate != lastTestedHanzi &&
+                        candidate != lastTestedWord &&
                         !areWordsSimilar(candidate, lastTestedHanzi) &&
+                        !areWordsSimilar(candidate, lastTestedWord) &&
                         recentTestedWords.none { areWordsSimilar(candidate, it) }
                     }
 
                     // Priority 1: Not similar to immediately preceding word (consecutive tests do not share any character)
                     val nonSimilarToLast = dueCandidates.firstOrNull { candidate ->
-                        candidate != lastTestedHanzi && !areWordsSimilar(candidate, lastTestedHanzi)
+                        candidate != lastTestedHanzi &&
+                        candidate != lastTestedWord &&
+                        !areWordsSimilar(candidate, lastTestedHanzi) &&
+                        !areWordsSimilar(candidate, lastTestedWord)
                     }
 
                     // Priority 2: Different word from last tested word
-                    val differentFromLast = dueCandidates.firstOrNull { it != lastTestedHanzi }
+                    val differentFromLast = dueCandidates.firstOrNull { candidate ->
+                        candidate != lastTestedHanzi && candidate != lastTestedWord
+                    }
 
                     // Fallback: First candidate in queue
                     nonSimilarToRecent ?: nonSimilarToLast ?: differentFromLast ?: dueCandidates.first()
@@ -116,8 +125,13 @@ class StudyViewModel(
             val card = buildStudyCard(nextHanzi, testStepIndex)
             testStepIndex++
             lastTestedHanzi = nextHanzi
-            recentTestedWords.addLast(nextHanzi)
-            if (recentTestedWords.size > 5) {
+            val revealedWord = card.revealedHanzi
+            lastTestedWord = revealedWord
+            recentTestedWords.addLast(revealedWord)
+            if (nextHanzi != revealedWord) {
+                recentTestedWords.addLast(nextHanzi)
+            }
+            while (recentTestedWords.size > 8) {
                 recentTestedWords.removeFirst()
             }
             val dueCount = studyRepository.getNumExpired(now)

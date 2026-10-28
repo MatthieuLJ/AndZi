@@ -1125,6 +1125,72 @@ class StudyViewModelTest {
         assertTrue("Expected to observe 0 similar characters in at least one Box 0 trial", seenZeroSimilar)
         assertTrue("Expected to observe 1 similar character in at least one Box 0 trial", seenOneSimilar)
     }
+
+    @Test
+    fun testConsecutiveTestsAvoidCharactersFromClozeWordAskedAbout() = runBlocking {
+        // "乐" is in vocabulary without user English translations, but has a containing compound word "乐曲"
+        // At index 1, "乐" gets QuizType.CLOZE with wordSlots = ["乐", "曲"] (asking about "乐曲")
+        vocRepo.addVocabulary(Vocabulary("猫咪", "mao1mi1", arrayListOf("kitty")))
+        vocRepo.addVocabulary(Vocabulary("乐曲", "yue4qu3", arrayListOf("music tune")))
+        andZiDb.vocabularyDao().insertCharPinyin(
+            com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "乐", pinyin = "yue4")
+        )
+        // Also add "曲" and an unrelated word "你好"
+        vocRepo.addVocabulary(Vocabulary("曲", "qu3", arrayListOf("song; tune")))
+        vocRepo.addVocabulary(Vocabulary("你好", "ni3hao3", arrayListOf("hello")))
+
+        val now = System.currentTimeMillis()
+        // "猫咪" tested 0th (index 0 -> WORD_ASSEMBLY)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "猫咪", box = 1, expTime = now - 40_000L)
+        )
+        // "乐" tested 1st (index 1 -> CLOZE inside "乐曲")
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = now - 30_000L)
+        )
+        // "曲" is second most overdue remaining (would be tested next without fix)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "曲", box = 1, expTime = now - 20_000L)
+        )
+        // "你好" is third overdue remaining (unrelated word)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "你好", box = 1, expTime = now - 10_000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+
+        // Card 0: "猫咪"
+        val state0 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        assertEquals("猫咪", state0.currentCard!!.hanzi)
+        viewModel.rateCard(ReviewGrade.GOOD)
+
+        // Card 1: "乐" presented as CLOZE inside "乐曲"
+        val state1 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card1 = state1.currentCard!!
+        assertEquals("乐", card1.hanzi)
+        assertEquals(QuizType.CLOZE, card1.quizType)
+        assertEquals("乐曲", card1.revealedHanzi)
+
+        // Rate Card 1 with AGAIN
+        viewModel.rateCard(ReviewGrade.AGAIN)
+
+        // Card 2:
+        // Even though "曲" is more overdue than "你好", "曲" was part of the word "乐曲" asked about in Card 1.
+        // Therefore, Card 2 must avoid "曲" and pick the alternative "你好"!
+        val state2 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card2 = state2.currentCard!!
+        assertEquals("你好", card2.hanzi)
+        assertFalse(
+            "Card 2 should not involve characters from Card 1's tested word ('${card1.revealedHanzi}')",
+            StudyViewModel.areWordsSimilar(card2.hanzi, card1.revealedHanzi)
+        )
+    }
 }
 
 
