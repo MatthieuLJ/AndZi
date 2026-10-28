@@ -63,7 +63,9 @@ class AnalyticsViewModelTest {
         vocRepo.addVocabulary(voc1)
 
         val now = 10_000_000L
-        studyRepo.recordReviewResult("字", isCorrect = true, now = now)
+        repeat(5) {
+            studyRepo.recordReviewResult("字", isCorrect = true, now = now)
+        }
 
         val viewModel = AnalyticsViewModel(progressRepo, studyRepo, andZiDb.leitnerDao())
 
@@ -77,7 +79,7 @@ class AnalyticsViewModelTest {
         assertEquals(1, state.distinctCharactersCount)
         assertEquals(1, state.charactersKnown)
         assertEquals(100f, state.overallAccuracy)
-        assertEquals(1, state.currentStreak)
+        assertEquals(5, state.currentStreak)
 
         // Select 7D range
         viewModel.selectTimeRange(TimeRange.DAYS_7)
@@ -129,9 +131,9 @@ class AnalyticsViewModelTest {
         vocRepo.addVocabulary(Vocabulary("学生", "xue2sheng1", arrayListOf("student")))
         vocRepo.addVocabulary(Vocabulary("大学", "da4xue2", arrayListOf("university")))
 
-        // Review 学习 and 学生 to make them known; leave 大学 unstudied (Box 0)
-        studyRepo.recordReviewResult("学习", isCorrect = true)
-        studyRepo.recordReviewResult("学生", isCorrect = true)
+        // Review 学习 and 学生 to make them mastered (Box >= 5); leave 大学 unstudied (Box 0)
+        repeat(5) { studyRepo.recordReviewResult("学习", isCorrect = true) }
+        repeat(5) { studyRepo.recordReviewResult("学生", isCorrect = true) }
 
         val viewModel = AnalyticsViewModel(progressRepo, studyRepo, andZiDb.leitnerDao(), vocRepo)
 
@@ -142,9 +144,11 @@ class AnalyticsViewModelTest {
         assertFalse(state.isLoading)
         // Total words in deck: 3 distinct compound words
         assertEquals(3, state.totalWords)
-        // Words known (Box >= 1): 2 (学习, 学生)
+        // Words mastered (Box >= 5): 2 (学习, 学生)
         assertEquals(2, state.wordsKnown)
         // Distinct characters in deck: 4 (学, 习, 生, 大)
         assertEquals(4, state.distinctCharactersCount)
+        // Characters mastered (Box >= 5 or in mastered word): 3 (学, 习, 生)
+        assertEquals(3, state.charactersKnown)
     }
 }

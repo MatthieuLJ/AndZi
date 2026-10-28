@@ -16,11 +16,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Card
@@ -104,27 +102,23 @@ fun AnalyticsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                // 1. Metric Summary Cards (3x2 Grid)
+                // 1. Metric Summary Cards (2x2 Grid)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MetricSummaryCard(
                         title = "Words Known",
-                        value = "${uiState.wordsKnown}",
-                        subtitle = if (uiState.totalWords > 0) "of ${uiState.totalWords} in study stack" else "0 in study stack",
+                        value = "${uiState.wordsKnown} / ${uiState.totalWords}",
+                        subtitle = "mastered in stack",
                         icon = Icons.Default.School,
                         iconTint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     MetricSummaryCard(
-                        title = "Characters",
-                        value = "${uiState.distinctCharactersCount}",
-                        subtitle = if (uiState.distinctCharactersCount > 0 && uiState.charactersKnown > 0) {
-                            "${uiState.charactersKnown} known • in stack"
-                        } else {
-                            "in study stack"
-                        },
+                        title = "Characters Known",
+                        value = "${uiState.charactersKnown} / ${uiState.distinctCharactersCount}",
+                        subtitle = "mastered in stack",
                         icon = Icons.Default.Translate,
                         iconTint = Color(0xFF8E24AA),
                         modifier = Modifier.weight(1f)
@@ -138,14 +132,6 @@ fun AnalyticsScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MetricSummaryCard(
-                        title = "Due Today",
-                        value = "${uiState.cardsDueToday}",
-                        subtitle = if (uiState.cardsDueToday > 0) "ready for review" else "all caught up!",
-                        icon = Icons.Default.Schedule,
-                        iconTint = if (uiState.cardsDueToday > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricSummaryCard(
                         title = "Retention",
                         value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
                         subtitle = "${uiState.totalReviewsCount} reviews",
@@ -153,14 +139,6 @@ fun AnalyticsScreen(
                         iconTint = Color(0xFF66BB6A),
                         modifier = Modifier.weight(1f)
                     )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
                     MetricSummaryCard(
                         title = "Best Streak",
                         value = "${uiState.currentStreak}",
@@ -169,35 +147,11 @@ fun AnalyticsScreen(
                         iconTint = Color(0xFFFF7043),
                         modifier = Modifier.weight(1f)
                     )
-                    MetricSummaryCard(
-                        title = "Mastered",
-                        value = "${uiState.masteredWordsCount}",
-                        subtitle = "Box 5+ cards",
-                        icon = Icons.Default.AutoAwesome,
-                        iconTint = Color(0xFFFB8C00),
-                        modifier = Modifier.weight(1f)
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 2. Real-time Bayesian Memory Health
-                com.matthieu.zi_app.ui.analytics.components.MemoryHealthCard(
-                    memoryHealth = uiState.memoryHealth,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // 3. Option B: Logarithmic Memory Retention & Review Workload Forecast Chart
-                com.matthieu.zi_app.ui.analytics.components.RetentionForecastChart(
-                    forecastData = uiState.forecastData,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // 4. Historical Progress Growth Chart Card
+                // 2. Historical Progress Growth Chart Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

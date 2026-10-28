@@ -130,13 +130,14 @@ class AnalyticsViewModel(
 
                 val leitnerMap = allRecords.associateBy { it.hanzi }
 
-                val (wordsKnown, totalWordsCount) = if (allWords.isNotEmpty()) {
-                    val known = allWords.count { (leitnerMap[it]?.box ?: 0) >= 1 }
-                    Pair(known, allWords.size)
+                val masteredWords = if (allWords.isNotEmpty()) {
+                    allWords.filter { (leitnerMap[it]?.box ?: 0) >= 5 }
                 } else {
-                    val known = allRecords.count { it.box >= 1 }
-                    Pair(known, allRecords.size)
+                    allRecords.filter { it.box >= 5 }.map { it.hanzi }
                 }
+
+                val wordsKnown = masteredWords.size
+                val totalWordsCount = if (allWords.isNotEmpty()) allWords.size else allRecords.size
 
                 val distinctCharactersCount = if (distinctChars.isNotEmpty()) {
                     distinctChars.size
@@ -153,7 +154,22 @@ class AnalyticsViewModel(
                     }.distinct().size
                 }
 
-                val charactersKnown = distinctChars.count { (leitnerMap[it]?.box ?: 0) >= 1 }
+                val charactersKnown = if (distinctChars.isNotEmpty()) {
+                    distinctChars.count { char ->
+                        (leitnerMap[char]?.box ?: 0) >= 5 || masteredWords.any { it.contains(char) }
+                    }
+                } else {
+                    masteredWords.flatMap { word ->
+                        val chars = mutableListOf<String>()
+                        var i = 0
+                        while (i < word.length) {
+                            val cp = word.codePointAt(i)
+                            chars.add(String(Character.toChars(cp)))
+                            i += Character.charCount(cp)
+                        }
+                        chars
+                    }.distinct().size
+                }
 
                 val currentRange = _uiState.value.selectedTimeRange
                 val filteredHistory = filterHistoryByRange(history, currentRange, now)

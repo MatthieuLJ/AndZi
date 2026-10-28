@@ -31,8 +31,6 @@ class HomeViewModel(
             try {
                 val now = System.currentTimeMillis()
                 val due = studyRepository.getNumExpired(now)
-                val reviewStates = studyRepository.getAllReviewStates()
-                val memoryHealth = com.matthieu.zi_app.domain.srs.MemoryForecastCalculator.calculateMemoryHealth(reviewStates, now)
                 val boxCounts = studyRepository.getBoxCounts()
                 val boxMap = (0..9).associateWith { box ->
                     boxCounts.find { it.box == box }?.count ?: 0
@@ -52,7 +50,6 @@ class HomeViewModel(
                     it.copy(
                         dueCount = due,
                         totalLearned = totalLearned,
-                        memoryHealth = memoryHealth,
                         boxDistribution = boxMap,
                         streakDays = streakDays,
                         isLoading = false,

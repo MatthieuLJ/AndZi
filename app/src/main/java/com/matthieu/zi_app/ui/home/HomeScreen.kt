@@ -147,13 +147,6 @@ fun HomeScreen(
                     )
                 }
 
-                // Real-time Memory Health
-                item {
-                    com.matthieu.zi_app.ui.analytics.components.MemoryHealthCard(
-                        memoryHealth = uiState.memoryHealth
-                    )
-                }
-
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
