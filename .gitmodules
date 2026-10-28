@@ -1,0 +1,3 @@
+[submodule "assets/makemeahanzi"]
+	path = assets/makemeahanzi
+	url = https://github.com/skishore/makemeahanzi.git

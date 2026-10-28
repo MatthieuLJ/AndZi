@@ -330,6 +330,14 @@ class VocabularyRepository(
         vocabularyDao.insertHskVocab(entities)
     }
 
+    suspend fun getSimilarCharacters(hanzi: String, limit: Int = 10): List<String> = withContext(Dispatchers.IO) {
+        vocabularyDao.getSimilarCharacters(hanzi, limit)
+    }
+
+    suspend fun getSimilarCharacterDetails(hanzi: String, limit: Int = 10): List<com.matthieu.zi_app.data.local.entity.CharSimilarityEntity> = withContext(Dispatchers.IO) {
+        vocabularyDao.getSimilarCharacterDetails(hanzi, limit)
+    }
+
     private fun toVocabulary(details: WordWithDetails): Vocabulary {
         val engList = ArrayList(details.translations.map { it.translation })
         return Vocabulary(

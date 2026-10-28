@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import com.matthieu.zi_app.data.local.dao.LeitnerDao
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
+import com.matthieu.zi_app.data.local.entity.CharSimilarityEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
@@ -29,9 +30,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WordSegmentEntity::class,
         EnglishTranslationEntity::class,
         LeitnerRecordEntity::class,
-        HskVocabEntity::class
+        HskVocabEntity::class,
+        CharSimilarityEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 abstract class AndZiDatabase : RoomDatabase() {
@@ -42,8 +44,8 @@ abstract class AndZiDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "HANZI_DB"
         const val CEDICT_DATABASE_NAME = "cedict_db"
-        const val DATABASE_VERSION = 8
-        const val ROOM_IDENTITY_HASH = "c126eeb78f3c642921694315aa5cc180"
+        const val DATABASE_VERSION = 9
+        const val ROOM_IDENTITY_HASH = "27a47e93ae1d280a71096c5fdf061e16"
 
         @Volatile
         private var INSTANCE: AndZiDatabase? = null
@@ -291,9 +293,27 @@ abstract class AndZiDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `char_similarity` (
+                        `hanzi` TEXT NOT NULL,
+                        `similar_hanzi` TEXT NOT NULL,
+                        `score` REAL NOT NULL,
+                        `shared_component` TEXT,
+                        PRIMARY KEY(`hanzi`, `similar_hanzi`)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_char_similarity_hanzi_score` ON `char_similarity` (`hanzi`, `score`)")
+            }
+        }
+
         val ALL_MIGRATIONS: Array<Migration> = arrayOf(
             MIGRATION_6_7,
-            MIGRATION_7_8
+            MIGRATION_7_8,
+            MIGRATION_8_9
         )
 
         fun createInMemory(context: Context): AndZiDatabase {

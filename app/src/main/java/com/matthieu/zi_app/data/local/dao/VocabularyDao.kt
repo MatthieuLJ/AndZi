@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
+import com.matthieu.zi_app.data.local.entity.CharSimilarityEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
@@ -244,4 +245,24 @@ interface VocabularyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHskVocab(entities: List<HskVocabEntity>)
+
+    // --- Character Similarity ---
+    @Query("""
+        SELECT similar_hanzi FROM char_similarity
+        WHERE hanzi = :hanzi
+        ORDER BY score DESC
+        LIMIT :limit
+    """)
+    suspend fun getSimilarCharacters(hanzi: String, limit: Int = 10): List<String>
+
+    @Query("""
+        SELECT * FROM char_similarity
+        WHERE hanzi = :hanzi
+        ORDER BY score DESC
+        LIMIT :limit
+    """)
+    suspend fun getSimilarCharacterDetails(hanzi: String, limit: Int = 10): List<CharSimilarityEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCharSimilarities(entities: List<CharSimilarityEntity>)
 }

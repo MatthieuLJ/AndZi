@@ -233,7 +233,68 @@ class DatabaseMigrationTest {
         assertEquals(1, hskVocab!!.hskLevel)
         assertEquals(150, hskVocab.freqRank)
 
+        // 5. Verify new CharSimilarity functionality works on the upgraded database
+        roomDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "喝",
+                    similarHanzi = "渴",
+                    score = 0.85f,
+                    sharedComponent = "曷"
+                )
+            )
+        )
+        val similar = roomDb.vocabularyDao().getSimilarCharacters("喝")
+        assertEquals(listOf("渴"), similar)
+
         roomDb.close()
+    }
+
+    @Test
+    fun testMigration8To9CreatesCharSimilarityTable() {
+        val dbFile = context.getDatabasePath(testDbName)
+        dbFile.parentFile?.mkdirs()
+
+        // 1. Create v8 database
+        val sqliteDb = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        sqliteDb.version = 8
+        sqliteDb.execSQL("CREATE TABLE hsk_vocab (hanzi TEXT PRIMARY KEY NOT NULL, hsk_level INTEGER NOT NULL, hsk2_level INTEGER NOT NULL DEFAULT 0, freq_rank INTEGER NOT NULL DEFAULT 999999, is_char INTEGER NOT NULL DEFAULT 0)")
+        sqliteDb.close()
+
+        // 2. Run MIGRATION_8_9
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val helper = factory.create(
+            androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(testDbName)
+                .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(9) {
+                    override fun onCreate(db: SupportSQLiteDatabase) {}
+                    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                        AndZiDatabase.MIGRATION_8_9.migrate(db)
+                    }
+                })
+                .build()
+        )
+        val migratedDb = helper.writableDatabase
+
+        // 3. Verify char_similarity table and index exist
+        val tableCursor = migratedDb.query("SELECT name FROM sqlite_master WHERE type='table' AND name='char_similarity'")
+        assertEquals(1, tableCursor.count)
+        tableCursor.close()
+
+        val indexCursor = migratedDb.query("SELECT name FROM sqlite_master WHERE type='index' AND name='index_char_similarity_hanzi_score'")
+        assertEquals(1, indexCursor.count)
+        indexCursor.close()
+
+        // 4. Test insert and query
+        migratedDb.execSQL("INSERT INTO char_similarity (hanzi, similar_hanzi, score, shared_component) VALUES ('楼', '数', 0.792, '娄')")
+        val dataCursor = migratedDb.query("SELECT similar_hanzi, score, shared_component FROM char_similarity WHERE hanzi = '楼'")
+        assertTrue(dataCursor.moveToFirst())
+        assertEquals("数", dataCursor.getString(0))
+        assertEquals(0.792f, dataCursor.getFloat(1), 0.001f)
+        assertEquals("娄", dataCursor.getString(2))
+        dataCursor.close()
+
+        migratedDb.close()
     }
 
     @Test

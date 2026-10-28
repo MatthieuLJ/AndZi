@@ -445,7 +445,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Includes CC-CEDICT Chinese-English Dictionary under Creative Commons Attribution-Share Alike 4.0 license.",
+                        text = "• Includes CC-CEDICT Chinese-English Dictionary under Creative Commons Attribution-Share Alike 4.0 license.\n• Includes MakeMeAHanzi character decomposition data by Shaun Kishore under CC BY-SA 3.0 and ODbL.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp
