@@ -178,4 +178,98 @@ class VocabularyListViewModelTest {
         val leitnerState = studyRepo.getLeitnerState("北京")
         assertEquals(null, leitnerState)
     }
+
+    @Test
+    fun testBoxRangeFilteringAndAdaptation() = runBlocking {
+        val word1 = Vocabulary("一", "yi1", arrayListOf("one"))
+        val word3 = Vocabulary("三", "san1", arrayListOf("three"))
+        val word5 = Vocabulary("五", "wu3", arrayListOf("five"))
+        val word7 = Vocabulary("七", "qi1", arrayListOf("seven"))
+
+        userVocRepo.addVocabulary(word1)
+        userVocRepo.addVocabulary(word3)
+        userVocRepo.addVocabulary(word5)
+        userVocRepo.addVocabulary(word7)
+
+        // Advance words to specific boxes
+        // word1: Box 1
+        studyRepo.recordReviewGrade("一", ReviewGrade.GOOD)
+        // word3: Box 3
+        repeat(3) { studyRepo.recordReviewGrade("三", ReviewGrade.GOOD) }
+        // word5: Box 5
+        repeat(5) { studyRepo.recordReviewGrade("五", ReviewGrade.GOOD) }
+        // word7: Box 7
+        repeat(7) { studyRepo.recordReviewGrade("七", ReviewGrade.GOOD) }
+
+        val viewModel = VocabularyListViewModel(userVocRepo, dictRepo, studyRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { it.items.size == 4 }.first()
+        }
+
+        // Verify bounds adapt strictly to existing boxes (1 to 7, not up to 9)
+        assertEquals(1, state.minAvailableBox)
+        assertEquals(7, state.maxAvailableBox)
+        assertEquals(setOf(1, 3, 5, 7), state.boxCounts.keys)
+        assertFalse(state.boxCounts.containsKey(8))
+        assertFalse(state.boxCounts.containsKey(9))
+        assertFalse(state.boxCounts.containsKey(0))
+
+        // Filter for range 2..5 (should include Box 3 and Box 5)
+        viewModel.onBoxRangeChanged(2..5)
+        val rangeState = viewModel.uiState.value
+        assertEquals(2..5, rangeState.selectedBoxRange)
+        assertEquals(2, rangeState.filteredItems.size)
+        assertTrue(rangeState.filteredItems.any { it.vocabulary.chinese == "三" })
+        assertTrue(rangeState.filteredItems.any { it.vocabulary.chinese == "五" })
+        assertFalse(rangeState.filteredItems.any { it.vocabulary.chinese == "一" })
+        assertFalse(rangeState.filteredItems.any { it.vocabulary.chinese == "七" })
+
+        // Single box selection (Box 7)
+        viewModel.onBoxRangeChanged(7..7)
+        val singleBoxState = viewModel.uiState.value
+        assertEquals(7..7, singleBoxState.selectedBoxRange)
+        assertEquals(1, singleBoxState.filteredItems.size)
+        assertEquals("七", singleBoxState.filteredItems.first().vocabulary.chinese)
+
+        // Clear range filter
+        viewModel.onBoxRangeChanged(null)
+        val resetState = viewModel.uiState.value
+        assertEquals(null, resetState.selectedBoxRange)
+        assertEquals(4, resetState.filteredItems.size)
+
+        // Full range selection (1..7) simplifies to null (All)
+        viewModel.onBoxRangeChanged(1..7)
+        assertEquals(null, viewModel.uiState.value.selectedBoxRange)
+        assertEquals(4, viewModel.uiState.value.filteredItems.size)
+    }
+
+    @Test
+    fun testCombinedBoxRangeAndSearchQuery() = runBlocking {
+        val wordA = Vocabulary("大", "da4", arrayListOf("big"))
+        val wordB = Vocabulary("小", "xiao3", arrayListOf("small"))
+        val wordC = Vocabulary("大家", "da4jia1", arrayListOf("everyone"))
+
+        userVocRepo.addVocabulary(wordA)
+        userVocRepo.addVocabulary(wordB)
+        userVocRepo.addVocabulary(wordC)
+
+        studyRepo.recordReviewGrade("大", ReviewGrade.GOOD) // Box 1
+        repeat(2) { studyRepo.recordReviewGrade("小", ReviewGrade.GOOD) } // Box 2
+        repeat(2) { studyRepo.recordReviewGrade("大家", ReviewGrade.GOOD) } // Box 2
+
+        val viewModel = VocabularyListViewModel(userVocRepo, dictRepo, studyRepo)
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.items.size == 3 }.first()
+        }
+
+        // Filter by Box 2..2
+        viewModel.onBoxRangeChanged(2..2)
+        assertEquals(2, viewModel.uiState.value.filteredItems.size)
+
+        // Search for "da" while box 2..2 filter is active
+        viewModel.onSearchQueryChanged("da")
+        val combinedState = viewModel.uiState.value
+        assertEquals(1, combinedState.filteredItems.size)
+        assertEquals("大家", combinedState.filteredItems.first().vocabulary.chinese)
+    }
 }

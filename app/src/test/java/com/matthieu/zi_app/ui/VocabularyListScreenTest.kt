@@ -10,6 +10,7 @@ import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.ui.vocabulary.ActiveVocabularyCard
 import com.matthieu.zi_app.ui.vocabulary.ActiveVocabularyItem
 import com.matthieu.zi_app.ui.vocabulary.ActiveWordDetailSheetContent
+import com.matthieu.zi_app.ui.vocabulary.BoxFilterSection
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -157,5 +158,40 @@ class VocabularyListScreenTest {
         val compound = composeTestRule.onNodeWithText("等等")
         compound.performScrollTo()
         compound.assertExists()
+    }
+
+    @Test
+    fun testBoxFilterSection_adaptsToPresentBoxesAndHandlesSelection() {
+        var selectedRange: IntRange? = null
+
+        composeTestRule.setContent {
+            BoxFilterSection(
+                minAvailableBox = 1,
+                maxAvailableBox = 5,
+                selectedRange = selectedRange,
+                boxCounts = mapOf(1 to 3, 3 to 2, 5 to 1),
+                totalCount = 6,
+                onRangeChanged = { selectedRange = it }
+            )
+        }
+
+        // Header and chips
+        composeTestRule.onNodeWithText("Filter by Box").assertExists()
+        composeTestRule.onNodeWithText("All (Box 1–5)").assertExists()
+        composeTestRule.onNodeWithText("All").assertExists()
+        composeTestRule.onNodeWithText("Box 1").assertExists()
+        composeTestRule.onNodeWithText("Box 3").assertExists()
+        composeTestRule.onNodeWithText("Box 5").assertExists()
+
+        // Verify boxes that don't have things (e.g. 0, 2, 4, 8, 9) are NOT shown as chips
+        composeTestRule.onNodeWithText("Box 0").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Box 2").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Box 4").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Box 8").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Box 9").assertDoesNotExist()
+
+        // Click Box 3 chip
+        composeTestRule.onNodeWithText("Box 3").performClick()
+        org.junit.Assert.assertEquals(3..3, selectedRange)
     }
 }

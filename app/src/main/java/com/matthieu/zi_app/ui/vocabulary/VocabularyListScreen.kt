@@ -2,6 +2,7 @@ package com.matthieu.zi_app.ui.vocabulary
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,6 +49,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
 import com.matthieu.zi_app.ui.theme.buildPinyinToneAnnotatedString
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +99,15 @@ fun VocabularyListScreen(
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = if (uiState.items.isNotEmpty()) "${uiState.items.size} cards in study" else "No cards in study",
+                            text = if (uiState.items.isNotEmpty()) {
+                                if (uiState.filteredItems.size != uiState.items.size) {
+                                    "${uiState.filteredItems.size} of ${uiState.items.size} cards in study"
+                                } else {
+                                    "${uiState.items.size} cards in study"
+                                }
+                            } else {
+                                "No cards in study"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -162,6 +175,18 @@ fun VocabularyListScreen(
                 )
             )
 
+            if (uiState.items.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                BoxFilterSection(
+                    minAvailableBox = uiState.minAvailableBox,
+                    maxAvailableBox = uiState.maxAvailableBox,
+                    selectedRange = uiState.selectedBoxRange,
+                    boxCounts = uiState.boxCounts,
+                    totalCount = uiState.items.size,
+                    onRangeChanged = { viewModel.onBoxRangeChanged(it) }
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             when {
@@ -183,7 +208,7 @@ fun VocabularyListScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (uiState.query.isEmpty()) {
+                            text = if (uiState.items.isEmpty()) {
                                 "No active cards in study yet.\nSearch the Dictionary to add words!"
                             } else {
                                 "No matching active cards found"
@@ -238,6 +263,237 @@ fun VocabularyListScreen(
                     onSelectCompound = { viewModel.selectWordFromCompound(it) },
                     onResetSrs = { viewModel.resetSrsScore(uiState.selectedWord!!) },
                     onRemoveFromStudy = { viewModel.removeFromStudy(uiState.selectedWord!!) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BoxFilterSection(
+    minAvailableBox: Int,
+    maxAvailableBox: Int,
+    selectedRange: IntRange?,
+    boxCounts: Map<Int, Int>,
+    totalCount: Int,
+    onRangeChanged: (IntRange?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (totalCount == 0) return
+
+    val hasMultipleBoxes = minAvailableBox < maxAvailableBox
+    val effectiveRange = selectedRange ?: (minAvailableBox..maxAvailableBox)
+
+    var sliderRange by remember(effectiveRange, minAvailableBox, maxAvailableBox) {
+        mutableStateOf(effectiveRange.first.toFloat()..effectiveRange.last.toFloat())
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp)
+        ) {
+            // Header: Filter title, current selection label, clear button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = "Box Filter",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Filter by Box",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val rangeText = when {
+                        selectedRange == null -> "All (Box $minAvailableBox–$maxAvailableBox)"
+                        selectedRange.first == selectedRange.last -> "Box ${selectedRange.first}"
+                        else -> "Box ${selectedRange.first}–${selectedRange.last}"
+                    }
+                    Text(
+                        text = rangeText,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = if (selectedRange != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (selectedRange != null) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        IconButton(
+                            onClick = { onRangeChanged(null) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear Box Filter",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // RangeSlider only when minAvailableBox < maxAvailableBox
+            if (hasMultipleBoxes) {
+                Spacer(modifier = Modifier.height(4.dp))
+                RangeSlider(
+                    value = sliderRange,
+                    onValueChange = { newRange ->
+                        sliderRange = newRange
+                        val start = newRange.start.roundToInt()
+                        val end = newRange.endInclusive.roundToInt()
+                        if (selectedRange == null ||
+                            start != selectedRange.first ||
+                            end != selectedRange.last
+                        ) {
+                            onRangeChanged(start..end)
+                        }
+                    },
+                    valueRange = minAvailableBox.toFloat()..maxAvailableBox.toFloat(),
+                    steps = (maxAvailableBox - minAvailableBox - 1).coerceAtLeast(0),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(if (hasMultipleBoxes) 4.dp else 8.dp))
+
+            // Quick Box Chips Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // "All" chip
+                val isAllSelected = selectedRange == null
+                BoxChip(
+                    label = "All",
+                    count = totalCount,
+                    isSelected = isAllSelected,
+                    onClick = { onRangeChanged(null) }
+                )
+
+                // Only show chips for boxes that actually have things!
+                val boxesWithItems = boxCounts.keys.sorted()
+                boxesWithItems.forEach { b ->
+                    val count = boxCounts[b] ?: 0
+                    val isChipSelected = selectedRange != null && b in selectedRange
+                    BoxChip(
+                        label = "Box $b",
+                        count = count,
+                        boxNumber = b,
+                        isSelected = isChipSelected,
+                        onClick = {
+                            if (selectedRange != null && selectedRange.first == b && selectedRange.last == b) {
+                                onRangeChanged(null) // toggle off
+                            } else {
+                                onRangeChanged(b..b)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BoxChip(
+    label: String,
+    count: Int,
+    boxNumber: Int? = null,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val baseContainerColor = if (boxNumber != null) {
+        when (boxNumber) {
+            0 -> MaterialTheme.colorScheme.errorContainer
+            in 1..3 -> MaterialTheme.colorScheme.tertiaryContainer
+            in 4..6 -> MaterialTheme.colorScheme.secondaryContainer
+            else -> MaterialTheme.colorScheme.primaryContainer
+        }
+    } else {
+        MaterialTheme.colorScheme.primaryContainer
+    }
+
+    val baseTextColor = if (boxNumber != null) {
+        when (boxNumber) {
+            0 -> MaterialTheme.colorScheme.onErrorContainer
+            in 1..3 -> MaterialTheme.colorScheme.onTertiaryContainer
+            in 4..6 -> MaterialTheme.colorScheme.onSecondaryContainer
+            else -> MaterialTheme.colorScheme.onPrimaryContainer
+        }
+    } else {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    }
+
+    val chipBg = if (isSelected) {
+        baseContainerColor
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val chipTextColor = if (isSelected) {
+        baseTextColor
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val borderStroke = if (isSelected) {
+        BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+    } else {
+        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+    }
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = chipBg,
+        border = borderStroke,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                ),
+                color = chipTextColor
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = if (isSelected) chipTextColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                    color = chipTextColor,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                 )
             }
         }

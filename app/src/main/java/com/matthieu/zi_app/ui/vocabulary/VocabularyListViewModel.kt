@@ -33,7 +33,11 @@ data class VocabularyListUiState(
     val selectedTranslations: Set<String> = emptySet(),
     val isInStudyQueue: Boolean = false,
     val currentBox: Int? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val minAvailableBox: Int = 0,
+    val maxAvailableBox: Int = 0,
+    val selectedBoxRange: IntRange? = null,
+    val boxCounts: Map<Int, Int> = emptyMap()
 )
 
 class VocabularyListViewModel(
@@ -71,10 +75,32 @@ class VocabularyListViewModel(
                         .thenBy { it.vocabulary.chinese }
                 )
 
+                val boxes = items.map { it.leitnerState?.box ?: 0 }
+                val minBox = boxes.minOrNull() ?: 0
+                val maxBox = boxes.maxOrNull() ?: 0
+                val boxCounts = boxes.groupingBy { it }.eachCount()
+
+                val currentRange = _uiState.value.selectedBoxRange
+                val newRange = if (currentRange != null && items.isNotEmpty()) {
+                    val clampedStart = currentRange.first.coerceIn(minBox, maxBox)
+                    val clampedEnd = currentRange.last.coerceIn(minBox, maxBox)
+                    if (clampedStart <= clampedEnd && (clampedStart != minBox || clampedEnd != maxBox)) {
+                        clampedStart..clampedEnd
+                    } else {
+                        null
+                    }
+                } else {
+                    null
+                }
+
                 _uiState.update { state ->
                     state.copy(
                         items = items,
-                        filteredItems = filterList(items, state.query),
+                        minAvailableBox = minBox,
+                        maxAvailableBox = maxBox,
+                        boxCounts = boxCounts,
+                        selectedBoxRange = newRange,
+                        filteredItems = filterList(items, state.query, newRange),
                         isLoading = false,
                         errorMessage = null
                     )
@@ -94,17 +120,46 @@ class VocabularyListViewModel(
         _uiState.update { state ->
             state.copy(
                 query = newQuery,
-                filteredItems = filterList(state.items, newQuery)
+                filteredItems = filterList(state.items, newQuery, state.selectedBoxRange)
             )
         }
     }
 
-    private fun filterList(items: List<ActiveVocabularyItem>, query: String): List<ActiveVocabularyItem> {
-        val trimmed = query.trim()
-        if (trimmed.isEmpty()) return items
+    fun onBoxRangeChanged(range: IntRange?) {
+        _uiState.update { state ->
+            val effectiveRange = if (range != null &&
+                (range.first <= state.minAvailableBox && range.last >= state.maxAvailableBox)
+            ) {
+                null
+            } else {
+                range
+            }
+            state.copy(
+                selectedBoxRange = effectiveRange,
+                filteredItems = filterList(state.items, state.query, effectiveRange)
+            )
+        }
+    }
 
+    private fun filterList(
+        items: List<ActiveVocabularyItem>,
+        query: String,
+        boxRange: IntRange?
+    ): List<ActiveVocabularyItem> {
+        val trimmed = query.trim()
         val lowerQuery = trimmed.lowercase()
+        val hasQuery = trimmed.isNotEmpty()
+
         return items.filter { item ->
+            val box = item.leitnerState?.box ?: 0
+            if (boxRange != null && box !in boxRange) {
+                return@filter false
+            }
+
+            if (!hasQuery) {
+                return@filter true
+            }
+
             val ch = item.vocabulary.chinese
             val pi = item.vocabulary.pinyin.lowercase()
             val piNoTone = pi.filter { !it.isDigit() }
