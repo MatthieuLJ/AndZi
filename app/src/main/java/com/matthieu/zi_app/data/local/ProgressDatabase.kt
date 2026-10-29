@@ -11,7 +11,7 @@ import com.matthieu.zi_app.data.local.entity.ProgressRecordEntity
 
 @Database(
     entities = [ProgressRecordEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class ProgressDatabase : RoomDatabase() {
@@ -40,8 +40,34 @@ abstract class ProgressDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val cursor = db.query("PRAGMA table_info(progress)")
+                val existingColumns = mutableSetOf<String>()
+                val nameIndex = cursor.getColumnIndex("name")
+                while (cursor.moveToNext()) {
+                    if (nameIndex != -1) {
+                        existingColumns.add(cursor.getString(nameIndex))
+                    }
+                }
+                cursor.close()
+
+                for (i in 6..10) {
+                    val totalCol = "total_box_$i"
+                    if (!existingColumns.contains(totalCol)) {
+                        db.execSQL("ALTER TABLE `progress` ADD COLUMN `$totalCol` INTEGER DEFAULT 0")
+                    }
+                    val expCol = "expired_box_$i"
+                    if (!existingColumns.contains(expCol)) {
+                        db.execSQL("ALTER TABLE `progress` ADD COLUMN `$expCol` INTEGER DEFAULT 0")
+                    }
+                }
+            }
+        }
+
         val ALL_MIGRATIONS: Array<Migration> = arrayOf(
-            MIGRATION_1_2
+            MIGRATION_1_2,
+            MIGRATION_2_3
         )
 
         @Volatile

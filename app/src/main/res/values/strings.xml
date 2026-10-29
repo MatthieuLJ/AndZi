@@ -155,7 +155,7 @@
 
     <string name="notification_ticker">More to study</string>
     <string name="notification_title">More Chinese to study</string>
-    <string name="notification_content">You have %s tests waiting</string>
+    <string name="notification_content">You have %d tests waiting</string>
 
     <string name="reference_too_many_pinned">No more free panel (need to unpin)</string>
     <string name="reference_query">Query</string>

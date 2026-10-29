@@ -422,4 +422,102 @@ class DatabaseMigrationTest {
 
         progressDb.close()
     }
+
+    @Test
+    fun testProgressDatabaseMigration2To3AddsGranularBoxes() = runBlocking {
+        val dbFile = context.getDatabasePath(testProgressDbName)
+        dbFile.parentFile?.mkdirs()
+
+        // 1. Create legacy v2 progress database (has zoom, but only total_box_1 through 5)
+        val sqliteDb = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        sqliteDb.version = 2
+        sqliteDb.execSQL(
+            """
+            CREATE TABLE progress (
+                date INTEGER PRIMARY KEY NOT NULL,
+                total_box_1 INTEGER DEFAULT 0,
+                total_box_2 INTEGER DEFAULT 0,
+                total_box_3 INTEGER DEFAULT 0,
+                total_box_4 INTEGER DEFAULT 0,
+                total_box_5 INTEGER DEFAULT 0,
+                expired_box_2 INTEGER DEFAULT 0,
+                expired_box_3 INTEGER DEFAULT 0,
+                expired_box_4 INTEGER DEFAULT 0,
+                expired_box_5 INTEGER DEFAULT 0,
+                zoom INTEGER DEFAULT 0
+            )
+            """.trimIndent()
+        )
+        sqliteDb.execSQL("CREATE INDEX IF NOT EXISTS progress_date ON progress (date)")
+
+        val snapshotDate = 1700000000000L
+        sqliteDb.execSQL(
+            """
+            INSERT INTO progress (date, total_box_1, total_box_2, total_box_3, total_box_4, total_box_5, expired_box_2, expired_box_3, expired_box_4, expired_box_5, zoom)
+            VALUES ($snapshotDate, 10, 20, 30, 40, 50, 2, 3, 4, 5, 0)
+            """.trimIndent()
+        )
+        sqliteDb.close()
+
+        // 2. Open via Room at version 3 with registered migrations
+        val progressDb = Room.databaseBuilder(
+            context,
+            ProgressDatabase::class.java,
+            testProgressDbName
+        )
+            .addMigrations(*ProgressDatabase.ALL_MIGRATIONS)
+            .build()
+
+        // 3. Verify existing data preserved and total_box_6..10 columns default to 0
+        val allProgress = progressDb.progressDao().getAllProgress()
+        assertEquals(1, allProgress.size)
+        val record = allProgress.first()
+        assertEquals(snapshotDate, record.date)
+        assertEquals(10, record.totalBox1)
+        assertEquals(20, record.totalBox2)
+        assertEquals(30, record.totalBox3)
+        assertEquals(40, record.totalBox4)
+        assertEquals(50, record.totalBox5)
+        assertEquals(0, record.totalBox6)
+        assertEquals(0, record.totalBox7)
+        assertEquals(0, record.totalBox8)
+        assertEquals(0, record.totalBox9)
+        assertEquals(0, record.totalBox10)
+        assertEquals(0, record.expiredBox6)
+        assertEquals(0, record.expiredBox7)
+        assertEquals(0, record.expiredBox8)
+        assertEquals(0, record.expiredBox9)
+        assertEquals(0, record.expiredBox10)
+
+        // 4. Verify inserting new progress record with 10 boxes (including Box 6) works
+        val newDate = 1710000000000L
+        progressDb.progressDao().insertProgress(
+            ProgressRecordEntity(
+                date = newDate,
+                totalBox1 = 5,
+                totalBox2 = 10,
+                totalBox3 = 15,
+                totalBox4 = 20,
+                totalBox5 = 25,
+                totalBox6 = 30,
+                totalBox7 = 35, // Box 6
+                totalBox8 = 0,
+                totalBox9 = 0,
+                totalBox10 = 0,
+                expiredBox6 = 2,
+                expiredBox7 = 4, // Box 6 expired
+                zoom = 0
+            )
+        )
+
+        val updatedProgress = progressDb.progressDao().getAllProgress()
+        assertEquals(2, updatedProgress.size)
+        val newRecord = updatedProgress.last()
+        assertEquals(newDate, newRecord.date)
+        assertEquals(35, newRecord.getBoxCount(6)) // Box 6 count
+        assertEquals(0, newRecord.getBoxCount(7)) // Box 7 count
+        assertEquals(4, newRecord.getExpiredBoxCount(6)) // Box 6 expired count
+
+        progressDb.close()
+    }
 }

@@ -104,25 +104,48 @@ class ProgressSyncWorker(
             val totalBox2 = boxCounts[1] ?: 0
             val totalBox3 = boxCounts[2] ?: 0
             val totalBox4 = boxCounts[3] ?: 0
-            val totalBox5 = (4..9).sumOf { boxCounts[it] ?: 0 }
+            val totalBox5 = boxCounts[4] ?: 0
+            val totalBox6 = boxCounts[5] ?: 0
+            val totalBox7 = boxCounts[6] ?: 0
+            val totalBox8 = boxCounts[7] ?: 0
+            val totalBox9 = boxCounts[8] ?: 0
+            val totalBox10 = boxCounts[9] ?: 0
 
             val allRecords = andZiDb.leitnerDao().getAllStudyRecords()
             val exp2 = allRecords.count { it.box == 1 && it.expTime < now }
             val exp3 = allRecords.count { it.box == 2 && it.expTime < now }
             val exp4 = allRecords.count { it.box == 3 && it.expTime < now }
-            val exp5 = allRecords.count { it.box >= 4 && it.expTime < now }
+            val exp5 = allRecords.count { it.box == 4 && it.expTime < now }
+            val exp6 = allRecords.count { it.box == 5 && it.expTime < now }
+            val exp7 = allRecords.count { it.box == 6 && it.expTime < now }
+            val exp8 = allRecords.count { it.box == 7 && it.expTime < now }
+            val exp9 = allRecords.count { it.box == 8 && it.expTime < now }
+            val exp10 = allRecords.count { it.box >= 9 && it.expTime < now }
 
-            if (totalBox1 + totalBox2 + totalBox3 + totalBox4 + totalBox5 > 0) {
+            val totalSum = totalBox1 + totalBox2 + totalBox3 + totalBox4 + totalBox5 +
+                totalBox6 + totalBox7 + totalBox8 + totalBox9 + totalBox10
+
+            if (totalSum > 0) {
                 progressRepo.recordProgressSnapshot(
                     totalBox1 = totalBox1,
                     totalBox2 = totalBox2,
                     totalBox3 = totalBox3,
                     totalBox4 = totalBox4,
                     totalBox5 = totalBox5,
+                    totalBox6 = totalBox6,
+                    totalBox7 = totalBox7,
+                    totalBox8 = totalBox8,
+                    totalBox9 = totalBox9,
+                    totalBox10 = totalBox10,
                     expiredBox2 = exp2,
                     expiredBox3 = exp3,
                     expiredBox4 = exp4,
                     expiredBox5 = exp5,
+                    expiredBox6 = exp6,
+                    expiredBox7 = exp7,
+                    expiredBox8 = exp8,
+                    expiredBox9 = exp9,
+                    expiredBox10 = exp10,
                     date = now
                 )
             }

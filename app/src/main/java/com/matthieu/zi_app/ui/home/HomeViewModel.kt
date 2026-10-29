@@ -139,12 +139,22 @@ class HomeViewModel(
                     val b1 = boxMap[1] ?: 0
                     val b2 = boxMap[2] ?: 0
                     val b3 = boxMap[3] ?: 0
-                    val b4Plus = (4..9).sumOf { boxMap[it] ?: 0 }
+                    val b4 = boxMap[4] ?: 0
+                    val b5 = boxMap[5] ?: 0
+                    val b6 = boxMap[6] ?: 0
+                    val b7 = boxMap[7] ?: 0
+                    val b8 = boxMap[8] ?: 0
+                    val b9 = boxMap[9] ?: 0
 
                     val exp2 = allRecords.count { it.box == 1 && it.expTime < now }
                     val exp3 = allRecords.count { it.box == 2 && it.expTime < now }
                     val exp4 = allRecords.count { it.box == 3 && it.expTime < now }
-                    val exp5 = allRecords.count { it.box >= 4 && it.expTime < now }
+                    val exp5 = allRecords.count { it.box == 4 && it.expTime < now }
+                    val exp6 = allRecords.count { it.box == 5 && it.expTime < now }
+                    val exp7 = allRecords.count { it.box == 6 && it.expTime < now }
+                    val exp8 = allRecords.count { it.box == 7 && it.expTime < now }
+                    val exp9 = allRecords.count { it.box == 8 && it.expTime < now }
+                    val exp10 = allRecords.count { it.box >= 9 && it.expTime < now }
 
                     val latest = history.maxByOrNull { it.date }
                     val shouldRecordSnapshot = totalLearned > 0 && (
@@ -154,7 +164,12 @@ class HomeViewModel(
                         latest.b2 != b1 ||
                         latest.b3 != b2 ||
                         latest.b4 != b3 ||
-                        latest.b5 != b4Plus
+                        latest.b5 != b4 ||
+                        latest.b6 != b5 ||
+                        latest.b7 != b6 ||
+                        latest.b8 != b7 ||
+                        latest.b9 != b8 ||
+                        latest.b10 != b9
                     )
 
                     if (shouldRecordSnapshot) {
@@ -163,11 +178,21 @@ class HomeViewModel(
                             totalBox2 = b1,
                             totalBox3 = b2,
                             totalBox4 = b3,
-                            totalBox5 = b4Plus,
+                            totalBox5 = b4,
+                            totalBox6 = b5,
+                            totalBox7 = b6,
+                            totalBox8 = b7,
+                            totalBox9 = b8,
+                            totalBox10 = b9,
                             expiredBox2 = exp2,
                             expiredBox3 = exp3,
                             expiredBox4 = exp4,
                             expiredBox5 = exp5,
+                            expiredBox6 = exp6,
+                            expiredBox7 = exp7,
+                            expiredBox8 = exp8,
+                            expiredBox9 = exp9,
+                            expiredBox10 = exp10,
                             date = now
                         )
                         history = progressRepository.getAllProgress()

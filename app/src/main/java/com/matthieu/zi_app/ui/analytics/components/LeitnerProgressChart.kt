@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,12 +44,17 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.max
 
-private val tierColors = listOf(
+private val boxColors = listOf(
     Color(0xFFE57373), // Box 0: Coral / Red
     Color(0xFFFFB74D), // Box 1: Orange
     Color(0xFFFFD54F), // Box 2: Amber
-    Color(0xFF64B5F6), // Box 3: Blue
-    Color(0xFF81C784)  // Box 4+: Emerald / Mastered
+    Color(0xFF81D4FA), // Box 3: Sky Blue
+    Color(0xFF4FC3F7), // Box 4: Cyan
+    Color(0xFF42A5F5), // Box 5: Blue
+    Color(0xFF7E57C2), // Box 6: Deep Purple
+    Color(0xFFAB47BC), // Box 7: Purple / Magenta
+    Color(0xFF66BB6A), // Box 8: Green
+    Color(0xFF2E7D32)  // Box 9: Dark Forest Green / Mastered
 )
 
 @Composable
@@ -81,6 +88,12 @@ fun LeitnerProgressChart(
                 )
             }
         } else {
+            // Determine maximum relevant box currently present in records (e.g. up to Box 6)
+            val maxRelevantBox = (0..9).reversed().firstOrNull { box ->
+                records.any { it.getBoxCount(box) > 0 }
+            } ?: 0
+            val displayMaxBox = max(maxRelevantBox, 1)
+
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -97,9 +110,9 @@ fun LeitnerProgressChart(
 
                 if (chartWidth <= 0 || chartHeight <= 0) return@Canvas
 
-                // 1. Compute totals per record
-                val pointTotals = records.map {
-                    val sum = it.b1 + it.b2 + it.b3 + it.b4 + it.b5
+                // 1. Compute totals per record using all relevant boxes
+                val pointTotals = records.map { rec ->
+                    val sum = (0..displayMaxBox).sumOf { rec.getBoxCount(it) }
                     max(sum, 1)
                 }
                 val maxTotal = max(pointTotals.maxOrNull() ?: 10, 5)
@@ -157,25 +170,15 @@ fun LeitnerProgressChart(
                     }
                 }
 
-                // 4. Draw Cumulative Stacked Area Curves for each tier
-                // Tier 4+: totalBox1+2+3+4+5
-                // Tier 3: totalBox1+2+3+4
-                // Tier 2: totalBox1+2+3
-                // Tier 1: totalBox1+2
-                // Tier 0: totalBox1
-                val cumulativeSeries = listOf(
-                    records.map { (it.b1 + it.b2 + it.b3 + it.b4 + it.b5).toFloat() },
-                    records.map { (it.b1 + it.b2 + it.b3 + it.b4).toFloat() },
-                    records.map { (it.b1 + it.b2 + it.b3).toFloat() },
-                    records.map { (it.b1 + it.b2).toFloat() },
-                    records.map { it.b1.toFloat() }
-                )
+                // 4. Draw Cumulative Stacked Area Curves for each relevant tier (from top level down to 0)
+                val cumulativeSeries = (displayMaxBox downTo 0).map { level ->
+                    level to records.map { rec ->
+                        (0..level).sumOf { rec.getBoxCount(it) }.toFloat()
+                    }
+                }
 
-                // Render in reverse order (Tier 4+ background down to Tier 0 foreground)
-                for (seriesIndex in 0 until cumulativeSeries.size) {
-                    val series = cumulativeSeries[seriesIndex]
-                    val tierIdx = cumulativeSeries.size - 1 - seriesIndex
-                    val color = tierColors[tierIdx]
+                for ((level, series) in cumulativeSeries) {
+                    val color = boxColors[level]
 
                     val path = Path()
                     val linePath = Path()
@@ -232,21 +235,28 @@ fun LeitnerProgressChart(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Chart Legend
+            // Chart Legend: only display boxes that are relevant (from displayMaxBox down to 0)
+            val relevantBoxes = (0..displayMaxBox).reversed()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = if (displayMaxBox <= 4) Arrangement.SpaceBetween else Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LegendItem(color = tierColors[4], label = "Mastered (4+)")
-                LegendItem(color = tierColors[3], label = "Box 3")
-                LegendItem(color = tierColors[2], label = "Box 2")
-                LegendItem(color = tierColors[1], label = "Box 1")
-                LegendItem(color = tierColors[0], label = "Box 0")
+                relevantBoxes.forEach { box ->
+                    LegendItem(
+                        color = boxColors[box],
+                        label = when (box) {
+                            0 -> "Box 0"
+                            9 -> "Box 9 (Mastered)"
+                            else -> "Box $box"
+                        }
+                    )
+                }
             }
         }
     }

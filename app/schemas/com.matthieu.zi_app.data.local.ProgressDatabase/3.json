@@ -1,0 +1,175 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "afcaa819dc80ad0aeda32281edd582a2",
+    "entities": [
+      {
+        "tableName": "progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`date` INTEGER NOT NULL, `total_box_1` INTEGER, `total_box_2` INTEGER, `total_box_3` INTEGER, `total_box_4` INTEGER, `total_box_5` INTEGER, `total_box_6` INTEGER DEFAULT 0, `total_box_7` INTEGER DEFAULT 0, `total_box_8` INTEGER DEFAULT 0, `total_box_9` INTEGER DEFAULT 0, `total_box_10` INTEGER DEFAULT 0, `expired_box_2` INTEGER, `expired_box_3` INTEGER, `expired_box_4` INTEGER, `expired_box_5` INTEGER, `expired_box_6` INTEGER DEFAULT 0, `expired_box_7` INTEGER DEFAULT 0, `expired_box_8` INTEGER DEFAULT 0, `expired_box_9` INTEGER DEFAULT 0, `expired_box_10` INTEGER DEFAULT 0, `zoom` INTEGER DEFAULT 0, PRIMARY KEY(`date`))",
+        "fields": [
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalBox1",
+            "columnName": "total_box_1",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalBox2",
+            "columnName": "total_box_2",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalBox3",
+            "columnName": "total_box_3",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalBox4",
+            "columnName": "total_box_4",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalBox5",
+            "columnName": "total_box_5",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalBox6",
+            "columnName": "total_box_6",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "totalBox7",
+            "columnName": "total_box_7",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "totalBox8",
+            "columnName": "total_box_8",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "totalBox9",
+            "columnName": "total_box_9",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "totalBox10",
+            "columnName": "total_box_10",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "expiredBox2",
+            "columnName": "expired_box_2",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "expiredBox3",
+            "columnName": "expired_box_3",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "expiredBox4",
+            "columnName": "expired_box_4",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "expiredBox5",
+            "columnName": "expired_box_5",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "expiredBox6",
+            "columnName": "expired_box_6",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "expiredBox7",
+            "columnName": "expired_box_7",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "expiredBox8",
+            "columnName": "expired_box_8",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "expiredBox9",
+            "columnName": "expired_box_9",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "expiredBox10",
+            "columnName": "expired_box_10",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "zoom",
+            "columnName": "zoom",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "date"
+          ]
+        },
+        "indices": [
+          {
+            "name": "progress_date",
+            "unique": false,
+            "columnNames": [
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `progress_date` ON `${TABLE_NAME}` (`date`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'afcaa819dc80ad0aeda32281edd582a2')"
+    ]
+  }
+}
