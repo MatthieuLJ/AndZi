@@ -129,17 +129,17 @@ class LeitnerSpacedRepetitionEngine : SpacedRepetitionEngine {
         currentState: ReviewState?,
         now: Long
     ): ReviewScheduleResult {
-        if (currentState == null) {
-            // First time seeing card, EASY promotes immediately to Box 2
+        if (currentState == null || currentState.box <= 0) {
+            // First time seeing card or unlearned Box 0, EASY promotes immediately to Box 2
             val delay = LeitnerScheduler.calculateSimpleExpiryDelay(2)
             val updatedState = ReviewState(
                 cardId = cardId,
                 box = 2,
                 nextReviewTimestamp = now + delay,
-                reviewCount = 1,
-                lapseCount = 0,
+                reviewCount = (currentState?.reviewCount ?: 0) + 1,
+                lapseCount = currentState?.lapseCount ?: 0,
                 streak = 2,
-                dateAdded = now
+                dateAdded = currentState?.dateAdded ?: now
             )
             return ReviewScheduleResult(
                 updatedState = updatedState,

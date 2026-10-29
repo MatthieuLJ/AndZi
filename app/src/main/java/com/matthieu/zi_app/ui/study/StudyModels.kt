@@ -72,7 +72,8 @@ data class StudyUiState(
     val currentStrokeIndex: Int = 0,
     val scaffoldingLevel: WritingScaffoldingLevel = WritingScaffoldingLevel.TEST,
     val hasUsedWritingGuide: Boolean = false,
-    val writingErrorShakeTrigger: Int = 0
+    val writingErrorShakeTrigger: Int = 0,
+    val isContextWordsRevealed: Boolean = false
 ) {
     val currentCard: StudyCard?
         get() = queue.getOrNull(currentIndex)

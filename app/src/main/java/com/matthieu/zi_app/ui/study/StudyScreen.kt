@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,11 +45,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.matthieu.zi_app.R
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.domain.writing.HanziPoint
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
@@ -92,6 +97,7 @@ fun StudyScreen(
         onSurrenderWriting = { viewModel.surrenderWriting() },
         onAcceptAnswer = { viewModel.markAnswerAsAcceptable() },
         onRateGrade = { viewModel.rateCard(it) },
+        onRevealContextWords = { viewModel.revealContextWords() },
         onNextCard = { viewModel.nextCard() },
         modifier = modifier
     )
@@ -115,6 +121,7 @@ fun StudyScreenContent(
     onSurrenderWriting: () -> Unit = {},
     onAcceptAnswer: () -> Unit = {},
     onRateGrade: (ReviewGrade) -> Unit = {},
+    onRevealContextWords: () -> Unit = {},
     onNextCard: () -> Unit,
     onReturnHome: () -> Unit = onNavigateBack,
     modifier: Modifier = Modifier
@@ -210,11 +217,7 @@ fun StudyScreenContent(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 220.dp)
-                                .detectToneGestures(
-                                    enabled = !uiState.isAnswerRevealed && card.quizType == QuizType.TONE,
-                                    onToneDetected = { tone -> onToneSelected(tone) }
-                                ),
+                                .heightIn(min = 220.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface
@@ -269,27 +272,57 @@ fun StudyScreenContent(
                                         displayedHanzi.length <= 3 -> AndZiThemeCustom.chineseTypography.hanziLarge
                                         else -> AndZiThemeCustom.chineseTypography.hanziMedium
                                     }
-                                    Text(
-                                        text = displayedHanzi,
-                                        style = hanziStyle,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .detectToneGestures(
+                                                enabled = !uiState.isAnswerRevealed && card.quizType == QuizType.TONE,
+                                                onToneDetected = { tone -> onToneSelected(tone) }
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = displayedHanzi,
+                                            style = hanziStyle,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
 
                                 if ((card.quizType == QuizType.TONE || card.quizType == QuizType.PINYIN) && card.contextWords.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(6.dp))
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text(
-                                            text = "In words: ${card.contextWords.joinToString(", ")}",
-                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                            textAlign = TextAlign.Center
-                                        )
+                                    if (uiState.isContextWordsRevealed || uiState.isAnswerRevealed) {
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text(
+                                                text = "As in: ${card.contextWords.joinToString(", ")}",
+                                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    } else {
+                                        OutlinedButton(
+                                            onClick = onRevealContextWords,
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                            modifier = Modifier.height(32.dp),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Visibility,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = stringResource(R.string.as_in),
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+                                        }
                                     }
                                 }
 

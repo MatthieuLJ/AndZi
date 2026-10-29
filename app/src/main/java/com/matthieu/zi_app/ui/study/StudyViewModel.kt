@@ -123,6 +123,7 @@ class StudyViewModel(
                         scaffoldingLevel = WritingScaffoldingLevel.TEST,
                         hasUsedWritingGuide = false,
                         writingErrorShakeTrigger = 0,
+                        isContextWordsRevealed = false,
                         isSessionFinished = true,
                         isLoading = false
                     )
@@ -159,6 +160,7 @@ class StudyViewModel(
                     scaffoldingLevel = WritingScaffoldingLevel.TEST,
                     hasUsedWritingGuide = false,
                     writingErrorShakeTrigger = 0,
+                    isContextWordsRevealed = false,
                     isSessionFinished = false,
                     isLoading = false
                 )
@@ -594,11 +596,26 @@ class StudyViewModel(
         }
     }
 
+    fun revealContextWords() {
+        if (_uiState.value.isAnswerRevealed) return
+        _uiState.update { it.copy(isContextWordsRevealed = true) }
+    }
+
     private fun processAnswer(card: StudyCard, isCorrect: Boolean, selectedInput: String) {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
-            val grade = if (isCorrect) ReviewGrade.GOOD else ReviewGrade.AGAIN
+
+            val isBonusToneOrPinyin = isCorrect &&
+                (card.quizType == QuizType.TONE || card.quizType == QuizType.PINYIN) &&
+                card.contextWords.isNotEmpty() &&
+                !_uiState.value.isContextWordsRevealed
+
+            val grade = when {
+                !isCorrect -> ReviewGrade.AGAIN
+                isBonusToneOrPinyin -> ReviewGrade.EASY
+                else -> ReviewGrade.GOOD
+            }
             studyRepository.recordReviewGrade(card.hanzi, grade, now)
             userPreferences?.recordStudySession(now)
             val dueCount = studyRepository.getNumExpired(now)

@@ -132,8 +132,12 @@ class EndToEndStudyFlowTest {
         val currentCard = studyState.currentCard
         assertNotNull(currentCard)
 
+        if ((currentCard!!.quizType == QuizType.TONE || currentCard.quizType == QuizType.PINYIN) && currentCard.contextWords.isNotEmpty()) {
+            studyViewModel.revealContextWords()
+        }
+
         // Submit correct answer based on card quiz type
-        when (currentCard!!.quizType) {
+        when (currentCard.quizType) {
             QuizType.TONE -> studyViewModel.submitToneAnswer(currentCard.tone)
             QuizType.PINYIN -> studyViewModel.submitPinyinAnswer(com.matthieu.zi_app.PinyinParser.convert_to_pretty_version(currentCard.pinyin))
             QuizType.ENGLISH -> studyViewModel.submitEnglishAnswer(currentCard.english.first())

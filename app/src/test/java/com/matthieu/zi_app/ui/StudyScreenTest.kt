@@ -250,7 +250,7 @@ class StudyScreenTest {
     }
 
     @Test
-    fun testToneQuiz_withContextWords_displaysContextWords() {
+    fun testToneQuiz_withContextWords_hiddenByDefault_andRevealedOnClick() {
         val card = StudyCard(
             hanzi = "长",
             pinyin = "chang2",
@@ -263,7 +263,52 @@ class StudyScreenTest {
             queue = listOf(card),
             currentIndex = 0,
             isLoading = false,
-            isAnswerRevealed = false
+            isAnswerRevealed = false,
+            isContextWordsRevealed = false
+        )
+        var revealClicked = false
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onRateGrade = {},
+                    onRevealContextWords = { revealClicked = true },
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Verify Hanzi is on top
+        composeTestRule.onNodeWithText("长").assertExists()
+        // Verify "As in…" button exists and words are not yet shown
+        composeTestRule.onNodeWithText("As in…").assertExists().performClick()
+        assertTrue(revealClicked)
+        composeTestRule.onNodeWithText("As in: 长度, 长城").assertDoesNotExist()
+        // Verify tone prompt
+        composeTestRule.onNodeWithText("Swipe or tap the correct tone").assertExists()
+    }
+
+    @Test
+    fun testToneQuiz_withContextWordsRevealed_displaysContextWords() {
+        val card = StudyCard(
+            hanzi = "长",
+            pinyin = "chang2",
+            tone = 2,
+            english = listOf("long"),
+            quizType = QuizType.TONE,
+            contextWords = listOf("长度", "长城")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false,
+            isContextWordsRevealed = true
         )
 
         composeTestRule.setContent {
@@ -280,12 +325,9 @@ class StudyScreenTest {
             }
         }
 
-        // Verify Hanzi is on top
         composeTestRule.onNodeWithText("长").assertExists()
-        // Verify Context words are rendered
-        composeTestRule.onNodeWithText("In words: 长度, 长城").assertExists()
-        // Verify tone prompt
-        composeTestRule.onNodeWithText("Swipe or tap the correct tone").assertExists()
+        composeTestRule.onNodeWithText("As in: 长度, 长城").assertExists()
+        composeTestRule.onNodeWithText("As in…").assertDoesNotExist()
     }
 
     @Test

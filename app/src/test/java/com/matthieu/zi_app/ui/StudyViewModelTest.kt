@@ -1444,6 +1444,152 @@ class StudyViewModelTest {
             hasUnstudied
         )
     }
+
+    @Test
+    fun testToneQuiz_answerWithoutRevealingContextWords_getsEasyBonusScore() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("长", "chang2", arrayListOf("long")))
+        vocRepo.addVocabulary(Vocabulary("长度", "chang2du4", arrayListOf("length")))
+        vocRepo.addVocabulary(Vocabulary("长城", "chang2cheng2", arrayListOf("Great Wall")))
+
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "长",
+                box = 0,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+        // Mark other constituent characters and compound words as not due so "长" is selected
+        for (other in listOf("城", "度", "长城", "长度")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = other, box = 5, expTime = Long.MAX_VALUE, numTested = 5, numWrong = 0, streak = 5, dateAdded = 0L
+                )
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card = state.currentCard!!
+        assertEquals("长", card.hanzi)
+        assertEquals(QuizType.TONE, card.quizType)
+        assertTrue(card.contextWords.isNotEmpty())
+        assertFalse(state.isContextWordsRevealed)
+
+        // Submit correct tone (2) WITHOUT revealing context words
+        viewModel.submitToneAnswer(2)
+
+        val answeredState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(answeredState.isCorrect == true)
+
+        // EASY review promotes Box 0 card directly to Box 2
+        val leitnerState = studyRepo.getLeitnerState("长")!!
+        assertEquals(2, leitnerState.box)
+        assertEquals(1, leitnerState.streak)
+    }
+
+    @Test
+    fun testToneQuiz_answerAfterRevealingContextWords_getsNormalGoodScore() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("长", "chang2", arrayListOf("long")))
+        vocRepo.addVocabulary(Vocabulary("长度", "chang2du4", arrayListOf("length")))
+        vocRepo.addVocabulary(Vocabulary("长城", "chang2cheng2", arrayListOf("Great Wall")))
+
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "长",
+                box = 0,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+        // Mark other constituent characters and compound words as not due so "长" is selected
+        for (other in listOf("城", "度", "长城", "长度")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = other, box = 5, expTime = Long.MAX_VALUE, numTested = 5, numWrong = 0, streak = 5, dateAdded = 0L
+                )
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card = state.currentCard!!
+        assertEquals("长", card.hanzi)
+        assertEquals(QuizType.TONE, card.quizType)
+        assertTrue(card.contextWords.isNotEmpty())
+        assertFalse(state.isContextWordsRevealed)
+
+        // Explicitly reveal context words before answering
+        viewModel.revealContextWords()
+        val revealedState = viewModel.uiState.value
+        assertTrue(revealedState.isContextWordsRevealed)
+
+        // Submit correct tone (2) WITH context words revealed
+        viewModel.submitToneAnswer(2)
+
+        val answeredState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(answeredState.isCorrect == true)
+
+        // Normal GOOD review promotes Box 0 card to Box 1 with streak = 1
+        val leitnerState = studyRepo.getLeitnerState("长")!!
+        assertEquals(1, leitnerState.box)
+        assertEquals(1, leitnerState.streak)
+    }
+
+    @Test
+    fun testPinyinQuiz_contextWordsScoringBonus() = runBlocking {
+        // Setup a single character tested via Pinyin Quiz with context words
+        vocRepo.addVocabulary(Vocabulary("行", "xing2", arrayListOf("to walk", "capable")))
+        vocRepo.addVocabulary(Vocabulary("行动", "xing2dong4", arrayListOf("action")))
+
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "行",
+                box = 1,
+                expTime = 0L,
+                numTested = 1,
+                numWrong = 0,
+                streak = 1,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card = state.currentCard!!
+        assertEquals("行", card.hanzi)
+
+        if (card.quizType == QuizType.PINYIN && card.contextWords.isNotEmpty()) {
+            assertFalse(state.isContextWordsRevealed)
+            // Answer without revealing context words -> EASY bonus
+            viewModel.submitPinyinAnswer("xíng")
+
+            val answeredState = withTimeout(3000) {
+                viewModel.uiState.filter { it.isAnswerRevealed }.first()
+            }
+            assertTrue(answeredState.isCorrect == true)
+
+            val leitnerState = studyRepo.getLeitnerState("行")!!
+            // Easy promotion from Box 1 gives Box 2 with streak + 2 (1 + 2 = 3 -> streak reset to 0 and numWrong reduced)
+            assertEquals(2, leitnerState.box)
+        }
+    }
 }
 
 
