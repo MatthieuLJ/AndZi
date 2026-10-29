@@ -144,4 +144,46 @@ class HomeViewModelTest {
 
         assertEquals(2, state.streakDays)
     }
+
+    @Test
+    fun testHomeViewModelLoadsAsyncAnalytics() = runBlocking {
+        val voc1 = Vocabulary("字", "zi4", arrayListOf("character"))
+        vocRepo.addVocabulary(voc1)
+
+        val now = 10_000_000L
+        repeat(5) {
+            studyRepo.recordReviewResult("字", isCorrect = true, now = now)
+        }
+
+        val viewModel = HomeViewModel(
+            studyRepository = studyRepo,
+            progressRepository = progressRepo,
+            leitnerDao = andZiDb.leitnerDao(),
+            vocabularyRepository = vocRepo
+        )
+
+        // Phase 1: Fast data loaded
+        val quickState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isQuickDataLoaded }.first()
+        }
+        assertEquals(1, quickState.totalLearned)
+
+        // Phase 2: Analytics data loaded
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isAnalyticsLoading }.first()
+        }
+        assertEquals(1, state.wordsKnown)
+        assertEquals(1, state.totalWords)
+        assertEquals(1, state.distinctCharactersCount)
+        assertEquals(1, state.charactersKnown)
+        assertEquals(100f, state.overallAccuracy)
+        assertEquals(5, state.totalReviewsCount)
+
+        // Select 7D range
+        viewModel.selectTimeRange(com.matthieu.zi_app.ui.home.TimeRange.DAYS_7)
+        val rangeState = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedTimeRange == com.matthieu.zi_app.ui.home.TimeRange.DAYS_7 }.first()
+        }
+        assertEquals(com.matthieu.zi_app.ui.home.TimeRange.DAYS_7, rangeState.selectedTimeRange)
+    }
 }

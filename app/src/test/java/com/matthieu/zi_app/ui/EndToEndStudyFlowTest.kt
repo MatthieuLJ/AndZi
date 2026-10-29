@@ -9,8 +9,6 @@ import com.matthieu.zi_app.data.repository.ProgressRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
-import com.matthieu.zi_app.ui.analytics.AnalyticsViewModel
-import com.matthieu.zi_app.ui.analytics.TimeRange
 import com.matthieu.zi_app.ui.dictionary.DictionaryViewModel
 import com.matthieu.zi_app.ui.home.HomeViewModel
 import com.matthieu.zi_app.ui.study.QuizType
@@ -186,15 +184,15 @@ class EndToEndStudyFlowTest {
             date = now
         )
 
-        val analyticsViewModel = AnalyticsViewModel(progressRepo, studyRepo, userDb.leitnerDao())
-        analyticsViewModel.selectTimeRange(TimeRange.DAYS_7)
-        val analyticsState = withTimeout(3000) {
-            analyticsViewModel.uiState.filter { !it.isLoading && it.progressRecords.isNotEmpty() }.first()
+        val finalHomeViewModel = HomeViewModel(studyRepo, progressRepo, leitnerDao = userDb.leitnerDao())
+        finalHomeViewModel.selectTimeRange(com.matthieu.zi_app.ui.home.TimeRange.DAYS_7)
+        val finalHomeState = withTimeout(3000) {
+            finalHomeViewModel.uiState.filter { !it.isAnalyticsLoading && it.progressRecords.isNotEmpty() }.first()
         }
-        assertTrue(analyticsState.progressRecords.isNotEmpty())
-        assertEquals(3, analyticsState.totalWordsStudied)
-        assertEquals(1, analyticsState.boxDistribution[1])
-        assertEquals(2, analyticsState.boxDistribution[0] ?: 0)
+        assertTrue(finalHomeState.progressRecords.isNotEmpty())
+        assertEquals(3, finalHomeState.totalLearned)
+        assertEquals(1, finalHomeState.boxDistribution[1])
+        assertEquals(2, finalHomeState.boxDistribution[0] ?: 0)
     }
 
     @Test

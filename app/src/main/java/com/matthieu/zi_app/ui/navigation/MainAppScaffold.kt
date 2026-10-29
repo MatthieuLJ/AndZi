@@ -25,7 +25,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.matthieu.zi_app.AndZiApplication
-import com.matthieu.zi_app.ui.analytics.AnalyticsScreen
 import com.matthieu.zi_app.ui.dictionary.DictionaryScreen
 import com.matthieu.zi_app.ui.home.HomeScreen
 import com.matthieu.zi_app.ui.home.HomeViewModel
@@ -125,7 +124,9 @@ fun MainAppScaffold(
                     factory = HomeViewModel.provideFactory(
                         studyRepository = appContainer.studyRepository,
                         progressRepository = appContainer.progressRepository,
-                        userPreferences = appContainer.userPreferences
+                        userPreferences = appContainer.userPreferences,
+                        leitnerDao = appContainer.leitnerDao,
+                        vocabularyRepository = appContainer.vocabularyRepository
                     )
                 )
                 HomeScreen(
@@ -176,18 +177,6 @@ fun MainAppScaffold(
                     )
                 )
                 DictionaryScreen(viewModel = dictViewModel)
-            }
-
-            composable(Screen.Analytics.route) {
-                val analyticsViewModel: com.matthieu.zi_app.ui.analytics.AnalyticsViewModel = viewModel(
-                    factory = com.matthieu.zi_app.ui.analytics.AnalyticsViewModel.provideFactory(
-                        progressRepository = appContainer.progressRepository,
-                        studyRepository = appContainer.studyRepository,
-                        leitnerDao = appContainer.leitnerDao,
-                        vocabularyRepository = appContainer.vocabularyRepository
-                    )
-                )
-                AnalyticsScreen(viewModel = analyticsViewModel)
             }
 
             composable(Screen.Study.route) {

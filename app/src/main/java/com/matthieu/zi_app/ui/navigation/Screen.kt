@@ -59,6 +59,6 @@ sealed class Screen(
 
     companion object {
         val bottomNavItems: List<Screen>
-            get() = listOf(Home, Dictionary, Analytics)
+            get() = listOf(Home, Dictionary)
     }
 }

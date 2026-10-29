@@ -118,7 +118,7 @@ class HomeScreenTest {
     @Test
     fun testScreenRoutesAndBottomNavItemsAreNotNull() {
         val items = com.matthieu.zi_app.ui.navigation.Screen.bottomNavItems
-        org.junit.Assert.assertEquals(3, items.size)
+        org.junit.Assert.assertEquals(2, items.size)
         items.forEach { screen ->
             org.junit.Assert.assertNotNull(screen)
             org.junit.Assert.assertNotNull(screen.route)

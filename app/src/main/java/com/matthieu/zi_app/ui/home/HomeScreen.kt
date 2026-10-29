@@ -1,6 +1,7 @@
 package com.matthieu.zi_app.ui.home
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,8 +21,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,6 +33,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -44,11 +50,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.matthieu.zi_app.ui.analytics.components.LeitnerProgressChart
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,6 +157,144 @@ fun HomeScreen(
                     )
                 }
 
+                // Asynchronous Analytics & History Section
+                item {
+                    if (uiState.isAnalyticsLoading && uiState.totalWords == 0 && uiState.progressRecords.isEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.5.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = "Loading study analytics & history...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // Row 1: Words Known & Characters Known
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                MetricSummaryCard(
+                                    title = "Words Known",
+                                    value = "${uiState.wordsKnown} / ${uiState.totalWords}",
+                                    subtitle = "mastered in stack",
+                                    icon = Icons.Default.School,
+                                    iconTint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MetricSummaryCard(
+                                    title = "Characters Known",
+                                    value = "${uiState.charactersKnown} / ${uiState.distinctCharactersCount}",
+                                    subtitle = "mastered in stack",
+                                    icon = Icons.Default.Translate,
+                                    iconTint = Color(0xFF8E24AA),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            // Row 2: Retention
+                            MetricSummaryCard(
+                                title = "Retention",
+                                value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
+                                subtitle = "${uiState.totalReviewsCount} reviews",
+                                icon = Icons.Default.CheckCircle,
+                                iconTint = Color(0xFF66BB6A),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            // Historical Growth Chart Card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "Historical Growth",
+                                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "Cumulative vocabulary over time",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Time Range Selection Tabs
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        TimeRange.values().forEach { range ->
+                                            val isSelected = uiState.selectedTimeRange == range
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { viewModel.selectTimeRange(range) },
+                                                label = {
+                                                    Text(
+                                                        text = range.label,
+                                                        style = MaterialTheme.typography.labelMedium.copy(
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                                        )
+                                                    )
+                                                },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                                ),
+                                                shape = RoundedCornerShape(10.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    LeitnerProgressChart(
+                                        records = uiState.progressRecords,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+
+                            // Leitner Box Distribution Card
+                            LeitnerDistributionCard(
+                                boxDistribution = uiState.boxDistribution,
+                                totalCards = uiState.totalLearned
+                            )
+                        }
+                    }
+                }
+
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -164,30 +312,45 @@ fun SummaryStatCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
-    val cardModifier = if (onClick != null) {
+    val isClickable = onClick != null
+    val cardModifier = if (isClickable) {
         modifier
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick!!)
     } else {
         modifier
+    }
+
+    val border = if (isClickable) {
+        BorderStroke(
+            width = 1.5.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+        )
+    } else {
+        null
     }
 
     Card(
         modifier = cardModifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isClickable) {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
         ),
+        border = border,
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(iconTint.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
@@ -196,11 +359,11 @@ fun SummaryStatCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodySmall,
@@ -210,6 +373,14 @@ fun SummaryStatCard(
                     text = value,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            if (isClickable) {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = "Open $title",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -391,6 +562,66 @@ fun LeitnerDistributionCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MetricSummaryCard(
+    title: String,
+    value: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconTint: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(iconTint.copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
