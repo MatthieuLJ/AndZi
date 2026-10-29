@@ -189,10 +189,9 @@ class DictionaryViewModel(
             val localVocabs = localVocabularyRepository.getVocabularyForChinese(hanzi)
             val localMatching = localVocabs.find { it.pinyin == vocabulary.pinyin } ?: localVocabs.firstOrNull()
 
-            val selectedTranslations = if (localMatching != null && localMatching.english.isNotEmpty()) {
-                localMatching.english.toSet()
-            } else if (leitnerState != null) {
-                vocabulary.english.toSet()
+            val isStudying = localMatching != null && localMatching.english.isNotEmpty()
+            val selectedTranslations = if (isStudying) {
+                localMatching!!.english.toSet()
             } else {
                 emptySet()
             }
@@ -200,7 +199,7 @@ class DictionaryViewModel(
             val mergedEnglish = ArrayList((vocabulary.english + (localMatching?.english ?: emptyList())).distinct())
             val displayWord = Vocabulary(
                 chinese = vocabulary.chinese,
-                pinyin = vocabulary.pinyin,
+                pinyin = vocabulary.pinyin.ifEmpty { localMatching?.pinyin ?: "" },
                 english = mergedEnglish
             )
 
@@ -210,8 +209,8 @@ class DictionaryViewModel(
                     selectedCharReadings = polyReadings,
                     containingCompounds = containingCompounds,
                     constituentCharacters = constituents,
-                    isInStudyQueue = leitnerState != null,
-                    currentBox = leitnerState?.box,
+                    isInStudyQueue = isStudying,
+                    currentBox = if (isStudying) (leitnerState?.box ?: 0) else null,
                     selectedTranslations = selectedTranslations
                 )
             }
@@ -221,7 +220,12 @@ class DictionaryViewModel(
     fun selectCharacterFromConstituent(char: String) {
         viewModelScope.launch {
             val vocList = dictionaryRepository.getVocabularyForChinese(char)
-            val first = vocList.firstOrNull() ?: Vocabulary(chinese = char, pinyin = "", english = arrayListOf())
+            val first = vocList.firstOrNull() ?: run {
+                val pinyin = dictionaryRepository.getCharPinyinsForHanzi(char).firstOrNull()?.pinyin
+                    ?: localVocabularyRepository.getCharPinyinsForHanzi(char).firstOrNull()?.pinyin
+                    ?: ""
+                Vocabulary(chinese = char, pinyin = pinyin, english = arrayListOf())
+            }
             selectWord(first)
         }
     }

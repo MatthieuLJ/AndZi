@@ -21,6 +21,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -271,5 +272,36 @@ class VocabularyListViewModelTest {
         val combinedState = viewModel.uiState.value
         assertEquals(1, combinedState.filteredItems.size)
         assertEquals("大家", combinedState.filteredItems.first().vocabulary.chinese)
+    }
+
+    @Test
+    fun testConstituentCharacterHasNoTranslationsSelectedWhenNotInStudy() = runBlocking {
+        // Compound word is in user study list
+        val compoundWord = Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow"))
+        userVocRepo.addVocabulary(compoundWord)
+        studyRepo.recordReviewGrade("明天", ReviewGrade.GOOD)
+
+        // Constituent character "明" exists in dictionary with definitions, but was not added to user vocabulary
+        val charWord = Vocabulary("明", "ming2", arrayListOf("bright", "clear"))
+        dictRepo.addVocabulary(charWord)
+
+        val viewModel = VocabularyListViewModel(userVocRepo, dictRepo, studyRepo)
+        val initial = withTimeout(3000) {
+            viewModel.uiState.filter { it.items.isNotEmpty() }.first()
+        }
+
+        // Clicking constituent character "明"
+        viewModel.selectCharacterFromConstituent("明")
+        val selectedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "明" }.first()
+        }
+
+        // The character definitions are visible, but NONE should be selected as in-study
+        assertEquals("明", selectedState.selectedWord?.chinese)
+        assertTrue(selectedState.selectedWord?.english?.contains("bright") == true)
+        assertTrue(selectedState.selectedWord?.english?.contains("clear") == true)
+        assertEquals(emptySet<String>(), selectedState.selectedTranslations)
+        assertFalse(selectedState.isInStudyQueue)
+        assertNull(selectedState.currentBox)
     }
 }

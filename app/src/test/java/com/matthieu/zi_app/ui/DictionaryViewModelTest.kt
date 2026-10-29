@@ -7,6 +7,7 @@ import com.matthieu.zi_app.data.local.AndZiDatabase
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
+import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.ui.dictionary.DictionaryViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -423,5 +424,37 @@ class DictionaryViewModelTest {
         }
         assertTrue(reselectedState.selectedWord!!.english.contains("to care for"))
         assertTrue(reselectedState.selectedTranslations.contains("to care for"))
+    }
+
+    @Test
+    fun testConstituentCharacterHasNoTranslationsSelectedWhenNotInStudy() = runBlocking {
+        // Compound word is in user study list
+        val compoundWord = Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow"))
+        dictRepo.addVocabulary(compoundWord)
+        userVocRepo.addVocabulary(compoundWord)
+        studyRepo.recordReviewGrade("明天", ReviewGrade.GOOD)
+
+        // Constituent character "明" exists in dictionary
+        val charWord = Vocabulary("明", "ming2", arrayListOf("bright", "clear"))
+        dictRepo.addVocabulary(charWord)
+
+        // Even if "明" was reviewed in character-based quizzes (so it has a Leitner record)
+        studyRepo.recordReviewGrade("明", ReviewGrade.GOOD)
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        // Select constituent character "明"
+        viewModel.selectCharacterFromConstituent("明")
+        val selectedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "明" }.first()
+        }
+
+        // None of the dictionary translations should be pre-selected as "In Study"
+        assertEquals("明", selectedState.selectedWord?.chinese)
+        assertTrue(selectedState.selectedWord?.english?.contains("bright") == true)
+        assertTrue(selectedState.selectedWord?.english?.contains("clear") == true)
+        assertEquals(emptySet<String>(), selectedState.selectedTranslations)
+        assertFalse(selectedState.isInStudyQueue)
+        assertNull(selectedState.currentBox)
     }
 }
