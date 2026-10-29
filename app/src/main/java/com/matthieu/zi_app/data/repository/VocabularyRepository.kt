@@ -194,6 +194,18 @@ class VocabularyRepository(
         val byChinese = vocabularyDao.searchByChinesePrefix(cleanQuery, limit)
         results.addAll(byChinese)
 
+        // If searching Chinese character(s) and results < limit, also include compound words containing the character(s)
+        if (results.size < limit && cleanQuery.any { Character.isIdeographic(it.code) }) {
+            val containing = vocabularyDao.getWordsContainingCharacter(cleanQuery)
+            val existingIds = results.map { it.word.cwordId }.toSet()
+            for (item in containing) {
+                if (results.size >= limit) break
+                if (item.word.cwordId !in existingIds) {
+                    results.add(item)
+                }
+            }
+        }
+
         if (results.size < limit) {
             val params = PinyinSearchParams.fromQuery(cleanQuery)
             if (params.rawPrefixGlob.isNotEmpty() || params.syllablePrefix.isNotEmpty()) {

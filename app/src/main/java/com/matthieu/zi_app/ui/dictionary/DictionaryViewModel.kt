@@ -218,16 +218,17 @@ class DictionaryViewModel(
     }
 
     fun selectCharacterFromConstituent(char: String) {
-        viewModelScope.launch {
-            val vocList = dictionaryRepository.getVocabularyForChinese(char)
-            val first = vocList.firstOrNull() ?: run {
-                val pinyin = dictionaryRepository.getCharPinyinsForHanzi(char).firstOrNull()?.pinyin
-                    ?: localVocabularyRepository.getCharPinyinsForHanzi(char).firstOrNull()?.pinyin
-                    ?: ""
-                Vocabulary(chinese = char, pinyin = pinyin, english = arrayListOf())
-            }
-            selectWord(first)
+        clearSelection()
+        suggestionJob?.cancel()
+        val isSuggested = char == _uiState.value.suggestedWord && _uiState.value.suggestedWord != null
+        _uiState.update {
+            it.copy(
+                query = char,
+                isAutoSuggested = isSuggested,
+                suggestionReason = if (isSuggested) it.suggestionReason else null
+            )
         }
+        executeSearch(char, skipDebounce = true)
     }
 
     fun clearSelection() {

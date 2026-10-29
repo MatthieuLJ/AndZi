@@ -427,7 +427,7 @@ class DictionaryViewModelTest {
     }
 
     @Test
-    fun testConstituentCharacterHasNoTranslationsSelectedWhenNotInStudy() = runBlocking {
+    fun testWordNotInStudyHasNoTranslationsSelectedEvenWithLeitnerRecord() = runBlocking {
         // Compound word is in user study list
         val compoundWord = Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow"))
         dictRepo.addVocabulary(compoundWord)
@@ -443,8 +443,8 @@ class DictionaryViewModelTest {
 
         val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
 
-        // Select constituent character "明"
-        viewModel.selectCharacterFromConstituent("明")
+        // Directly select character "明"
+        viewModel.selectWord(charWord)
         val selectedState = withTimeout(3000) {
             viewModel.uiState.filter { it.selectedWord?.chinese == "明" }.first()
         }
@@ -456,5 +456,39 @@ class DictionaryViewModelTest {
         assertEquals(emptySet<String>(), selectedState.selectedTranslations)
         assertFalse(selectedState.isInStudyQueue)
         assertNull(selectedState.currentBox)
+    }
+
+    @Test
+    fun testSelectCharacterFromConstituent_dismissesSheetAndSearchesCharacter() = runBlocking {
+        val word1 = Vocabulary("明天", "ming2tian1", arrayListOf("tomorrow"))
+        val word2 = Vocabulary("天", "tian1", arrayListOf("day", "sky"))
+        val word3 = Vocabulary("天气", "tian1qi4", arrayListOf("weather"))
+        dictRepo.addVocabulary(word1)
+        dictRepo.addVocabulary(word2)
+        dictRepo.addVocabulary(word3)
+
+        val viewModel = DictionaryViewModel(dictRepo, userVocRepo, studyRepo, debounceMillis = 0L)
+
+        // User opens "明天"
+        viewModel.selectWord(word1)
+        withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedWord?.chinese == "明天" }.first()
+        }
+
+        // Tap constituent character "天"
+        viewModel.selectCharacterFromConstituent("天")
+        val stateAfterTap = withTimeout(3000) {
+            viewModel.uiState.filter { it.query == "天" && !it.isSearching && it.results.isNotEmpty() }.first()
+        }
+
+        // Bottom sheet is dismissed
+        assertNull(stateAfterTap.selectedWord)
+        // Search query is set to "天"
+        assertEquals("天", stateAfterTap.query)
+        // Results include both words starting with "天" and words containing "天"
+        val resultWords = stateAfterTap.results.map { it.chinese }
+        assertTrue(resultWords.contains("天"))
+        assertTrue(resultWords.contains("天气"))
+        assertTrue(resultWords.contains("明天"))
     }
 }
