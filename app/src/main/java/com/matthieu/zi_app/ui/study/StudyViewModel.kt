@@ -348,7 +348,7 @@ class StudyViewModel(
                 val ch = String(Character.toChars(codePoint))
                 wordSlots.add(ch)
             }
-            val distractors = generateCharDistractorsForWord(wordSlots.toSet(), distractorCount, studyChars)
+            val distractors = generateCharDistractorsForWord(wordSlots, box, distractorCount, studyChars)
             scrambledTiles.addAll((wordSlots + distractors).shuffled())
         }
 
@@ -747,13 +747,70 @@ class StudyViewModel(
         return finalTiles.shuffled()
     }
 
-    private fun generateCharDistractorsForWord(
-        existingChars: Set<String>,
+    private suspend fun generateCharDistractorsForWord(
+        wordSlots: List<String>,
+        wordBox: Int,
         count: Int = 3,
         studyChars: Set<String> = emptySet()
     ): List<String> {
-        val candidates = studyChars.filter { !existingChars.contains(it) }.shuffled()
-        return candidates.take(count)
+        val existingChars = wordSlots.toSet()
+        val distinctChars = wordSlots.distinct().shuffled()
+        val selectedDistractors = mutableSetOf<String>()
+
+        // 1. Gather similar character distractors for the constituent characters of the word
+        // based on how well known each constituent character is (individual Leitner box, falling back to wordBox)
+        for (c in distinctChars) {
+            if (selectedDistractors.size >= count) break
+
+            val charBox = studyRepository.getLeitnerState(c)?.box ?: wordBox
+
+            val similarFromCedict = (
+                vocabularyRepository.getSimilarCharacters(c, limit = 20) +
+                (dictionaryRepository?.getSimilarCharacters(c, limit = 20) ?: emptyList())
+            ).filter { it !in existingChars && it !in selectedDistractors }.distinct()
+
+            val knownSimilar = similarFromCedict.filter { it in studyChars }
+            val unstudiedSimilar = similarFromCedict.filter { it !in studyChars }
+
+            val remainingSlots = count - selectedDistractors.size
+            val numToTakeForChar = when {
+                charBox <= 1 -> (0..minOf(1, remainingSlots)).random() // Box 0-1: 0 or 1 from known
+                charBox in 2..4 -> (1..minOf(2, remainingSlots)).random() // Box 2-4: 1 or 2 from known
+                else -> (1..minOf(3, remainingSlots)).random() // Box 5+: 1 to 3 from known or unstudied CEDICT
+            }
+
+            if (numToTakeForChar > 0) {
+                if (charBox >= 5) {
+                    val pool = (knownSimilar.shuffled() + unstudiedSimilar.shuffled())
+                    selectedDistractors.addAll(pool.take(numToTakeForChar))
+                } else {
+                    selectedDistractors.addAll(knownSimilar.shuffled().take(numToTakeForChar))
+                }
+            }
+        }
+
+        // 2. Backfill with other characters from the user's active study list
+        if (selectedDistractors.size < count) {
+            val otherStudyChars = studyChars.filter { it !in existingChars && it !in selectedDistractors }.shuffled()
+            selectedDistractors.addAll(otherStudyChars.take(count - selectedDistractors.size))
+        }
+
+        // 3. For well known words/characters (Box 5+), if study list doesn't have enough characters to fill count,
+        // backfill with remaining unstudied similar characters from CEDICT
+        val anyCharWellKnown = distinctChars.any { (studyRepository.getLeitnerState(it)?.box ?: wordBox) >= 5 }
+        if (selectedDistractors.size < count && anyCharWellKnown) {
+            val remainingUnstudied = distinctChars.flatMap { c ->
+                val b = studyRepository.getLeitnerState(c)?.box ?: wordBox
+                if (b >= 5) {
+                    (vocabularyRepository.getSimilarCharacters(c, limit = 20) +
+                     (dictionaryRepository?.getSimilarCharacters(c, limit = 20) ?: emptyList()))
+                        .filter { it !in studyChars && it !in existingChars && it !in selectedDistractors }
+                } else emptyList()
+            }.distinct().shuffled()
+            selectedDistractors.addAll(remainingUnstudied.take(count - selectedDistractors.size))
+        }
+
+        return selectedDistractors.take(count).toList().shuffled()
     }
 
     companion object {

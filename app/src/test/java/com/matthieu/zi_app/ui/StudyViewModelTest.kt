@@ -1327,6 +1327,124 @@ class StudyViewModelTest {
             multiToneSyllables.size >= 3
         )
     }
+
+    @Test
+    fun testWordAssembly_wellKnownConstituentCharacter_mixesInSimilarCharactersFromCedict() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("乐曲", "yue4qu3", arrayListOf("music tune")))
+        val now = System.currentTimeMillis()
+        // "乐" is well known (Box 5)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 5, expTime = now + 100_000L)
+        )
+        // "乐曲" is due at index 0 (WORD_ASSEMBLY)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐曲", box = 5, expTime = now - 1000L)
+        )
+        // Add visual similarities for "乐": "东" and "车" (neither is in user vocabulary)
+        andZiDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "东",
+                    score = 0.800f,
+                    sharedComponent = "小"
+                ),
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "车",
+                    score = 0.550f,
+                    sharedComponent = "东-bridge"
+                )
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card = state.currentCard!!
+        assertEquals("乐曲", card.hanzi)
+        assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
+
+        // For well known Box 5 character, tiles must mix in visually similar character from CEDICT
+        val similarChars = listOf("东", "车")
+        val hasSimilarDistractor = card.scrambledTiles.any { it in similarChars }
+        assertTrue(
+            "Expected word assembly scrambled tiles for '乐曲' to include similar characters for '乐' ('东'/'车'), had: ${card.scrambledTiles}",
+            hasSimilarDistractor
+        )
+    }
+
+    @Test
+    fun testWordAssembly_lowBoxConstituentCharacter_avoidsUnstudiedSimilarCharacters() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("乐曲", "yue4qu3", arrayListOf("music tune")))
+        vocRepo.addVocabulary(Vocabulary("小狗", "xiao3gou3", arrayListOf("puppy")))
+        vocRepo.addVocabulary(Vocabulary("大马", "da4ma3", arrayListOf("big horse")))
+
+        val now = System.currentTimeMillis()
+        // Low box: Box 0 (unlearned)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "曲", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "小狗", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "小", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "狗", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "大马", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "大", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "马", box = 0, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐曲", box = 0, expTime = now - 1000L)
+        )
+
+        // "东" and "车" are similar to "乐", but NOT in user study list
+        andZiDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "东",
+                    score = 0.800f,
+                    sharedComponent = "小"
+                ),
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "车",
+                    score = 0.550f,
+                    sharedComponent = "东-bridge"
+                )
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card = state.currentCard!!
+        assertEquals("乐曲", card.hanzi)
+        assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
+
+        // Low box characters must NOT include unstudied characters from CEDICT ("东", "车")
+        val unstudiedCedict = listOf("东", "车")
+        val hasUnstudied = card.scrambledTiles.any { it in unstudiedCedict }
+        assertFalse(
+            "Low box characters should not receive unstudied CEDICT distractors, had: ${card.scrambledTiles}",
+            hasUnstudied
+        )
+    }
 }
 
 
