@@ -30,6 +30,12 @@ interface VocabularyDao {
     @Query("SELECT COUNT(DISTINCT hanzi) FROM char_pinyin")
     suspend fun getDistinctHanziCount(): Int
 
+    @Query("SELECT DISTINCT pinyin FROM char_pinyin WHERE hanzi IN (:hanziList)")
+    suspend fun getPinyinsForHanziList(hanziList: List<String>): List<String>
+
+    @Query("SELECT DISTINCT pinyin FROM char_pinyin LIMIT :limit")
+    suspend fun getAllDistinctPinyins(limit: Int = 100): List<String>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertCharPinyin(entity: CharPinyinEntity): Long
 

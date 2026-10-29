@@ -48,8 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.ui.study.components.ClozeAssemblyView
 import com.matthieu.zi_app.ui.study.components.EnglishMcqView
+import com.matthieu.zi_app.ui.study.components.PinyinQuizView
 import com.matthieu.zi_app.ui.study.components.RevealedFeedbackCard
 import com.matthieu.zi_app.ui.study.components.StudyFinishedView
 import com.matthieu.zi_app.ui.study.components.StudyWordsUsingCharacterSection
@@ -77,6 +79,7 @@ fun StudyScreen(
         onToneSelected = { viewModel.submitToneAnswer(it) },
         onEnglishSelected = { viewModel.submitEnglishAnswer(it) },
         onClozeSelected = { viewModel.submitClozeAnswer(it) },
+        onPinyinSelected = { viewModel.submitPinyinAnswer(it) },
         onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
         onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
         onAcceptAnswer = { viewModel.markAnswerAsAcceptable() },
@@ -94,6 +97,7 @@ fun StudyScreenContent(
     onToneSelected: (Int) -> Unit,
     onEnglishSelected: (String) -> Unit,
     onClozeSelected: (String) -> Unit,
+    onPinyinSelected: (String) -> Unit = {},
     onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
     onUndoAssemblyTile: () -> Unit = {},
     onAcceptAnswer: () -> Unit = {},
@@ -242,7 +246,7 @@ fun StudyScreenContent(
                                     )
                                 }
 
-                                if (card.quizType == QuizType.TONE && card.contextWords.isNotEmpty()) {
+                                if ((card.quizType == QuizType.TONE || card.quizType == QuizType.PINYIN) && card.contextWords.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Surface(
                                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
@@ -266,7 +270,7 @@ fun StudyScreenContent(
                                     QuizType.ENGLISH -> "Select the English meaning"
                                     QuizType.CLOZE -> "Fill in the missing character"
                                     QuizType.WORD_ASSEMBLY -> "Assemble the compound word"
-                                    QuizType.PINYIN -> "Select the correct syllable"
+                                    QuizType.PINYIN -> "Select the correct Pinyin pronunciation"
                                 }
                                 if (promptText.isNotEmpty()) {
                                     Text(
@@ -343,9 +347,12 @@ fun StudyScreenContent(
                                     )
                                 }
                                 QuizType.PINYIN -> {
-                                    ToneKeypad(
-                                        enabled = !uiState.isAnswerRevealed,
-                                        onToneSelected = { tone -> onToneSelected(tone) }
+                                    PinyinQuizView(
+                                        options = card.mcqOptions,
+                                        correctPinyin = PinyinParser.convert_to_pretty_version(card.pinyin),
+                                        selectedOption = uiState.selectedOption,
+                                        isRevealed = uiState.isAnswerRevealed,
+                                        onOptionSelected = onPinyinSelected
                                     )
                                 }
                             }

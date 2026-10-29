@@ -244,6 +244,97 @@ fun EnglishMcqView(
 }
 
 @Composable
+fun PinyinQuizView(
+    options: List<String>,
+    correctPinyin: String,
+    selectedOption: String?,
+    isRevealed: Boolean,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        val rows = options.chunked(2)
+        rows.forEach { rowOptions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                rowOptions.forEach { option ->
+                    val isSelected = (selectedOption == option)
+                    val isCorrect = option.equals(correctPinyin, ignoreCase = true)
+
+                    val backgroundColor by animateColorAsState(
+                        targetValue = when {
+                            !isRevealed -> MaterialTheme.colorScheme.surfaceVariant
+                            isCorrect -> Color(0xFF10B981).copy(alpha = 0.25f)
+                            isSelected && !isCorrect -> Color(0xFFEF4444).copy(alpha = 0.25f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        },
+                        label = "pinyinOptionColor"
+                    )
+
+                    val borderColor = when {
+                        !isRevealed && isSelected -> MaterialTheme.colorScheme.primary
+                        isRevealed && isCorrect -> Color(0xFF10B981)
+                        isRevealed && isSelected && !isCorrect -> Color(0xFFEF4444)
+                        else -> Color.Transparent
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
+                            .clickable(enabled = !isRevealed) { onOptionSelected(option) },
+                        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = option,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(1f)
+                            )
+                            if (isRevealed) {
+                                if (isCorrect) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Correct",
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                } else if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Incorrect",
+                                        tint = Color(0xFFEF4444),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                if (rowOptions.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ClozeAssemblyView(
     quizType: QuizType,
     wordSlots: List<String>,

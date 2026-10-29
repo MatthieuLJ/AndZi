@@ -137,7 +137,7 @@ class EndToEndStudyFlowTest {
         // Submit correct answer based on card quiz type
         when (currentCard!!.quizType) {
             QuizType.TONE -> studyViewModel.submitToneAnswer(currentCard.tone)
-            QuizType.PINYIN -> studyViewModel.submitToneAnswer(currentCard.tone)
+            QuizType.PINYIN -> studyViewModel.submitPinyinAnswer(com.matthieu.zi_app.PinyinParser.convert_to_pretty_version(currentCard.pinyin))
             QuizType.ENGLISH -> studyViewModel.submitEnglishAnswer(currentCard.english.first())
             QuizType.CLOZE -> studyViewModel.submitClozeAnswer(currentCard.wordSlots[currentCard.clozeTargetIndex])
             QuizType.WORD_ASSEMBLY -> {

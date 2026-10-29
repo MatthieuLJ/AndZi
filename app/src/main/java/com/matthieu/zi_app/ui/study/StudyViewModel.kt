@@ -239,36 +239,54 @@ class StudyViewModel(
                 // MUST NEVER use QuizType.ENGLISH!
                 when {
                     hasValidNonNeutralTone && containingWords.isNotEmpty() -> {
-                        if (index % 2 == 0) QuizType.TONE else QuizType.CLOZE
+                        when (index % 3) {
+                            0 -> QuizType.TONE
+                            1 -> QuizType.CLOZE
+                            else -> QuizType.PINYIN
+                        }
                     }
-                    hasValidNonNeutralTone -> QuizType.TONE
+                    hasValidNonNeutralTone -> {
+                        if (index % 2 == 0) QuizType.TONE else QuizType.PINYIN
+                    }
                     containingWords.isNotEmpty() -> QuizType.CLOZE
-                    else -> QuizType.TONE
+                    else -> QuizType.PINYIN
                 }
             }
             else -> {
                 // Single character WITH user English translations
                 when {
                     hasValidNonNeutralTone -> {
-                        if (index % 2 == 0) QuizType.TONE else QuizType.ENGLISH
+                        when (index % 3) {
+                            0 -> QuizType.TONE
+                            1 -> QuizType.ENGLISH
+                            else -> QuizType.PINYIN
+                        }
                     }
-                    else -> QuizType.ENGLISH
+                    else -> {
+                        if (index % 2 == 0) QuizType.ENGLISH else QuizType.PINYIN
+                    }
                 }
             }
         }
 
-        // 2. If Tone Quiz, find studied compound words demonstrating this character (study stack only)
+        // 2. If Tone Quiz or Pinyin Quiz, find studied compound words demonstrating this character (study stack only)
         var contextWords = emptyList<String>()
-        if (quizType == QuizType.TONE) {
+        if (quizType == QuizType.TONE || quizType == QuizType.PINYIN) {
             val exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
             contextWords = exampleWords.filter { it != hanzi && it.codePointCount(0, it.length) > 1 }
         }
 
-        // 3. Generate MCQ distractors for English
-        val mcqOptions = if (quizType == QuizType.ENGLISH) {
-            val correct = voc.english.randomOrNull() ?: "Meaning"
-            generateEnglishDistractors(correct, allStudyEnglish, excludedMeanings = voc.english)
-        } else emptyList()
+        // 3. Generate MCQ distractors for English or Pinyin
+        val mcqOptions = when (quizType) {
+            QuizType.ENGLISH -> {
+                val correct = voc.english.randomOrNull() ?: "Meaning"
+                generateEnglishDistractors(correct, allStudyEnglish, excludedMeanings = voc.english)
+            }
+            QuizType.PINYIN -> {
+                generatePinyinDistractors(voc.pinyin, hanzi, box, studyChars)
+            }
+            else -> emptyList()
+        }
 
         // 4. Generate Cloze / Assembly slots
         var cardEnglish = voc.english
@@ -358,6 +376,16 @@ class StudyViewModel(
 
         val isCorrect = (selectedTone == card.tone)
         processAnswer(card, isCorrect, selectedTone.toString())
+    }
+
+    fun submitPinyinAnswer(selectedPinyin: String) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+
+        val prettyCorrect = PinyinParser.convert_to_pretty_version(card.pinyin)
+        val isCorrect = selectedPinyin.equals(prettyCorrect, ignoreCase = true) ||
+                selectedPinyin.equals(card.pinyin, ignoreCase = true)
+        processAnswer(card, isCorrect, selectedPinyin)
     }
 
     fun submitEnglishAnswer(selectedMeaning: String) {
@@ -502,6 +530,147 @@ class StudyViewModel(
         }
     }
 
+    private suspend fun generatePinyinDistractors(
+        correctPinyin: String,
+        hanzi: String,
+        box: Int,
+        studyChars: Set<String> = emptySet(),
+        targetOptionCount: Int = if (box >= 3) 8 else 6
+    ): List<String> {
+        val prettyCorrect = PinyinParser.convert_to_pretty_version(correctPinyin)
+        val pinyins = PinyinParser.parse_string_to_pinyin(correctPinyin)
+        val firstPinyin = pinyins?.firstOrNull()
+        val targetRadical = (firstPinyin?.radical ?: correctPinyin.filter { !it.isDigit() }).lowercase()
+        val targetTone = firstPinyin?.tone?.takeIf { it in 1..4 } ?: 1
+
+        val numSyllables = (targetOptionCount / 2).coerceAtLeast(2)
+        val neededDistractorSyllables = (numSyllables - 1).coerceAtLeast(1)
+
+        // Generate 2 tones for the target syllable: correct tone + 1 alternate tone
+        val targetAltTone = (1..4).filter { it != targetTone }.shuffled().first()
+        val targetAltPretty = PinyinParser.convert_to_pretty_version("$targetRadical$targetAltTone")
+
+        val targetPair = mutableListOf(prettyCorrect)
+        if (targetAltPretty.isNotBlank() && !targetAltPretty.equals(prettyCorrect, ignoreCase = true)) {
+            targetPair.add(targetAltPretty)
+        }
+
+        fun extractSyllable(raw: String): Pair<String, Int>? {
+            val p = PinyinParser.parse_string_to_pinyin(raw)?.firstOrNull() ?: return null
+            val rad = p.radical.lowercase()
+            if (rad.isBlank() || rad == targetRadical) return null
+            val t = if (p.tone in 1..4) p.tone else 1
+            return Pair(rad, t)
+        }
+
+        // 1. Gather candidate distractor syllables from visually similar characters
+        val similarChars = (
+            vocabularyRepository.getSimilarCharacters(hanzi, limit = 20) +
+            (dictionaryRepository?.getSimilarCharacters(hanzi, limit = 20) ?: emptyList())
+        ).filter { it != hanzi }.distinct()
+
+        val knownSimilarChars = similarChars.filter { studyChars.contains(it) }
+        val unstudiedSimilarChars = similarChars.filter { !studyChars.contains(it) }
+
+        val maxSimilarSyllables = when {
+            box <= 1 -> (0..minOf(1, neededDistractorSyllables)).random() // Box 0-1: 0 or 1
+            box in 2..4 -> (1..minOf(2, neededDistractorSyllables)).random() // Box 2-4: 1 or 2
+            else -> (2..neededDistractorSyllables).random() // Box 5+: 2 to 3 from similar characters
+        }
+
+        val chosenDistractorSyllables = mutableMapOf<String, Int>() // radical -> baseTone
+
+        if (maxSimilarSyllables > 0) {
+            val charsToQuery = if (box >= 5) {
+                (knownSimilarChars.shuffled() + unstudiedSimilarChars.shuffled()).take(maxSimilarSyllables * 2)
+            } else {
+                knownSimilarChars.shuffled().take(maxSimilarSyllables * 2)
+            }
+
+            val pinyinsFromVoc = if (charsToQuery.isNotEmpty()) {
+                vocabularyRepository.getPinyinsForHanziList(charsToQuery)
+            } else emptyList()
+
+            val pinyinsFromDict = if (box >= 5 && charsToQuery.isNotEmpty() && dictionaryRepository != null) {
+                dictionaryRepository.getPinyinsForHanziList(charsToQuery)
+            } else emptyList()
+
+            for (p in (pinyinsFromVoc + pinyinsFromDict).shuffled()) {
+                if (chosenDistractorSyllables.size >= maxSimilarSyllables) break
+                val syll = extractSyllable(p) ?: continue
+                if (!chosenDistractorSyllables.containsKey(syll.first)) {
+                    chosenDistractorSyllables[syll.first] = syll.second
+                }
+            }
+        }
+
+        // 2. Backfill syllables from general study vocabulary if needed
+        if (chosenDistractorSyllables.size < neededDistractorSyllables) {
+            val studyPinyins = vocabularyRepository.getAllDistinctPinyins(100).shuffled()
+            for (p in studyPinyins) {
+                if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
+                val syll = extractSyllable(p) ?: continue
+                if (!chosenDistractorSyllables.containsKey(syll.first)) {
+                    chosenDistractorSyllables[syll.first] = syll.second
+                }
+            }
+        }
+
+        // 3. Backfill syllables from dictionary repository or default fallback list
+        if (chosenDistractorSyllables.size < neededDistractorSyllables && dictionaryRepository != null) {
+            val dictPinyins = dictionaryRepository.getAllDistinctPinyins(100).shuffled()
+            for (p in dictPinyins) {
+                if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
+                val syll = extractSyllable(p) ?: continue
+                if (!chosenDistractorSyllables.containsKey(syll.first)) {
+                    chosenDistractorSyllables[syll.first] = syll.second
+                }
+            }
+        }
+
+        if (chosenDistractorSyllables.size < neededDistractorSyllables) {
+            val fallbackPinyins = DEFAULT_FALLBACK_PINYIN_DISTRACTORS.shuffled()
+            for (p in fallbackPinyins) {
+                if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
+                val syll = extractSyllable(p) ?: continue
+                if (!chosenDistractorSyllables.containsKey(syll.first)) {
+                    chosenDistractorSyllables[syll.first] = syll.second
+                }
+            }
+        }
+
+        // Build paired tone options: each distinct syllable receives 2 tone variations
+        // so no single syllable is given away by being the only one repeated with multiple tones
+        val resultOptions = mutableSetOf<String>()
+        resultOptions.addAll(targetPair)
+
+        for ((rad, baseTone) in chosenDistractorSyllables) {
+            val basePretty = PinyinParser.convert_to_pretty_version("$rad$baseTone")
+            val altTone = (1..4).filter { it != baseTone }.shuffled().first()
+            val altPretty = PinyinParser.convert_to_pretty_version("$rad$altTone")
+
+            if (basePretty.isNotBlank()) resultOptions.add(basePretty)
+            if (altPretty.isNotBlank()) resultOptions.add(altPretty)
+        }
+
+        // Ensure we meet targetOptionCount (safety backfill)
+        if (resultOptions.size < targetOptionCount) {
+            for (fb in DEFAULT_FALLBACK_PINYIN_DISTRACTORS) {
+                if (resultOptions.size >= targetOptionCount) break
+                val p = extractSyllable(fb) ?: continue
+                val p1 = PinyinParser.convert_to_pretty_version("${p.first}${p.second}")
+                val altT = (1..4).filter { it != p.second }.shuffled().first()
+                val p2 = PinyinParser.convert_to_pretty_version("${p.first}$altT")
+                if (p1.isNotBlank()) resultOptions.add(p1)
+                if (resultOptions.size < targetOptionCount && p2.isNotBlank()) resultOptions.add(p2)
+            }
+        }
+
+        val nonTargetOptions = (resultOptions - prettyCorrect).shuffled()
+        val finalOptions = (listOf(prettyCorrect) + nonTargetOptions.take(targetOptionCount - 1)).shuffled()
+        return finalOptions
+    }
+
     private fun generateEnglishDistractors(
         correct: String,
         allStudyEnglish: Set<String> = emptySet(),
@@ -627,6 +796,11 @@ class StudyViewModel(
             "time; hour",
             "sky; heaven",
             "home; family"
+        )
+
+        val DEFAULT_FALLBACK_PINYIN_DISTRACTORS = listOf(
+            "hao3", "ni3", "da4", "xiao3", "shui3", "ren2", "tian1", "di4",
+            "zhong1", "guo2", "shang4", "xia4", "yue4", "ri4", "shan1", "mu4"
         )
 
         fun provideFactory(

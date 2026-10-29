@@ -2,6 +2,7 @@ package com.matthieu.zi_app.ui
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.AndZiDatabase
 import com.matthieu.zi_app.data.repository.StudyRepository
@@ -1102,7 +1103,7 @@ class StudyViewModelTest {
         // Across multiple Cloze card trials for Box 0, numSimilarTarget can be 0 or 1
         var seenZeroSimilar = false
         var seenOneSimilar = false
-        for (i in 0 until 20) {
+        for (i in 0 until 50) {
             // Keep both words due for each trial so the queue always yields 乐曲 at index 1 (CLOZE)
             andZiDb.leitnerDao().insertOrUpdateRecord(
                 com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "猫咪", box = 0, expTime = now - 2000L)
@@ -1189,6 +1190,141 @@ class StudyViewModelTest {
         assertFalse(
             "Card 2 should not involve characters from Card 1's tested word ('${card1.revealedHanzi}')",
             StudyViewModel.areWordsSimilar(card2.hanzi, card1.revealedHanzi)
+        )
+    }
+
+    @Test
+    fun testToneAndPinyinQuizzesBothExistAndRotateForSingleCharacters() = runBlocking {
+        // Add single character "乐" without user English
+        andZiDb.vocabularyDao().insertCharPinyin(
+            com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "乐", pinyin = "le4")
+        )
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = now - 10_000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+
+        // Card 1 at index 0 is TONE quiz
+        val state1 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card1 = state1.currentCard!!
+        assertEquals("乐", card1.hanzi)
+        assertEquals(QuizType.TONE, card1.quizType)
+
+        // Submit tone answer (Tone 4)
+        viewModel.submitToneAnswer(4)
+        val afterCard1 = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(afterCard1.isCorrect == true)
+
+        // Reset Leitner record for "乐" so it stays due for next card at index 1
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = now - 10_000L)
+        )
+        viewModel.rateCard(ReviewGrade.AGAIN)
+
+        // Card 2 at index 1 is PINYIN quiz!
+        val state2 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        val card2 = state2.currentCard!!
+        assertEquals("乐", card2.hanzi)
+        assertEquals(QuizType.PINYIN, card2.quizType)
+
+        // Options should have enough choices (>= 6)
+        assertTrue("PINYIN quiz should have at least 6 choices, had: ${card2.mcqOptions.size}", card2.mcqOptions.size >= 6)
+        assertTrue("PINYIN quiz options should include correct pinyin 'lè'", card2.mcqOptions.contains("lè"))
+
+        // Submitting Pinyin answer
+        viewModel.submitPinyinAnswer("lè")
+        val afterCard2 = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(afterCard2.isCorrect == true)
+    }
+
+    @Test
+    fun testPinyinQuiz_highBox_mixesInPinyinFromSimilarCharacters() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("乐", "le4", arrayListOf()))
+        andZiDb.vocabularyDao().insertCharPinyin(
+            com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "乐", pinyin = "le4")
+        )
+        // Add similar characters to char_pinyin: 东 (dong1), 车 (che1)
+        andZiDb.vocabularyDao().insertCharPinyin(
+            com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "东", pinyin = "dong1")
+        )
+        andZiDb.vocabularyDao().insertCharPinyin(
+            com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "车", pinyin = "che1")
+        )
+
+        // Add similarity link
+        andZiDb.vocabularyDao().insertCharSimilarities(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "东",
+                    score = 0.800f,
+                    sharedComponent = "小"
+                ),
+                com.matthieu.zi_app.data.local.entity.CharSimilarityEntity(
+                    hanzi = "乐",
+                    similarHanzi = "车",
+                    score = 0.550f,
+                    sharedComponent = "东-bridge"
+                )
+            )
+        )
+
+        val now = System.currentTimeMillis()
+        // Box 5 ("well known") for "乐" and set "东", "车" as not due so "乐" is the only due candidate
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 5, expTime = now - 10_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "东", box = 5, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "车", box = 5, expTime = now + 100_000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        // Card at index 0 is TONE, advance to PINYIN at index 1
+        val state1 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        assertEquals(QuizType.TONE, state1.currentCard!!.quizType)
+        viewModel.nextCard()
+
+        val state2 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard!!.quizType == QuizType.PINYIN }.first()
+        }
+        val card = state2.currentCard!!
+        assertEquals(QuizType.PINYIN, card.quizType)
+        // For Box 5, options count is 8
+        assertEquals(8, card.mcqOptions.size)
+
+        // Options must include correct answer "lè"
+        assertTrue(card.mcqOptions.contains("lè"))
+
+        // For well known Box 5, options mix in pinyins from visually similar characters ("dōng" and/or "chē")
+        val similarPinyins = listOf("dōng", "chē")
+        val hasSimilarPinyin = card.mcqOptions.any { it in similarPinyins }
+        assertTrue(
+            "Expected options for Box 5 character '乐' to mix in pinyin from similar characters ('东'/'车'), had: ${card.mcqOptions}",
+            hasSimilarPinyin
+        )
+
+        // Options should pair syllables with multiple tones so the target syllable is not the only one repeated
+        val syllablesGrouped = card.mcqOptions.groupBy { PinyinParser.parse_string_to_pinyin(it)?.firstOrNull()?.get_radical()?.lowercase() }
+        val multiToneSyllables = syllablesGrouped.filter { it.value.size >= 2 }
+        assertTrue(
+            "Expected multiple distinct syllables to have tone pairs so no single syllable is given away, grouped: $syllablesGrouped",
+            multiToneSyllables.size >= 3
         )
     }
 }

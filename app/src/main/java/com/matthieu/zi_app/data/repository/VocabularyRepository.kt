@@ -338,6 +338,14 @@ class VocabularyRepository(
         vocabularyDao.getSimilarCharacterDetails(hanzi, limit)
     }
 
+    suspend fun getPinyinsForHanziList(hanziList: List<String>): List<String> = withContext(Dispatchers.IO) {
+        if (hanziList.isEmpty()) emptyList() else vocabularyDao.getPinyinsForHanziList(hanziList)
+    }
+
+    suspend fun getAllDistinctPinyins(limit: Int = 100): List<String> = withContext(Dispatchers.IO) {
+        vocabularyDao.getAllDistinctPinyins(limit)
+    }
+
     private fun toVocabulary(details: WordWithDetails): Vocabulary {
         val engList = ArrayList(details.translations.map { it.translation })
         return Vocabulary(
