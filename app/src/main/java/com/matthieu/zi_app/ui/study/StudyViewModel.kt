@@ -11,6 +11,9 @@ import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.domain.writing.HanziPoint
+import com.matthieu.zi_app.domain.writing.StrokeMatcher
+import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -115,6 +118,11 @@ class StudyViewModel(
                         selectedOption = null,
                         assembledChars = emptyList(),
                         usedTileIndices = emptyList(),
+                        completedStrokes = emptyList(),
+                        currentStrokeIndex = 0,
+                        scaffoldingLevel = WritingScaffoldingLevel.TEST,
+                        hasUsedWritingGuide = false,
+                        writingErrorShakeTrigger = 0,
                         isSessionFinished = true,
                         isLoading = false
                     )
@@ -146,6 +154,11 @@ class StudyViewModel(
                     selectedOption = null,
                     assembledChars = emptyList(),
                     usedTileIndices = emptyList(),
+                    completedStrokes = emptyList(),
+                    currentStrokeIndex = 0,
+                    scaffoldingLevel = WritingScaffoldingLevel.TEST,
+                    hasUsedWritingGuide = false,
+                    writingErrorShakeTrigger = 0,
                     isSessionFinished = false,
                     isLoading = false
                 )
@@ -220,10 +233,17 @@ class StudyViewModel(
             vocabularyRepository.getWordsContainingCharacter(hanzi).filter { it.chinese.length > 1 }
         } else emptyList()
 
+        val writingEnabled = userPreferences?.writingQuizEnabled?.value ?: false
+        val charStrokes = if (isSingleChar && writingEnabled) {
+            vocabularyRepository.getHanziCharacter(hanzi)
+                ?: dictionaryRepository?.getHanziCharacter(hanzi)
+        } else null
+        val canDoWriting = charStrokes != null
+
         // 1. Determine Quiz Type:
         val quizType = when {
             !isSingleChar -> {
-                // Multi-character words NEVER use Tone quiz
+                // Multi-character words NEVER use Tone or Writing quiz
                 if (hasUserEnglish) {
                     when (index % 3) {
                         0 -> QuizType.WORD_ASSEMBLY
@@ -236,34 +256,57 @@ class StudyViewModel(
             }
             !hasUserEnglish -> {
                 // Single character from char_pinyin (without user English translations)
-                // MUST NEVER use QuizType.ENGLISH!
                 when {
                     hasValidNonNeutralTone && containingWords.isNotEmpty() -> {
-                        when (index % 3) {
-                            0 -> QuizType.TONE
-                            1 -> QuizType.CLOZE
-                            else -> QuizType.PINYIN
+                        val candidates = if (canDoWriting) {
+                            listOf(QuizType.TONE, QuizType.CLOZE, QuizType.PINYIN, QuizType.WRITING)
+                        } else {
+                            listOf(QuizType.TONE, QuizType.CLOZE, QuizType.PINYIN)
                         }
+                        candidates[index % candidates.size]
                     }
                     hasValidNonNeutralTone -> {
-                        if (index % 2 == 0) QuizType.TONE else QuizType.PINYIN
+                        val candidates = if (canDoWriting) {
+                            listOf(QuizType.TONE, QuizType.PINYIN, QuizType.WRITING)
+                        } else {
+                            listOf(QuizType.TONE, QuizType.PINYIN)
+                        }
+                        candidates[index % candidates.size]
                     }
-                    containingWords.isNotEmpty() -> QuizType.CLOZE
-                    else -> QuizType.PINYIN
+                    containingWords.isNotEmpty() -> {
+                        if (canDoWriting) {
+                            if (index % 2 == 0) QuizType.CLOZE else QuizType.WRITING
+                        } else {
+                            QuizType.CLOZE
+                        }
+                    }
+                    else -> {
+                        if (canDoWriting) {
+                            if (index % 2 == 0) QuizType.PINYIN else QuizType.WRITING
+                        } else {
+                            QuizType.PINYIN
+                        }
+                    }
                 }
             }
             else -> {
                 // Single character WITH user English translations
                 when {
                     hasValidNonNeutralTone -> {
-                        when (index % 3) {
-                            0 -> QuizType.TONE
-                            1 -> QuizType.ENGLISH
-                            else -> QuizType.PINYIN
+                        val candidates = if (canDoWriting) {
+                            listOf(QuizType.TONE, QuizType.ENGLISH, QuizType.PINYIN, QuizType.WRITING)
+                        } else {
+                            listOf(QuizType.TONE, QuizType.ENGLISH, QuizType.PINYIN)
                         }
+                        candidates[index % candidates.size]
                     }
                     else -> {
-                        if (index % 2 == 0) QuizType.ENGLISH else QuizType.PINYIN
+                        val candidates = if (canDoWriting) {
+                            listOf(QuizType.ENGLISH, QuizType.PINYIN, QuizType.WRITING)
+                        } else {
+                            listOf(QuizType.ENGLISH, QuizType.PINYIN)
+                        }
+                        candidates[index % candidates.size]
                     }
                 }
             }
@@ -298,9 +341,9 @@ class StudyViewModel(
 
         val distractorCount = getDistractorCountForBox(box, quizType)
 
-        if (quizType == QuizType.CLOZE) {
+        if (quizType == QuizType.CLOZE || quizType == QuizType.WRITING) {
             if (isSingleChar && containingWords.isNotEmpty()) {
-                // Test filling the single character within a larger compound word!
+                // Test filling or writing the single character within a larger compound word!
                 val comp = containingWords[index % containingWords.size]
                 val compHanzi = comp.chinese
                 var charIdx = 0
@@ -313,14 +356,16 @@ class StudyViewModel(
                 targetIdx = if (idxInWord >= 0) idxInWord else 0
                 val correctChar = wordSlots[targetIdx]
                 val missingCharBox = studyRepository.getLeitnerState(correctChar)?.box ?: box
-                scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
+                if (quizType == QuizType.CLOZE) {
+                    scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
+                }
                 if (comp.english.isNotEmpty()) {
                     cardEnglish = comp.english
                 }
                 if (comp.pinyin.isNotBlank()) {
                     displayPinyin = comp.pinyin
                 }
-            } else {
+            } else if (quizType == QuizType.CLOZE) {
                 for (i in 0 until charCount) {
                     val codePoint = hanzi.codePointAt(i)
                     val ch = String(Character.toChars(codePoint))
@@ -366,7 +411,8 @@ class StudyViewModel(
             clozeTargetIndex = targetIdx,
             contextWords = contextWords,
             displayPinyin = displayPinyin,
-            relatedStudyWords = relatedStudyWords
+            relatedStudyWords = relatedStudyWords,
+            writingCharacter = if (quizType == QuizType.WRITING) charStrokes else null
         )
     }
 
@@ -436,6 +482,113 @@ class StudyViewModel(
                 it.copy(
                     assembledChars = currentAssembled.dropLast(1),
                     usedTileIndices = currentUsed.dropLast(1)
+                )
+            }
+        }
+    }
+
+    fun onUserStrokeDrawn(points: List<HanziPoint>) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+        val charData = card.writingCharacter ?: return
+        val currentIdx = _uiState.value.currentStrokeIndex
+        if (currentIdx !in charData.strokes.indices) return
+
+        val isOutlineVisible = _uiState.value.scaffoldingLevel == WritingScaffoldingLevel.GUIDED_FULL
+        val matchResult = StrokeMatcher.strokeMatches(
+            userPointsRaw = points,
+            character = charData,
+            strokeNum = currentIdx,
+            isOutlineVisible = isOutlineVisible
+        )
+
+        if (matchResult.isMatch) {
+            val updatedCompleted = _uiState.value.completedStrokes + charData.strokes[currentIdx]
+            val nextIdx = currentIdx + 1
+            if (nextIdx >= charData.strokes.size) {
+                _uiState.update {
+                    it.copy(
+                        completedStrokes = updatedCompleted,
+                        currentStrokeIndex = nextIdx
+                    )
+                }
+                if (_uiState.value.hasUsedWritingGuide || _uiState.value.scaffoldingLevel != WritingScaffoldingLevel.TEST) {
+                    processGuidedWritingAnswer(card, charData.strokeCount)
+                } else {
+                    processAnswer(card, isCorrect = true, selectedInput = card.hanzi)
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        completedStrokes = updatedCompleted,
+                        currentStrokeIndex = nextIdx
+                    )
+                }
+            }
+        } else {
+            _uiState.update { it.copy(writingErrorShakeTrigger = it.writingErrorShakeTrigger + 1) }
+        }
+    }
+
+    fun setWritingScaffoldingLevel(level: WritingScaffoldingLevel) {
+        if (_uiState.value.isAnswerRevealed) return
+        _uiState.update {
+            it.copy(
+                scaffoldingLevel = level,
+                hasUsedWritingGuide = it.hasUsedWritingGuide || (level != WritingScaffoldingLevel.TEST)
+            )
+        }
+    }
+
+    fun undoWritingStroke() {
+        if (_uiState.value.isAnswerRevealed) return
+        val completed = _uiState.value.completedStrokes
+        if (completed.isNotEmpty()) {
+            _uiState.update {
+                it.copy(
+                    completedStrokes = completed.dropLast(1),
+                    currentStrokeIndex = (it.currentStrokeIndex - 1).coerceAtLeast(0)
+                )
+            }
+        }
+    }
+
+    fun clearWritingCanvas() {
+        if (_uiState.value.isAnswerRevealed) return
+        _uiState.update {
+            it.copy(
+                completedStrokes = emptyList(),
+                currentStrokeIndex = 0
+            )
+        }
+    }
+
+    fun surrenderWriting() {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+        processAnswer(card, isCorrect = false, selectedInput = "Given up")
+    }
+
+    private fun processGuidedWritingAnswer(card: StudyCard, strokeCount: Int) {
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
+            studyRepository.recordGuidedWritingResult(card.hanzi, strokeCount, now)
+            userPreferences?.recordStudySession(now)
+            val dueCount = studyRepository.getNumExpired(now)
+
+            _uiState.update { state ->
+                val prevStats = state.sessionStats
+                val newStats = prevStats.copy(
+                    totalReviewed = prevStats.totalReviewed + 1,
+                    correctCount = prevStats.correctCount + 1
+                )
+                state.copy(
+                    remainingDueCount = dueCount,
+                    isAnswerRevealed = true,
+                    isCorrect = true,
+                    selectedOption = "Guided Practice",
+                    sessionStats = newStats
                 )
             }
         }

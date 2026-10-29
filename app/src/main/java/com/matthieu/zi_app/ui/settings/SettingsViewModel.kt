@@ -30,6 +30,7 @@ class SettingsViewModel(
             themeMode = userPreferences.themeMode.value,
             coloredPinyin = userPreferences.coloredPinyin.value,
             notificationsEnabled = userPreferences.notificationEnabled.value,
+            writingQuizEnabled = userPreferences.writingQuizEnabled.value,
             appVersion = getAppVersion(context)
         )
     )
@@ -51,6 +52,11 @@ class SettingsViewModel(
                 _uiState.update { it.copy(notificationsEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            userPreferences.writingQuizEnabled.collect { enabled ->
+                _uiState.update { it.copy(writingQuizEnabled = enabled) }
+            }
+        }
     }
 
     fun setThemeMode(mode: AppThemeMode) {
@@ -69,6 +75,10 @@ class SettingsViewModel(
         } else {
             ProgressSyncWorker.cancelNotification(context)
         }
+    }
+
+    fun setWritingQuizEnabled(enabled: Boolean) {
+        userPreferences.setWritingQuizEnabled(enabled)
     }
 
     fun showFeedbackMessage(message: String) {

@@ -1,13 +1,17 @@
 package com.matthieu.zi_app.ui.study
 
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.domain.writing.HanziCharacter
+import com.matthieu.zi_app.domain.writing.HanziStroke
+import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
 
 enum class QuizType {
     TONE,           // Guess the tone of the character
     PINYIN,         // Syllable / Pinyin recognition
     ENGLISH,        // Multiple-choice English definitions
     CLOZE,          // Missing character fill-in-the-blank
-    WORD_ASSEMBLY   // Assemble characters to form the compound word
+    WORD_ASSEMBLY,  // Assemble characters to form the compound word
+    WRITING         // Stroke-by-stroke handwriting test
 }
 
 data class StudyCard(
@@ -24,10 +28,11 @@ data class StudyCard(
     val clozeTargetIndex: Int = -1,
     val contextWords: List<String> = emptyList(),
     val displayPinyin: String = pinyin,
-    val relatedStudyWords: List<Vocabulary> = emptyList()
+    val relatedStudyWords: List<Vocabulary> = emptyList(),
+    val writingCharacter: HanziCharacter? = null
 ) {
     val revealedHanzi: String
-        get() = if (quizType == QuizType.CLOZE && wordSlots.isNotEmpty()) {
+        get() = if ((quizType == QuizType.CLOZE || quizType == QuizType.WRITING) && wordSlots.isNotEmpty()) {
             wordSlots.joinToString("")
         } else {
             hanzi
@@ -62,7 +67,12 @@ data class StudyUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val assembledChars: List<String> = emptyList(),
-    val usedTileIndices: List<Int> = emptyList()
+    val usedTileIndices: List<Int> = emptyList(),
+    val completedStrokes: List<HanziStroke> = emptyList(),
+    val currentStrokeIndex: Int = 0,
+    val scaffoldingLevel: WritingScaffoldingLevel = WritingScaffoldingLevel.TEST,
+    val hasUsedWritingGuide: Boolean = false,
+    val writingErrorShakeTrigger: Int = 0
 ) {
     val currentCard: StudyCard?
         get() = queue.getOrNull(currentIndex)

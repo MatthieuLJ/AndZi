@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.domain.writing.HanziPoint
+import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.ui.study.components.ClozeAssemblyView
 import com.matthieu.zi_app.ui.study.components.EnglishMcqView
@@ -56,6 +58,7 @@ import com.matthieu.zi_app.ui.study.components.RevealedFeedbackCard
 import com.matthieu.zi_app.ui.study.components.StudyFinishedView
 import com.matthieu.zi_app.ui.study.components.StudyWordsUsingCharacterSection
 import com.matthieu.zi_app.ui.study.components.ToneKeypad
+import com.matthieu.zi_app.ui.study.components.WritingQuizView
 import com.matthieu.zi_app.ui.study.components.detectToneGestures
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
 
@@ -82,6 +85,11 @@ fun StudyScreen(
         onPinyinSelected = { viewModel.submitPinyinAnswer(it) },
         onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
         onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
+        onWritingStrokeDrawn = { viewModel.onUserStrokeDrawn(it) },
+        onSetWritingScaffolding = { viewModel.setWritingScaffoldingLevel(it) },
+        onUndoWritingStroke = { viewModel.undoWritingStroke() },
+        onClearWritingCanvas = { viewModel.clearWritingCanvas() },
+        onSurrenderWriting = { viewModel.surrenderWriting() },
         onAcceptAnswer = { viewModel.markAnswerAsAcceptable() },
         onRateGrade = { viewModel.rateCard(it) },
         onNextCard = { viewModel.nextCard() },
@@ -100,6 +108,11 @@ fun StudyScreenContent(
     onPinyinSelected: (String) -> Unit = {},
     onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
     onUndoAssemblyTile: () -> Unit = {},
+    onWritingStrokeDrawn: (List<HanziPoint>) -> Unit = {},
+    onSetWritingScaffolding: (WritingScaffoldingLevel) -> Unit = {},
+    onUndoWritingStroke: () -> Unit = {},
+    onClearWritingCanvas: () -> Unit = {},
+    onSurrenderWriting: () -> Unit = {},
     onAcceptAnswer: () -> Unit = {},
     onRateGrade: (ReviewGrade) -> Unit = {},
     onNextCard: () -> Unit,
@@ -217,7 +230,7 @@ fun StudyScreenContent(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 val showEnglishOnTop = !uiState.isAnswerRevealed &&
-                                        (card.quizType == QuizType.CLOZE || card.quizType == QuizType.WORD_ASSEMBLY)
+                                        (card.quizType == QuizType.CLOZE || card.quizType == QuizType.WORD_ASSEMBLY || card.quizType == QuizType.WRITING)
 
                                 if (showEnglishOnTop) {
                                     val englishText = if (card.english.isNotEmpty()) {
@@ -231,6 +244,24 @@ fun StudyScreenContent(
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(horizontal = 16.dp)
                                     )
+
+                                    if (card.quizType == QuizType.WRITING && card.wordSlots.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            card.wordSlots.forEachIndexed { idx, slotChar ->
+                                                val isTarget = idx == card.clozeTargetIndex
+                                                val displayChar = if (isTarget) "_" else slotChar
+                                                Text(
+                                                    text = displayChar,
+                                                    style = AndZiThemeCustom.chineseTypography.hanziLarge,
+                                                    color = if (isTarget) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+                                        }
+                                    }
                                 } else {
                                     val displayedHanzi = if (uiState.isAnswerRevealed) card.revealedHanzi else card.hanzi
                                     val hanziStyle = when {
@@ -271,6 +302,7 @@ fun StudyScreenContent(
                                     QuizType.CLOZE -> "Fill in the missing character"
                                     QuizType.WORD_ASSEMBLY -> "Assemble the compound word"
                                     QuizType.PINYIN -> "Select the correct Pinyin pronunciation"
+                                    QuizType.WRITING -> if (card.wordSlots.isNotEmpty()) "Write the missing character" else "Write the character from memory"
                                 }
                                 if (promptText.isNotEmpty()) {
                                     Text(
@@ -297,7 +329,7 @@ fun StudyScreenContent(
                                     onAcceptAnswer = onAcceptAnswer,
                                     onNextCard = { onNextCard() }
                                 )
-                                if (card.quizType == QuizType.CLOZE && card.relatedStudyWords.isNotEmpty()) {
+                                if ((card.quizType == QuizType.CLOZE || card.quizType == QuizType.WRITING) && card.relatedStudyWords.isNotEmpty()) {
                                     StudyWordsUsingCharacterSection(
                                         character = card.missingCharacter,
                                         words = card.relatedStudyWords
@@ -354,6 +386,23 @@ fun StudyScreenContent(
                                         isRevealed = uiState.isAnswerRevealed,
                                         onOptionSelected = onPinyinSelected
                                     )
+                                }
+                                QuizType.WRITING -> {
+                                    card.writingCharacter?.let { charData ->
+                                        WritingQuizView(
+                                            character = charData,
+                                            completedStrokes = uiState.completedStrokes,
+                                            currentStrokeIndex = uiState.currentStrokeIndex,
+                                            scaffoldingLevel = uiState.scaffoldingLevel,
+                                            isAnswerRevealed = uiState.isAnswerRevealed,
+                                            errorShakeTrigger = uiState.writingErrorShakeTrigger,
+                                            onStrokeDrawn = onWritingStrokeDrawn,
+                                            onSetScaffoldingLevel = onSetWritingScaffolding,
+                                            onUndoStroke = onUndoWritingStroke,
+                                            onClearCanvas = onClearWritingCanvas,
+                                            onSurrender = onSurrenderWriting
+                                        )
+                                    }
                                 }
                             }
                         }

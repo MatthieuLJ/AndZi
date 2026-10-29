@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.CharSimilarityEntity
+import com.matthieu.zi_app.data.local.entity.CharacterStrokeEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
@@ -271,4 +272,11 @@ interface VocabularyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCharSimilarities(entities: List<CharSimilarityEntity>)
+
+    // --- Character Strokes ---
+    @Query("SELECT * FROM character_strokes WHERE hanzi = :hanzi LIMIT 1")
+    suspend fun getCharacterStroke(hanzi: String): CharacterStrokeEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCharacterStrokes(entities: List<CharacterStrokeEntity>)
 }

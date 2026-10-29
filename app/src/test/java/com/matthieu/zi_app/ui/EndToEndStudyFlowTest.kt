@@ -146,6 +146,11 @@ class EndToEndStudyFlowTest {
                     studyViewModel.selectAssemblyTile(idx, ch)
                 }
             }
+            QuizType.WRITING -> {
+                currentCard.writingCharacter?.strokes?.forEach { stroke ->
+                    studyViewModel.onUserStrokeDrawn(stroke.points)
+                }
+            }
         }
 
         val afterAnswerState = withTimeout(3000) {

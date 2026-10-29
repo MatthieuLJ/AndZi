@@ -8,6 +8,7 @@ import com.matthieu.zi_app.data.local.dao.LeitnerDao
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.CharSimilarityEntity
+import com.matthieu.zi_app.data.local.entity.CharacterStrokeEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
@@ -31,9 +32,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         EnglishTranslationEntity::class,
         LeitnerRecordEntity::class,
         HskVocabEntity::class,
-        CharSimilarityEntity::class
+        CharSimilarityEntity::class,
+        CharacterStrokeEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 abstract class AndZiDatabase : RoomDatabase() {
@@ -44,8 +46,8 @@ abstract class AndZiDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "HANZI_DB"
         const val CEDICT_DATABASE_NAME = "cedict_db"
-        const val DATABASE_VERSION = 9
-        const val ROOM_IDENTITY_HASH = "27a47e93ae1d280a71096c5fdf061e16"
+        const val DATABASE_VERSION = 10
+        const val ROOM_IDENTITY_HASH = "6f1b0c0409fc7612c232a3cfaae51f63"
 
         @Volatile
         private var INSTANCE: AndZiDatabase? = null
@@ -310,10 +312,27 @@ abstract class AndZiDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `character_strokes` (
+                        `hanzi` TEXT NOT NULL,
+                        `strokes` TEXT NOT NULL,
+                        `medians` TEXT NOT NULL,
+                        `stroke_count` INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(`hanzi`)
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         val ALL_MIGRATIONS: Array<Migration> = arrayOf(
             MIGRATION_6_7,
             MIGRATION_7_8,
-            MIGRATION_8_9
+            MIGRATION_8_9,
+            MIGRATION_9_10
         )
 
         fun createInMemory(context: Context): AndZiDatabase {

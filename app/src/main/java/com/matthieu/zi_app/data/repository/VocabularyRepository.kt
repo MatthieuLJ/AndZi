@@ -5,13 +5,18 @@ import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
+import com.matthieu.zi_app.data.local.entity.CharacterStrokeEntity
 import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
 import com.matthieu.zi_app.data.local.model.WordWithDetails
+import com.matthieu.zi_app.domain.writing.HanziCharacter
+import com.matthieu.zi_app.domain.writing.HanziPoint
+import com.matthieu.zi_app.domain.writing.HanziStroke
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import java.util.Locale
 
 data class PinyinSearchParams(
@@ -344,6 +349,33 @@ class VocabularyRepository(
 
     suspend fun getAllDistinctPinyins(limit: Int = 100): List<String> = withContext(Dispatchers.IO) {
         vocabularyDao.getAllDistinctPinyins(limit)
+    }
+
+    suspend fun getCharacterStroke(hanzi: String): CharacterStrokeEntity? = withContext(Dispatchers.IO) {
+        vocabularyDao.getCharacterStroke(hanzi)
+    }
+
+    suspend fun getHanziCharacter(hanzi: String): HanziCharacter? = withContext(Dispatchers.IO) {
+        val entity = vocabularyDao.getCharacterStroke(hanzi) ?: return@withContext null
+        try {
+            val strokesArray = JSONArray(entity.strokes)
+            val mediansArray = JSONArray(entity.medians)
+            val strokeList = ArrayList<HanziStroke>(strokesArray.length())
+            for (i in 0 until strokesArray.length()) {
+                val path = strokesArray.getString(i)
+                val strokeMedian = mediansArray.getJSONArray(i)
+                val points = ArrayList<HanziPoint>(strokeMedian.length())
+                for (j in 0 until strokeMedian.length()) {
+                    val pt = strokeMedian.getJSONArray(j)
+                    points.add(HanziPoint(pt.getDouble(0).toFloat(), pt.getDouble(1).toFloat()))
+                }
+                strokeList.add(HanziStroke(strokeNum = i, svgPath = path, points = points))
+            }
+            HanziCharacter(hanzi = entity.hanzi, strokes = strokeList, strokeCount = entity.strokeCount)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     private fun toVocabulary(details: WordWithDetails): Vocabulary {

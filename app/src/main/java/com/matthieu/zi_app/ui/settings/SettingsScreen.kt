@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.History
@@ -261,6 +262,42 @@ fun SettingsScreen(
                             onCheckedChange = { viewModel.setColoredPinyin(it) }
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Writing Practice Quiz",
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Include stroke-by-stroke character writing tests in review sessions",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = uiState.writingQuizEnabled,
+                            onCheckedChange = { viewModel.setWritingQuizEnabled(it) }
+                        )
+                    }
                 }
             }
 
@@ -445,7 +482,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "• Includes CC-CEDICT Chinese-English Dictionary under Creative Commons Attribution-Share Alike 4.0 license.\n• Includes MakeMeAHanzi character decomposition data by Shaun Kishore under CC BY-SA 3.0 and ODbL.\n• Includes SUBTLEX-CH frequency corpus (Ghent University / Cai & Brysbaert, PLoS ONE, CC BY 4.0).\n• Includes HSK 3.0 curriculum vocabulary under MIT License.",
+                        text = "• Includes CC-CEDICT Chinese-English Dictionary under Creative Commons Attribution-Share Alike 4.0 license.\n• Includes Hanzi Writer stroke animations & matching engine (David Chanin, MIT License).\n• Includes Make Me a Hanzi & Arphic PL font glyph data (Arphic Technology Co., Ltd. & Shaunak Kishore, Arphic Public License).\n• Includes SUBTLEX-CH frequency corpus (Ghent University / Cai & Brysbaert, PLoS ONE, CC BY 4.0).\n• Includes HSK 3.0 curriculum vocabulary under MIT License.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp

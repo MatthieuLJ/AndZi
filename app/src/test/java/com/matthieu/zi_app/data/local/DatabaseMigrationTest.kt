@@ -298,6 +298,49 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun testMigration9To10CreatesCharacterStrokesTable() {
+        val dbFile = context.getDatabasePath(testDbName)
+        dbFile.parentFile?.mkdirs()
+
+        // 1. Create v9 database
+        val sqliteDb = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        sqliteDb.version = 9
+        sqliteDb.execSQL("CREATE TABLE char_similarity (hanzi TEXT NOT NULL, similar_hanzi TEXT NOT NULL, score REAL NOT NULL, shared_component TEXT, PRIMARY KEY(hanzi, similar_hanzi))")
+        sqliteDb.close()
+
+        // 2. Run MIGRATION_9_10
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val helper = factory.create(
+            androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(testDbName)
+                .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(10) {
+                    override fun onCreate(db: SupportSQLiteDatabase) {}
+                    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                        AndZiDatabase.MIGRATION_9_10.migrate(db)
+                    }
+                })
+                .build()
+        )
+        val migratedDb = helper.writableDatabase
+
+        // 3. Verify character_strokes table exists
+        val tableCursor = migratedDb.query("SELECT name FROM sqlite_master WHERE type='table' AND name='character_strokes'")
+        assertEquals(1, tableCursor.count)
+        tableCursor.close()
+
+        // 4. Test insert and query
+        migratedDb.execSQL("INSERT INTO character_strokes (hanzi, strokes, medians, stroke_count) VALUES ('一', '[\"M 250 500 L 750 500\"]', '[[[250,500],[750,500]]]', 1)")
+        val dataCursor = migratedDb.query("SELECT strokes, medians, stroke_count FROM character_strokes WHERE hanzi = '一'")
+        assertTrue(dataCursor.moveToFirst())
+        assertEquals("[\"M 250 500 L 750 500\"]", dataCursor.getString(0))
+        assertEquals("[[[250,500],[750,500]]]", dataCursor.getString(1))
+        assertEquals(1, dataCursor.getInt(2))
+        dataCursor.close()
+
+        migratedDb.close()
+    }
+
+    @Test
     fun testProgressDatabaseMigration1To2() = runBlocking {
         val dbFile = context.getDatabasePath(testProgressDbName)
         dbFile.parentFile?.mkdirs()

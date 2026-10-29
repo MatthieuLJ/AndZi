@@ -1,0 +1,483 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 10,
+    "identityHash": "6f1b0c0409fc7612c232a3cfaae51f63",
+    "entities": [
+      {
+        "tableName": "char_pinyin",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`char_pinyin_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `hanzi` TEXT NOT NULL, `pinyin` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "charPinyinId",
+            "columnName": "char_pinyin_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hanzi",
+            "columnName": "hanzi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinyin",
+            "columnName": "pinyin",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "char_pinyin_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "char_pinyin_id",
+            "unique": false,
+            "columnNames": [
+              "char_pinyin_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `char_pinyin_id` ON `${TABLE_NAME}` (`char_pinyin_id`)"
+          },
+          {
+            "name": "char_pinyin_hanzi",
+            "unique": false,
+            "columnNames": [
+              "hanzi"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `char_pinyin_hanzi` ON `${TABLE_NAME}` (`hanzi`)"
+          },
+          {
+            "name": "char_pinyin_pinyin",
+            "unique": false,
+            "columnNames": [
+              "pinyin"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `char_pinyin_pinyin` ON `${TABLE_NAME}` (`pinyin`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "cword",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cword_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `chinese` TEXT NOT NULL, `pinyin` TEXT NOT NULL, `length` INTEGER DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "cwordId",
+            "columnName": "cword_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chinese",
+            "columnName": "chinese",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinyin",
+            "columnName": "pinyin",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "length",
+            "columnName": "length",
+            "affinity": "INTEGER",
+            "notNull": false,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "cword_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "cword_id",
+            "unique": false,
+            "columnNames": [
+              "cword_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `cword_id` ON `${TABLE_NAME}` (`cword_id`)"
+          },
+          {
+            "name": "cword_chinese",
+            "unique": false,
+            "columnNames": [
+              "chinese"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `cword_chinese` ON `${TABLE_NAME}` (`chinese`)"
+          },
+          {
+            "name": "cword_pinyin",
+            "unique": false,
+            "columnNames": [
+              "pinyin"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `cword_pinyin` ON `${TABLE_NAME}` (`pinyin`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "cword_segment",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cword_id` INTEGER NOT NULL, `char_pinyin_id` INTEGER NOT NULL, `pos` INTEGER NOT NULL, PRIMARY KEY(`cword_id`, `pos`), FOREIGN KEY(`cword_id`) REFERENCES `cword`(`cword_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`char_pinyin_id`) REFERENCES `char_pinyin`(`char_pinyin_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "cwordId",
+            "columnName": "cword_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "charPinyinId",
+            "columnName": "char_pinyin_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pos",
+            "columnName": "pos",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "cword_id",
+            "pos"
+          ]
+        },
+        "indices": [
+          {
+            "name": "cword_segment_pos",
+            "unique": false,
+            "columnNames": [
+              "pos"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `cword_segment_pos` ON `${TABLE_NAME}` (`pos`)"
+          },
+          {
+            "name": "index_cword_segment_char_pinyin_id",
+            "unique": false,
+            "columnNames": [
+              "char_pinyin_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_cword_segment_char_pinyin_id` ON `${TABLE_NAME}` (`char_pinyin_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "cword",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "cword_id"
+            ],
+            "referencedColumns": [
+              "cword_id"
+            ]
+          },
+          {
+            "table": "char_pinyin",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "char_pinyin_id"
+            ],
+            "referencedColumns": [
+              "char_pinyin_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "eword",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eng_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cword_id` INTEGER NOT NULL, `translation` TEXT NOT NULL, FOREIGN KEY(`cword_id`) REFERENCES `cword`(`cword_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "engId",
+            "columnName": "eng_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cwordId",
+            "columnName": "cword_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "translation",
+            "columnName": "translation",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "eng_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_eword_cword_id",
+            "unique": false,
+            "columnNames": [
+              "cword_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_eword_cword_id` ON `${TABLE_NAME}` (`cword_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "cword",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "cword_id"
+            ],
+            "referencedColumns": [
+              "cword_id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "leitner",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, PRIMARY KEY(`hanzi`))",
+        "fields": [
+          {
+            "fieldPath": "hanzi",
+            "columnName": "hanzi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "box",
+            "columnName": "box",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expTime",
+            "columnName": "exp_time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numTested",
+            "columnName": "num_tested",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "numWrong",
+            "columnName": "num_wrong",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "streak",
+            "columnName": "streak",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "dateAdded",
+            "columnName": "date_added",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hanzi"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "hsk_vocab",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hanzi` TEXT NOT NULL, `hsk_level` INTEGER NOT NULL, `hsk2_level` INTEGER NOT NULL DEFAULT 0, `freq_rank` INTEGER NOT NULL DEFAULT 999999, `is_char` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`hanzi`))",
+        "fields": [
+          {
+            "fieldPath": "hanzi",
+            "columnName": "hanzi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hskLevel",
+            "columnName": "hsk_level",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hsk2Level",
+            "columnName": "hsk2_level",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "freqRank",
+            "columnName": "freq_rank",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "999999"
+          },
+          {
+            "fieldPath": "isChar",
+            "columnName": "is_char",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hanzi"
+          ]
+        },
+        "indices": [
+          {
+            "name": "idx_hsk_level",
+            "unique": false,
+            "columnNames": [
+              "hsk_level"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `idx_hsk_level` ON `${TABLE_NAME}` (`hsk_level`)"
+          },
+          {
+            "name": "idx_hsk_freq",
+            "unique": false,
+            "columnNames": [
+              "freq_rank"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `idx_hsk_freq` ON `${TABLE_NAME}` (`freq_rank`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "char_similarity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hanzi` TEXT NOT NULL, `similar_hanzi` TEXT NOT NULL, `score` REAL NOT NULL, `shared_component` TEXT, PRIMARY KEY(`hanzi`, `similar_hanzi`))",
+        "fields": [
+          {
+            "fieldPath": "hanzi",
+            "columnName": "hanzi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "similarHanzi",
+            "columnName": "similar_hanzi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sharedComponent",
+            "columnName": "shared_component",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hanzi",
+            "similar_hanzi"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_char_similarity_hanzi_score",
+            "unique": false,
+            "columnNames": [
+              "hanzi",
+              "score"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_char_similarity_hanzi_score` ON `${TABLE_NAME}` (`hanzi`, `score`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "character_strokes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hanzi` TEXT NOT NULL, `strokes` TEXT NOT NULL, `medians` TEXT NOT NULL, `stroke_count` INTEGER NOT NULL, PRIMARY KEY(`hanzi`))",
+        "fields": [
+          {
+            "fieldPath": "hanzi",
+            "columnName": "hanzi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "strokes",
+            "columnName": "strokes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "medians",
+            "columnName": "medians",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "strokeCount",
+            "columnName": "stroke_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hanzi"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f1b0c0409fc7612c232a3cfaae51f63')"
+    ]
+  }
+}

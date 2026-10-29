@@ -67,6 +67,37 @@ class StudyRepository(
         toLeitnerState(reviewState)
     }
 
+    suspend fun recordGuidedWritingResult(
+        hanzi: String,
+        strokeCount: Int,
+        now: Long = System.currentTimeMillis()
+    ): LeitnerState = withContext(Dispatchers.IO) {
+        val currentRecord = leitnerDao.getRecord(hanzi)
+        val currentBox = currentRecord?.box ?: 0
+        val currentStreak = currentRecord?.streak ?: 0
+        val numTested = (currentRecord?.numTested ?: 0) + 1
+        val numWrong = currentRecord?.numWrong ?: 0
+
+        val (newBox, newStreak, newNumWrong) = when {
+            strokeCount <= 3 -> Triple(maxOf(0, currentBox - 1), 0, numWrong + 1)
+            else -> Triple(currentBox, currentStreak, numWrong)
+        }
+        val oneDayMillis = 24L * 60 * 60 * 1000
+        val newExpTime = now + oneDayMillis
+
+        val updatedRecord = LeitnerRecordEntity(
+            hanzi = hanzi,
+            box = newBox,
+            expTime = newExpTime,
+            numTested = numTested,
+            numWrong = newNumWrong,
+            streak = newStreak,
+            dateAdded = currentRecord?.dateAdded ?: now
+        )
+        leitnerDao.insertOrUpdateRecord(updatedRecord)
+        toDomainState(updatedRecord)
+    }
+
     suspend fun restartStudy(
         hanzi: String,
         now: Long = System.currentTimeMillis()

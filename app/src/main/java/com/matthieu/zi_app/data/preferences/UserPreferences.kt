@@ -24,6 +24,9 @@ class UserPreferences(context: Context) {
     private val _notificationEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATION_ENABLED, true))
     val notificationEnabled: StateFlow<Boolean> = _notificationEnabled.asStateFlow()
 
+    private val _writingQuizEnabled = MutableStateFlow(prefs.getBoolean(KEY_WRITING_QUIZ_ENABLED, true))
+    val writingQuizEnabled: StateFlow<Boolean> = _writingQuizEnabled.asStateFlow()
+
     private val _streakDays = MutableStateFlow(getStreakDays())
     val streakDays: StateFlow<Int> = _streakDays.asStateFlow()
 
@@ -40,6 +43,11 @@ class UserPreferences(context: Context) {
     fun setNotificationEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_NOTIFICATION_ENABLED, enabled).apply()
         _notificationEnabled.value = enabled
+    }
+
+    fun setWritingQuizEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_WRITING_QUIZ_ENABLED, enabled).apply()
+        _writingQuizEnabled.value = enabled
     }
 
     fun hasNoRecordedStudy(): Boolean = !prefs.contains(KEY_LAST_STUDY_DATE)
@@ -123,6 +131,7 @@ class UserPreferences(context: Context) {
         const val KEY_THEME_MODE = "app_theme_mode"
         const val KEY_COLOR_PINYIN = "color_pinyin"
         const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
+        const val KEY_WRITING_QUIZ_ENABLED = "writing_quiz_enabled"
         const val KEY_STREAK_DAYS = "streak_days"
         const val KEY_LAST_STUDY_DATE = "last_study_date"
     }

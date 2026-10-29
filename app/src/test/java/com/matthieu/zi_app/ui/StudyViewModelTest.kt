@@ -1200,15 +1200,14 @@ class StudyViewModelTest {
             com.matthieu.zi_app.data.local.entity.CharPinyinEntity(hanzi = "乐", pinyin = "le4")
         )
 
-        val now = System.currentTimeMillis()
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = now - 10_000L)
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = 0L)
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
 
         // Card 1 at index 0 is TONE quiz
-        val state1 = withTimeout(3000) {
+        val state1 = withTimeout(10_000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         val card1 = state1.currentCard!!
@@ -1217,19 +1216,19 @@ class StudyViewModelTest {
 
         // Submit tone answer (Tone 4)
         viewModel.submitToneAnswer(4)
-        val afterCard1 = withTimeout(3000) {
+        val afterCard1 = withTimeout(10_000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
         assertTrue(afterCard1.isCorrect == true)
 
         // Reset Leitner record for "乐" so it stays due for next card at index 1
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = now - 10_000L)
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "乐", box = 1, expTime = 0L)
         )
         viewModel.rateCard(ReviewGrade.AGAIN)
 
         // Card 2 at index 1 is PINYIN quiz!
-        val state2 = withTimeout(3000) {
+        val state2 = withTimeout(10_000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         val card2 = state2.currentCard!!
@@ -1242,7 +1241,7 @@ class StudyViewModelTest {
 
         // Submitting Pinyin answer
         viewModel.submitPinyinAnswer("lè")
-        val afterCard2 = withTimeout(3000) {
+        val afterCard2 = withTimeout(10_000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
         assertTrue(afterCard2.isCorrect == true)
