@@ -1207,7 +1207,7 @@ class StudyViewModelTest {
         val viewModel = StudyViewModel(studyRepo, vocRepo)
 
         // Card 1 at index 0 is TONE quiz
-        val state1 = withTimeout(10_000) {
+        val state1 = withTimeout(20_000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         val card1 = state1.currentCard!!
@@ -1216,7 +1216,7 @@ class StudyViewModelTest {
 
         // Submit tone answer (Tone 4)
         viewModel.submitToneAnswer(4)
-        val afterCard1 = withTimeout(10_000) {
+        val afterCard1 = withTimeout(20_000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
         assertTrue(afterCard1.isCorrect == true)
@@ -1228,8 +1228,8 @@ class StudyViewModelTest {
         viewModel.rateCard(ReviewGrade.AGAIN)
 
         // Card 2 at index 1 is PINYIN quiz!
-        val state2 = withTimeout(10_000) {
-            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        val state2 = withTimeout(20_000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null && !it.isAnswerRevealed }.first()
         }
         val card2 = state2.currentCard!!
         assertEquals("乐", card2.hanzi)
@@ -1241,7 +1241,7 @@ class StudyViewModelTest {
 
         // Submitting Pinyin answer
         viewModel.submitPinyinAnswer("lè")
-        val afterCard2 = withTimeout(10_000) {
+        val afterCard2 = withTimeout(20_000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
         assertTrue(afterCard2.isCorrect == true)

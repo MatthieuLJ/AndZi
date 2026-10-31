@@ -88,7 +88,7 @@ class WritingQuizTest {
 
         val now = System.currentTimeMillis()
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            LeitnerRecordEntity(hanzi = "一", box = 0, expTime = now - 1000L)
+            LeitnerRecordEntity(hanzi = "一", box = 1, expTime = now - 1000L)
         )
 
         // With index = 3, in candidate list [TONE, ENGLISH, PINYIN, WRITING], 3 % 4 = 3 -> WRITING
@@ -140,7 +140,7 @@ class WritingQuizTest {
 
         val now = System.currentTimeMillis()
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            LeitnerRecordEntity(hanzi = "一", box = 0, expTime = now - 1000L)
+            LeitnerRecordEntity(hanzi = "一", box = 1, expTime = now - 1000L)
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
@@ -177,7 +177,7 @@ class WritingQuizTest {
 
         val now = System.currentTimeMillis()
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            LeitnerRecordEntity(hanzi = "十", box = 0, expTime = now - 1000L)
+            LeitnerRecordEntity(hanzi = "十", box = 1, expTime = now - 1000L)
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
@@ -222,7 +222,7 @@ class WritingQuizTest {
         assertTrue("Answer should be revealed as correct", completedState.isCorrect == true)
         val updatedRecord = studyRepo.getLeitnerState("十")
         assertNotNull(updatedRecord)
-        assertEquals("Unassisted test mode advances box to 1", 1, updatedRecord!!.box)
+        assertEquals("Unassisted test mode advances box to 2", 2, updatedRecord!!.box)
     }
 
     @Test

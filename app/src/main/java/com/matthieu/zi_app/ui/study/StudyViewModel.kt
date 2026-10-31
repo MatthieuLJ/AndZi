@@ -11,6 +11,7 @@ import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.domain.study.AdaptiveQuizPolicy
 import com.matthieu.zi_app.domain.writing.HanziPoint
 import com.matthieu.zi_app.domain.writing.StrokeMatcher
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
@@ -240,79 +241,17 @@ class StudyViewModel(
             vocabularyRepository.getHanziCharacter(hanzi)
                 ?: dictionaryRepository?.getHanziCharacter(hanzi)
         } else null
-        val canDoWriting = charStrokes != null
 
-        // 1. Determine Quiz Type:
-        val quizType = when {
-            !isSingleChar -> {
-                // Multi-character words NEVER use Tone or Writing quiz
-                if (hasUserEnglish) {
-                    when (index % 3) {
-                        0 -> QuizType.WORD_ASSEMBLY
-                        1 -> QuizType.CLOZE
-                        else -> QuizType.ENGLISH
-                    }
-                } else {
-                    if (index % 2 == 0) QuizType.WORD_ASSEMBLY else QuizType.CLOZE
-                }
-            }
-            !hasUserEnglish -> {
-                // Single character from char_pinyin (without user English translations)
-                when {
-                    hasValidNonNeutralTone && containingWords.isNotEmpty() -> {
-                        val candidates = if (canDoWriting) {
-                            listOf(QuizType.TONE, QuizType.CLOZE, QuizType.PINYIN, QuizType.WRITING)
-                        } else {
-                            listOf(QuizType.TONE, QuizType.CLOZE, QuizType.PINYIN)
-                        }
-                        candidates[index % candidates.size]
-                    }
-                    hasValidNonNeutralTone -> {
-                        val candidates = if (canDoWriting) {
-                            listOf(QuizType.TONE, QuizType.PINYIN, QuizType.WRITING)
-                        } else {
-                            listOf(QuizType.TONE, QuizType.PINYIN)
-                        }
-                        candidates[index % candidates.size]
-                    }
-                    containingWords.isNotEmpty() -> {
-                        if (canDoWriting) {
-                            if (index % 2 == 0) QuizType.CLOZE else QuizType.WRITING
-                        } else {
-                            QuizType.CLOZE
-                        }
-                    }
-                    else -> {
-                        if (canDoWriting) {
-                            if (index % 2 == 0) QuizType.PINYIN else QuizType.WRITING
-                        } else {
-                            QuizType.PINYIN
-                        }
-                    }
-                }
-            }
-            else -> {
-                // Single character WITH user English translations
-                when {
-                    hasValidNonNeutralTone -> {
-                        val candidates = if (canDoWriting) {
-                            listOf(QuizType.TONE, QuizType.ENGLISH, QuizType.PINYIN, QuizType.WRITING)
-                        } else {
-                            listOf(QuizType.TONE, QuizType.ENGLISH, QuizType.PINYIN)
-                        }
-                        candidates[index % candidates.size]
-                    }
-                    else -> {
-                        val candidates = if (canDoWriting) {
-                            listOf(QuizType.ENGLISH, QuizType.PINYIN, QuizType.WRITING)
-                        } else {
-                            listOf(QuizType.ENGLISH, QuizType.PINYIN)
-                        }
-                        candidates[index % candidates.size]
-                    }
-                }
-            }
-        }
+        // 1. Determine Quiz Type using AdaptiveQuizPolicy:
+        val quizType = AdaptiveQuizPolicy.selectQuizType(
+            box = box,
+            isSingleChar = isSingleChar,
+            hasValidNonNeutralTone = hasValidNonNeutralTone,
+            hasUserEnglish = hasUserEnglish,
+            hasContainingWords = containingWords.isNotEmpty(),
+            strokeCount = charStrokes?.strokeCount,
+            index = index
+        )
 
         // 2. If Tone Quiz or Pinyin Quiz, find studied compound words demonstrating this character (study stack only)
         var contextWords = emptyList<String>()
