@@ -51,11 +51,13 @@ sealed class Screen(
     )
 
     data object Vocabulary : Screen(
-        route = "vocabulary",
+        route = "vocabulary?tab={tab}",
         title = "Active Cards",
         selectedIcon = Icons.Filled.School,
         unselectedIcon = Icons.Outlined.School
-    )
+    ) {
+        fun createRoute(tab: String = "words") = "vocabulary?tab=$tab"
+    }
 
     companion object {
         val bottomNavItems: List<Screen>

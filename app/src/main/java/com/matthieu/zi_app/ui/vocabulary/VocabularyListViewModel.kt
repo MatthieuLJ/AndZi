@@ -15,14 +15,29 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class ActiveCardTab {
+    WORDS,
+    CHARACTERS
+}
+
 data class ActiveVocabularyItem(
     val vocabulary: Vocabulary,
     val leitnerState: LeitnerState?
 )
 
+data class ActiveCharacterItem(
+    val character: String,
+    val pinyins: List<String>,
+    val containingWords: List<String>,
+    val leitnerState: LeitnerState?
+)
+
 data class VocabularyListUiState(
+    val currentTab: ActiveCardTab = ActiveCardTab.WORDS,
     val items: List<ActiveVocabularyItem> = emptyList(),
     val filteredItems: List<ActiveVocabularyItem> = emptyList(),
+    val characterItems: List<ActiveCharacterItem> = emptyList(),
+    val filteredCharacterItems: List<ActiveCharacterItem> = emptyList(),
     val query: String = "",
     val isLoading: Boolean = false,
     val selectedItem: ActiveVocabularyItem? = null,
@@ -55,6 +70,30 @@ class VocabularyListViewModel(
         loadActiveVocabulary()
     }
 
+    fun selectTab(tab: ActiveCardTab) {
+        if (_uiState.value.currentTab == tab) return
+        _uiState.update { state ->
+            val boxes = if (tab == ActiveCardTab.WORDS) {
+                state.items.map { it.leitnerState?.box ?: 0 }
+            } else {
+                state.characterItems.map { it.leitnerState?.box ?: 0 }
+            }
+            val minBox = boxes.minOrNull() ?: 0
+            val maxBox = boxes.maxOrNull() ?: 0
+            val boxCounts = boxes.groupingBy { it }.eachCount()
+
+            state.copy(
+                currentTab = tab,
+                selectedBoxRange = null,
+                minAvailableBox = minBox,
+                maxAvailableBox = maxBox,
+                boxCounts = boxCounts,
+                filteredItems = filterWordList(state.items, state.query, null),
+                filteredCharacterItems = filterCharacterList(state.characterItems, state.query, null)
+            )
+        }
+    }
+
     fun loadActiveVocabulary() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -64,7 +103,8 @@ class VocabularyListViewModel(
                 val allLeitner = studyRepository.getAllRecords()
                 val leitnerMap = allLeitner.associateBy { it.hanzi }
 
-                val items = localVocabs.map { voc ->
+                // 1. Word Items
+                val wordItems = localVocabs.map { voc ->
                     ActiveVocabularyItem(
                         vocabulary = voc,
                         leitnerState = leitnerMap[voc.chinese]
@@ -75,13 +115,72 @@ class VocabularyListViewModel(
                         .thenBy { it.vocabulary.chinese }
                 )
 
-                val boxes = items.map { it.leitnerState?.box ?: 0 }
-                val minBox = boxes.minOrNull() ?: 0
-                val maxBox = boxes.maxOrNull() ?: 0
-                val boxCounts = boxes.groupingBy { it }.eachCount()
+                // 2. Character Items: Map which active words contain each character
+                val wordMap = mutableMapOf<String, MutableList<String>>()
+                for (voc in localVocabs) {
+                    val word = voc.chinese
+                    var i = 0
+                    while (i < word.length) {
+                        val cp = word.codePointAt(i)
+                        val charStr = String(Character.toChars(cp))
+                        val list = wordMap.getOrPut(charStr) { mutableListOf() }
+                        if (word !in list) {
+                            list.add(word)
+                        }
+                        i += Character.charCount(cp)
+                    }
+                }
+
+                val charEntities = localVocabularyRepository.getAllCharPinyins()
+                val charPinyinMap = charEntities.groupBy({ it.hanzi }, { it.pinyin })
+
+                val allChars = mutableSetOf<String>()
+                allChars.addAll(charPinyinMap.keys)
+                allChars.addAll(wordMap.keys)
+                for (record in allLeitner) {
+                    if (record.hanzi.codePointCount(0, record.hanzi.length) == 1) {
+                        allChars.add(record.hanzi)
+                    }
+                }
+
+                val characterItems = allChars.map { charStr ->
+                    var pinyins = charPinyinMap[charStr]?.distinct() ?: emptyList()
+                    if (pinyins.isEmpty()) {
+                        pinyins = dictionaryRepository.getCharPinyinsForHanzi(charStr).map { it.pinyin }.distinct()
+                    }
+                    if (pinyins.isEmpty()) {
+                        val voc = localVocabs.find { it.chinese == charStr }
+                        if (voc != null && voc.pinyin.isNotEmpty()) {
+                            pinyins = listOf(voc.pinyin)
+                        }
+                    }
+                    val containingWords = wordMap[charStr] ?: emptyList()
+                    val leitnerState = leitnerMap[charStr]
+
+                    ActiveCharacterItem(
+                        character = charStr,
+                        pinyins = pinyins,
+                        containingWords = containingWords,
+                        leitnerState = leitnerState
+                    )
+                }.sortedWith(
+                    compareByDescending<ActiveCharacterItem> { it.leitnerState?.box ?: 0 }
+                        .thenBy { it.pinyins.firstOrNull() ?: "" }
+                        .thenBy { it.character }
+                )
+
+                val activeTab = _uiState.value.currentTab
+                val currentBoxes = if (activeTab == ActiveCardTab.WORDS) {
+                    wordItems.map { it.leitnerState?.box ?: 0 }
+                } else {
+                    characterItems.map { it.leitnerState?.box ?: 0 }
+                }
+                val minBox = currentBoxes.minOrNull() ?: 0
+                val maxBox = currentBoxes.maxOrNull() ?: 0
+                val boxCounts = currentBoxes.groupingBy { it }.eachCount()
 
                 val currentRange = _uiState.value.selectedBoxRange
-                val newRange = if (currentRange != null && items.isNotEmpty()) {
+                val newRange = if (currentRange != null && currentBoxes.isNotEmpty()) {
                     val clampedStart = currentRange.first.coerceIn(minBox, maxBox)
                     val clampedEnd = currentRange.last.coerceIn(minBox, maxBox)
                     if (clampedStart <= clampedEnd && (clampedStart != minBox || clampedEnd != maxBox)) {
@@ -95,12 +194,14 @@ class VocabularyListViewModel(
 
                 _uiState.update { state ->
                     state.copy(
-                        items = items,
+                        items = wordItems,
+                        characterItems = characterItems,
                         minAvailableBox = minBox,
                         maxAvailableBox = maxBox,
                         boxCounts = boxCounts,
                         selectedBoxRange = newRange,
-                        filteredItems = filterList(items, state.query, newRange),
+                        filteredItems = filterWordList(wordItems, state.query, newRange),
+                        filteredCharacterItems = filterCharacterList(characterItems, state.query, newRange),
                         isLoading = false,
                         errorMessage = null
                     )
@@ -120,7 +221,8 @@ class VocabularyListViewModel(
         _uiState.update { state ->
             state.copy(
                 query = newQuery,
-                filteredItems = filterList(state.items, newQuery, state.selectedBoxRange)
+                filteredItems = filterWordList(state.items, newQuery, state.selectedBoxRange),
+                filteredCharacterItems = filterCharacterList(state.characterItems, newQuery, state.selectedBoxRange)
             )
         }
     }
@@ -136,12 +238,13 @@ class VocabularyListViewModel(
             }
             state.copy(
                 selectedBoxRange = effectiveRange,
-                filteredItems = filterList(state.items, state.query, effectiveRange)
+                filteredItems = filterWordList(state.items, state.query, effectiveRange),
+                filteredCharacterItems = filterCharacterList(state.characterItems, state.query, effectiveRange)
             )
         }
     }
 
-    private fun filterList(
+    private fun filterWordList(
         items: List<ActiveVocabularyItem>,
         query: String,
         boxRange: IntRange?
@@ -170,6 +273,41 @@ class VocabularyListViewModel(
                 piNoTone.contains(lowerQuery) ||
                 en.any { it.contains(lowerQuery, ignoreCase = true) }
         }
+    }
+
+    private fun filterCharacterList(
+        items: List<ActiveCharacterItem>,
+        query: String,
+        boxRange: IntRange?
+    ): List<ActiveCharacterItem> {
+        val trimmed = query.trim()
+        val lowerQuery = trimmed.lowercase()
+        val hasQuery = trimmed.isNotEmpty()
+
+        return items.filter { item ->
+            val box = item.leitnerState?.box ?: 0
+            if (boxRange != null && box !in boxRange) {
+                return@filter false
+            }
+
+            if (!hasQuery) {
+                return@filter true
+            }
+
+            val ch = item.character
+            val pinyins = item.pinyins.map { it.lowercase() }
+            val pinyinsNoTone = pinyins.map { p -> p.filter { !it.isDigit() } }
+            val words = item.containingWords
+
+            ch.contains(trimmed) ||
+                pinyins.any { it.contains(lowerQuery) } ||
+                pinyinsNoTone.any { it.contains(lowerQuery) } ||
+                words.any { it.contains(trimmed) }
+        }
+    }
+
+    fun selectCharacter(char: String) {
+        selectCharacterFromConstituent(char)
     }
 
     fun selectItem(item: ActiveVocabularyItem) {

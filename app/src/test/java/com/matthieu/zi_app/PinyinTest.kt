@@ -39,7 +39,18 @@ class PinyinTest {
         assertEquals(1, annotatedSingle.spanStyles.size)
         assertEquals(toneColors.colorForTone(3), annotatedSingle.spanStyles[0].item.color)
 
-        // 4. Blank string
+        // 4. Comma-separated pinyin syllables (polyphonic character readings)
+        val annotatedComma = buildPinyinToneAnnotatedString("di4, de5", toneColors)
+        assertEquals("dì, de", annotatedComma.text)
+        assertEquals(2, annotatedComma.spanStyles.size)
+        assertEquals(toneColors.colorForTone(4), annotatedComma.spanStyles[0].item.color)
+        assertEquals(0, annotatedComma.spanStyles[0].start)
+        assertEquals(2, annotatedComma.spanStyles[0].end)
+        assertEquals(toneColors.colorForTone(5), annotatedComma.spanStyles[1].item.color)
+        assertEquals(4, annotatedComma.spanStyles[1].start)
+        assertEquals(6, annotatedComma.spanStyles[1].end)
+
+        // 5. Blank string
         val annotatedEmpty = buildPinyinToneAnnotatedString("", toneColors)
         assertEquals("", annotatedEmpty.text)
         assertTrue(annotatedEmpty.spanStyles.isEmpty())

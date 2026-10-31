@@ -67,6 +67,8 @@ fun HomeScreen(
     onStartStudy: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenVocabulary: () -> Unit = {},
+    onOpenWords: () -> Unit = onOpenVocabulary,
+    onOpenCharacters: () -> Unit = onOpenVocabulary,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -125,7 +127,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Top Summary Row: Streak & Total Studied
+                // Top Summary Row: Streak & Retention
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -139,12 +141,11 @@ fun HomeScreen(
                             modifier = Modifier.weight(1f)
                         )
                         SummaryStatCard(
-                            title = "Active Cards",
-                            value = "${uiState.totalLearned}",
+                            title = "Retention",
+                            value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
                             icon = Icons.Default.CheckCircle,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f),
-                            onClick = onOpenVocabulary
+                            iconTint = Color(0xFF66BB6A),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -188,7 +189,7 @@ fun HomeScreen(
                         }
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            // Row 1: Words Known & Characters Known
+                            // Words Known & Characters Known (Clickable to open Active Word / Character Cards)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -199,7 +200,8 @@ fun HomeScreen(
                                     subtitle = "mastered in stack",
                                     icon = Icons.Default.School,
                                     iconTint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    onClick = onOpenWords
                                 )
                                 MetricSummaryCard(
                                     title = "Characters Known",
@@ -207,19 +209,10 @@ fun HomeScreen(
                                     subtitle = "mastered in stack",
                                     icon = Icons.Default.Translate,
                                     iconTint = Color(0xFF8E24AA),
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    onClick = onOpenCharacters
                                 )
                             }
-
-                            // Row 2: Retention
-                            MetricSummaryCard(
-                                title = "Retention",
-                                value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
-                                subtitle = "${uiState.totalReviewsCount} reviews",
-                                icon = Icons.Default.CheckCircle,
-                                iconTint = Color(0xFF66BB6A),
-                                modifier = Modifier.fillMaxWidth()
-                            )
 
                             // Historical Growth Chart Card
                             Card(
@@ -573,11 +566,31 @@ private fun MetricSummaryCard(
     subtitle: String,
     icon: ImageVector,
     iconTint: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
+    val isClickable = onClick != null
+    val cardModifier = if (isClickable) {
+        modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+    } else {
+        modifier
+    }
+
+    val border = if (isClickable) {
+        BorderStroke(
+            width = 1.5.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+        )
+    } else {
+        null
+    }
+
     Card(
-        modifier = modifier,
+        modifier = cardModifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = border,
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -592,18 +605,29 @@ private fun MetricSummaryCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .background(iconTint.copy(alpha = 0.15f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(16.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(iconTint.copy(alpha = 0.15f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconTint,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    if (isClickable) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open $title",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 

@@ -90,11 +90,12 @@ fun buildPinyinToneAnnotatedString(
     val clean = pinyinString.trim()
     if (clean.isEmpty()) return AnnotatedString("")
 
-    val chunks = clean.split(" ")
+    val regex = Regex("([a-zA-ZāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜüÜ'0-5]+|[^a-zA-ZāōēīūǖáóéíúǘǎǒěǐǔǚàòèìùǜüÜ'0-5]+)")
+    val matches = regex.findAll(clean)
     return buildAnnotatedString {
-        chunks.forEachIndexed { chunkIndex, chunk ->
-            if (chunkIndex > 0) append(" ")
-            val pinyins = PinyinParser.parse_string_to_pinyin(chunk)
+        for (match in matches) {
+            val token = match.value
+            val pinyins = PinyinParser.parse_string_to_pinyin(token)
             if (!pinyins.isNullOrEmpty()) {
                 pinyins.forEach { p ->
                     withStyle(SpanStyle(color = toneColors.colorForTone(p.tone))) {
@@ -102,7 +103,7 @@ fun buildPinyinToneAnnotatedString(
                     }
                 }
             } else {
-                append(PinyinParser.convert_to_pretty_version(chunk))
+                append(PinyinParser.convert_to_pretty_version(token))
             }
         }
     }

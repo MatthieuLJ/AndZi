@@ -54,6 +54,8 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -68,6 +70,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -89,25 +93,43 @@ fun VocabularyListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    val currentTab = uiState.currentTab
+    val isWordsTab = currentTab == ActiveCardTab.WORDS
+
+    val titleText = if (isWordsTab) "Active Word Cards" else "Active Character Cards"
+    val subtitleText = if (isWordsTab) {
+        if (uiState.items.isNotEmpty()) {
+            if (uiState.filteredItems.size != uiState.items.size) {
+                "${uiState.filteredItems.size} of ${uiState.items.size} word cards in study"
+            } else {
+                "${uiState.items.size} word cards in study"
+            }
+        } else {
+            "No word cards in study"
+        }
+    } else {
+        if (uiState.characterItems.isNotEmpty()) {
+            if (uiState.filteredCharacterItems.size != uiState.characterItems.size) {
+                "${uiState.filteredCharacterItems.size} of ${uiState.characterItems.size} character cards in study"
+            } else {
+                "${uiState.characterItems.size} character cards in study"
+            }
+        } else {
+            "No character cards in study"
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = "Active Cards",
+                            text = titleText,
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = if (uiState.items.isNotEmpty()) {
-                                if (uiState.filteredItems.size != uiState.items.size) {
-                                    "${uiState.filteredItems.size} of ${uiState.items.size} cards in study"
-                                } else {
-                                    "${uiState.items.size} cards in study"
-                                }
-                            } else {
-                                "No cards in study"
-                            },
+                            text = subtitleText,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -136,6 +158,41 @@ fun VocabularyListScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp, vertical = 4.dp)
         ) {
+            // Tabs: Word Cards vs Character Cards
+            TabRow(
+                selectedTabIndex = if (isWordsTab) 0 else 1,
+                containerColor = MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Tab(
+                    selected = isWordsTab,
+                    onClick = { viewModel.selectTab(ActiveCardTab.WORDS) },
+                    text = {
+                        Text(
+                            text = "Word Cards (${uiState.items.size})",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = if (isWordsTab) FontWeight.Bold else FontWeight.Medium
+                            )
+                        )
+                    }
+                )
+                Tab(
+                    selected = !isWordsTab,
+                    onClick = { viewModel.selectTab(ActiveCardTab.CHARACTERS) },
+                    text = {
+                        Text(
+                            text = "Character Cards (${uiState.characterItems.size})",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = if (!isWordsTab) FontWeight.Bold else FontWeight.Medium
+                            )
+                        )
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // Search Input Header
             OutlinedTextField(
                 value = uiState.query,
@@ -143,7 +200,11 @@ fun VocabularyListScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        text = "Search active cards, pinyin, English...",
+                        text = if (isWordsTab) {
+                            "Search active word cards, pinyin, English..."
+                        } else {
+                            "Search characters, pinyin, containing words..."
+                        },
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
@@ -175,14 +236,15 @@ fun VocabularyListScreen(
                 )
             )
 
-            if (uiState.items.isNotEmpty()) {
+            val currentTabTotal = if (isWordsTab) uiState.items.size else uiState.characterItems.size
+            if (currentTabTotal > 0) {
                 Spacer(modifier = Modifier.height(10.dp))
                 BoxFilterSection(
                     minAvailableBox = uiState.minAvailableBox,
                     maxAvailableBox = uiState.maxAvailableBox,
                     selectedRange = uiState.selectedBoxRange,
                     boxCounts = uiState.boxCounts,
-                    totalCount = uiState.items.size,
+                    totalCount = currentTabTotal,
                     onRangeChanged = { viewModel.onBoxRangeChanged(it) }
                 )
             }
@@ -200,41 +262,81 @@ fun VocabularyListScreen(
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
-                uiState.filteredItems.isEmpty() -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (uiState.items.isEmpty()) {
-                                "No active cards in study yet.\nSearch the Dictionary to add words!"
-                            } else {
-                                "No matching active cards found"
-                            },
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
+                isWordsTab -> {
+                    if (uiState.filteredItems.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (uiState.items.isEmpty()) {
+                                    "No active word cards in study yet.\nSearch the Dictionary to add words!"
+                                } else {
+                                    "No matching active word cards found"
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentPadding = PaddingValues(vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(
+                                uiState.filteredItems,
+                                key = { "${it.vocabulary.chinese}_${it.vocabulary.pinyin}_${it.leitnerState?.box}" }
+                            ) { item ->
+                                ActiveVocabularyCard(
+                                    item = item,
+                                    onClick = { viewModel.selectItem(item) }
+                                )
+                            }
+                        }
                     }
                 }
                 else -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentPadding = PaddingValues(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(
-                            uiState.filteredItems,
-                            key = { "${it.vocabulary.chinese}_${it.vocabulary.pinyin}_${it.leitnerState?.box}" }
-                        ) { item ->
-                            ActiveVocabularyCard(
-                                item = item,
-                                onClick = { viewModel.selectItem(item) }
+                    if (uiState.filteredCharacterItems.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (uiState.characterItems.isEmpty()) {
+                                    "No active character cards in study yet."
+                                } else {
+                                    "No matching active character cards found"
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentPadding = PaddingValues(vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(
+                                uiState.filteredCharacterItems,
+                                key = { "char_${it.character}_${it.leitnerState?.box}" }
+                            ) { item ->
+                                ActiveCharacterCard(
+                                    item = item,
+                                    onClick = { viewModel.selectCharacter(item.character) }
+                                )
+                            }
                         }
                     }
                 }
@@ -550,6 +652,121 @@ fun ActiveVocabularyCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Box Badge
+            val boxText = when (box) {
+                null -> "New"
+                0 -> "Box 0"
+                9 -> "Box 9"
+                else -> "Box $box"
+            }
+            val boxColor = when (box) {
+                null, 0 -> MaterialTheme.colorScheme.errorContainer
+                in 1..3 -> MaterialTheme.colorScheme.tertiaryContainer
+                in 4..6 -> MaterialTheme.colorScheme.secondaryContainer
+                else -> MaterialTheme.colorScheme.primaryContainer
+            }
+            val boxTextColor = when (box) {
+                null, 0 -> MaterialTheme.colorScheme.onErrorContainer
+                in 1..3 -> MaterialTheme.colorScheme.onTertiaryContainer
+                in 4..6 -> MaterialTheme.colorScheme.onSecondaryContainer
+                else -> MaterialTheme.colorScheme.onPrimaryContainer
+            }
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = boxColor
+            ) {
+                Text(
+                    text = boxText,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = boxTextColor,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun ActiveCharacterCard(
+    item: ActiveCharacterItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val char = item.character
+    val box = item.leitnerState?.box
+    val annotatedPinyin = if (item.pinyins.isNotEmpty()) {
+        buildAnnotatedString {
+            item.pinyins.forEachIndexed { index, p ->
+                if (index > 0) append(", ")
+                append(buildPinyinToneAnnotatedString(p.trim(), AndZiThemeCustom.toneColors))
+            }
+        }
+    } else {
+        AnnotatedString("")
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Chinese Character
+            Text(
+                text = char,
+                style = AndZiThemeCustom.chineseTypography.hanziMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.widthIn(min = 54.dp, max = 80.dp)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Pinyin & Containing Words
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (item.pinyins.isNotEmpty()) annotatedPinyin else AnnotatedString("(No pinyin)"),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                if (item.containingWords.isNotEmpty()) {
+                    Text(
+                        text = "In words: " + item.containingWords.joinToString(", "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                } else {
+                    Text(
+                        text = "Single character card",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))

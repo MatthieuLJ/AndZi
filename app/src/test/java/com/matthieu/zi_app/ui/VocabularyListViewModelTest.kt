@@ -7,6 +7,7 @@ import com.matthieu.zi_app.data.local.AndZiDatabase
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.ui.vocabulary.ActiveCardTab
 import com.matthieu.zi_app.ui.vocabulary.ActiveVocabularyItem
 import com.matthieu.zi_app.ui.vocabulary.VocabularyListViewModel
 import kotlinx.coroutines.Dispatchers
@@ -303,5 +304,74 @@ class VocabularyListViewModelTest {
         assertEquals(emptySet<String>(), selectedState.selectedTranslations)
         assertFalse(selectedState.isInStudyQueue)
         assertNull(selectedState.currentBox)
+    }
+
+    @Test
+    fun testActiveCharacterCardsTabAndBoxDistribution() = runBlocking {
+        // Add two compound words sharing character '学'
+        val word1 = Vocabulary("学习", "xue2xi2", arrayListOf("to study"))
+        val word2 = Vocabulary("学生", "xue2sheng1", arrayListOf("student"))
+        userVocRepo.addVocabulary(word1)
+        userVocRepo.addVocabulary(word2)
+
+        // Advance words to Box 7
+        repeat(7) {
+            studyRepo.recordReviewGrade("学习", ReviewGrade.GOOD)
+            studyRepo.recordReviewGrade("学生", ReviewGrade.GOOD)
+        }
+
+        // Advance constituent character '学' to Box 8
+        repeat(8) {
+            studyRepo.recordReviewGrade("学", ReviewGrade.GOOD)
+        }
+
+        val viewModel = VocabularyListViewModel(userVocRepo, dictRepo, studyRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { it.items.size == 2 && it.characterItems.isNotEmpty() }.first()
+        }
+
+        // On Active Word Cards tab (default):
+        assertEquals(ActiveCardTab.WORDS, state.currentTab)
+        assertEquals(2, state.items.size)
+        // Word cards only go up to Box 7
+        assertEquals(2, state.boxCounts[7])
+        assertNull(state.boxCounts[8])
+
+        // Switch to Active Character Cards tab:
+        viewModel.selectTab(ActiveCardTab.CHARACTERS)
+        val charState = withTimeout(3000) {
+            viewModel.uiState.filter { it.currentTab == ActiveCardTab.CHARACTERS }.first()
+        }
+
+        // Characters list includes '学', '习', '生'
+        assertTrue(charState.characterItems.any { it.character == "学" })
+        assertTrue(charState.characterItems.any { it.character == "习" })
+        assertTrue(charState.characterItems.any { it.character == "生" })
+
+        // Character '学' is in Box 8 and lists both containing words
+        val xueChar = charState.characterItems.first { it.character == "学" }
+        assertEquals(8, xueChar.leitnerState?.box)
+        assertTrue(xueChar.pinyins.contains("xue2"))
+        assertTrue(xueChar.containingWords.contains("学习"))
+        assertTrue(xueChar.containingWords.contains("学生"))
+
+        // Box counts on Character tab now shows Box 8!
+        assertEquals(1, charState.boxCounts[8])
+
+        // Search on character cards tab
+        viewModel.onSearchQueryChanged("生")
+        val searched = withTimeout(3000) {
+            viewModel.uiState.filter { it.query == "生" }.first()
+        }
+        assertTrue(searched.filteredCharacterItems.any { it.character == "生" })
+
+        // Box filter on character cards tab for Box 8
+        viewModel.onSearchQueryChanged("")
+        viewModel.onBoxRangeChanged(8..8)
+        val boxFiltered = withTimeout(3000) {
+            viewModel.uiState.filter { it.selectedBoxRange == 8..8 }.first()
+        }
+        assertEquals(1, boxFiltered.filteredCharacterItems.size)
+        assertEquals("学", boxFiltered.filteredCharacterItems.first().character)
     }
 }

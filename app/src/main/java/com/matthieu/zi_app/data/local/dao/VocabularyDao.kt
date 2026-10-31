@@ -28,6 +28,9 @@ interface VocabularyDao {
     @Query("SELECT DISTINCT hanzi FROM char_pinyin")
     suspend fun getAllDistinctHanzi(): List<String>
 
+    @Query("SELECT * FROM char_pinyin")
+    suspend fun getAllCharPinyins(): List<CharPinyinEntity>
+
     @Query("SELECT COUNT(DISTINCT hanzi) FROM char_pinyin")
     suspend fun getDistinctHanziCount(): Int
 

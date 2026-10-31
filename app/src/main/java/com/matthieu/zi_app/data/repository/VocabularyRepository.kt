@@ -296,6 +296,10 @@ class VocabularyRepository(
         vocabularyDao.getAllDistinctHanzi()
     }
 
+    suspend fun getAllCharPinyins(): List<CharPinyinEntity> = withContext(Dispatchers.IO) {
+        vocabularyDao.getAllCharPinyins()
+    }
+
     suspend fun getRandomTranslations(limit: Int = 30): List<String> = withContext(Dispatchers.IO) {
         vocabularyDao.getRandomTranslations(limit)
     }

@@ -20,10 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.matthieu.zi_app.AndZiApplication
 import com.matthieu.zi_app.ui.dictionary.DictionaryScreen
 import com.matthieu.zi_app.ui.home.HomeScreen
@@ -138,12 +140,27 @@ fun MainAppScaffold(
                         navController.navigate(Screen.Settings.route)
                     },
                     onOpenVocabulary = {
-                        navController.navigate(Screen.Vocabulary.route)
+                        navController.navigate(Screen.Vocabulary.createRoute("words"))
+                    },
+                    onOpenWords = {
+                        navController.navigate(Screen.Vocabulary.createRoute("words"))
+                    },
+                    onOpenCharacters = {
+                        navController.navigate(Screen.Vocabulary.createRoute("characters"))
                     }
                 )
             }
 
-            composable(Screen.Vocabulary.route) {
+            composable(
+                route = Screen.Vocabulary.route,
+                arguments = listOf(
+                    navArgument("tab") {
+                        type = NavType.StringType
+                        defaultValue = "words"
+                    }
+                )
+            ) { backStackEntry ->
+                val tabArg = backStackEntry.arguments?.getString("tab")
                 val vocabViewModel: com.matthieu.zi_app.ui.vocabulary.VocabularyListViewModel = viewModel(
                     factory = com.matthieu.zi_app.ui.vocabulary.VocabularyListViewModel.provideFactory(
                         localVocabularyRepository = appContainer.vocabularyRepository,
@@ -151,6 +168,14 @@ fun MainAppScaffold(
                         studyRepository = appContainer.studyRepository
                     )
                 )
+                LaunchedEffect(tabArg) {
+                    val targetTab = if (tabArg == "characters") {
+                        com.matthieu.zi_app.ui.vocabulary.ActiveCardTab.CHARACTERS
+                    } else {
+                        com.matthieu.zi_app.ui.vocabulary.ActiveCardTab.WORDS
+                    }
+                    vocabViewModel.selectTab(targetTab)
+                }
                 com.matthieu.zi_app.ui.vocabulary.VocabularyListScreen(
                     viewModel = vocabViewModel,
                     onNavigateBack = {
