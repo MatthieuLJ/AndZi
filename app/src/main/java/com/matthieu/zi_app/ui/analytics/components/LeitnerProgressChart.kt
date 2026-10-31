@@ -39,23 +39,13 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.matthieu.zi_app.data.local.entity.ProgressRecordEntity
+import com.matthieu.zi_app.ui.theme.LeitnerBoxColors
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.max
 
-private val boxColors = listOf(
-    Color(0xFFE57373), // Box 0: Coral / Red
-    Color(0xFFFFB74D), // Box 1: Orange
-    Color(0xFFFFD54F), // Box 2: Amber
-    Color(0xFF81D4FA), // Box 3: Sky Blue
-    Color(0xFF4FC3F7), // Box 4: Cyan
-    Color(0xFF42A5F5), // Box 5: Blue
-    Color(0xFF7E57C2), // Box 6: Deep Purple
-    Color(0xFFAB47BC), // Box 7: Purple / Magenta
-    Color(0xFF66BB6A), // Box 8: Green
-    Color(0xFF2E7D32)  // Box 9: Dark Forest Green / Mastered
-)
+private val boxColors = LeitnerBoxColors
 
 @Composable
 fun LeitnerProgressChart(

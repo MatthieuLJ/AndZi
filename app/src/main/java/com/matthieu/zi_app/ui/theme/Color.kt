@@ -108,3 +108,21 @@ fun buildPinyinToneAnnotatedString(
         }
     }
 }
+
+// --- Leitner Mastery Box Colors (Box 0 to Box 9) ---
+val LeitnerBoxColors = listOf(
+    Color(0xFFE57373), // Box 0: Coral / Red
+    Color(0xFFFFB74D), // Box 1: Orange
+    Color(0xFFFFD54F), // Box 2: Amber
+    Color(0xFF81D4FA), // Box 3: Sky Blue
+    Color(0xFF4FC3F7), // Box 4: Cyan
+    Color(0xFF42A5F5), // Box 5: Blue
+    Color(0xFF7E57C2), // Box 6: Deep Purple
+    Color(0xFFAB47BC), // Box 7: Purple / Magenta
+    Color(0xFF66BB6A), // Box 8: Green
+    Color(0xFF2E7D32)  // Box 9: Dark Forest Green / Mastered
+)
+
+fun colorForLeitnerBox(box: Int): Color {
+    return LeitnerBoxColors.getOrElse(box.coerceIn(0, 9)) { LeitnerBoxColors[0] }
+}

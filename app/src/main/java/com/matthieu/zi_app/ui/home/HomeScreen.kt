@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.ui.analytics.components.LeitnerProgressChart
+import com.matthieu.zi_app.ui.theme.colorForLeitnerBox
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -514,6 +515,7 @@ fun LeitnerDistributionCard(
                     9 -> "Box 9 (Mastered)"
                     else -> "Box $box"
                 }
+                val boxColor = colorForLeitnerBox(box)
 
                 Row(
                     modifier = Modifier
@@ -521,12 +523,22 @@ fun LeitnerDistributionCard(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = boxLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.width(110.dp)
-                    )
+                    Row(
+                        modifier = Modifier.width(115.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(boxColor, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = boxLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
 
                     LinearProgressIndicator(
                         progress = { animatedProgress },
@@ -534,12 +546,7 @@ fun LeitnerDistributionCard(
                             .weight(1f)
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
-                        color = when (box) {
-                            0 -> MaterialTheme.colorScheme.error
-                            in 1..3 -> MaterialTheme.colorScheme.tertiary
-                            in 4..6 -> MaterialTheme.colorScheme.secondary
-                            else -> MaterialTheme.colorScheme.primary
-                        },
+                        color = boxColor,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         strokeCap = StrokeCap.Round
                     )
