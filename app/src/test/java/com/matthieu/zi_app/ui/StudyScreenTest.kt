@@ -1,7 +1,11 @@
 package com.matthieu.zi_app.ui
 
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -129,6 +133,88 @@ class StudyScreenTest {
         composeTestRule.onNodeWithText("明").performClick()
         org.junit.Assert.assertEquals(2, selectedIndex)
         org.junit.Assert.assertEquals("明", selectedTile)
+    }
+
+    @Test
+    fun testWordAssemblyQuiz_repeatedCharacter_tileRemainsEnabledUntilCountReached() {
+        val card = StudyCard(
+            hanzi = "妈妈",
+            pinyin = "ma1ma5",
+            english = listOf("mother"),
+            quizType = QuizType.WORD_ASSEMBLY,
+            wordSlots = listOf("妈", "妈"),
+            scrambledTiles = listOf("妈", "爸", "姐")
+        )
+
+        // When '妈' (tile 0) is used once, it should still be enabled because it appears twice in wordSlots
+        val stateOneUsed = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false,
+            assembledChars = listOf("妈"),
+            usedTileIndices = listOf(0)
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = stateOneUsed,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onAssemblyTileSelected = { _, _ -> },
+                    onRateGrade = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // '妈' is used once, so candidate tile should still be enabled
+        composeTestRule.onAllNodesWithText("妈").onLast().assertIsEnabled()
+        // Non-repeated distractor '爸' is not used, so it's also enabled
+        composeTestRule.onNodeWithText("爸").assertIsEnabled()
+    }
+
+    @Test
+    fun testWordAssemblyQuiz_repeatedCharacter_tileBecomesDisabledWhenCountReached() {
+        val card = StudyCard(
+            hanzi = "妈妈",
+            pinyin = "ma1ma5",
+            english = listOf("mother"),
+            quizType = QuizType.WORD_ASSEMBLY,
+            wordSlots = listOf("妈", "妈"),
+            scrambledTiles = listOf("妈", "爸", "姐")
+        )
+
+        // When '妈' (tile 0) is used twice, it should be disabled
+        val stateTwoUsed = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false,
+            assembledChars = listOf("妈", "妈"),
+            usedTileIndices = listOf(0, 0)
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = stateTwoUsed,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onAssemblyTileSelected = { _, _ -> },
+                    onRateGrade = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // '妈' is used twice (the allowed count), so candidate tile should be disabled
+        composeTestRule.onAllNodesWithText("妈").onLast().assertIsNotEnabled()
     }
 
     @Test

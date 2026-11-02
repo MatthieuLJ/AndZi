@@ -329,13 +329,16 @@ class StudyViewModel(
                 .distinctBy { "${it.chinese}_${it.pinyin}" }
                 .sortedBy { if (it.chinese == revealedWord) 1 else 0 }
         } else if (quizType == QuizType.WORD_ASSEMBLY) {
-            for (i in 0 until charCount) {
-                val codePoint = hanzi.codePointAt(i)
+            var charIdx = 0
+            while (charIdx < hanzi.length) {
+                val codePoint = hanzi.codePointAt(charIdx)
                 val ch = String(Character.toChars(codePoint))
                 wordSlots.add(ch)
+                charIdx += Character.charCount(codePoint)
             }
             val distractors = generateCharDistractorsForWord(wordSlots, box, distractorCount, studyChars)
-            scrambledTiles.addAll((wordSlots + distractors).shuffled())
+            val uniqueTiles = (wordSlots.distinct() + distractors).distinct().shuffled()
+            scrambledTiles.addAll(uniqueTiles)
         }
 
         return StudyCard(
@@ -399,9 +402,14 @@ class StudyViewModel(
         val card = _uiState.value.currentCard ?: return
         if (_uiState.value.isAnswerRevealed) return
         val currentUsed = _uiState.value.usedTileIndices
-        if (tileIndex in currentUsed) return
 
-        val updatedAssembled = _uiState.value.assembledChars + tileChar
+        val charToAssemble = card.scrambledTiles.getOrNull(tileIndex) ?: tileChar
+        val maxAllowed = maxOf(1, card.wordSlots.count { it == charToAssemble })
+        val timesUsed = currentUsed.count { it == tileIndex }
+        if (timesUsed >= maxAllowed) return
+        if (_uiState.value.assembledChars.size >= card.wordSlots.size) return
+
+        val updatedAssembled = _uiState.value.assembledChars + charToAssemble
         val updatedUsed = currentUsed + tileIndex
 
         if (updatedAssembled.size >= card.wordSlots.size) {

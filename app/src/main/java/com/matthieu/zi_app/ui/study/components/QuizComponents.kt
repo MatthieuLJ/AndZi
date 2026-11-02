@@ -466,7 +466,13 @@ fun ClozeAssemblyView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     rowTiles.forEach { (tileIndex, tileChar) ->
-                        val isUsed = (tileIndex in usedTileIndices)
+                        val maxAllowed = if (isAssembly) {
+                            maxOf(1, wordSlots.count { it == tileChar })
+                        } else {
+                            1
+                        }
+                        val timesUsed = usedTileIndices.count { it == tileIndex }
+                        val isUsed = timesUsed >= maxAllowed
                         val isEnabled = !isRevealed && !isUsed
 
                         Card(

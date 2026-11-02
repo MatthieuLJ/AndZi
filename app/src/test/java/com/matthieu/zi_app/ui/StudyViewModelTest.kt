@@ -338,6 +338,70 @@ class StudyViewModelTest {
     }
 
     @Test
+    fun testWordAssemblyQuiz_withRepeatedCharacters_deduplicatesTilesAndAllowsMultipleUses() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("妈妈", "ma1ma5", arrayListOf("mother", "mom")))
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        vocRepo.addVocabulary(Vocabulary("火", "huo3", arrayListOf("fire")))
+        vocRepo.addVocabulary(Vocabulary("木", "mu4", arrayListOf("wood")))
+
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "妈妈",
+                box = 1,
+                expTime = 0L,
+                numTested = 0,
+                numWrong = 0,
+                streak = 0,
+                dateAdded = System.currentTimeMillis()
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+
+        val card = state.currentCard!!
+        assertEquals("妈妈", card.hanzi)
+        assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
+        assertEquals(listOf("妈", "妈"), card.wordSlots)
+
+        // Verify that '妈' only appears ONCE in scrambledTiles
+        assertEquals(1, card.scrambledTiles.count { it == "妈" })
+
+        val maIdx = card.scrambledTiles.indexOf("妈")
+        assertTrue(maIdx >= 0)
+
+        // 1. Select '妈' once
+        viewModel.selectAssemblyTile(maIdx, "妈")
+        var current = viewModel.uiState.value
+        assertEquals(listOf("妈"), current.assembledChars)
+        assertEquals(listOf(maIdx), current.usedTileIndices)
+        assertFalse(current.isAnswerRevealed)
+
+        // 2. Test undo
+        viewModel.undoAssemblyTile()
+        current = viewModel.uiState.value
+        assertTrue(current.assembledChars.isEmpty())
+        assertTrue(current.usedTileIndices.isEmpty())
+
+        // 3. Select '妈' twice (first and second slot)
+        viewModel.selectAssemblyTile(maIdx, "妈")
+        current = viewModel.uiState.value
+        assertEquals(listOf("妈"), current.assembledChars)
+        assertEquals(listOf(maIdx), current.usedTileIndices)
+
+        viewModel.selectAssemblyTile(maIdx, "妈")
+        val completedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(completedState.isAnswerRevealed)
+        assertEquals(true, completedState.isCorrect)
+        assertEquals(listOf("妈", "妈"), completedState.assembledChars)
+        assertEquals(listOf(maIdx, maIdx), completedState.usedTileIndices)
+    }
+
+    @Test
     fun testDistractorCountScalesWithLeitnerBox() = runBlocking {
         // Box 0 word (no English so index % 2 == 0 gives WORD_ASSEMBLY)
         vocRepo.addVocabulary(Vocabulary("明天", "ming2tian1", arrayListOf()))
