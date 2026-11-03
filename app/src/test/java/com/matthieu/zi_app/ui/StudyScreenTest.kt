@@ -218,6 +218,109 @@ class StudyScreenTest {
     }
 
     @Test
+    fun testPinyinQuiz_withTone_displaysSyllableAndToneSections() {
+        val card = StudyCard(
+            hanzi = "水",
+            pinyin = "shui3",
+            syllable = "shui",
+            tone = 3,
+            english = listOf("water"),
+            quizType = QuizType.PINYIN,
+            mcqOptions = listOf("shui", "huo", "mu", "tu")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false
+        )
+
+        var selectedSyllable: String? = null
+        var selectedTone: Int? = null
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onPinyinSyllableSelected = { selectedSyllable = it },
+                    onPinyinToneSelected = { selectedTone = it },
+                    onRateGrade = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Verify headers and prompt
+        composeTestRule.onNodeWithText("Select Pinyin and tone").assertExists()
+        composeTestRule.onNodeWithText("1. Select Pinyin").assertExists()
+        composeTestRule.onNodeWithText("2. Select Tone").assertExists()
+
+        // Verify syllables exist
+        composeTestRule.onNodeWithText("shui").assertExists()
+        composeTestRule.onNodeWithText("huo").assertExists()
+
+        // Verify tones exist
+        composeTestRule.onNodeWithText("1st  Flat ¯").assertExists()
+        composeTestRule.onNodeWithText("3rd  Dip ˇ").assertExists()
+
+        // Perform clicks and assert callbacks
+        composeTestRule.onNodeWithText("shui").performClick()
+        org.junit.Assert.assertEquals("shui", selectedSyllable)
+
+        composeTestRule.onNodeWithText("3rd  Dip ˇ").performScrollTo().performClick()
+        org.junit.Assert.assertEquals(3, selectedTone)
+    }
+
+    @Test
+    fun testPinyinQuiz_neutralTone_displaysOnlySyllablesWithoutToneSection() {
+        val card = StudyCard(
+            hanzi = "的",
+            pinyin = "de5",
+            syllable = "de",
+            tone = 0, // neutral tone
+            english = listOf("possessive particle"),
+            quizType = QuizType.PINYIN,
+            mcqOptions = listOf("de", "da", "dou", "di")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onPinyinSyllableSelected = {},
+                    onPinyinToneSelected = {},
+                    onRateGrade = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Verify prompt
+        composeTestRule.onNodeWithText("Select the correct Pinyin").assertExists()
+
+        // Verify tone section does NOT exist
+        composeTestRule.onNodeWithText("2. Select Tone").assertDoesNotExist()
+        composeTestRule.onNodeWithText("1st  Flat ¯").assertDoesNotExist()
+
+        // Verify syllables exist
+        composeTestRule.onNodeWithText("de").assertExists()
+    }
+
+    @Test
     fun testToneQuiz_showsHanziOnTop() {
         val card = StudyCard(
             hanzi = "水",

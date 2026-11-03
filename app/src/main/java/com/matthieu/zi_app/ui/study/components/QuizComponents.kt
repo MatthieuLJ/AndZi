@@ -246,88 +246,207 @@ fun EnglishMcqView(
 @Composable
 fun PinyinQuizView(
     options: List<String>,
-    correctPinyin: String,
-    selectedOption: String?,
+    correctSyllable: String,
+    correctTone: Int,
+    selectedSyllable: String?,
+    selectedTone: Int?,
     isRevealed: Boolean,
-    onOptionSelected: (String) -> Unit,
+    onSyllableSelected: (String) -> Unit,
+    onToneSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hasTone = correctTone in 1..4
+
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        val rows = options.chunked(2)
-        rows.forEach { rowOptions ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                rowOptions.forEach { option ->
-                    val isSelected = (selectedOption == option)
-                    val isCorrect = option.equals(correctPinyin, ignoreCase = true)
+        // Section 1: Pinyin Syllable
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (hasTone) {
+                Text(
+                    text = "1. Select Pinyin",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-                    val backgroundColor by animateColorAsState(
-                        targetValue = when {
-                            !isRevealed -> MaterialTheme.colorScheme.surfaceVariant
-                            isCorrect -> Color(0xFF10B981).copy(alpha = 0.25f)
-                            isSelected && !isCorrect -> Color(0xFFEF4444).copy(alpha = 0.25f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                        },
-                        label = "pinyinOptionColor"
-                    )
+            val rows = options.chunked(2)
+            rows.forEach { rowOptions ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    rowOptions.forEach { option ->
+                        val isSelected = (selectedSyllable == option)
+                        val isCorrect = option.equals(correctSyllable, ignoreCase = true)
 
-                    val borderColor = when {
-                        !isRevealed && isSelected -> MaterialTheme.colorScheme.primary
-                        isRevealed && isCorrect -> Color(0xFF10B981)
-                        isRevealed && isSelected && !isCorrect -> Color(0xFFEF4444)
-                        else -> Color.Transparent
-                    }
+                        val backgroundColor by animateColorAsState(
+                            targetValue = when {
+                                !isRevealed -> if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                                isCorrect -> Color(0xFF10B981).copy(alpha = 0.25f)
+                                isSelected && !isCorrect -> Color(0xFFEF4444).copy(alpha = 0.25f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            },
+                            label = "pinyinOptionColor"
+                        )
 
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .defaultMinSize(minHeight = 52.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
-                            .clickable(enabled = !isRevealed) { onOptionSelected(option) },
-                        colors = CardDefaults.cardColors(containerColor = backgroundColor)
-                    ) {
-                        Row(
+                        val borderColor = when {
+                            !isRevealed && isSelected -> MaterialTheme.colorScheme.primary
+                            isRevealed && isCorrect -> Color(0xFF10B981)
+                            isRevealed && isSelected && !isCorrect -> Color(0xFFEF4444)
+                            else -> Color.Transparent
+                        }
+
+                        Card(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 48.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
+                                .clickable(enabled = !isRevealed) { onSyllableSelected(option) },
+                            colors = CardDefaults.cardColors(containerColor = backgroundColor)
                         ) {
-                            Text(
-                                text = option,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (isRevealed) {
-                                if (isCorrect) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "Correct",
-                                        tint = Color(0xFF10B981),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                } else if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Incorrect",
-                                        tint = Color(0xFFEF4444),
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = option,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (isRevealed) {
+                                    if (isCorrect) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Correct",
+                                            tint = Color(0xFF10B981),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    } else if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Incorrect",
+                                            tint = Color(0xFFEF4444),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+                    if (rowOptions.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
-                if (rowOptions.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+
+        // Section 2: Tone (Only if card has a tone 1..4)
+        if (hasTone) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "2. Select Tone",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                val toneColors = AndZiThemeCustom.toneColors
+                val toneRows = listOf(
+                    listOf(
+                        1 to ("1st  Flat ¯" to toneColors.tone1),
+                        2 to ("2nd  Rising ˊ" to toneColors.tone2)
+                    ),
+                    listOf(
+                        3 to ("3rd  Dip ˇ" to toneColors.tone3),
+                        4 to ("4th  Falling ˋ" to toneColors.tone4)
+                    )
+                )
+
+                toneRows.forEach { rowTones ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        rowTones.forEach { (toneNum, labelAndColor) ->
+                            val (label, toneColor) = labelAndColor
+                            val isSelected = (selectedTone == toneNum)
+                            val isCorrect = (toneNum == correctTone)
+
+                            val backgroundColor by animateColorAsState(
+                                targetValue = when {
+                                    !isRevealed -> if (isSelected) toneColor.copy(alpha = 0.35f) else toneColor.copy(alpha = 0.12f)
+                                    isCorrect -> Color(0xFF10B981).copy(alpha = 0.25f)
+                                    isSelected && !isCorrect -> Color(0xFFEF4444).copy(alpha = 0.25f)
+                                    else -> toneColor.copy(alpha = 0.05f)
+                                },
+                                label = "pinyinToneColor"
+                            )
+
+                            val borderColor = when {
+                                !isRevealed && isSelected -> toneColor
+                                !isRevealed -> toneColor.copy(alpha = 0.6f)
+                                isRevealed && isCorrect -> Color(0xFF10B981)
+                                isRevealed && isSelected && !isCorrect -> Color(0xFFEF4444)
+                                else -> Color.Transparent
+                            }
+
+                            Card(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
+                                    .clickable(enabled = !isRevealed) { onToneSelected(toneNum) },
+                                colors = CardDefaults.cardColors(containerColor = backgroundColor)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    if (isRevealed) {
+                                        if (isCorrect) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = "Correct",
+                                                tint = Color(0xFF10B981),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        } else if (isSelected) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Incorrect",
+                                                tint = Color(0xFFEF4444),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

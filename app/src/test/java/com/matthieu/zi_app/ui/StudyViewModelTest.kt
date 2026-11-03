@@ -1299,12 +1299,16 @@ class StudyViewModelTest {
         assertEquals("乐", card2.hanzi)
         assertEquals(QuizType.PINYIN, card2.quizType)
 
-        // Options should have enough choices (>= 6)
-        assertTrue("PINYIN quiz should have at least 6 choices, had: ${card2.mcqOptions.size}", card2.mcqOptions.size >= 6)
-        assertTrue("PINYIN quiz options should include correct pinyin 'lè'", card2.mcqOptions.contains("lè"))
+        // Options should have enough choices (>= 4)
+        assertTrue("PINYIN quiz should have at least 4 choices, had: ${card2.mcqOptions.size}", card2.mcqOptions.size >= 4)
+        assertTrue("PINYIN quiz options should include correct syllable 'le'", card2.mcqOptions.contains("le"))
 
-        // Submitting Pinyin answer
-        viewModel.submitPinyinAnswer("lè")
+        // Submitting Pinyin answer (split selection: syllable "le" and tone 4)
+        viewModel.selectPinyinSyllable("le")
+        assertFalse(viewModel.uiState.value.isAnswerRevealed)
+        assertEquals("le", viewModel.uiState.value.selectedOption)
+
+        viewModel.selectPinyinTone(4)
         val afterCard2 = withTimeout(20_000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
@@ -1368,27 +1372,96 @@ class StudyViewModelTest {
         }
         val card = state2.currentCard!!
         assertEquals(QuizType.PINYIN, card.quizType)
-        // For Box 5, options count is 8
-        assertEquals(8, card.mcqOptions.size)
+        // For Box 5, options count is 6
+        assertEquals(6, card.mcqOptions.size)
 
-        // Options must include correct answer "lè"
-        assertTrue(card.mcqOptions.contains("lè"))
+        // Options must include correct answer "le"
+        assertTrue(card.mcqOptions.contains("le"))
 
-        // For well known Box 5, options mix in pinyins from visually similar characters ("dōng" and/or "chē")
-        val similarPinyins = listOf("dōng", "chē")
-        val hasSimilarPinyin = card.mcqOptions.any { it in similarPinyins }
+        // For well known Box 5, options mix in syllables from visually similar characters ("dong" and/or "che")
+        val similarSyllables = listOf("dong", "che")
+        val hasSimilarSyllable = card.mcqOptions.any { it in similarSyllables }
         assertTrue(
-            "Expected options for Box 5 character '乐' to mix in pinyin from similar characters ('东'/'车'), had: ${card.mcqOptions}",
-            hasSimilarPinyin
+            "Expected options for Box 5 character '乐' to mix in syllables from similar characters ('东'/'车'), had: ${card.mcqOptions}",
+            hasSimilarSyllable
+        )
+    }
+
+    @Test
+    fun testNeutralToneCharacter_neverHasToneQuiz_andPinyinQuizDoesNotRequireTone() = runBlocking {
+        // "的" has neutral tone (de5 / tone 5 or 0)
+        vocRepo.addVocabulary(Vocabulary("的", "de5", arrayListOf()))
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "的", box = 1, expTime = 0L)
         )
 
-        // Options should pair syllables with multiple tones so the target syllable is not the only one repeated
-        val syllablesGrouped = card.mcqOptions.groupBy { PinyinParser.parse_string_to_pinyin(it)?.firstOrNull()?.get_radical()?.lowercase() }
-        val multiToneSyllables = syllablesGrouped.filter { it.value.size >= 2 }
-        assertTrue(
-            "Expected multiple distinct syllables to have tone pairs so no single syllable is given away, grouped: $syllablesGrouped",
-            multiToneSyllables.size >= 3
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val initialCard = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }.currentCard!!
+
+        // 1. First card must be PINYIN (not TONE)
+        assertEquals("的", initialCard.hanzi)
+        assertEquals(QuizType.PINYIN, initialCard.quizType)
+        assertEquals(0, initialCard.tone) // tone is 0 for neutral
+        assertTrue(initialCard.mcqOptions.contains("de"))
+
+        // 2. Cycling through cards should NEVER produce a TONE quiz
+        for (i in 1..6) {
+            viewModel.nextCard()
+            val card = viewModel.uiState.value.currentCard
+            if (card != null) {
+                assertFalse("Neutral tone character should never have TONE quiz", card.quizType == QuizType.TONE)
+            }
+        }
+
+        // 3. For neutral tone character, selecting syllable alone immediately completes the quiz without tone prompt
+        viewModel.startStudySession()
+        withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard?.quizType == QuizType.PINYIN }.first()
+        }
+        viewModel.selectPinyinSyllable("de")
+        val afterSelect = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue("Selecting syllable for neutral-tone character should immediately reveal answer", afterSelect.isAnswerRevealed)
+        assertEquals(true, afterSelect.isCorrect)
+    }
+
+    @Test
+    fun testPinyinQuiz_splitSyllableAndTone_selectionOrderAndIncorrectTone() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf()))
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "水", box = 1, expTime = 0L)
         )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        // Candidates for Box 1 without English: [TONE, PINYIN]
+        val card0 = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }.currentCard!!
+        assertEquals(QuizType.TONE, card0.quizType)
+
+        viewModel.nextCard()
+        val pinyinCard = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard?.quizType == QuizType.PINYIN }.first()
+        }.currentCard!!
+
+        assertEquals("水", pinyinCard.hanzi)
+        assertEquals(3, pinyinCard.tone)
+        assertEquals("shui", pinyinCard.syllable)
+
+        // Test selecting tone first, then syllable
+        viewModel.selectPinyinTone(2) // Incorrect tone (2 instead of 3)
+        assertFalse(viewModel.uiState.value.isAnswerRevealed)
+        assertEquals(2, viewModel.uiState.value.selectedPinyinTone)
+
+        viewModel.selectPinyinSyllable("shui") // Correct syllable
+        val revealedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(revealedState.isAnswerRevealed)
+        assertEquals(false, revealedState.isCorrect) // Incorrect because tone was wrong!
     }
 
     @Test

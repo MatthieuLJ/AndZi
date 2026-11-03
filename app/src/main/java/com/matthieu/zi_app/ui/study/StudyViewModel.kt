@@ -117,6 +117,7 @@ class StudyViewModel(
                         isAnswerRevealed = false,
                         isCorrect = null,
                         selectedOption = null,
+                        selectedPinyinTone = null,
                         assembledChars = emptyList(),
                         usedTileIndices = emptyList(),
                         completedStrokes = emptyList(),
@@ -154,6 +155,7 @@ class StudyViewModel(
                     isAnswerRevealed = false,
                     isCorrect = null,
                     selectedOption = null,
+                    selectedPinyinTone = null,
                     assembledChars = emptyList(),
                     usedTileIndices = emptyList(),
                     completedStrokes = emptyList(),
@@ -225,12 +227,12 @@ class StudyViewModel(
             PinyinParser.parse_string_to_pinyin(voc.pinyin) ?: emptyList()
         } else emptyList()
         val firstPinyin = pinyins.firstOrNull()
-        val tone = firstPinyin?.tone ?: 1
+        val tone = firstPinyin?.tone?.takeIf { it in 1..4 } ?: 0
         val syllable = firstPinyin?.radical ?: (if (voc.pinyin.isNotBlank()) voc.pinyin else hanzi)
 
         val charCount = hanzi.codePointCount(0, hanzi.length)
         val isSingleChar = (charCount == 1)
-        val hasValidNonNeutralTone = isSingleChar && (tone in 1..4)
+        val hasValidNonNeutralTone = isSingleChar && (firstPinyin != null && tone in 1..4)
 
         val containingWords = if (isSingleChar) {
             vocabularyRepository.getWordsContainingCharacter(hanzi).filter { it.chinese.length > 1 }
@@ -368,14 +370,92 @@ class StudyViewModel(
         processAnswer(card, isCorrect, selectedTone.toString())
     }
 
+    fun selectPinyinSyllable(syllable: String) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+
+        val hasTone = card.tone in 1..4
+        if (!hasTone) {
+            val isCorrect = syllable.equals(card.syllable, ignoreCase = true)
+            _uiState.update { it.copy(selectedOption = syllable) }
+            processAnswer(card, isCorrect, syllable)
+            return
+        }
+
+        val currentTone = _uiState.value.selectedPinyinTone
+        if (currentTone != null) {
+            _uiState.update { it.copy(selectedOption = syllable) }
+            val isCorrect = syllable.equals(card.syllable, ignoreCase = true) && currentTone == card.tone
+            val combined = PinyinParser.convert_to_pretty_version("$syllable$currentTone")
+            processAnswer(card, isCorrect, combined)
+        } else {
+            _uiState.update { it.copy(selectedOption = syllable) }
+        }
+    }
+
+    fun selectPinyinTone(tone: Int) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+
+        val currentSyllable = _uiState.value.selectedOption
+        if (currentSyllable != null) {
+            _uiState.update { it.copy(selectedPinyinTone = tone) }
+            val isCorrect = currentSyllable.equals(card.syllable, ignoreCase = true) && tone == card.tone
+            val combined = PinyinParser.convert_to_pretty_version("$currentSyllable$tone")
+            processAnswer(card, isCorrect, combined)
+        } else {
+            _uiState.update { it.copy(selectedPinyinTone = tone) }
+        }
+    }
+
     fun submitPinyinAnswer(selectedPinyin: String) {
         val card = _uiState.value.currentCard ?: return
         if (_uiState.value.isAnswerRevealed) return
 
-        val prettyCorrect = PinyinParser.convert_to_pretty_version(card.pinyin)
-        val isCorrect = selectedPinyin.equals(prettyCorrect, ignoreCase = true) ||
-                selectedPinyin.equals(card.pinyin, ignoreCase = true)
+        val p = PinyinParser.parse_string_to_pinyin(selectedPinyin)?.firstOrNull()
+        val parsedSyllable = p?.radical ?: selectedPinyin.filter { !it.isDigit() }
+        val parsedTone = if (p != null && p.tone in 1..4) p.tone else null
+
+        val hasTone = card.tone in 1..4
+        val isCorrect = if (hasTone) {
+            parsedSyllable.equals(card.syllable, ignoreCase = true) && parsedTone == card.tone
+        } else {
+            parsedSyllable.equals(card.syllable, ignoreCase = true)
+        }
+
+        _uiState.update {
+            it.copy(
+                selectedOption = parsedSyllable,
+                selectedPinyinTone = parsedTone
+            )
+        }
         processAnswer(card, isCorrect, selectedPinyin)
+    }
+
+    fun submitPinyinAnswer(syllable: String, tone: Int?) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+
+        val hasTone = card.tone in 1..4
+        val isCorrect = if (hasTone) {
+            syllable.equals(card.syllable, ignoreCase = true) && tone == card.tone
+        } else {
+            syllable.equals(card.syllable, ignoreCase = true)
+        }
+
+        val display = if (tone != null && tone in 1..4) {
+            PinyinParser.convert_to_pretty_version("$syllable$tone")
+        } else {
+            syllable
+        }
+
+        _uiState.update {
+            it.copy(
+                selectedOption = syllable,
+                selectedPinyinTone = tone
+            )
+        }
+        processAnswer(card, isCorrect, display)
     }
 
     fun submitEnglishAnswer(selectedMeaning: String) {
@@ -652,32 +732,19 @@ class StudyViewModel(
         hanzi: String,
         box: Int,
         studyChars: Set<String> = emptySet(),
-        targetOptionCount: Int = if (box >= 3) 8 else 6
+        targetOptionCount: Int = if (box >= 3) 6 else 4
     ): List<String> {
-        val prettyCorrect = PinyinParser.convert_to_pretty_version(correctPinyin)
         val pinyins = PinyinParser.parse_string_to_pinyin(correctPinyin)
         val firstPinyin = pinyins?.firstOrNull()
         val targetRadical = (firstPinyin?.radical ?: correctPinyin.filter { !it.isDigit() }).lowercase()
-        val targetTone = firstPinyin?.tone?.takeIf { it in 1..4 } ?: 1
 
-        val numSyllables = (targetOptionCount / 2).coerceAtLeast(2)
-        val neededDistractorSyllables = (numSyllables - 1).coerceAtLeast(1)
+        val neededDistractorSyllables = (targetOptionCount - 1).coerceAtLeast(1)
 
-        // Generate 2 tones for the target syllable: correct tone + 1 alternate tone
-        val targetAltTone = (1..4).filter { it != targetTone }.shuffled().first()
-        val targetAltPretty = PinyinParser.convert_to_pretty_version("$targetRadical$targetAltTone")
-
-        val targetPair = mutableListOf(prettyCorrect)
-        if (targetAltPretty.isNotBlank() && !targetAltPretty.equals(prettyCorrect, ignoreCase = true)) {
-            targetPair.add(targetAltPretty)
-        }
-
-        fun extractSyllable(raw: String): Pair<String, Int>? {
+        fun extractSyllable(raw: String): String? {
             val p = PinyinParser.parse_string_to_pinyin(raw)?.firstOrNull() ?: return null
             val rad = p.radical.lowercase()
             if (rad.isBlank() || rad == targetRadical) return null
-            val t = if (p.tone in 1..4) p.tone else 1
-            return Pair(rad, t)
+            return rad
         }
 
         // 1. Gather candidate distractor syllables from visually similar characters
@@ -695,7 +762,7 @@ class StudyViewModel(
             else -> (2..neededDistractorSyllables).random() // Box 5+: 2 to 3 from similar characters
         }
 
-        val chosenDistractorSyllables = mutableMapOf<String, Int>() // radical -> baseTone
+        val chosenDistractorSyllables = mutableSetOf<String>()
 
         if (maxSimilarSyllables > 0) {
             val charsToQuery = if (box >= 5) {
@@ -715,9 +782,7 @@ class StudyViewModel(
             for (p in (pinyinsFromVoc + pinyinsFromDict).shuffled()) {
                 if (chosenDistractorSyllables.size >= maxSimilarSyllables) break
                 val syll = extractSyllable(p) ?: continue
-                if (!chosenDistractorSyllables.containsKey(syll.first)) {
-                    chosenDistractorSyllables[syll.first] = syll.second
-                }
+                chosenDistractorSyllables.add(syll)
             }
         }
 
@@ -727,9 +792,7 @@ class StudyViewModel(
             for (p in studyPinyins) {
                 if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
                 val syll = extractSyllable(p) ?: continue
-                if (!chosenDistractorSyllables.containsKey(syll.first)) {
-                    chosenDistractorSyllables[syll.first] = syll.second
-                }
+                chosenDistractorSyllables.add(syll)
             }
         }
 
@@ -739,9 +802,7 @@ class StudyViewModel(
             for (p in dictPinyins) {
                 if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
                 val syll = extractSyllable(p) ?: continue
-                if (!chosenDistractorSyllables.containsKey(syll.first)) {
-                    chosenDistractorSyllables[syll.first] = syll.second
-                }
+                chosenDistractorSyllables.add(syll)
             }
         }
 
@@ -750,41 +811,12 @@ class StudyViewModel(
             for (p in fallbackPinyins) {
                 if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
                 val syll = extractSyllable(p) ?: continue
-                if (!chosenDistractorSyllables.containsKey(syll.first)) {
-                    chosenDistractorSyllables[syll.first] = syll.second
-                }
+                chosenDistractorSyllables.add(syll)
             }
         }
 
-        // Build paired tone options: each distinct syllable receives 2 tone variations
-        // so no single syllable is given away by being the only one repeated with multiple tones
-        val resultOptions = mutableSetOf<String>()
-        resultOptions.addAll(targetPair)
-
-        for ((rad, baseTone) in chosenDistractorSyllables) {
-            val basePretty = PinyinParser.convert_to_pretty_version("$rad$baseTone")
-            val altTone = (1..4).filter { it != baseTone }.shuffled().first()
-            val altPretty = PinyinParser.convert_to_pretty_version("$rad$altTone")
-
-            if (basePretty.isNotBlank()) resultOptions.add(basePretty)
-            if (altPretty.isNotBlank()) resultOptions.add(altPretty)
-        }
-
-        // Ensure we meet targetOptionCount (safety backfill)
-        if (resultOptions.size < targetOptionCount) {
-            for (fb in DEFAULT_FALLBACK_PINYIN_DISTRACTORS) {
-                if (resultOptions.size >= targetOptionCount) break
-                val p = extractSyllable(fb) ?: continue
-                val p1 = PinyinParser.convert_to_pretty_version("${p.first}${p.second}")
-                val altT = (1..4).filter { it != p.second }.shuffled().first()
-                val p2 = PinyinParser.convert_to_pretty_version("${p.first}$altT")
-                if (p1.isNotBlank()) resultOptions.add(p1)
-                if (resultOptions.size < targetOptionCount && p2.isNotBlank()) resultOptions.add(p2)
-            }
-        }
-
-        val nonTargetOptions = (resultOptions - prettyCorrect).shuffled()
-        val finalOptions = (listOf(prettyCorrect) + nonTargetOptions.take(targetOptionCount - 1)).shuffled()
+        val nonTargetOptions = (chosenDistractorSyllables - targetRadical).shuffled()
+        val finalOptions = (listOf(targetRadical) + nonTargetOptions.take(neededDistractorSyllables)).shuffled()
         return finalOptions
     }
 

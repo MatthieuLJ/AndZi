@@ -62,6 +62,7 @@ data class StudyUiState(
     val isAnswerRevealed: Boolean = false,
     val isCorrect: Boolean? = null,
     val selectedOption: String? = null,
+    val selectedPinyinTone: Int? = null,
     val isSessionFinished: Boolean = false,
     val sessionStats: SessionStats = SessionStats(),
     val isLoading: Boolean = false,

@@ -88,6 +88,8 @@ fun StudyScreen(
         onEnglishSelected = { viewModel.submitEnglishAnswer(it) },
         onClozeSelected = { viewModel.submitClozeAnswer(it) },
         onPinyinSelected = { viewModel.submitPinyinAnswer(it) },
+        onPinyinSyllableSelected = { viewModel.selectPinyinSyllable(it) },
+        onPinyinToneSelected = { viewModel.selectPinyinTone(it) },
         onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
         onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
         onWritingStrokeDrawn = { viewModel.onUserStrokeDrawn(it) },
@@ -112,6 +114,8 @@ fun StudyScreenContent(
     onEnglishSelected: (String) -> Unit,
     onClozeSelected: (String) -> Unit,
     onPinyinSelected: (String) -> Unit = {},
+    onPinyinSyllableSelected: (String) -> Unit = {},
+    onPinyinToneSelected: (Int) -> Unit = {},
     onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
     onUndoAssemblyTile: () -> Unit = {},
     onWritingStrokeDrawn: (List<HanziPoint>) -> Unit = {},
@@ -334,7 +338,7 @@ fun StudyScreenContent(
                                     QuizType.ENGLISH -> "Select the English meaning"
                                     QuizType.CLOZE -> "Fill in the missing character"
                                     QuizType.WORD_ASSEMBLY -> "Assemble the compound word"
-                                    QuizType.PINYIN -> "Select the correct Pinyin pronunciation"
+                                    QuizType.PINYIN -> if (card.tone in 1..4) "Select Pinyin and tone" else "Select the correct Pinyin"
                                     QuizType.WRITING -> if (card.wordSlots.isNotEmpty()) "Write the missing character" else "Write the character from memory"
                                 }
                                 if (promptText.isNotEmpty()) {
@@ -414,10 +418,13 @@ fun StudyScreenContent(
                                 QuizType.PINYIN -> {
                                     PinyinQuizView(
                                         options = card.mcqOptions,
-                                        correctPinyin = PinyinParser.convert_to_pretty_version(card.pinyin),
-                                        selectedOption = uiState.selectedOption,
+                                        correctSyllable = card.syllable,
+                                        correctTone = card.tone,
+                                        selectedSyllable = uiState.selectedOption,
+                                        selectedTone = uiState.selectedPinyinTone,
                                         isRevealed = uiState.isAnswerRevealed,
-                                        onOptionSelected = onPinyinSelected
+                                        onSyllableSelected = onPinyinSyllableSelected,
+                                        onToneSelected = onPinyinToneSelected
                                     )
                                 }
                                 QuizType.WRITING -> {

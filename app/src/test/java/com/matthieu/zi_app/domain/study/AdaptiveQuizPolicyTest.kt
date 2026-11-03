@@ -69,6 +69,25 @@ class AdaptiveQuizPolicyTest {
     }
 
     @Test
+    fun testNoToneQuizWhenToneIsNoneOrNeutral() {
+        // When hasValidNonNeutralTone is false, TONE quiz must NEVER be generated for any box
+        for (box in 0..5) {
+            for (index in 0..10) {
+                val quiz = AdaptiveQuizPolicy.selectQuizType(
+                    box = box,
+                    isSingleChar = true,
+                    hasValidNonNeutralTone = false,
+                    hasUserEnglish = true,
+                    hasContainingWords = true,
+                    strokeCount = 4,
+                    index = index
+                )
+                assertFalse("Tone none/0 must never produce TONE quiz", quiz == QuizType.TONE)
+            }
+        }
+    }
+
+    @Test
     fun testWritingGatedByStrokeCount() {
         // Complex character with 12 strokes:
         // In Box 1, 2, 3: WRITING must NOT be present
