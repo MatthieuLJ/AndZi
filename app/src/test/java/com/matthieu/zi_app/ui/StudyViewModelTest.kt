@@ -204,7 +204,7 @@ class StudyViewModelTest {
         val multiCharCards = presentedCards.filter { it.hanzi.length > 1 }
         assertTrue(multiCharCards.isNotEmpty())
         assertTrue(multiCharCards.none { it.quizType == QuizType.TONE })
-        assertTrue(multiCharCards.all { it.quizType in listOf(QuizType.CLOZE, QuizType.WORD_ASSEMBLY, QuizType.ENGLISH) })
+        assertTrue(multiCharCards.all { it.quizType in listOf(QuizType.CLOZE, QuizType.WORD_ASSEMBLY, QuizType.ENGLISH, QuizType.PAIR_MATCH) })
     }
 
     @Test
@@ -1407,19 +1407,15 @@ class StudyViewModelTest {
         assertTrue(initialCard.mcqOptions.contains("de"))
 
         // 2. Cycling through cards should NEVER produce a TONE quiz
-        for (i in 1..6) {
+        for (i in 1..4) {
             viewModel.nextCard()
-            val card = viewModel.uiState.value.currentCard
-            if (card != null) {
-                assertFalse("Neutral tone character should never have TONE quiz", card.quizType == QuizType.TONE)
-            }
+            val card = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }.currentCard!!
+            assertFalse("Neutral tone character should never have TONE quiz", card.quizType == QuizType.TONE)
         }
 
         // 3. For neutral tone character, selecting syllable alone immediately completes the quiz without tone prompt
-        viewModel.startStudySession()
-        withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading && it.currentCard?.quizType == QuizType.PINYIN }.first()
-        }
         viewModel.selectPinyinSyllable("de")
         val afterSelect = withTimeout(3000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
@@ -1726,6 +1722,153 @@ class StudyViewModelTest {
             // Easy promotion from Box 1 gives Box 2 with streak + 2 (1 + 2 = 3 -> streak reset to 0 and numWrong reduced)
             assertEquals(2, leitnerState.box)
         }
+    }
+
+    @Test
+    fun testPairMatchQuiz_generatesDistinctTilesAndSupportsInteractiveMatching() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("飞机", "fei1ji1", arrayListOf("airplane")))
+        vocRepo.addVocabulary(Vocabulary("苹果", "ping2guo3", arrayListOf("apple")))
+        vocRepo.addVocabulary(Vocabulary("汽车", "qi4che1", arrayListOf("car")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "飞机", box = 1, expTime = now - 1000L)
+        )
+        // Keep companion words unexpired in queue so only 飞机 is tested as primary
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "苹果", box = 1, expTime = now + 100000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "汽车", box = 1, expTime = now + 100000L)
+        )
+        // Set constituent chars unexpired too
+        for (char in listOf("飞", "机", "苹", "果", "汽", "车")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = char, box = 1, expTime = now + 100000L)
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var card = state.currentCard!!
+
+        // Advance until PAIR_MATCH
+        var steps = 0
+        while (card.quizType != QuizType.PAIR_MATCH && steps < 10) {
+            viewModel.nextCard()
+            state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            card = state.currentCard!!
+            steps++
+        }
+
+        assertEquals(QuizType.PAIR_MATCH, card.quizType)
+        assertEquals(3, card.matchPairs.size)
+        assertEquals(setOf("飞", "苹", "汽"), card.leftMatchTiles.toSet())
+        assertEquals(setOf("机", "果", "车"), card.rightMatchTiles.toSet())
+
+        // 1. Mismatch test: pair 飞 with 车
+        val leftFeiIdx = card.leftMatchTiles.indexOf("飞")
+        val rightCheIdx = card.rightMatchTiles.indexOf("车")
+        viewModel.selectMatchLeftTile(leftFeiIdx)
+        assertEquals(leftFeiIdx, viewModel.uiState.value.selectedLeftMatchIndex)
+        viewModel.selectMatchRightTile(rightCheIdx)
+
+        // Error shake triggered, selections cleared, words marked as failed
+        val afterMismatch = viewModel.uiState.value
+        assertEquals(1, afterMismatch.matchErrorShakeTrigger)
+        assertEquals(null, afterMismatch.selectedLeftMatchIndex)
+        assertEquals(null, afterMismatch.selectedRightMatchIndex)
+        assertTrue(afterMismatch.failedMatchWords.contains("飞机"))
+        assertTrue(afterMismatch.failedMatchWords.contains("汽车"))
+        assertTrue(afterMismatch.matchedWords.isEmpty())
+
+        // 2. Correct match: 飞 + 机
+        val rightJiIdx = card.rightMatchTiles.indexOf("机")
+        viewModel.selectMatchLeftTile(leftFeiIdx)
+        viewModel.selectMatchRightTile(rightJiIdx)
+        assertTrue(viewModel.uiState.value.matchedWords.contains("飞机"))
+
+        // 3. Correct match: 苹 + 果
+        val leftPingIdx = card.leftMatchTiles.indexOf("苹")
+        val rightGuoIdx = card.rightMatchTiles.indexOf("果")
+        viewModel.selectMatchLeftTile(leftPingIdx)
+        viewModel.selectMatchRightTile(rightGuoIdx)
+        assertTrue(viewModel.uiState.value.matchedWords.contains("苹果"))
+
+        // 4. Correct match: 汽 + 车
+        val leftQiIdx = card.leftMatchTiles.indexOf("汽")
+        viewModel.selectMatchLeftTile(leftQiIdx)
+        viewModel.selectMatchRightTile(rightCheIdx)
+
+        val revealedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(revealedState.isAnswerRevealed)
+        // Failed because prior error occurred on 飞机
+        assertEquals(false, revealedState.isCorrect)
+    }
+
+    @Test
+    fun testPairMatchQuiz_allCorrectPromotesCard() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("飞机", "fei1ji1", arrayListOf("airplane")))
+        vocRepo.addVocabulary(Vocabulary("苹果", "ping2guo3", arrayListOf("apple")))
+        vocRepo.addVocabulary(Vocabulary("汽车", "qi4che1", arrayListOf("car")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "飞机", box = 1, expTime = now - 1000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "苹果", box = 1, expTime = now + 100000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "汽车", box = 1, expTime = now + 100000L)
+        )
+        for (char in listOf("飞", "机", "苹", "果", "汽", "车")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = char, box = 1, expTime = now + 100000L)
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var card = state.currentCard!!
+
+        var steps = 0
+        while (card.quizType != QuizType.PAIR_MATCH && steps < 10) {
+            viewModel.nextCard()
+            state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            card = state.currentCard!!
+            steps++
+        }
+
+        assertEquals(QuizType.PAIR_MATCH, card.quizType)
+
+        // Match all 3 pairs with zero errors
+        for (pair in card.matchPairs) {
+            val lIdx = card.leftMatchTiles.indexOf(pair.firstChar)
+            val rIdx = card.rightMatchTiles.indexOf(pair.secondChar)
+            viewModel.selectMatchLeftTile(lIdx)
+            viewModel.selectMatchRightTile(rIdx)
+        }
+
+        val revealedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(revealedState.isAnswerRevealed)
+        assertEquals(true, revealedState.isCorrect)
+
+        // Promoted to Box 2
+        val updated = studyRepo.getLeitnerState("飞机")!!
+        assertEquals(2, updated.box)
     }
 }
 

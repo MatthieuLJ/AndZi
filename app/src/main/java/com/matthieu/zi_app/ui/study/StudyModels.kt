@@ -11,8 +11,17 @@ enum class QuizType {
     ENGLISH,        // Multiple-choice English definitions
     CLOZE,          // Missing character fill-in-the-blank
     WORD_ASSEMBLY,  // Assemble characters to form the compound word
-    WRITING         // Stroke-by-stroke handwriting test
+    WRITING,        // Stroke-by-stroke handwriting test
+    PAIR_MATCH      // Multi-pair collocation matching
 }
+
+data class CollocationPair(
+    val word: String,
+    val pinyin: String,
+    val english: List<String>,
+    val firstChar: String,
+    val secondChar: String
+)
 
 data class StudyCard(
     val hanzi: String,
@@ -29,11 +38,16 @@ data class StudyCard(
     val contextWords: List<String> = emptyList(),
     val displayPinyin: String = pinyin,
     val relatedStudyWords: List<Vocabulary> = emptyList(),
-    val writingCharacter: HanziCharacter? = null
+    val writingCharacter: HanziCharacter? = null,
+    val matchPairs: List<CollocationPair> = emptyList(),
+    val leftMatchTiles: List<String> = emptyList(),
+    val rightMatchTiles: List<String> = emptyList()
 ) {
     val revealedHanzi: String
         get() = if ((quizType == QuizType.CLOZE || quizType == QuizType.WRITING) && wordSlots.isNotEmpty()) {
             wordSlots.joinToString("")
+        } else if (quizType == QuizType.PAIR_MATCH && matchPairs.isNotEmpty()) {
+            matchPairs.joinToString(" • ") { it.word }
         } else {
             hanzi
         }
@@ -74,7 +88,12 @@ data class StudyUiState(
     val scaffoldingLevel: WritingScaffoldingLevel = WritingScaffoldingLevel.TEST,
     val hasUsedWritingGuide: Boolean = false,
     val writingErrorShakeTrigger: Int = 0,
-    val isContextWordsRevealed: Boolean = false
+    val isContextWordsRevealed: Boolean = false,
+    val selectedLeftMatchIndex: Int? = null,
+    val selectedRightMatchIndex: Int? = null,
+    val matchedWords: Set<String> = emptySet(),
+    val failedMatchWords: Set<String> = emptySet(),
+    val matchErrorShakeTrigger: Int = 0
 ) {
     val currentCard: StudyCard?
         get() = queue.getOrNull(currentIndex)

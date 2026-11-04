@@ -31,17 +31,32 @@ object AdaptiveQuizPolicy {
      */
     fun getCandidatesForMultiChar(
         box: Int,
-        hasUserEnglish: Boolean
+        hasUserEnglish: Boolean,
+        canPairMatch: Boolean = false
     ): List<QuizType> {
         return if (hasUserEnglish) {
             when {
-                box < 4 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.ENGLISH)
-                else -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.WORD_ASSEMBLY, QuizType.ENGLISH)
+                box <= 0 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.ENGLISH)
+                canPairMatch -> when {
+                    box < 4 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.PAIR_MATCH, QuizType.ENGLISH)
+                    else -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.PAIR_MATCH, QuizType.WORD_ASSEMBLY, QuizType.ENGLISH)
+                }
+                else -> when {
+                    box < 4 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.ENGLISH)
+                    else -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.WORD_ASSEMBLY, QuizType.ENGLISH)
+                }
             }
         } else {
             when {
-                box < 4 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE)
-                else -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.WORD_ASSEMBLY)
+                box <= 0 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE)
+                canPairMatch -> when {
+                    box < 4 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.PAIR_MATCH)
+                    else -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.PAIR_MATCH, QuizType.WORD_ASSEMBLY)
+                }
+                else -> when {
+                    box < 4 -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE)
+                    else -> listOf(QuizType.WORD_ASSEMBLY, QuizType.CLOZE, QuizType.WORD_ASSEMBLY)
+                }
             }
         }
     }
@@ -186,7 +201,8 @@ object AdaptiveQuizPolicy {
         hasUserEnglish: Boolean,
         hasContainingWords: Boolean,
         strokeCount: Int?,
-        index: Int
+        index: Int,
+        canPairMatch: Boolean = false
     ): QuizType {
         val candidates = if (isSingleChar) {
             getCandidatesForSingleChar(
@@ -199,7 +215,8 @@ object AdaptiveQuizPolicy {
         } else {
             getCandidatesForMultiChar(
                 box = box,
-                hasUserEnglish = hasUserEnglish
+                hasUserEnglish = hasUserEnglish,
+                canPairMatch = canPairMatch
             )
         }
         val safeIndex = if (index < 0) 0 else index

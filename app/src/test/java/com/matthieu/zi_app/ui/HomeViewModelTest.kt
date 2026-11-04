@@ -67,7 +67,7 @@ class HomeViewModelTest {
         studyRepo.recordReviewResult("你", isCorrect = true, now = 1000L)
         studyRepo.recordReviewResult("好", isCorrect = true, now = 1000L)
 
-        val viewModel = HomeViewModel(studyRepo, progressRepo)
+        val viewModel = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
 
         val state = withTimeout(3000) {
             viewModel.uiState.filter { !it.isLoading }.first()
@@ -89,7 +89,7 @@ class HomeViewModelTest {
         // Review "你" to Box 1, leave "好" unreviewed (Box 0)
         studyRepo.recordReviewResult("你", isCorrect = true, now = 1000L)
 
-        val viewModel = HomeViewModel(studyRepo, progressRepo)
+        val viewModel = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
         var state = withTimeout(3000) {
             viewModel.uiState.filter { !it.isLoading }.first()
         }
@@ -113,7 +113,7 @@ class HomeViewModelTest {
 
     @Test
     fun testHomeViewModelLoadsEmptyDashboardWhenNoData() = runBlocking {
-        val viewModel = HomeViewModel(studyRepo, progressRepo)
+        val viewModel = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
 
         val state = withTimeout(3000) {
             viewModel.uiState.filter { !it.isLoading }.first()
@@ -136,7 +136,7 @@ class HomeViewModelTest {
         prefs.recordStudySession(now - 86400000L) // Yesterday
         prefs.recordStudySession(now) // Today -> streak 2
 
-        val viewModel = HomeViewModel(studyRepo, progressRepo, prefs)
+        val viewModel = HomeViewModel(studyRepo, progressRepo, prefs, dispatcher = testDispatcher)
 
         val state = withTimeout(3000) {
             viewModel.uiState.filter { !it.isLoading }.first()
@@ -159,7 +159,8 @@ class HomeViewModelTest {
             studyRepository = studyRepo,
             progressRepository = progressRepo,
             leitnerDao = andZiDb.leitnerDao(),
-            vocabularyRepository = vocRepo
+            vocabularyRepository = vocRepo,
+            dispatcher = testDispatcher
         )
 
         // Phase 1: Fast data loaded

@@ -140,5 +140,20 @@ class AdaptiveQuizPolicyTest {
             }
         }
     }
+
+    @Test
+    fun testPairMatchEligibilityForMultiCharWords() {
+        // Box 0: PAIR_MATCH must NEVER be scheduled even if canPairMatch is true
+        val box0Candidates = AdaptiveQuizPolicy.getCandidatesForMultiChar(box = 0, hasUserEnglish = true, canPairMatch = true)
+        assertFalse(box0Candidates.contains(QuizType.PAIR_MATCH))
+
+        // Box 1+: PAIR_MATCH is scheduled when canPairMatch is true
+        val box1CandidatesWithPair = AdaptiveQuizPolicy.getCandidatesForMultiChar(box = 1, hasUserEnglish = true, canPairMatch = true)
+        assertTrue(box1CandidatesWithPair.contains(QuizType.PAIR_MATCH))
+
+        // Box 1+: PAIR_MATCH is NOT scheduled when canPairMatch is false
+        val box1CandidatesWithoutPair = AdaptiveQuizPolicy.getCandidatesForMultiChar(box = 1, hasUserEnglish = true, canPairMatch = false)
+        assertFalse(box1CandidatesWithoutPair.contains(QuizType.PAIR_MATCH))
+    }
 }
 

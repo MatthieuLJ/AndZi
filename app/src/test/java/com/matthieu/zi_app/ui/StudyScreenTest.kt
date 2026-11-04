@@ -12,11 +12,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.Pinyin
+import com.matthieu.zi_app.ui.study.CollocationPair
 import com.matthieu.zi_app.ui.study.QuizType
 import com.matthieu.zi_app.ui.study.StudyCard
 import com.matthieu.zi_app.ui.study.StudyScreenContent
 import com.matthieu.zi_app.ui.study.StudyUiState
 import com.matthieu.zi_app.ui.theme.AndZiTheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -676,6 +678,73 @@ class StudyScreenTest {
             .performClick()
 
         assertTrue(navigateBackClicked)
+    }
+
+    @Test
+    fun testPairMatchView_rendersTilesAndInteracts() {
+        val pairs = listOf(
+            CollocationPair("飞机", "fēijī", listOf("airplane"), "飞", "机"),
+            CollocationPair("苹果", "píngguǒ", listOf("apple"), "苹", "果"),
+            CollocationPair("汽车", "qìchē", listOf("car"), "汽", "车")
+        )
+        val card = StudyCard(
+            hanzi = "飞机",
+            pinyin = "fei1ji1",
+            english = listOf("airplane"),
+            quizType = QuizType.PAIR_MATCH,
+            matchPairs = pairs,
+            leftMatchTiles = listOf("飞", "苹", "汽"),
+            rightMatchTiles = listOf("机", "果", "车")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = false,
+            matchedWords = setOf("飞机")
+        )
+
+        var selectedLeft: Int? = null
+        var selectedRight: Int? = null
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onMatchLeftSelected = { selectedLeft = it },
+                    onMatchRightSelected = { selectedRight = it },
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Verify prompt and headers
+        composeTestRule.onNodeWithText("Match the characters to form words")
+            .assertExists()
+        composeTestRule.onNodeWithText("Form Word Pairs")
+            .assertExists()
+        composeTestRule.onNodeWithText("1 / 3 pairs matched")
+            .assertExists()
+
+        // Tap left tile '苹' (index 1)
+        composeTestRule.onNodeWithText("苹")
+            .performScrollTo()
+            .assertExists()
+            .performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(1, selectedLeft)
+
+        // Tap right tile '果' (index 1)
+        composeTestRule.onNodeWithText("果")
+            .performScrollTo()
+            .assertExists()
+            .performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(1, selectedRight)
     }
 }
 

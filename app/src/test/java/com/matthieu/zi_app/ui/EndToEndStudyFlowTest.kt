@@ -153,6 +153,14 @@ class EndToEndStudyFlowTest {
                     studyViewModel.onUserStrokeDrawn(stroke.points)
                 }
             }
+            QuizType.PAIR_MATCH -> {
+                currentCard.matchPairs.forEach { pair ->
+                    val leftIdx = currentCard.leftMatchTiles.indexOf(pair.firstChar)
+                    val rightIdx = currentCard.rightMatchTiles.indexOf(pair.secondChar)
+                    studyViewModel.selectMatchLeftTile(leftIdx)
+                    studyViewModel.selectMatchRightTile(rightIdx)
+                }
+            }
         }
 
         val afterAnswerState = withTimeout(3000) {

@@ -2,7 +2,10 @@ package com.matthieu.zi_app.ui.study.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,9 +39,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +58,7 @@ import com.matthieu.zi_app.Pinyin
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.ui.study.CollocationPair
 import com.matthieu.zi_app.ui.study.QuizType
 import com.matthieu.zi_app.ui.study.SessionStats
 import com.matthieu.zi_app.ui.study.StudyCard
@@ -625,6 +633,201 @@ fun ClozeAssemblyView(
 }
 
 @Composable
+fun PairMatchQuizView(
+    leftTiles: List<String>,
+    rightTiles: List<String>,
+    pairs: List<CollocationPair>,
+    matchedWords: Set<String>,
+    selectedLeftIndex: Int?,
+    selectedRightIndex: Int?,
+    errorShakeTrigger: Int,
+    onSelectLeft: (Int) -> Unit,
+    onSelectRight: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shakeOffset = remember { Animatable(0f) }
+    LaunchedEffect(errorShakeTrigger) {
+        if (errorShakeTrigger > 0) {
+            shakeOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = keyframes {
+                    durationMillis = 300
+                    0f at 0
+                    -12f at 50
+                    12f at 100
+                    -8f at 150
+                    8f at 200
+                    -4f at 250
+                    0f at 300
+                }
+            )
+        }
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .offset(x = shakeOffset.value.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
+        ) {
+            // Left Column (1st characters)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                leftTiles.forEachIndexed { index, char ->
+                    val isMatched = matchedWords.any { it.startsWith(char) }
+                    val isSelected = (selectedLeftIndex == index)
+
+                    val borderColor = when {
+                        isMatched -> Color(0xFF10B981).copy(alpha = 0.5f)
+                        isSelected -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                    }
+
+                    val containerColor = when {
+                        isMatched -> Color(0xFF10B981).copy(alpha = 0.12f)
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer
+                        else -> MaterialTheme.colorScheme.surface
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable(enabled = !isMatched) { onSelectLeft(index) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = containerColor,
+                        border = BorderStroke(if (isSelected) 2.5.dp else 1.5.dp, borderColor)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = char,
+                                style = AndZiThemeCustom.chineseTypography.hanziLarge,
+                                color = when {
+                                    isMatched -> Color(0xFF10B981)
+                                    isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Right Column (2nd characters)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rightTiles.forEachIndexed { index, char ->
+                    val isMatched = matchedWords.any { it.endsWith(char) }
+                    val isSelected = (selectedRightIndex == index)
+
+                    val borderColor = when {
+                        isMatched -> Color(0xFF10B981).copy(alpha = 0.5f)
+                        isSelected -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                    }
+
+                    val containerColor = when {
+                        isMatched -> Color(0xFF10B981).copy(alpha = 0.12f)
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer
+                        else -> MaterialTheme.colorScheme.surface
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable(enabled = !isMatched) { onSelectRight(index) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = containerColor,
+                        border = BorderStroke(if (isSelected) 2.5.dp else 1.5.dp, borderColor)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = char,
+                                style = AndZiThemeCustom.chineseTypography.hanziLarge,
+                                color = when {
+                                    isMatched -> Color(0xFF10B981)
+                                    isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Matched pairs list display below columns
+        if (matchedWords.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                pairs.filter { it.word in matchedWords }.forEach { pair ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF10B981).copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = Color(0xFF10B981),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = pair.word,
+                                    style = AndZiThemeCustom.chineseTypography.hanziMedium,
+                                    color = Color(0xFF10B981)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = pair.pinyin,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Text(
+                                text = pair.english.firstOrNull() ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun RevealedFeedbackCard(
     card: StudyCard,
     isCorrect: Boolean?,
@@ -671,22 +874,63 @@ fun RevealedFeedbackCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Pinyin with Tone Color per syllable
-            Text(
-                text = annotatedPinyin,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                textAlign = TextAlign.Center
-            )
-
-            // English Meanings
-            if (card.english.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(6.dp))
+            // Pinyin with Tone Color per syllable or Pair Match list
+            if (card.quizType == QuizType.PAIR_MATCH && card.matchPairs.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    card.matchPairs.forEach { pair ->
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = pair.word,
+                                        style = AndZiThemeCustom.chineseTypography.hanziMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = buildPinyinToneAnnotatedString(pair.pinyin, toneColors),
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                                    )
+                                }
+                                Text(
+                                    text = pair.english.firstOrNull() ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
                 Text(
-                    text = card.english.joinToString("; "),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = annotatedPinyin,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center
                 )
+
+                // English Meanings
+                if (card.english.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = card.english.joinToString("; "),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             if (isCorrect == false && card.quizType == QuizType.ENGLISH && !selectedOption.isNullOrBlank()) {

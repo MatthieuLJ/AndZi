@@ -53,7 +53,12 @@ class StudyViewModel(
                     isLoading = true,
                     errorMessage = null,
                     sessionStats = SessionStats(),
-                    isSessionFinished = false
+                    isSessionFinished = false,
+                    selectedLeftMatchIndex = null,
+                    selectedRightMatchIndex = null,
+                    matchedWords = emptySet(),
+                    failedMatchWords = emptySet(),
+                    matchErrorShakeTrigger = 0
                 )
             }
             loadNextCard(isInitialLoad = true)
@@ -126,6 +131,11 @@ class StudyViewModel(
                         hasUsedWritingGuide = false,
                         writingErrorShakeTrigger = 0,
                         isContextWordsRevealed = false,
+                        selectedLeftMatchIndex = null,
+                        selectedRightMatchIndex = null,
+                        matchedWords = emptySet(),
+                        failedMatchWords = emptySet(),
+                        matchErrorShakeTrigger = 0,
                         isSessionFinished = true,
                         isLoading = false
                     )
@@ -164,6 +174,11 @@ class StudyViewModel(
                     hasUsedWritingGuide = false,
                     writingErrorShakeTrigger = 0,
                     isContextWordsRevealed = false,
+                    selectedLeftMatchIndex = null,
+                    selectedRightMatchIndex = null,
+                    matchedWords = emptySet(),
+                    failedMatchWords = emptySet(),
+                    matchErrorShakeTrigger = 0,
                     isSessionFinished = false,
                     isLoading = false
                 )
@@ -232,7 +247,14 @@ class StudyViewModel(
 
         val charCount = hanzi.codePointCount(0, hanzi.length)
         val isSingleChar = (charCount == 1)
+        val isTwoChar = (charCount == 2)
         val hasValidNonNeutralTone = isSingleChar && (firstPinyin != null && tone in 1..4)
+
+        val matchCompanions = if (isTwoChar && box >= 1) {
+            val allUserVoc = vocabularyRepository.getAllVocabulary()
+            findMatchCompanions(hanzi, targetPairCount = 3, candidates = allUserVoc)
+        } else emptyList()
+        val canPairMatch = isTwoChar && box >= 1 && matchCompanions.size >= 2
 
         val containingWords = if (isSingleChar) {
             vocabularyRepository.getWordsContainingCharacter(hanzi).filter { it.chinese.length > 1 }
@@ -252,7 +274,8 @@ class StudyViewModel(
             hasUserEnglish = hasUserEnglish,
             hasContainingWords = containingWords.isNotEmpty(),
             strokeCount = charStrokes?.strokeCount,
-            index = index
+            index = index,
+            canPairMatch = canPairMatch
         )
 
         // 2. If Tone Quiz or Pinyin Quiz, find studied compound words demonstrating this character (study stack only)
@@ -360,6 +383,28 @@ class StudyViewModel(
             scrambledTiles.addAll(uniqueTiles)
         }
 
+        val matchPairs = if (quizType == QuizType.PAIR_MATCH) {
+            val allVocList = listOf(voc) + matchCompanions
+            allVocList.mapNotNull { v ->
+                val split = splitTwoCharWord(v.chinese) ?: return@mapNotNull null
+                CollocationPair(
+                    word = v.chinese,
+                    pinyin = v.pinyin,
+                    english = v.english,
+                    firstChar = split.first,
+                    secondChar = split.second
+                )
+            }
+        } else emptyList()
+
+        val leftMatchTiles = if (quizType == QuizType.PAIR_MATCH) {
+            matchPairs.map { it.firstChar }.shuffled()
+        } else emptyList()
+
+        val rightMatchTiles = if (quizType == QuizType.PAIR_MATCH) {
+            matchPairs.map { it.secondChar }.shuffled()
+        } else emptyList()
+
         return StudyCard(
             hanzi = hanzi,
             pinyin = voc.pinyin,
@@ -375,7 +420,10 @@ class StudyViewModel(
             contextWords = contextWords,
             displayPinyin = displayPinyin,
             relatedStudyWords = relatedStudyWords,
-            writingCharacter = if (quizType == QuizType.WRITING) charStrokes else null
+            writingCharacter = if (quizType == QuizType.WRITING) charStrokes else null,
+            matchPairs = matchPairs,
+            leftMatchTiles = leftMatchTiles,
+            rightMatchTiles = rightMatchTiles
         )
     }
 
@@ -528,6 +576,113 @@ class StudyViewModel(
                 it.copy(
                     assembledChars = currentAssembled.dropLast(1),
                     usedTileIndices = currentUsed.dropLast(1)
+                )
+            }
+        }
+    }
+
+    fun selectMatchLeftTile(index: Int) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+        val tile = card.leftMatchTiles.getOrNull(index) ?: return
+        if (_uiState.value.matchedWords.any { it.startsWith(tile) }) return
+
+        _uiState.update { it.copy(selectedLeftMatchIndex = index) }
+        val rightIdx = _uiState.value.selectedRightMatchIndex
+        if (rightIdx != null) {
+            evaluateMatchPair(index, rightIdx)
+        }
+    }
+
+    fun selectMatchRightTile(index: Int) {
+        val card = _uiState.value.currentCard ?: return
+        if (_uiState.value.isAnswerRevealed) return
+        val tile = card.rightMatchTiles.getOrNull(index) ?: return
+        if (_uiState.value.matchedWords.any { it.endsWith(tile) }) return
+
+        _uiState.update { it.copy(selectedRightMatchIndex = index) }
+        val leftIdx = _uiState.value.selectedLeftMatchIndex
+        if (leftIdx != null) {
+            evaluateMatchPair(leftIdx, index)
+        }
+    }
+
+    private fun evaluateMatchPair(leftIndex: Int, rightIndex: Int) {
+        val card = _uiState.value.currentCard ?: return
+        val leftChar = card.leftMatchTiles.getOrNull(leftIndex) ?: return
+        val rightChar = card.rightMatchTiles.getOrNull(rightIndex) ?: return
+        val formedWord = leftChar + rightChar
+
+        val matchedPair = card.matchPairs.find { it.word == formedWord }
+        if (matchedPair != null) {
+            val updatedMatched = _uiState.value.matchedWords + formedWord
+            val allMatched = updatedMatched.size >= card.matchPairs.size
+
+            if (allMatched) {
+                _uiState.update {
+                    it.copy(
+                        matchedWords = updatedMatched,
+                        selectedLeftMatchIndex = null,
+                        selectedRightMatchIndex = null
+                    )
+                }
+                processPairMatchCompletion(card, updatedMatched)
+            } else {
+                _uiState.update {
+                    it.copy(
+                        matchedWords = updatedMatched,
+                        selectedLeftMatchIndex = null,
+                        selectedRightMatchIndex = null
+                    )
+                }
+            }
+        } else {
+            val involvedWords = card.matchPairs.filter { it.firstChar == leftChar || it.secondChar == rightChar }.map { it.word }.toSet()
+            _uiState.update {
+                it.copy(
+                    failedMatchWords = it.failedMatchWords + involvedWords,
+                    matchErrorShakeTrigger = it.matchErrorShakeTrigger + 1,
+                    selectedLeftMatchIndex = null,
+                    selectedRightMatchIndex = null
+                )
+            }
+        }
+    }
+
+    private fun processPairMatchCompletion(card: StudyCard, matchedWords: Set<String>) {
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
+            val isPrimaryFailed = _uiState.value.failedMatchWords.contains(card.hanzi)
+            val primaryGrade = if (!isPrimaryFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
+            studyRepository.recordReviewGrade(card.hanzi, primaryGrade, now)
+
+            // Companion words: if any companion word was due in the queue, record review too
+            for (pair in card.matchPairs.filter { it.word != card.hanzi }) {
+                val state = studyRepository.getLeitnerState(pair.word)
+                if (state != null && (state.expTime <= now || state.box == 0)) {
+                    val compGrade = if (!_uiState.value.failedMatchWords.contains(pair.word)) ReviewGrade.GOOD else ReviewGrade.AGAIN
+                    studyRepository.recordReviewGrade(pair.word, compGrade, now)
+                }
+            }
+
+            userPreferences?.recordStudySession(now)
+            val dueCount = studyRepository.getNumExpired(now)
+
+            _uiState.update { state ->
+                val prevStats = state.sessionStats
+                val isSuccess = !isPrimaryFailed
+                val newStats = prevStats.copy(
+                    totalReviewed = prevStats.totalReviewed + 1,
+                    correctCount = prevStats.correctCount + if (isSuccess) 1 else 0,
+                    lapseCount = prevStats.lapseCount + if (!isSuccess) 1 else 0
+                )
+                state.copy(
+                    remainingDueCount = dueCount,
+                    isAnswerRevealed = true,
+                    isCorrect = isSuccess,
+                    selectedOption = card.hanzi,
+                    sessionStats = newStats
                 )
             }
         }
@@ -758,6 +913,67 @@ class StudyViewModel(
             }
         }
         return count
+    }
+
+    private fun splitTwoCharWord(word: String): Pair<String, String>? {
+        val count = word.codePointCount(0, word.length)
+        if (count != 2) return null
+        val cp0 = word.codePointAt(0)
+        val char0 = String(Character.toChars(cp0))
+        val cp1 = word.codePointAt(char0.length)
+        val char1 = String(Character.toChars(cp1))
+        return Pair(char0, char1)
+    }
+
+    private suspend fun isWordInDictionary(word: String): Boolean {
+        if (dictionaryRepository != null) {
+            return dictionaryRepository.getVocabularyForChinese(word).isNotEmpty()
+        }
+        return vocabularyRepository.getVocabularyForChinese(word).isNotEmpty()
+    }
+
+    private suspend fun findMatchCompanions(
+        primaryWord: String,
+        targetPairCount: Int = 3,
+        candidates: List<Vocabulary>
+    ): List<Vocabulary> {
+        val primarySplit = splitTwoCharWord(primaryWord) ?: return emptyList()
+        val chosen = mutableListOf<Vocabulary>()
+        val chosenFirstChars = mutableSetOf(primarySplit.first)
+        val chosenSecondChars = mutableSetOf(primarySplit.second)
+
+        val shuffled = candidates.shuffled()
+
+        for (cand in shuffled) {
+            if (chosen.size >= targetPairCount - 1) break
+            val candSplit = splitTwoCharWord(cand.chinese) ?: continue
+            // Bijection guarantee: no duplicate 1st or 2nd character
+            if (candSplit.first in chosenFirstChars || candSplit.second in chosenSecondChars) continue
+
+            // CC-CEDICT anti-collision check: ensure cross-pairs do not form valid words
+            var hasCrossCollision = false
+            for (prevFirst in chosenFirstChars) {
+                if (isWordInDictionary(prevFirst + candSplit.second)) {
+                    hasCrossCollision = true
+                    break
+                }
+            }
+            if (hasCrossCollision) continue
+
+            for (prevSecond in chosenSecondChars) {
+                if (isWordInDictionary(candSplit.first + prevSecond)) {
+                    hasCrossCollision = true
+                    break
+                }
+            }
+            if (hasCrossCollision) continue
+
+            chosen.add(cand)
+            chosenFirstChars.add(candSplit.first)
+            chosenSecondChars.add(candSplit.second)
+        }
+
+        return if (chosen.size == targetPairCount - 1) chosen else emptyList()
     }
 
     private suspend fun generatePinyinDistractors(

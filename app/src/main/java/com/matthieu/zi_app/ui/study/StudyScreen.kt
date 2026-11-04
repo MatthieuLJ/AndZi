@@ -58,6 +58,7 @@ import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.ui.study.components.ClozeAssemblyView
 import com.matthieu.zi_app.ui.study.components.EnglishMcqView
+import com.matthieu.zi_app.ui.study.components.PairMatchQuizView
 import com.matthieu.zi_app.ui.study.components.PinyinQuizView
 import com.matthieu.zi_app.ui.study.components.RevealedFeedbackCard
 import com.matthieu.zi_app.ui.study.components.StudyFinishedView
@@ -92,6 +93,8 @@ fun StudyScreen(
         onPinyinToneSelected = { viewModel.selectPinyinTone(it) },
         onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
         onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
+        onMatchLeftSelected = { viewModel.selectMatchLeftTile(it) },
+        onMatchRightSelected = { viewModel.selectMatchRightTile(it) },
         onWritingStrokeDrawn = { viewModel.onUserStrokeDrawn(it) },
         onSetWritingScaffolding = { viewModel.setWritingScaffoldingLevel(it) },
         onUndoWritingStroke = { viewModel.undoWritingStroke() },
@@ -118,6 +121,8 @@ fun StudyScreenContent(
     onPinyinToneSelected: (Int) -> Unit = {},
     onAssemblyTileSelected: (Int, String) -> Unit = { _, _ -> },
     onUndoAssemblyTile: () -> Unit = {},
+    onMatchLeftSelected: (Int) -> Unit = {},
+    onMatchRightSelected: (Int) -> Unit = {},
     onWritingStrokeDrawn: (List<HanziPoint>) -> Unit = {},
     onSetWritingScaffolding: (WritingScaffoldingLevel) -> Unit = {},
     onUndoWritingStroke: () -> Unit = {},
@@ -271,6 +276,19 @@ fun StudyScreenContent(
                                             }
                                         }
                                     }
+                                } else if (card.quizType == QuizType.PAIR_MATCH) {
+                                    Text(
+                                        text = "Form Word Pairs",
+                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "${uiState.matchedWords.size} / ${card.matchPairs.size} pairs matched",
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                 } else {
                                     val displayedHanzi = if (uiState.isAnswerRevealed) card.revealedHanzi else card.hanzi
                                     val hanziStyle = when {
@@ -342,6 +360,7 @@ fun StudyScreenContent(
                                     QuizType.WORD_ASSEMBLY -> "Assemble the compound word"
                                     QuizType.PINYIN -> if (card.tone in 1..4) "Select Pinyin and tone" else "Select the correct Pinyin"
                                     QuizType.WRITING -> if (card.wordSlots.isNotEmpty()) "Write the missing character" else "Write the character from memory"
+                                    QuizType.PAIR_MATCH -> "Match the characters to form words"
                                 }
                                 if (promptText.isNotEmpty()) {
                                     Text(
@@ -445,6 +464,19 @@ fun StudyScreenContent(
                                             onSurrender = onSurrenderWriting
                                         )
                                     }
+                                }
+                                QuizType.PAIR_MATCH -> {
+                                    PairMatchQuizView(
+                                        leftTiles = card.leftMatchTiles,
+                                        rightTiles = card.rightMatchTiles,
+                                        pairs = card.matchPairs,
+                                        matchedWords = uiState.matchedWords,
+                                        selectedLeftIndex = uiState.selectedLeftMatchIndex,
+                                        selectedRightIndex = uiState.selectedRightMatchIndex,
+                                        errorShakeTrigger = uiState.matchErrorShakeTrigger,
+                                        onSelectLeft = onMatchLeftSelected,
+                                        onSelectRight = onMatchRightSelected
+                                    )
                                 }
                             }
                         }
