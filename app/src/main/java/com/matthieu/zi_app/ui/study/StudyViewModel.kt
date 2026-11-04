@@ -12,9 +12,11 @@ import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.domain.study.AdaptiveQuizPolicy
+import com.matthieu.zi_app.domain.study.quiz.QuizAction
 import com.matthieu.zi_app.domain.study.quiz.QuizBuildContext
 import com.matthieu.zi_app.domain.study.quiz.QuizDistractorGenerator
 import com.matthieu.zi_app.domain.study.quiz.QuizEligibilityContext
+import com.matthieu.zi_app.domain.study.quiz.QuizSessionState
 import com.matthieu.zi_app.domain.study.quiz.QuizStrategyRegistry
 import com.matthieu.zi_app.domain.writing.HanziPoint
 import com.matthieu.zi_app.domain.writing.StrokeMatcher
@@ -316,6 +318,26 @@ class StudyViewModel(
             quizType = quizType,
             payload = payload
         )
+    }
+
+    fun onQuizAction(action: QuizAction) {
+        when (action) {
+            is QuizAction.ToneSelected -> submitToneAnswer(action.tone)
+            is QuizAction.EnglishSelected -> submitEnglishAnswer(action.option)
+            is QuizAction.ClozeSelected -> submitClozeAnswer(action.character)
+            is QuizAction.PinyinSyllableSelected -> selectPinyinSyllable(action.syllable)
+            is QuizAction.PinyinToneSelected -> selectPinyinTone(action.tone)
+            is QuizAction.AssemblyTileSelected -> selectAssemblyTile(action.index, action.character)
+            is QuizAction.UndoAssemblyTile -> undoAssemblyTile()
+            is QuizAction.MatchLeftSelected -> selectMatchLeftTile(action.index)
+            is QuizAction.MatchRightSelected -> selectMatchRightTile(action.index)
+            is QuizAction.WritingStrokeDrawn -> onUserStrokeDrawn(action.points)
+            is QuizAction.SetWritingScaffolding -> setWritingScaffoldingLevel(action.level)
+            is QuizAction.UndoWritingStroke -> undoWritingStroke()
+            is QuizAction.ClearWritingCanvas -> clearWritingCanvas()
+            is QuizAction.SurrenderWriting -> surrenderWriting()
+            is QuizAction.RevealContextWords -> revealContextWords()
+        }
     }
 
     fun submitToneAnswer(selectedTone: Int) {

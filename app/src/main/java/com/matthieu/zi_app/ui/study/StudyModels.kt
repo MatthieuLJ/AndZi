@@ -1,7 +1,9 @@
 package com.matthieu.zi_app.ui.study
 
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.domain.study.quiz.QuizAction
 import com.matthieu.zi_app.domain.study.quiz.QuizPayload
+import com.matthieu.zi_app.domain.study.quiz.QuizSessionState
 import com.matthieu.zi_app.domain.writing.HanziCharacter
 import com.matthieu.zi_app.domain.writing.HanziStroke
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
@@ -124,7 +126,8 @@ data class StudyUiState(
     val selectedRightMatchIndex: Int? = null,
     val matchedWords: Set<String> = emptySet(),
     val failedMatchWords: Set<String> = emptySet(),
-    val matchErrorShakeTrigger: Int = 0
+    val matchErrorShakeTrigger: Int = 0,
+    val sessionState: QuizSessionState = QuizSessionState.Idle()
 ) {
     val currentCard: StudyCard?
         get() = queue.getOrNull(currentIndex)

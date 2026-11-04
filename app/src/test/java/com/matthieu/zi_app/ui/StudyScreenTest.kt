@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.matthieu.zi_app.ComposeTestActivity
 import com.matthieu.zi_app.Pinyin
+import com.matthieu.zi_app.domain.study.quiz.QuizAction
 import com.matthieu.zi_app.ui.study.CollocationPair
 import com.matthieu.zi_app.ui.study.QuizType
 import com.matthieu.zi_app.ui.study.StudyCard
@@ -745,6 +746,46 @@ class StudyScreenTest {
             .performClick()
         composeTestRule.waitForIdle()
         assertEquals(1, selectedRight)
+    }
+
+    @Test
+    fun testStudyScreenContent_dispatchesUnifiedQuizAction() {
+        val card = StudyCard(
+            hanzi = "好",
+            pinyin = "hao3",
+            english = listOf("good"),
+            currentBox = 1,
+            quizType = QuizType.ENGLISH,
+            mcqOptions = listOf("good", "bad", "water", "fire")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            remainingDueCount = 1,
+            isAnswerRevealed = false
+        )
+
+        var emittedAction: QuizAction? = null
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onQuizAction = { emittedAction = it },
+                    onNextCard = {}
+                )
+            }
+        }
+
+        // Tap the option "good"
+        composeTestRule.onNodeWithText("good")
+            .performScrollTo()
+            .performClick()
+        composeTestRule.waitForIdle()
+
+        assertTrue(emittedAction is QuizAction.EnglishSelected)
+        assertEquals("good", (emittedAction as QuizAction.EnglishSelected).option)
     }
 }
 

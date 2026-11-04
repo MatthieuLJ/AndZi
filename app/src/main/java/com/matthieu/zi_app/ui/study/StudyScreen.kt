@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.R
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.domain.study.quiz.QuizAction
 import com.matthieu.zi_app.domain.study.quiz.QuizStrategyRegistry
 import com.matthieu.zi_app.domain.writing.HanziPoint
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
@@ -86,24 +87,9 @@ fun StudyScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onReturnHome = onReturnHome,
-        onToneSelected = { viewModel.submitToneAnswer(it) },
-        onEnglishSelected = { viewModel.submitEnglishAnswer(it) },
-        onClozeSelected = { viewModel.submitClozeAnswer(it) },
-        onPinyinSelected = { viewModel.submitPinyinAnswer(it) },
-        onPinyinSyllableSelected = { viewModel.selectPinyinSyllable(it) },
-        onPinyinToneSelected = { viewModel.selectPinyinTone(it) },
-        onAssemblyTileSelected = { index, char -> viewModel.selectAssemblyTile(index, char) },
-        onUndoAssemblyTile = { viewModel.undoAssemblyTile() },
-        onMatchLeftSelected = { viewModel.selectMatchLeftTile(it) },
-        onMatchRightSelected = { viewModel.selectMatchRightTile(it) },
-        onWritingStrokeDrawn = { viewModel.onUserStrokeDrawn(it) },
-        onSetWritingScaffolding = { viewModel.setWritingScaffoldingLevel(it) },
-        onUndoWritingStroke = { viewModel.undoWritingStroke() },
-        onClearWritingCanvas = { viewModel.clearWritingCanvas() },
-        onSurrenderWriting = { viewModel.surrenderWriting() },
+        onQuizAction = { viewModel.onQuizAction(it) },
         onAcceptAnswer = { viewModel.markAnswerAsAcceptable() },
         onRateGrade = { viewModel.rateCard(it) },
-        onRevealContextWords = { viewModel.revealContextWords() },
         onNextCard = { viewModel.nextCard() },
         modifier = modifier
     )
@@ -114,9 +100,9 @@ fun StudyScreen(
 fun StudyScreenContent(
     uiState: StudyUiState,
     onNavigateBack: () -> Unit,
-    onToneSelected: (Int) -> Unit,
-    onEnglishSelected: (String) -> Unit,
-    onClozeSelected: (String) -> Unit,
+    onToneSelected: (Int) -> Unit = {},
+    onEnglishSelected: (String) -> Unit = {},
+    onClozeSelected: (String) -> Unit = {},
     onPinyinSelected: (String) -> Unit = {},
     onPinyinSyllableSelected: (String) -> Unit = {},
     onPinyinToneSelected: (Int) -> Unit = {},
@@ -132,8 +118,27 @@ fun StudyScreenContent(
     onAcceptAnswer: () -> Unit = {},
     onRateGrade: (ReviewGrade) -> Unit = {},
     onRevealContextWords: () -> Unit = {},
-    onNextCard: () -> Unit,
+    onNextCard: () -> Unit = {},
     onReturnHome: () -> Unit = onNavigateBack,
+    onQuizAction: (QuizAction) -> Unit = { action ->
+        when (action) {
+            is QuizAction.ToneSelected -> onToneSelected(action.tone)
+            is QuizAction.EnglishSelected -> onEnglishSelected(action.option)
+            is QuizAction.ClozeSelected -> onClozeSelected(action.character)
+            is QuizAction.PinyinSyllableSelected -> onPinyinSyllableSelected(action.syllable)
+            is QuizAction.PinyinToneSelected -> onPinyinToneSelected(action.tone)
+            is QuizAction.AssemblyTileSelected -> onAssemblyTileSelected(action.index, action.character)
+            is QuizAction.UndoAssemblyTile -> onUndoAssemblyTile()
+            is QuizAction.MatchLeftSelected -> onMatchLeftSelected(action.index)
+            is QuizAction.MatchRightSelected -> onMatchRightSelected(action.index)
+            is QuizAction.WritingStrokeDrawn -> onWritingStrokeDrawn(action.points)
+            is QuizAction.SetWritingScaffolding -> onSetWritingScaffolding(action.level)
+            is QuizAction.UndoWritingStroke -> onUndoWritingStroke()
+            is QuizAction.ClearWritingCanvas -> onClearWritingCanvas()
+            is QuizAction.SurrenderWriting -> onSurrenderWriting()
+            is QuizAction.RevealContextWords -> onRevealContextWords()
+        }
+    },
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -302,7 +307,7 @@ fun StudyScreenContent(
                                             .fillMaxWidth()
                                             .detectToneGestures(
                                                 enabled = !uiState.isAnswerRevealed && card.quizType == QuizType.TONE,
-                                                onToneDetected = { tone -> onToneSelected(tone) }
+                                                onToneDetected = { tone -> onQuizAction(QuizAction.ToneSelected(tone)) }
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -332,7 +337,7 @@ fun StudyScreenContent(
                                         }
                                     } else {
                                         OutlinedButton(
-                                            onClick = onRevealContextWords,
+                                            onClick = { onQuizAction(QuizAction.RevealContextWords) },
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                             modifier = Modifier.height(32.dp),
                                             shape = RoundedCornerShape(8.dp)
@@ -392,87 +397,11 @@ fun StudyScreenContent(
                     } else {
                         // Interactive Quiz Input
                         item {
-                            when (card.quizType) {
-                                QuizType.TONE -> {
-                                    ToneKeypad(
-                                        enabled = !uiState.isAnswerRevealed,
-                                        onToneSelected = { tone -> onToneSelected(tone) }
-                                    )
-                                }
-                                QuizType.ENGLISH -> {
-                                    val correct = card.english.firstOrNull() ?: ""
-                                    EnglishMcqView(
-                                        options = card.mcqOptions,
-                                        correctMeaning = correct,
-                                        correctMeanings = card.english,
-                                        selectedOption = uiState.selectedOption,
-                                        isRevealed = uiState.isAnswerRevealed,
-                                        onOptionSelected = { option -> onEnglishSelected(option) }
-                                    )
-                                }
-                                QuizType.CLOZE, QuizType.WORD_ASSEMBLY -> {
-                                    ClozeAssemblyView(
-                                        quizType = card.quizType,
-                                        wordSlots = card.wordSlots,
-                                        clozeTargetIndex = card.clozeTargetIndex,
-                                        assembledChars = uiState.assembledChars,
-                                        usedTileIndices = uiState.usedTileIndices,
-                                        tiles = card.scrambledTiles,
-                                        isRevealed = uiState.isAnswerRevealed,
-                                        isCorrect = uiState.isCorrect,
-                                        onTileSelected = { index, tile ->
-                                            if (card.quizType == QuizType.CLOZE) {
-                                                onClozeSelected(tile)
-                                            } else {
-                                                onAssemblyTileSelected(index, tile)
-                                            }
-                                        },
-                                        onUndoTile = onUndoAssemblyTile
-                                    )
-                                }
-                                QuizType.PINYIN -> {
-                                    PinyinQuizView(
-                                        options = card.mcqOptions,
-                                        correctSyllable = card.syllable,
-                                        correctTone = card.tone,
-                                        selectedSyllable = uiState.selectedOption,
-                                        selectedTone = uiState.selectedPinyinTone,
-                                        isRevealed = uiState.isAnswerRevealed,
-                                        onSyllableSelected = onPinyinSyllableSelected,
-                                        onToneSelected = onPinyinToneSelected
-                                    )
-                                }
-                                QuizType.WRITING -> {
-                                    card.writingCharacter?.let { charData ->
-                                        WritingQuizView(
-                                            character = charData,
-                                            completedStrokes = uiState.completedStrokes,
-                                            currentStrokeIndex = uiState.currentStrokeIndex,
-                                            scaffoldingLevel = uiState.scaffoldingLevel,
-                                            isAnswerRevealed = uiState.isAnswerRevealed,
-                                            errorShakeTrigger = uiState.writingErrorShakeTrigger,
-                                            onStrokeDrawn = onWritingStrokeDrawn,
-                                            onSetScaffoldingLevel = onSetWritingScaffolding,
-                                            onUndoStroke = onUndoWritingStroke,
-                                            onClearCanvas = onClearWritingCanvas,
-                                            onSurrender = onSurrenderWriting
-                                        )
-                                    }
-                                }
-                                QuizType.PAIR_MATCH -> {
-                                    PairMatchQuizView(
-                                        leftTiles = card.leftMatchTiles,
-                                        rightTiles = card.rightMatchTiles,
-                                        pairs = card.matchPairs,
-                                        matchedWords = uiState.matchedWords,
-                                        selectedLeftIndex = uiState.selectedLeftMatchIndex,
-                                        selectedRightIndex = uiState.selectedRightMatchIndex,
-                                        errorShakeTrigger = uiState.matchErrorShakeTrigger,
-                                        onSelectLeft = onMatchLeftSelected,
-                                        onSelectRight = onMatchRightSelected
-                                    )
-                                }
-                            }
+                            QuizInteractiveInput(
+                                card = card,
+                                uiState = uiState,
+                                onQuizAction = onQuizAction
+                            )
                         }
                     }
 
@@ -481,6 +410,95 @@ fun StudyScreenContent(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuizInteractiveInput(
+    card: StudyCard,
+    uiState: StudyUiState,
+    onQuizAction: (QuizAction) -> Unit
+) {
+    when (card.quizType) {
+        QuizType.TONE -> {
+            ToneKeypad(
+                enabled = !uiState.isAnswerRevealed,
+                onToneSelected = { tone -> onQuizAction(QuizAction.ToneSelected(tone)) }
+            )
+        }
+        QuizType.ENGLISH -> {
+            val correct = card.english.firstOrNull() ?: ""
+            EnglishMcqView(
+                options = card.mcqOptions,
+                correctMeaning = correct,
+                correctMeanings = card.english,
+                selectedOption = uiState.selectedOption,
+                isRevealed = uiState.isAnswerRevealed,
+                onOptionSelected = { option -> onQuizAction(QuizAction.EnglishSelected(option)) }
+            )
+        }
+        QuizType.CLOZE, QuizType.WORD_ASSEMBLY -> {
+            ClozeAssemblyView(
+                quizType = card.quizType,
+                wordSlots = card.wordSlots,
+                clozeTargetIndex = card.clozeTargetIndex,
+                assembledChars = uiState.assembledChars,
+                usedTileIndices = uiState.usedTileIndices,
+                tiles = card.scrambledTiles,
+                isRevealed = uiState.isAnswerRevealed,
+                isCorrect = uiState.isCorrect,
+                onTileSelected = { index, tile ->
+                    if (card.quizType == QuizType.CLOZE) {
+                        onQuizAction(QuizAction.ClozeSelected(tile))
+                    } else {
+                        onQuizAction(QuizAction.AssemblyTileSelected(index, tile))
+                    }
+                },
+                onUndoTile = { onQuizAction(QuizAction.UndoAssemblyTile) }
+            )
+        }
+        QuizType.PINYIN -> {
+            PinyinQuizView(
+                options = card.mcqOptions,
+                correctSyllable = card.syllable,
+                correctTone = card.tone,
+                selectedSyllable = uiState.selectedOption,
+                selectedTone = uiState.selectedPinyinTone,
+                isRevealed = uiState.isAnswerRevealed,
+                onSyllableSelected = { onQuizAction(QuizAction.PinyinSyllableSelected(it)) },
+                onToneSelected = { onQuizAction(QuizAction.PinyinToneSelected(it)) }
+            )
+        }
+        QuizType.WRITING -> {
+            card.writingCharacter?.let { charData ->
+                WritingQuizView(
+                    character = charData,
+                    completedStrokes = uiState.completedStrokes,
+                    currentStrokeIndex = uiState.currentStrokeIndex,
+                    scaffoldingLevel = uiState.scaffoldingLevel,
+                    isAnswerRevealed = uiState.isAnswerRevealed,
+                    errorShakeTrigger = uiState.writingErrorShakeTrigger,
+                    onStrokeDrawn = { onQuizAction(QuizAction.WritingStrokeDrawn(it)) },
+                    onSetScaffoldingLevel = { onQuizAction(QuizAction.SetWritingScaffolding(it)) },
+                    onUndoStroke = { onQuizAction(QuizAction.UndoWritingStroke) },
+                    onClearCanvas = { onQuizAction(QuizAction.ClearWritingCanvas) },
+                    onSurrender = { onQuizAction(QuizAction.SurrenderWriting) }
+                )
+            }
+        }
+        QuizType.PAIR_MATCH -> {
+            PairMatchQuizView(
+                leftTiles = card.leftMatchTiles,
+                rightTiles = card.rightMatchTiles,
+                pairs = card.matchPairs,
+                matchedWords = uiState.matchedWords,
+                selectedLeftIndex = uiState.selectedLeftMatchIndex,
+                selectedRightIndex = uiState.selectedRightMatchIndex,
+                errorShakeTrigger = uiState.matchErrorShakeTrigger,
+                onSelectLeft = { onQuizAction(QuizAction.MatchLeftSelected(it)) },
+                onSelectRight = { onQuizAction(QuizAction.MatchRightSelected(it)) }
+            )
         }
     }
 }
