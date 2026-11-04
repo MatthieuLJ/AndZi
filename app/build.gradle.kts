@@ -57,6 +57,7 @@ android {
             isIncludeAndroidResources = true
             all {
                 it.maxHeapSize = "2048m"
+                it.maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
             }
         }
     }
