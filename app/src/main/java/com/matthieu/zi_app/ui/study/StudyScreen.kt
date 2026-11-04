@@ -240,9 +240,11 @@ fun StudyScreenContent(
                                         (card.quizType == QuizType.CLOZE || card.quizType == QuizType.WORD_ASSEMBLY || card.quizType == QuizType.WRITING)
 
                                 if (showEnglishOnTop) {
-                                    val englishText = if (card.english.isNotEmpty()) {
-                                        card.english.joinToString("; ")
-                                    } else "Complete the word"
+                                    val englishText = when {
+                                        card.english.isNotEmpty() -> card.english.joinToString("; ")
+                                        card.quizType == QuizType.WRITING && card.wordSlots.isEmpty() -> "Write the character from memory"
+                                        else -> "Complete the word"
+                                    }
 
                                     Text(
                                         text = englishText,

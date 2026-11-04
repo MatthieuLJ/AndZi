@@ -285,9 +285,19 @@ class StudyViewModel(
         val distractorCount = getDistractorCountForBox(box, quizType)
 
         if (quizType == QuizType.CLOZE || quizType == QuizType.WRITING) {
-            if (isSingleChar && containingWords.isNotEmpty()) {
+            val eligibleContainingWords = if (quizType == QuizType.WRITING) {
+                containingWords.filter { comp ->
+                    // For handwriting quizzes, the word shown should not be a repeat of the same character being tested
+                    // (e.g. 妈妈 for 妈, 天天 for 天, or 看一看 for 看) so the user cannot see the target character.
+                    countCharacterOccurrences(comp.chinese, hanzi) == 1
+                }
+            } else {
+                containingWords
+            }
+
+            if (isSingleChar && eligibleContainingWords.isNotEmpty()) {
                 // Test filling or writing the single character within a larger compound word!
-                val comp = containingWords[index % containingWords.size]
+                val comp = eligibleContainingWords[index % eligibleContainingWords.size]
                 val compHanzi = comp.chinese
                 var charIdx = 0
                 while (charIdx < compHanzi.length) {
@@ -319,6 +329,13 @@ class StudyViewModel(
                     val correctChar = wordSlots[targetIdx]
                     val missingCharBox = studyRepository.getLeitnerState(correctChar)?.box ?: box
                     scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
+                }
+            }
+
+            if (cardEnglish.isEmpty() && dictionaryRepository != null) {
+                val dictVoc = dictionaryRepository.getVocabularyForChinese(hanzi).firstOrNull { it.english.isNotEmpty() }
+                if (dictVoc != null && dictVoc.english.isNotEmpty()) {
+                    cardEnglish = dictVoc.english
                 }
             }
 
@@ -725,6 +742,22 @@ class StudyViewModel(
             }
             else -> 3
         }
+    }
+
+    private fun countCharacterOccurrences(text: String, char: String): Int {
+        if (char.isEmpty() || text.isEmpty()) return 0
+        var count = 0
+        var idx = 0
+        while (idx <= text.length - char.length) {
+            val found = text.indexOf(char, idx)
+            if (found >= 0) {
+                count++
+                idx = found + char.length
+            } else {
+                break
+            }
+        }
+        return count
     }
 
     private suspend fun generatePinyinDistractors(

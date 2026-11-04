@@ -2,6 +2,7 @@ package com.matthieu.zi_app.ui
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.AndZiDatabase
 import com.matthieu.zi_app.data.local.entity.CharPinyinEntity
 import com.matthieu.zi_app.data.local.entity.CharacterStrokeEntity
@@ -346,5 +347,110 @@ class WritingQuizTest {
         assertNotNull(updatedRecord)
         assertEquals("Complex character (>= 4 strokes) should preserve box", 4, updatedRecord!!.box)
         assertEquals("Complex character should preserve streak", 5, updatedRecord.streak)
+    }
+
+    @Test
+    fun testWritingQuiz_whenContainingWordHasRepeatedCharacter_doesNotUseRepeatedWord() = runBlocking {
+        // Character "妈" (3 strokes for simplicity in test data)
+        andZiDb.vocabularyDao().insertCharacterStrokes(
+            listOf(
+                CharacterStrokeEntity(
+                    hanzi = "妈",
+                    strokes = "[\"M 250 500 L 750 500\", \"M 250 500 L 750 500\", \"M 250 500 L 750 500\"]",
+                    medians = "[[[250, 500], [750, 500]], [[250, 500], [750, 500]], [[250, 500], [750, 500]]]",
+                    strokeCount = 3
+                )
+            )
+        )
+        vocRepo.addVocabulary(Vocabulary("妈", "ma1", arrayListOf("mom")))
+        // Containing compound word repeats the character "妈": "妈妈"
+        vocRepo.addVocabulary(Vocabulary("妈妈", "ma1ma5", arrayListOf("mother")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            LeitnerRecordEntity(hanzi = "妈", box = 2, expTime = now - 1000L)
+        )
+        // Keep compound word "妈妈" in vocabulary but unexpired so only "妈" is drawn from study queue
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            LeitnerRecordEntity(hanzi = "妈妈", box = 1, expTime = now + 100000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var currentCard = state.currentCard!!
+        while (currentCard.quizType != QuizType.WRITING || currentCard.hanzi != "妈") {
+            viewModel.nextCard()
+            currentCard = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }.currentCard!!
+        }
+
+        assertEquals(QuizType.WRITING, currentCard.quizType)
+        // Since the only containing word is "妈妈" which repeats "妈", it must NOT be used for writing quiz!
+        assertTrue(
+            "Word slots must be empty rather than showing repeated character '妈妈'",
+            currentCard.wordSlots.isEmpty()
+        )
+        // No slot should show "妈"
+        val displayedNonTargetSlots = currentCard.wordSlots.filterIndexed { idx, _ -> idx != currentCard.clozeTargetIndex }
+        assertFalse("Character being tested must never be shown in non-target slots", displayedNonTargetSlots.contains("妈"))
+    }
+
+    @Test
+    fun testWritingQuiz_whenMultipleContainingWordsExist_prefersNonRepeatingWord() = runBlocking {
+        // Character "天" (4 strokes)
+        andZiDb.vocabularyDao().insertCharacterStrokes(
+            listOf(
+                CharacterStrokeEntity(
+                    hanzi = "天",
+                    strokes = "[\"M 250 500 L 750 500\", \"M 250 500 L 750 500\", \"M 250 500 L 750 500\", \"M 250 500 L 750 500\"]",
+                    medians = "[[[250, 500], [750, 500]], [[250, 500], [750, 500]], [[250, 500], [750, 500]], [[250, 500], [750, 500]]]",
+                    strokeCount = 4
+                )
+            )
+        )
+        vocRepo.addVocabulary(Vocabulary("天", "tian1", arrayListOf("sky; day")))
+        // Two containing compound words: "天天" (repeats "天") and "天气" (does not repeat "天")
+        vocRepo.addVocabulary(Vocabulary("天天", "tian1tian1", arrayListOf("every day")))
+        vocRepo.addVocabulary(Vocabulary("天气", "tian1qi4", arrayListOf("weather")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            LeitnerRecordEntity(hanzi = "天", box = 2, expTime = now - 1000L)
+        )
+        // Keep compound words and constituent characters in vocabulary but unexpired so only "天" is drawn from study queue
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            LeitnerRecordEntity(hanzi = "天天", box = 1, expTime = now + 100000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            LeitnerRecordEntity(hanzi = "天气", box = 1, expTime = now + 100000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            LeitnerRecordEntity(hanzi = "气", box = 1, expTime = now + 100000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
+        val state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var currentCard = state.currentCard!!
+        while (currentCard.quizType != QuizType.WRITING || currentCard.hanzi != "天") {
+            viewModel.nextCard()
+            currentCard = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }.currentCard!!
+        }
+
+        assertEquals(QuizType.WRITING, currentCard.quizType)
+        // Word shown must be "天气", NOT "天天"
+        assertEquals("天气", currentCard.revealedHanzi)
+        assertEquals(listOf("天", "气"), currentCard.wordSlots)
+        assertEquals(0, currentCard.clozeTargetIndex)
+        // Visible slots should only contain "气", never "天"
+        val displayedNonTargetSlots = currentCard.wordSlots.filterIndexed { idx, _ -> idx != currentCard.clozeTargetIndex }
+        assertEquals(listOf("气"), displayedNonTargetSlots)
+        assertFalse(displayedNonTargetSlots.contains("天"))
     }
 }
