@@ -1,5 +1,6 @@
 package com.matthieu.zi_app.domain.study
 
+import com.matthieu.zi_app.domain.study.quiz.QuizEligibilityContext
 import com.matthieu.zi_app.ui.study.QuizType
 
 object AdaptiveQuizPolicy {
@@ -189,6 +190,25 @@ object AdaptiveQuizPolicy {
                 }
             }
         }
+    }
+
+    /**
+     * Selects the quiz type for a card given its eligibility context and session index.
+     */
+    fun selectQuizType(
+        context: QuizEligibilityContext,
+        index: Int
+    ): QuizType {
+        return selectQuizType(
+            box = context.box,
+            isSingleChar = context.isSingleChar,
+            hasValidNonNeutralTone = context.hasValidNonNeutralTone,
+            hasUserEnglish = context.hasUserEnglish,
+            hasContainingWords = context.hasContainingWords,
+            strokeCount = context.strokeCount,
+            index = index,
+            canPairMatch = context.canPairMatch
+        )
     }
 
     /**

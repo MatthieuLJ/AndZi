@@ -1,6 +1,7 @@
 package com.matthieu.zi_app.ui.study
 
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.domain.study.quiz.QuizPayload
 import com.matthieu.zi_app.domain.writing.HanziCharacter
 import com.matthieu.zi_app.domain.writing.HanziStroke
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
@@ -31,18 +32,48 @@ data class StudyCard(
     val english: List<String> = emptyList(),
     val currentBox: Int = 0,
     val quizType: QuizType = QuizType.TONE,
-    val mcqOptions: List<String> = emptyList(),
-    val wordSlots: List<String> = emptyList(),
-    val scrambledTiles: List<String> = emptyList(),
-    val clozeTargetIndex: Int = -1,
-    val contextWords: List<String> = emptyList(),
-    val displayPinyin: String = pinyin,
-    val relatedStudyWords: List<Vocabulary> = emptyList(),
-    val writingCharacter: HanziCharacter? = null,
-    val matchPairs: List<CollocationPair> = emptyList(),
-    val leftMatchTiles: List<String> = emptyList(),
-    val rightMatchTiles: List<String> = emptyList()
+    val payload: QuizPayload = QuizPayload.Empty,
+    val mcqOptions: List<String> = (payload as? QuizPayload.OptionsProvider)?.options ?: emptyList(),
+    val wordSlots: List<String> = (payload as? QuizPayload.SlotsProvider)?.slots ?: emptyList(),
+    val scrambledTiles: List<String> = (payload as? QuizPayload.TilesProvider)?.tiles ?: emptyList(),
+    val clozeTargetIndex: Int = (payload as? QuizPayload.ClozeTargetProvider)?.targetIndex ?: -1,
+    val contextWords: List<String> = (payload as? QuizPayload.ContextWordsProvider)?.contextWords ?: emptyList(),
+    val displayPinyin: String = (payload as? QuizPayload.DisplayPinyinProvider)?.displayPinyin?.takeIf { it.isNotBlank() } ?: pinyin,
+    val relatedStudyWords: List<Vocabulary> = (payload as? QuizPayload.Cloze)?.relatedStudyWords
+        ?: (payload as? QuizPayload.Writing)?.relatedStudyWords
+        ?: emptyList(),
+    val writingCharacter: HanziCharacter? = (payload as? QuizPayload.WritingProvider)?.character,
+    val matchPairs: List<CollocationPair> = (payload as? QuizPayload.MatchPairsProvider)?.pairs ?: emptyList(),
+    val leftMatchTiles: List<String> = (payload as? QuizPayload.MatchPairsProvider)?.leftTiles ?: emptyList(),
+    val rightMatchTiles: List<String> = (payload as? QuizPayload.MatchPairsProvider)?.rightTiles ?: emptyList()
 ) {
+    companion object {
+        fun fromPayload(
+            hanzi: String,
+            pinyin: String,
+            syllable: String,
+            tone: Int,
+            english: List<String>,
+            currentBox: Int,
+            quizType: QuizType,
+            payload: QuizPayload
+        ): StudyCard {
+            val cardEnglish = (payload as? QuizPayload.Cloze)?.cardEnglish?.takeIf { it.isNotEmpty() }
+                ?: (payload as? QuizPayload.WordAssembly)?.cardEnglish?.takeIf { it.isNotEmpty() }
+                ?: (payload as? QuizPayload.Writing)?.cardEnglish?.takeIf { it.isNotEmpty() }
+                ?: english
+            return StudyCard(
+                hanzi = hanzi,
+                pinyin = pinyin,
+                syllable = syllable,
+                tone = tone,
+                english = cardEnglish,
+                currentBox = currentBox,
+                quizType = quizType,
+                payload = payload
+            )
+        }
+    }
     val revealedHanzi: String
         get() = if ((quizType == QuizType.CLOZE || quizType == QuizType.WRITING) && wordSlots.isNotEmpty()) {
             wordSlots.joinToString("")

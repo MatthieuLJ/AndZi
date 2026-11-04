@@ -12,6 +12,10 @@ import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.domain.study.AdaptiveQuizPolicy
+import com.matthieu.zi_app.domain.study.quiz.QuizBuildContext
+import com.matthieu.zi_app.domain.study.quiz.QuizDistractorGenerator
+import com.matthieu.zi_app.domain.study.quiz.QuizEligibilityContext
+import com.matthieu.zi_app.domain.study.quiz.QuizStrategyRegistry
 import com.matthieu.zi_app.domain.writing.HanziPoint
 import com.matthieu.zi_app.domain.writing.StrokeMatcher
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
@@ -252,7 +256,13 @@ class StudyViewModel(
 
         val matchCompanions = if (isTwoChar && box >= 1) {
             val allUserVoc = vocabularyRepository.getAllVocabulary()
-            findMatchCompanions(hanzi, targetPairCount = 3, candidates = allUserVoc)
+            QuizDistractorGenerator.findMatchCompanions(
+                primaryWord = hanzi,
+                targetPairCount = 3,
+                candidates = allUserVoc,
+                vocabularyRepository = vocabularyRepository,
+                dictionaryRepository = dictionaryRepository
+            )
         } else emptyList()
         val canPairMatch = isTwoChar && box >= 1 && matchCompanions.size >= 2
 
@@ -266,164 +276,45 @@ class StudyViewModel(
                 ?: dictionaryRepository?.getHanziCharacter(hanzi)
         } else null
 
-        // 1. Determine Quiz Type using AdaptiveQuizPolicy:
-        val quizType = AdaptiveQuizPolicy.selectQuizType(
+        val eligibilityContext = QuizEligibilityContext(
             box = box,
             isSingleChar = isSingleChar,
             hasValidNonNeutralTone = hasValidNonNeutralTone,
             hasUserEnglish = hasUserEnglish,
             hasContainingWords = containingWords.isNotEmpty(),
             strokeCount = charStrokes?.strokeCount,
-            index = index,
             canPairMatch = canPairMatch
         )
 
-        // 2. If Tone Quiz or Pinyin Quiz, find studied compound words demonstrating this character (study stack only)
-        var contextWords = emptyList<String>()
-        if (quizType == QuizType.TONE || quizType == QuizType.PINYIN) {
-            val exampleWords = vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, voc.pinyin, limit = 4)
-            contextWords = exampleWords.filter { it != hanzi && it.codePointCount(0, it.length) > 1 }
-        }
+        // 1. Determine Quiz Type using AdaptiveQuizPolicy:
+        val quizType = AdaptiveQuizPolicy.selectQuizType(eligibilityContext, index)
 
-        // 3. Generate MCQ distractors for English or Pinyin
-        val mcqOptions = when (quizType) {
-            QuizType.ENGLISH -> {
-                val correct = voc.english.randomOrNull() ?: "Meaning"
-                generateEnglishDistractors(correct, allStudyEnglish, excludedMeanings = voc.english)
-            }
-            QuizType.PINYIN -> {
-                generatePinyinDistractors(voc.pinyin, hanzi, box, studyChars)
-            }
-            else -> emptyList()
-        }
+        // 2. Build payload using the corresponding QuizStrategy:
+        val buildContext = QuizBuildContext(
+            box = box,
+            index = index,
+            studyChars = studyChars,
+            containingWords = containingWords,
+            allStudyEnglish = allStudyEnglish,
+            strokeData = charStrokes,
+            matchCompanions = matchCompanions,
+            vocabularyRepository = vocabularyRepository,
+            dictionaryRepository = dictionaryRepository,
+            studyRepository = studyRepository
+        )
 
-        // 4. Generate Cloze / Assembly slots
-        var cardEnglish = voc.english
-        var displayPinyin = voc.pinyin
-        var relatedStudyWords = emptyList<Vocabulary>()
-        val wordSlots = mutableListOf<String>()
-        val scrambledTiles = mutableListOf<String>()
-        var targetIdx = -1
+        val strategy = QuizStrategyRegistry.getStrategy(quizType)
+        val payload = strategy.buildPayload(voc, buildContext)
 
-        val distractorCount = getDistractorCountForBox(box, quizType)
-
-        if (quizType == QuizType.CLOZE || quizType == QuizType.WRITING) {
-            val eligibleContainingWords = if (quizType == QuizType.WRITING) {
-                containingWords.filter { comp ->
-                    // For handwriting quizzes, the word shown should not be a repeat of the same character being tested
-                    // (e.g. 妈妈 for 妈, 天天 for 天, or 看一看 for 看) so the user cannot see the target character.
-                    countCharacterOccurrences(comp.chinese, hanzi) == 1
-                }
-            } else {
-                containingWords
-            }
-
-            if (isSingleChar && eligibleContainingWords.isNotEmpty()) {
-                // Test filling or writing the single character within a larger compound word!
-                val comp = eligibleContainingWords[index % eligibleContainingWords.size]
-                val compHanzi = comp.chinese
-                var charIdx = 0
-                while (charIdx < compHanzi.length) {
-                    val cp = compHanzi.codePointAt(charIdx)
-                    wordSlots.add(String(Character.toChars(cp)))
-                    charIdx += Character.charCount(cp)
-                }
-                val idxInWord = wordSlots.indexOf(hanzi)
-                targetIdx = if (idxInWord >= 0) idxInWord else 0
-                val correctChar = wordSlots[targetIdx]
-                val missingCharBox = studyRepository.getLeitnerState(correctChar)?.box ?: box
-                if (quizType == QuizType.CLOZE) {
-                    scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
-                }
-                if (comp.english.isNotEmpty()) {
-                    cardEnglish = comp.english
-                }
-                if (comp.pinyin.isNotBlank()) {
-                    displayPinyin = comp.pinyin
-                }
-            } else if (quizType == QuizType.CLOZE) {
-                for (i in 0 until charCount) {
-                    val codePoint = hanzi.codePointAt(i)
-                    val ch = String(Character.toChars(codePoint))
-                    wordSlots.add(ch)
-                }
-                if (wordSlots.isNotEmpty()) {
-                    targetIdx = (0 until wordSlots.size).random()
-                    val correctChar = wordSlots[targetIdx]
-                    val missingCharBox = studyRepository.getLeitnerState(correctChar)?.box ?: box
-                    scrambledTiles.addAll(generateClozeDistractors(correctChar, missingCharBox, distractorCount, studyChars))
-                }
-            }
-
-            if (cardEnglish.isEmpty() && dictionaryRepository != null) {
-                val dictVoc = dictionaryRepository.getVocabularyForChinese(hanzi).firstOrNull { it.english.isNotEmpty() }
-                if (dictVoc != null && dictVoc.english.isNotEmpty()) {
-                    cardEnglish = dictVoc.english
-                }
-            }
-
-            val missingChar = if (targetIdx in wordSlots.indices) wordSlots[targetIdx] else hanzi
-            val revealedWord = if (wordSlots.isNotEmpty()) wordSlots.joinToString("") else hanzi
-            relatedStudyWords = (
-                vocabularyRepository.getVocabularyForChinese(missingChar).filter { it.english.isNotEmpty() } +
-                vocabularyRepository.getWordsContainingCharacter(missingChar)
-            )
-                .distinctBy { "${it.chinese}_${it.pinyin}" }
-                .sortedBy { if (it.chinese == revealedWord) 1 else 0 }
-        } else if (quizType == QuizType.WORD_ASSEMBLY) {
-            var charIdx = 0
-            while (charIdx < hanzi.length) {
-                val codePoint = hanzi.codePointAt(charIdx)
-                val ch = String(Character.toChars(codePoint))
-                wordSlots.add(ch)
-                charIdx += Character.charCount(codePoint)
-            }
-            val distractors = generateCharDistractorsForWord(wordSlots, box, distractorCount, studyChars)
-            val uniqueTiles = (wordSlots.distinct() + distractors).distinct().shuffled()
-            scrambledTiles.addAll(uniqueTiles)
-        }
-
-        val matchPairs = if (quizType == QuizType.PAIR_MATCH) {
-            val allVocList = listOf(voc) + matchCompanions
-            allVocList.mapNotNull { v ->
-                val split = splitTwoCharWord(v.chinese) ?: return@mapNotNull null
-                CollocationPair(
-                    word = v.chinese,
-                    pinyin = v.pinyin,
-                    english = v.english,
-                    firstChar = split.first,
-                    secondChar = split.second
-                )
-            }
-        } else emptyList()
-
-        val leftMatchTiles = if (quizType == QuizType.PAIR_MATCH) {
-            matchPairs.map { it.firstChar }.shuffled()
-        } else emptyList()
-
-        val rightMatchTiles = if (quizType == QuizType.PAIR_MATCH) {
-            matchPairs.map { it.secondChar }.shuffled()
-        } else emptyList()
-
-        return StudyCard(
+        return StudyCard.fromPayload(
             hanzi = hanzi,
             pinyin = voc.pinyin,
             syllable = syllable,
             tone = tone,
-            english = cardEnglish,
+            english = voc.english,
             currentBox = box,
             quizType = quizType,
-            mcqOptions = mcqOptions,
-            wordSlots = wordSlots,
-            scrambledTiles = scrambledTiles,
-            clozeTargetIndex = targetIdx,
-            contextWords = contextWords,
-            displayPinyin = displayPinyin,
-            relatedStudyWords = relatedStudyWords,
-            writingCharacter = if (quizType == QuizType.WRITING) charStrokes else null,
-            matchPairs = matchPairs,
-            leftMatchTiles = leftMatchTiles,
-            rightMatchTiles = rightMatchTiles
+            payload = payload
         )
     }
 
@@ -879,336 +770,6 @@ class StudyViewModel(
         viewModelScope.launch {
             loadNextCard(isInitialLoad = false)
         }
-    }
-
-    private fun getDistractorCountForBox(box: Int, quizType: QuizType): Int {
-        return when (quizType) {
-            QuizType.CLOZE -> when {
-                box <= 0 -> 2
-                box <= 2 -> 3
-                box <= 4 -> 4
-                else -> 5
-            }
-            QuizType.WORD_ASSEMBLY -> when {
-                box <= 0 -> 2
-                box <= 2 -> 3
-                box <= 4 -> 4
-                else -> 5
-            }
-            else -> 3
-        }
-    }
-
-    private fun countCharacterOccurrences(text: String, char: String): Int {
-        if (char.isEmpty() || text.isEmpty()) return 0
-        var count = 0
-        var idx = 0
-        while (idx <= text.length - char.length) {
-            val found = text.indexOf(char, idx)
-            if (found >= 0) {
-                count++
-                idx = found + char.length
-            } else {
-                break
-            }
-        }
-        return count
-    }
-
-    private fun splitTwoCharWord(word: String): Pair<String, String>? {
-        val count = word.codePointCount(0, word.length)
-        if (count != 2) return null
-        val cp0 = word.codePointAt(0)
-        val char0 = String(Character.toChars(cp0))
-        val cp1 = word.codePointAt(char0.length)
-        val char1 = String(Character.toChars(cp1))
-        return Pair(char0, char1)
-    }
-
-    private suspend fun isWordInDictionary(word: String): Boolean {
-        if (dictionaryRepository != null) {
-            return dictionaryRepository.getVocabularyForChinese(word).isNotEmpty()
-        }
-        return vocabularyRepository.getVocabularyForChinese(word).isNotEmpty()
-    }
-
-    private suspend fun findMatchCompanions(
-        primaryWord: String,
-        targetPairCount: Int = 3,
-        candidates: List<Vocabulary>
-    ): List<Vocabulary> {
-        val primarySplit = splitTwoCharWord(primaryWord) ?: return emptyList()
-        val chosen = mutableListOf<Vocabulary>()
-        val chosenFirstChars = mutableSetOf(primarySplit.first)
-        val chosenSecondChars = mutableSetOf(primarySplit.second)
-
-        val shuffled = candidates.shuffled()
-
-        for (cand in shuffled) {
-            if (chosen.size >= targetPairCount - 1) break
-            val candSplit = splitTwoCharWord(cand.chinese) ?: continue
-            // Bijection guarantee: no duplicate 1st or 2nd character
-            if (candSplit.first in chosenFirstChars || candSplit.second in chosenSecondChars) continue
-
-            // CC-CEDICT anti-collision check: ensure cross-pairs do not form valid words
-            var hasCrossCollision = false
-            for (prevFirst in chosenFirstChars) {
-                if (isWordInDictionary(prevFirst + candSplit.second)) {
-                    hasCrossCollision = true
-                    break
-                }
-            }
-            if (hasCrossCollision) continue
-
-            for (prevSecond in chosenSecondChars) {
-                if (isWordInDictionary(candSplit.first + prevSecond)) {
-                    hasCrossCollision = true
-                    break
-                }
-            }
-            if (hasCrossCollision) continue
-
-            chosen.add(cand)
-            chosenFirstChars.add(candSplit.first)
-            chosenSecondChars.add(candSplit.second)
-        }
-
-        return if (chosen.size == targetPairCount - 1) chosen else emptyList()
-    }
-
-    private suspend fun generatePinyinDistractors(
-        correctPinyin: String,
-        hanzi: String,
-        box: Int,
-        studyChars: Set<String> = emptySet(),
-        targetOptionCount: Int = if (box >= 3) 6 else 4
-    ): List<String> {
-        val pinyins = PinyinParser.parse_string_to_pinyin(correctPinyin)
-        val firstPinyin = pinyins?.firstOrNull()
-        val targetRadical = (firstPinyin?.radical ?: correctPinyin.filter { !it.isDigit() }).lowercase()
-
-        val neededDistractorSyllables = (targetOptionCount - 1).coerceAtLeast(1)
-
-        fun extractSyllable(raw: String): String? {
-            val p = PinyinParser.parse_string_to_pinyin(raw)?.firstOrNull() ?: return null
-            val rad = p.radical.lowercase()
-            if (rad.isBlank() || rad == targetRadical) return null
-            return rad
-        }
-
-        // 1. Gather candidate distractor syllables from visually similar characters
-        val similarChars = (
-            vocabularyRepository.getSimilarCharacters(hanzi, limit = 20) +
-            (dictionaryRepository?.getSimilarCharacters(hanzi, limit = 20) ?: emptyList())
-        ).filter { it != hanzi }.distinct()
-
-        val knownSimilarChars = similarChars.filter { studyChars.contains(it) }
-        val unstudiedSimilarChars = similarChars.filter { !studyChars.contains(it) }
-
-        val maxSimilarSyllables = when {
-            box <= 1 -> (0..minOf(1, neededDistractorSyllables)).random() // Box 0-1: 0 or 1
-            box in 2..4 -> (1..minOf(2, neededDistractorSyllables)).random() // Box 2-4: 1 or 2
-            else -> (2..neededDistractorSyllables).random() // Box 5+: 2 to 3 from similar characters
-        }
-
-        val chosenDistractorSyllables = mutableSetOf<String>()
-
-        if (maxSimilarSyllables > 0) {
-            val charsToQuery = if (box >= 5) {
-                (knownSimilarChars.shuffled() + unstudiedSimilarChars.shuffled()).take(maxSimilarSyllables * 2)
-            } else {
-                knownSimilarChars.shuffled().take(maxSimilarSyllables * 2)
-            }
-
-            val pinyinsFromVoc = if (charsToQuery.isNotEmpty()) {
-                vocabularyRepository.getPinyinsForHanziList(charsToQuery)
-            } else emptyList()
-
-            val pinyinsFromDict = if (box >= 5 && charsToQuery.isNotEmpty() && dictionaryRepository != null) {
-                dictionaryRepository.getPinyinsForHanziList(charsToQuery)
-            } else emptyList()
-
-            for (p in (pinyinsFromVoc + pinyinsFromDict).shuffled()) {
-                if (chosenDistractorSyllables.size >= maxSimilarSyllables) break
-                val syll = extractSyllable(p) ?: continue
-                chosenDistractorSyllables.add(syll)
-            }
-        }
-
-        // 2. Backfill syllables from general study vocabulary if needed
-        if (chosenDistractorSyllables.size < neededDistractorSyllables) {
-            val studyPinyins = vocabularyRepository.getAllDistinctPinyins(100).shuffled()
-            for (p in studyPinyins) {
-                if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
-                val syll = extractSyllable(p) ?: continue
-                chosenDistractorSyllables.add(syll)
-            }
-        }
-
-        // 3. Backfill syllables from dictionary repository or default fallback list
-        if (chosenDistractorSyllables.size < neededDistractorSyllables && dictionaryRepository != null) {
-            val dictPinyins = dictionaryRepository.getAllDistinctPinyins(100).shuffled()
-            for (p in dictPinyins) {
-                if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
-                val syll = extractSyllable(p) ?: continue
-                chosenDistractorSyllables.add(syll)
-            }
-        }
-
-        if (chosenDistractorSyllables.size < neededDistractorSyllables) {
-            val fallbackPinyins = DEFAULT_FALLBACK_PINYIN_DISTRACTORS.shuffled()
-            for (p in fallbackPinyins) {
-                if (chosenDistractorSyllables.size >= neededDistractorSyllables) break
-                val syll = extractSyllable(p) ?: continue
-                chosenDistractorSyllables.add(syll)
-            }
-        }
-
-        val nonTargetOptions = (chosenDistractorSyllables - targetRadical).shuffled()
-        val finalOptions = (listOf(targetRadical) + nonTargetOptions.take(neededDistractorSyllables)).shuffled()
-        return finalOptions
-    }
-
-    private fun generateEnglishDistractors(
-        correct: String,
-        allStudyEnglish: Set<String> = emptySet(),
-        excludedMeanings: Collection<String> = emptyList()
-    ): List<String> {
-        val excludedLower = (excludedMeanings + correct).map { it.trim().lowercase() }.toSet()
-        val candidates = allStudyEnglish
-            .filter { it.isNotBlank() && it.trim().lowercase() !in excludedLower }
-            .toMutableList()
-
-        if (candidates.size < 3) {
-            val fallback = DEFAULT_FALLBACK_ENGLISH_DISTRACTORS.filter {
-                it.isNotBlank() &&
-                it.trim().lowercase() !in excludedLower &&
-                candidates.none { c -> c.equals(it, ignoreCase = true) }
-            }.shuffled()
-            candidates.addAll(fallback)
-        }
-
-        val distractors = candidates.shuffled().take(3).toMutableList()
-        distractors.add(correct)
-        return distractors.shuffled()
-    }
-
-    private suspend fun generateClozeDistractors(
-        correct: String,
-        missingCharBox: Int,
-        count: Int = 3,
-        studyChars: Set<String> = emptySet()
-    ): List<String> {
-        // Query precomputed visual similarities from char_similarity table
-        val similarFromCedict = vocabularyRepository.getSimilarCharacters(correct, limit = 20)
-            .filter { it != correct }
-
-        val knownSimilar = similarFromCedict.filter { it in studyChars }
-        val unstudiedSimilar = similarFromCedict.filter { it !in studyChars }
-        val otherStudyChars = studyChars.filter { it != correct && it !in knownSimilar }.shuffled()
-
-        // The count of similar characters we take should be somewhat random.
-        // For not well known characters (box 0-1), this could even be 0.
-        val numSimilarTarget = when {
-            missingCharBox <= 1 -> (0..minOf(count, if (missingCharBox == 0) 1 else 2)).random()
-            missingCharBox in 2..3 -> (1..minOf(count, 2)).random()
-            missingCharBox == 4 -> (1..minOf(count, 3)).random()
-            else -> (1..count).random()
-        }
-
-        val selectedDistractors = mutableListOf<String>()
-
-        if (missingCharBox >= 5) {
-            // Really well known (Box 5+):
-            // Suggest similar characters, including ones from CEDICT that are not being studied yet!
-            val similarPool = (knownSimilar.shuffled() + unstudiedSimilar.shuffled())
-            selectedDistractors.addAll(similarPool.take(numSimilarTarget))
-            if (selectedDistractors.size < count) {
-                selectedDistractors.addAll(otherStudyChars.take(count - selectedDistractors.size))
-            }
-            // If study list doesn't have enough characters to fill count, backfill with remaining unstudied similar characters
-            if (selectedDistractors.size < count) {
-                val remainingUnstudied = unstudiedSimilar.filter { it !in selectedDistractors }
-                selectedDistractors.addAll(remainingUnstudied.take(count - selectedDistractors.size))
-            }
-        } else {
-            // Lower / intermediate boxes (Box 0-4):
-            // Only suggest known characters from study list
-            selectedDistractors.addAll(knownSimilar.shuffled().take(numSimilarTarget))
-            if (selectedDistractors.size < count) {
-                selectedDistractors.addAll(otherStudyChars.take(count - selectedDistractors.size))
-            }
-        }
-
-        val finalTiles = selectedDistractors.take(count).toMutableList()
-        finalTiles.add(correct)
-        return finalTiles.shuffled()
-    }
-
-    private suspend fun generateCharDistractorsForWord(
-        wordSlots: List<String>,
-        wordBox: Int,
-        count: Int = 3,
-        studyChars: Set<String> = emptySet()
-    ): List<String> {
-        val existingChars = wordSlots.toSet()
-        val distinctChars = wordSlots.distinct().shuffled()
-        val selectedDistractors = mutableSetOf<String>()
-
-        // 1. Gather similar character distractors for the constituent characters of the word
-        // based on how well known each constituent character is (individual Leitner box, falling back to wordBox)
-        for (c in distinctChars) {
-            if (selectedDistractors.size >= count) break
-
-            val charBox = studyRepository.getLeitnerState(c)?.box ?: wordBox
-
-            val similarFromCedict = (
-                vocabularyRepository.getSimilarCharacters(c, limit = 20) +
-                (dictionaryRepository?.getSimilarCharacters(c, limit = 20) ?: emptyList())
-            ).filter { it !in existingChars && it !in selectedDistractors }.distinct()
-
-            val knownSimilar = similarFromCedict.filter { it in studyChars }
-            val unstudiedSimilar = similarFromCedict.filter { it !in studyChars }
-
-            val remainingSlots = count - selectedDistractors.size
-            val numToTakeForChar = when {
-                charBox <= 1 -> (0..minOf(1, remainingSlots)).random() // Box 0-1: 0 or 1 from known
-                charBox in 2..4 -> (1..minOf(2, remainingSlots)).random() // Box 2-4: 1 or 2 from known
-                else -> (1..minOf(3, remainingSlots)).random() // Box 5+: 1 to 3 from known or unstudied CEDICT
-            }
-
-            if (numToTakeForChar > 0) {
-                if (charBox >= 5) {
-                    val pool = (knownSimilar.shuffled() + unstudiedSimilar.shuffled())
-                    selectedDistractors.addAll(pool.take(numToTakeForChar))
-                } else {
-                    selectedDistractors.addAll(knownSimilar.shuffled().take(numToTakeForChar))
-                }
-            }
-        }
-
-        // 2. Backfill with other characters from the user's active study list
-        if (selectedDistractors.size < count) {
-            val otherStudyChars = studyChars.filter { it !in existingChars && it !in selectedDistractors }.shuffled()
-            selectedDistractors.addAll(otherStudyChars.take(count - selectedDistractors.size))
-        }
-
-        // 3. For well known words/characters (Box 5+), if study list doesn't have enough characters to fill count,
-        // backfill with remaining unstudied similar characters from CEDICT
-        val anyCharWellKnown = distinctChars.any { (studyRepository.getLeitnerState(it)?.box ?: wordBox) >= 5 }
-        if (selectedDistractors.size < count && anyCharWellKnown) {
-            val remainingUnstudied = distinctChars.flatMap { c ->
-                val b = studyRepository.getLeitnerState(c)?.box ?: wordBox
-                if (b >= 5) {
-                    (vocabularyRepository.getSimilarCharacters(c, limit = 20) +
-                     (dictionaryRepository?.getSimilarCharacters(c, limit = 20) ?: emptyList()))
-                        .filter { it !in studyChars && it !in existingChars && it !in selectedDistractors }
-                } else emptyList()
-            }.distinct().shuffled()
-            selectedDistractors.addAll(remainingUnstudied.take(count - selectedDistractors.size))
-        }
-
-        return selectedDistractors.take(count).toList().shuffled()
     }
 
     companion object {

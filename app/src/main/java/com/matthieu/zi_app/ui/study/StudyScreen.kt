@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.R
 import com.matthieu.zi_app.domain.srs.ReviewGrade
+import com.matthieu.zi_app.domain.study.quiz.QuizStrategyRegistry
 import com.matthieu.zi_app.domain.writing.HanziPoint
 import com.matthieu.zi_app.domain.writing.WritingScaffoldingLevel
 import com.matthieu.zi_app.PinyinParser
@@ -353,15 +354,8 @@ fun StudyScreenContent(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 // Contextual Quiz Prompt
-                                val promptText = when (card.quizType) {
-                                    QuizType.TONE -> if (!uiState.isAnswerRevealed) "Swipe or tap the correct tone" else ""
-                                    QuizType.ENGLISH -> "Select the English meaning"
-                                    QuizType.CLOZE -> "Fill in the missing character"
-                                    QuizType.WORD_ASSEMBLY -> "Assemble the compound word"
-                                    QuizType.PINYIN -> if (card.tone in 1..4) "Select Pinyin and tone" else "Select the correct Pinyin"
-                                    QuizType.WRITING -> if (card.wordSlots.isNotEmpty()) "Write the missing character" else "Write the character from memory"
-                                    QuizType.PAIR_MATCH -> "Match the characters to form words"
-                                }
+                                val promptText = QuizStrategyRegistry.getStrategy(card.quizType)
+                                    .getPromptText(card, uiState.isAnswerRevealed)
                                 if (promptText.isNotEmpty()) {
                                     Text(
                                         text = promptText,
