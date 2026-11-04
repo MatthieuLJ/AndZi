@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 class WordRecommendationEngine(
     private val dictionaryRepository: VocabularyRepository,
-    private val temperature: Double = 18.0
+    private val temperature: Double = 6.0
 ) {
 
     suspend fun recommendNextWord(
@@ -138,9 +138,26 @@ class WordRecommendationEngine(
 
     private suspend fun estimateTargetHskLevel(deckWords: Set<String>): Int {
         if (deckWords.isEmpty()) return 1
-        val sample = deckWords.take(100).toList()
+        val sample = deckWords.toList()
         val hskEntries = dictionaryRepository.getHskVocabForWords(sample)
         if (hskEntries.isEmpty()) return 1
+
+        val levelCounts = hskEntries
+            .filter { it.hskLevel in 1..7 }
+            .groupingBy { it.hskLevel }
+            .eachCount()
+
+        val hsk1Learned = levelCounts[1] ?: 0
+        if (hsk1Learned < 60) return 1
+
+        val hsk2Learned = levelCounts[2] ?: 0
+        if (hsk2Learned < 80) return 2
+
+        val hsk3Learned = levelCounts[3] ?: 0
+        if (hsk3Learned < 120) return 3
+
+        val hsk4Learned = levelCounts[4] ?: 0
+        if (hsk4Learned < 180) return 4
 
         val validLevels = hskEntries.map { it.hskLevel }.filter { it in 1..9 }
         if (validLevels.isEmpty()) return 1
@@ -174,7 +191,8 @@ class WordRecommendationEngine(
         val hskScore = computeHskScore(hskLevel, targetHskLevel)
         val freqScore = computeFreqScore(freqRank)
         val lenBonus = if (length == 2) 5.0 else 0.0
-        return 20.0 + hskScore + freqScore + lenBonus
+        val levelPenalty = if (hskLevel > targetHskLevel + 1) (hskLevel - targetHskLevel - 1) * 25.0 else 0.0
+        return max(0.0, 20.0 + hskScore + freqScore + lenBonus - levelPenalty)
     }
 
     private fun computeHskScore(hskLevel: Int, targetHskLevel: Int): Double {

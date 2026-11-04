@@ -1,6 +1,7 @@
 package com.matthieu.zi_app.ui.dictionary
 
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.ui.hsk.HskLevelProgress
 
 data class DictionaryUiState(
     val query: String = "",
@@ -16,5 +17,6 @@ data class DictionaryUiState(
     val errorMessage: String? = null,
     val suggestedWord: String? = null,
     val suggestionReason: String? = null,
-    val isAutoSuggested: Boolean = false
+    val isAutoSuggested: Boolean = false,
+    val hskLevelStats: Map<Int, HskLevelProgress> = emptyMap()
 )

@@ -201,7 +201,40 @@ fun MainAppScaffold(
                         wordRecommendationEngine = appContainer.wordRecommendationEngine
                     )
                 )
-                DictionaryScreen(viewModel = dictViewModel)
+                DictionaryScreen(
+                    viewModel = dictViewModel,
+                    onOpenHskBrowser = { level ->
+                        navController.navigate(Screen.HskBrowser.createRoute(level))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.HskBrowser.route,
+                arguments = listOf(
+                    navArgument("level") {
+                        type = NavType.IntType
+                        defaultValue = 1
+                    }
+                )
+            ) { backStackEntry ->
+                val level = backStackEntry.arguments?.getInt("level") ?: 1
+                val hskViewModel: com.matthieu.zi_app.ui.hsk.HskBrowserViewModel = viewModel(
+                    factory = com.matthieu.zi_app.ui.hsk.HskBrowserViewModel.provideFactory(
+                        dictionaryRepository = appContainer.dictionaryRepository,
+                        localVocabularyRepository = appContainer.vocabularyRepository,
+                        studyRepository = appContainer.studyRepository,
+                        initialLevel = level
+                    )
+                )
+                com.matthieu.zi_app.ui.hsk.HskBrowserScreen(
+                    viewModel = hskViewModel,
+                    onNavigateBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Dictionary.route)
+                        }
+                    }
+                )
             }
 
             composable(Screen.Study.route) {

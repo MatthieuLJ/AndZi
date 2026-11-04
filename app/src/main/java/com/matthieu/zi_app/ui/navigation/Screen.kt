@@ -59,6 +59,15 @@ sealed class Screen(
         fun createRoute(tab: String = "words") = "vocabulary?tab=$tab"
     }
 
+    data object HskBrowser : Screen(
+        route = "hsk_browser?level={level}",
+        title = "HSK Vocabulary",
+        selectedIcon = Icons.Filled.School,
+        unselectedIcon = Icons.Outlined.School
+    ) {
+        fun createRoute(level: Int = 1) = "hsk_browser?level=$level"
+    }
+
     companion object {
         val bottomNavItems: List<Screen>
             get() = listOf(Home, Dictionary)

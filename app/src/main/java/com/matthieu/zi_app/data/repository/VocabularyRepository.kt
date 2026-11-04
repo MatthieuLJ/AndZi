@@ -347,6 +347,14 @@ class VocabularyRepository(
         vocabularyDao.getHskVocabForWord(hanzi)
     }
 
+    suspend fun getHskLevelCounts(): Map<Int, Int> = withContext(Dispatchers.IO) {
+        vocabularyDao.getHskLevelCounts().associate { it.hskLevel to it.count }
+    }
+
+    suspend fun getVocabularyForHskLevel(level: Int): List<Vocabulary> = withContext(Dispatchers.IO) {
+        vocabularyDao.getWordsWithDetailsForHskLevel(level).map { toVocabulary(it) }
+    }
+
     suspend fun insertHskVocab(entities: List<HskVocabEntity>) = withContext(Dispatchers.IO) {
         vocabularyDao.insertHskVocab(entities)
     }

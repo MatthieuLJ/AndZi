@@ -12,6 +12,7 @@ import com.matthieu.zi_app.data.local.entity.ChineseWordEntity
 import com.matthieu.zi_app.data.local.entity.EnglishTranslationEntity
 import com.matthieu.zi_app.data.local.entity.HskVocabEntity
 import com.matthieu.zi_app.data.local.entity.WordSegmentEntity
+import com.matthieu.zi_app.data.local.model.HskLevelCount
 import com.matthieu.zi_app.data.local.model.WordWithDetails
 import kotlinx.coroutines.flow.Flow
 
@@ -252,6 +253,24 @@ interface VocabularyDao {
 
     @Query("SELECT * FROM hsk_vocab WHERE hanzi = :hanzi LIMIT 1")
     suspend fun getHskVocabForWord(hanzi: String): HskVocabEntity?
+
+    @Query("""
+        SELECT hsk_level, COUNT(*) as count
+        FROM hsk_vocab
+        WHERE hsk_level BETWEEN 1 AND 7
+        GROUP BY hsk_level
+        ORDER BY hsk_level ASC
+    """)
+    suspend fun getHskLevelCounts(): List<HskLevelCount>
+
+    @Transaction
+    @Query("""
+        SELECT c.* FROM cword c
+        INNER JOIN hsk_vocab h ON h.hanzi = c.chinese
+        WHERE h.hsk_level = :level
+        ORDER BY h.freq_rank ASC, c.length ASC, c.cword_id ASC
+    """)
+    suspend fun getWordsWithDetailsForHskLevel(level: Int): List<WordWithDetails>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHskVocab(entities: List<HskVocabEntity>)

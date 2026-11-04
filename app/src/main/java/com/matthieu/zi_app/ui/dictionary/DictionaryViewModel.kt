@@ -34,6 +34,35 @@ class DictionaryViewModel(
 
     init {
         loadInitialSuggestion()
+        loadHskStats()
+    }
+
+    fun loadHskStats() {
+        viewModelScope.launch {
+            try {
+                val totalCounts = dictionaryRepository.getHskLevelCounts()
+                val studyRecords = studyRepository.getAllRecords()
+                val studiedHanzi = studyRecords.map { it.hanzi }.distinct()
+                val hskEntities = dictionaryRepository.getHskVocabForWords(studiedHanzi)
+
+                val studiedPerLevel = mutableMapOf<Int, MutableSet<String>>()
+                for (entity in hskEntities) {
+                    if (entity.hskLevel in 1..7) {
+                        studiedPerLevel.getOrPut(entity.hskLevel) { mutableSetOf() }.add(entity.hanzi)
+                    }
+                }
+
+                val stats = (1..7).associateWith { lvl ->
+                    val total = totalCounts[lvl] ?: 0
+                    val studied = studiedPerLevel[lvl]?.size ?: 0
+                    com.matthieu.zi_app.ui.hsk.HskLevelProgress(level = lvl, totalWords = total, studiedWords = studied)
+                }
+
+                _uiState.update { it.copy(hskLevelStats = stats) }
+            } catch (e: Exception) {
+                // Ignore stats load failure
+            }
+        }
     }
 
     fun loadInitialSuggestion() {
@@ -364,6 +393,7 @@ class DictionaryViewModel(
                     )
                 }
             }
+            loadHskStats()
         }
     }
 
