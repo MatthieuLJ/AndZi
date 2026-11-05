@@ -13,6 +13,7 @@ interface AppContainer {
     val studyRepository: StudyRepository
     val progressRepository: ProgressRepository
     val databaseBackupRepository: com.matthieu.zi_app.data.repository.DatabaseBackupRepository
+    val podcastRepository: com.matthieu.zi_app.data.repository.PodcastRepository
     val userPreferences: com.matthieu.zi_app.data.preferences.UserPreferences
     val leitnerDao: com.matthieu.zi_app.data.local.dao.LeitnerDao
     val wordRecommendationEngine: com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine
@@ -22,6 +23,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     private val andZiDb by lazy { AndZiDatabase.getInstance(context) }
     private val cedictDb by lazy { AndZiDatabase.getDictionaryInstance(context) }
     private val progressDb by lazy { ProgressDatabase.getInstance(context) }
+    private val podcastDb by lazy { com.matthieu.zi_app.data.local.PodcastDatabase.getInstance(context) }
 
     override val leitnerDao: com.matthieu.zi_app.data.local.dao.LeitnerDao by lazy {
         andZiDb.leitnerDao()
@@ -45,6 +47,14 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
 
     override val progressRepository: ProgressRepository by lazy {
         ProgressRepository(progressDb.progressDao(), andZiDb.leitnerDao())
+    }
+
+    override val podcastRepository: com.matthieu.zi_app.data.repository.PodcastRepository by lazy {
+        com.matthieu.zi_app.data.repository.PodcastRepository(
+            podcastDao = podcastDb.podcastDao(),
+            context = context,
+            dictionaryDao = cedictDb.vocabularyDao()
+        )
     }
 
     override val databaseBackupRepository: com.matthieu.zi_app.data.repository.DatabaseBackupRepository by lazy {

@@ -1,0 +1,179 @@
+package com.matthieu.zi_app.data.podcast
+
+import android.util.Xml
+import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
+import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.regex.Pattern
+
+object PodcastRssParser {
+
+    private val rfc822DateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH)
+    private val htmlTagPattern = Pattern.compile("<[^>]+>")
+
+    fun parseRss(inputStream: InputStream, defaultChannelId: Int = 1): List<PodcastEpisodeEntity> {
+        val episodes = mutableListOf<PodcastEpisodeEntity>()
+
+        val parser: XmlPullParser = try {
+            Xml.newPullParser()
+        } catch (e: Exception) {
+            XmlPullParserFactory.newInstance().newPullParser()
+        }
+
+        parser.setInput(inputStream, "UTF-8")
+
+        var eventType = parser.eventType
+        var inItem = false
+
+        var title: String? = null
+        var audioUrl: String? = null
+        var durationMs = 0
+        var pubDate: Long = 0
+        var description: String? = null
+        var itunesSummary: String? = null
+
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            val tagName = parser.name
+
+            when (eventType) {
+                XmlPullParser.START_TAG -> {
+                    if (tagName.equals("item", ignoreCase = true)) {
+                        inItem = true
+                        title = null
+                        audioUrl = null
+                        durationMs = 0
+                        pubDate = 0
+                        description = null
+                        itunesSummary = null
+                    } else if (inItem) {
+                        when (tagName.lowercase()) {
+                            "title" -> title = safeNextText(parser)
+                            "enclosure" -> {
+                                val url = parser.getAttributeValue(null, "url")
+                                if (url != null) {
+                                    audioUrl = when {
+                                        url.startsWith("//") -> "https:$url"
+                                        url.startsWith("http://archive.org") -> url.replaceFirst("http://", "https://")
+                                        else -> url
+                                    }
+                                }
+                            }
+                            "duration", "itunes:duration" -> {
+                                val durStr = safeNextText(parser)
+                                durationMs = parseDurationToMs(durStr)
+                            }
+                            "pubdate" -> {
+                                val dateStr = safeNextText(parser)
+                                pubDate = parsePubDate(dateStr)
+                            }
+                            "summary", "itunes:summary" -> itunesSummary = safeNextText(parser)
+                            "description" -> description = safeNextText(parser)
+                        }
+                    }
+                }
+                XmlPullParser.END_TAG -> {
+                    if (tagName.equals("item", ignoreCase = true)) {
+                        inItem = false
+                        val finalTitle = title ?: "Untitled Episode"
+                        val finalAudioUrl = audioUrl ?: ""
+
+                        // Determine channel: if title contains "中文天天读", map to channel 2, else defaultChannelId
+                        val channelId = if (finalTitle.contains("中文天天读")) 2 else defaultChannelId
+
+                        // Extract episode number from title
+                        val episodeNum = extractEpisodeNum(finalTitle)
+
+                        // Clean transcript (prefer itunes:summary which contains the Chinese text)
+                        val rawText = if (!itunesSummary.isNullOrBlank()) itunesSummary else description ?: ""
+                        val cleanTranscript = cleanTranscript(rawText)
+
+                        episodes.add(
+                            PodcastEpisodeEntity(
+                                episodeId = 0, // autoGenerate by Room
+                                channelId = channelId,
+                                episodeNum = episodeNum,
+                                title = finalTitle,
+                                audioUrl = finalAudioUrl,
+                                durationMs = durationMs,
+                                transcript = cleanTranscript,
+                                pubDate = pubDate,
+                                playbackPositionMs = 0,
+                                isCompleted = false,
+                                downloadedPath = null
+                            )
+                        )
+                    }
+                }
+            }
+            eventType = parser.next()
+        }
+
+        return episodes
+    }
+
+    private fun extractEpisodeNum(title: String): Int {
+        val matcher = Pattern.compile("(\\d+)").matcher(title)
+        return if (matcher.find()) {
+            matcher.group(1)?.toIntOrNull() ?: 0
+        } else 0
+    }
+
+    private fun parseDurationToMs(durationStr: String?): Int {
+        if (durationStr.isNullOrBlank()) return 0
+        return try {
+            val parts = durationStr.trim().split(":")
+            when (parts.size) {
+                3 -> {
+                    val h = parts[0].toDoubleOrNull() ?: 0.0
+                    val m = parts[1].toDoubleOrNull() ?: 0.0
+                    val s = parts[2].toDoubleOrNull() ?: 0.0
+                    ((h * 3600 + m * 60 + s) * 1000).toInt()
+                }
+                2 -> {
+                    val m = parts[0].toDoubleOrNull() ?: 0.0
+                    val s = parts[1].toDoubleOrNull() ?: 0.0
+                    ((m * 60 + s) * 1000).toInt()
+                }
+                else -> {
+                    val s = durationStr.toDoubleOrNull() ?: 0.0
+                    (s * 1000).toInt()
+                }
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    private fun parsePubDate(dateStr: String?): Long {
+        if (dateStr.isNullOrBlank()) return 0
+        return try {
+            rfc822DateFormat.parse(dateStr.trim())?.time ?: 0
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    private fun cleanTranscript(rawHtml: String): String {
+        var text = htmlTagPattern.matcher(rawHtml).replaceAll("")
+        text = text.replace("&nbsp;", " ")
+            .replace("&amp;", "&")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&apos;", "'")
+            .replace("&quot;", "\"")
+        val lines = text.split("\n").map { it.trim() }.filter { it.isNotBlank() }
+        return lines.joinToString("\n\n")
+    }
+
+    private fun safeNextText(parser: XmlPullParser): String {
+        return try {
+            parser.nextText()
+        } catch (e: Exception) {
+            ""
+        }
+    }
+}
+

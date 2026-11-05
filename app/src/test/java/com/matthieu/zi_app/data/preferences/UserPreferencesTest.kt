@@ -31,6 +31,15 @@ class UserPreferencesTest {
     }
 
     @Test
+    fun testAudioStoriesEnabledToggle() {
+        assertFalse(userPreferences.audioStoriesEnabled.value)
+        userPreferences.setAudioStoriesEnabled(true)
+        assertTrue(userPreferences.audioStoriesEnabled.value)
+        userPreferences.setAudioStoriesEnabled(false)
+        assertFalse(userPreferences.audioStoriesEnabled.value)
+    }
+
+    @Test
     fun testInitialStreakState() {
         assertTrue(userPreferences.hasNoRecordedStudy())
         assertEquals(0, userPreferences.getStreakDays())

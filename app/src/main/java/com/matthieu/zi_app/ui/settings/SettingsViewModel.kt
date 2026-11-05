@@ -31,6 +31,7 @@ class SettingsViewModel(
             coloredPinyin = userPreferences.coloredPinyin.value,
             notificationsEnabled = userPreferences.notificationEnabled.value,
             writingQuizEnabled = userPreferences.writingQuizEnabled.value,
+            audioStoriesEnabled = userPreferences.audioStoriesEnabled.value,
             appVersion = getAppVersion(context)
         )
     )
@@ -57,6 +58,11 @@ class SettingsViewModel(
                 _uiState.update { it.copy(writingQuizEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            userPreferences.audioStoriesEnabled.collect { enabled ->
+                _uiState.update { it.copy(audioStoriesEnabled = enabled) }
+            }
+        }
     }
 
     fun setThemeMode(mode: AppThemeMode) {
@@ -79,6 +85,10 @@ class SettingsViewModel(
 
     fun setWritingQuizEnabled(enabled: Boolean) {
         userPreferences.setWritingQuizEnabled(enabled)
+    }
+
+    fun setAudioStoriesEnabled(enabled: Boolean) {
+        userPreferences.setAudioStoriesEnabled(enabled)
     }
 
     fun showFeedbackMessage(message: String) {

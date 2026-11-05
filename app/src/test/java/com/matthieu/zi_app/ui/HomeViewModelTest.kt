@@ -1,6 +1,7 @@
 package com.matthieu.zi_app.ui
 
 import android.content.Context
+import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.AndZiDatabase
@@ -11,9 +12,11 @@ import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.ui.home.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -30,15 +33,17 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class HomeViewModelTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private lateinit var testDispatcher: TestDispatcher
     private lateinit var andZiDb: AndZiDatabase
     private lateinit var progressDb: ProgressDatabase
     private lateinit var vocRepo: VocabularyRepository
     private lateinit var studyRepo: StudyRepository
     private lateinit var progressRepo: ProgressRepository
+    private var viewModel: HomeViewModel? = null
 
     @Before
     fun setup() {
+        testDispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(testDispatcher)
         val context = ApplicationProvider.getApplicationContext<Context>()
         andZiDb = AndZiDatabase.createInMemory(context)
@@ -51,6 +56,8 @@ class HomeViewModelTest {
 
     @After
     fun teardown() {
+        viewModel?.viewModelScope?.cancel()
+        viewModel = null
         Dispatchers.resetMain()
         andZiDb.close()
         progressDb.close()
@@ -67,10 +74,11 @@ class HomeViewModelTest {
         studyRepo.recordReviewResult("你", isCorrect = true, now = 1000L)
         studyRepo.recordReviewResult("好", isCorrect = true, now = 1000L)
 
-        val viewModel = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
+        val vm = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
+        viewModel = vm
 
         val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading }.first()
         }
 
         assertNotNull(state)
@@ -89,9 +97,10 @@ class HomeViewModelTest {
         // Review "你" to Box 1, leave "好" unreviewed (Box 0)
         studyRepo.recordReviewResult("你", isCorrect = true, now = 1000L)
 
-        val viewModel = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
+        val vm = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
+        viewModel = vm
         var state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading }.first()
         }
 
         assertEquals(2, state.totalLearned)
@@ -100,10 +109,10 @@ class HomeViewModelTest {
 
         // Reset all study scores -> everything falls back to Box 0
         studyRepo.resetAllScores()
-        viewModel.loadDashboardData()
+        vm.loadDashboardData()
 
         state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading && (it.boxDistribution[0] ?: 0) == 2 }.first()
         }
 
         assertEquals(2, state.totalLearned)
@@ -113,10 +122,11 @@ class HomeViewModelTest {
 
     @Test
     fun testHomeViewModelLoadsEmptyDashboardWhenNoData() = runBlocking {
-        val viewModel = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
+        val vm = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
+        viewModel = vm
 
         val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading }.first()
         }
 
         assertNotNull(state)
@@ -136,10 +146,11 @@ class HomeViewModelTest {
         prefs.recordStudySession(now - 86400000L) // Yesterday
         prefs.recordStudySession(now) // Today -> streak 2
 
-        val viewModel = HomeViewModel(studyRepo, progressRepo, prefs, dispatcher = testDispatcher)
+        val vm = HomeViewModel(studyRepo, progressRepo, prefs, dispatcher = testDispatcher)
+        viewModel = vm
 
         val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading }.first()
         }
 
         assertEquals(2, state.streakDays)
@@ -155,23 +166,24 @@ class HomeViewModelTest {
             studyRepo.recordReviewResult("字", isCorrect = true, now = now)
         }
 
-        val viewModel = HomeViewModel(
+        val vm = HomeViewModel(
             studyRepository = studyRepo,
             progressRepository = progressRepo,
             leitnerDao = andZiDb.leitnerDao(),
             vocabularyRepository = vocRepo,
             dispatcher = testDispatcher
         )
+        viewModel = vm
 
         // Phase 1: Fast data loaded
         val quickState = withTimeout(3000) {
-            viewModel.uiState.filter { it.isQuickDataLoaded }.first()
+            vm.uiState.filter { it.isQuickDataLoaded }.first()
         }
         assertEquals(1, quickState.totalLearned)
 
         // Phase 2: Analytics data loaded
         val state = withTimeout(3000) {
-            viewModel.uiState.filter { !it.isAnalyticsLoading }.first()
+            vm.uiState.filter { !it.isAnalyticsLoading }.first()
         }
         assertEquals(1, state.wordsKnown)
         assertEquals(1, state.totalWords)
@@ -180,11 +192,11 @@ class HomeViewModelTest {
         assertEquals(100f, state.overallAccuracy)
         assertEquals(5, state.totalReviewsCount)
 
-        // Select 7D range
-        viewModel.selectTimeRange(com.matthieu.zi_app.ui.home.TimeRange.DAYS_7)
+        // Select 30D range
+        vm.selectTimeRange(com.matthieu.zi_app.ui.home.TimeRange.DAYS_30)
         val rangeState = withTimeout(3000) {
-            viewModel.uiState.filter { it.selectedTimeRange == com.matthieu.zi_app.ui.home.TimeRange.DAYS_7 }.first()
+            vm.uiState.filter { it.selectedTimeRange == com.matthieu.zi_app.ui.home.TimeRange.DAYS_30 }.first()
         }
-        assertEquals(com.matthieu.zi_app.ui.home.TimeRange.DAYS_7, rangeState.selectedTimeRange)
+        assertEquals(com.matthieu.zi_app.ui.home.TimeRange.DAYS_30, rangeState.selectedTimeRange)
     }
 }

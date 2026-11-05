@@ -13,6 +13,7 @@ data class SettingsUiState(
     val coloredPinyin: Boolean = true,
     val notificationsEnabled: Boolean = true,
     val writingQuizEnabled: Boolean = true,
+    val audioStoriesEnabled: Boolean = false,
     val appVersion: String = "1.0",
     val showResetConfirmation: Boolean = false,
     val showClearConfirmation: Boolean = false,

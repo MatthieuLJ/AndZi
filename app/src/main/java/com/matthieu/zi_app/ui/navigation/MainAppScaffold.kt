@@ -15,8 +15,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -30,6 +33,11 @@ import com.matthieu.zi_app.AndZiApplication
 import com.matthieu.zi_app.ui.dictionary.DictionaryScreen
 import com.matthieu.zi_app.ui.home.HomeScreen
 import com.matthieu.zi_app.ui.home.HomeViewModel
+import com.matthieu.zi_app.ui.podcast.catalog.PodcastCatalogScreen
+import com.matthieu.zi_app.ui.podcast.catalog.PodcastCatalogViewModel
+import com.matthieu.zi_app.ui.podcast.player.PodcastAudioPlayer
+import com.matthieu.zi_app.ui.podcast.player.PodcastPlayerScreen
+import com.matthieu.zi_app.ui.podcast.player.PodcastPlayerViewModel
 import com.matthieu.zi_app.ui.settings.SettingsScreen
 import com.matthieu.zi_app.ui.study.StudyScreen
 import kotlinx.coroutines.flow.filterNotNull
@@ -57,11 +65,20 @@ fun MainAppScaffold(
         }
     }
 
-    val isBottomBarVisible = currentRoute in Screen.bottomNavItems.map { it.route }
-
     val context = LocalContext.current
     val app = context.applicationContext as AndZiApplication
     val appContainer = app.appContainer
+
+    val audioStoriesEnabled by appContainer.userPreferences.audioStoriesEnabled.collectAsStateWithLifecycle()
+    val bottomNavItems = remember(audioStoriesEnabled) {
+        if (audioStoriesEnabled) {
+            listOf(Screen.Home, Screen.Dictionary, Screen.PodcastCatalog)
+        } else {
+            listOf(Screen.Home, Screen.Dictionary)
+        }
+    }
+
+    val isBottomBarVisible = currentRoute in bottomNavItems.map { it.route }
 
     Scaffold(
         bottomBar = {
@@ -74,7 +91,7 @@ fun MainAppScaffold(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
-                    Screen.bottomNavItems.forEach { screen ->
+                    bottomNavItems.forEach { screen ->
                         val isSelected = currentRoute == screen.route
                         NavigationBarItem(
                             selected = isSelected,
@@ -293,6 +310,42 @@ fun MainAppScaffold(
                             }
                         }
                     }
+                )
+            }
+
+            composable(Screen.PodcastCatalog.route) {
+                val catalogViewModel: PodcastCatalogViewModel = viewModel(
+                    factory = PodcastCatalogViewModel.provideFactory(appContainer.podcastRepository)
+                )
+                PodcastCatalogScreen(
+                    viewModel = catalogViewModel,
+                    onEpisodeClick = { episodeId ->
+                        navController.navigate(Screen.PodcastPlayer.createRoute(episodeId))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.PodcastPlayer.route,
+                arguments = listOf(navArgument("episodeId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val epId = backStackEntry.arguments?.getInt("episodeId") ?: 1
+                val coroutineScope = rememberCoroutineScope()
+                val audioPlayer = remember(epId) { PodcastAudioPlayer(context, coroutineScope) }
+                val playerViewModel: PodcastPlayerViewModel = viewModel(
+                    key = "podcast_player_$epId",
+                    factory = PodcastPlayerViewModel.provideFactory(
+                        episodeId = epId,
+                        podcastRepository = appContainer.podcastRepository,
+                        localVocabularyRepository = appContainer.vocabularyRepository,
+                        dictionaryRepository = appContainer.dictionaryRepository,
+                        studyRepository = appContainer.studyRepository,
+                        audioPlayer = audioPlayer
+                    )
+                )
+                PodcastPlayerScreen(
+                    viewModel = playerViewModel,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }

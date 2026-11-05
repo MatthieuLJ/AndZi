@@ -638,8 +638,24 @@ class StudyViewModelTest {
             )
         }
 
+        // Set constituent single characters to future expiry so only the 5 test words are tested
+        val allChars = vocRepo.getAllDistinctHanzi()
+        for (c in allChars) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = c,
+                    box = 5,
+                    expTime = now + 999999L,
+                    numTested = 1,
+                    numWrong = 0,
+                    streak = 1,
+                    dateAdded = now
+                )
+            )
+        }
+
         val viewModel = StudyViewModel(studyRepo, vocRepo)
-        val presentedCards = collectPresentedCards(viewModel, maxSteps = 15)
+        val presentedCards = collectPresentedCards(viewModel, maxSteps = 25)
 
         val englishCards = presentedCards.filter { it.quizType == QuizType.ENGLISH }
         assertTrue("Should have at least one English MCQ card", englishCards.isNotEmpty())

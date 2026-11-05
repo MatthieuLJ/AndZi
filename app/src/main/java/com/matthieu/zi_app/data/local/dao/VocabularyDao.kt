@@ -57,6 +57,9 @@ interface VocabularyDao {
     @Query("SELECT * FROM cword WHERE chinese = :chinese")
     suspend fun getWordsForChinese(chinese: String): List<ChineseWordEntity>
 
+    @Query("SELECT * FROM cword WHERE chinese IN (:words)")
+    suspend fun getWordsForChineseList(words: List<String>): List<ChineseWordEntity>
+
     @Query("SELECT * FROM cword WHERE pinyin = :pinyin")
     suspend fun getWordsForPinyin(pinyin: String): List<ChineseWordEntity>
 
@@ -94,6 +97,9 @@ interface VocabularyDao {
     // --- English Translations ---
     @Query("SELECT * FROM eword WHERE cword_id = :cwordId")
     suspend fun getTranslationsForWord(cwordId: Long): List<EnglishTranslationEntity>
+
+    @Query("SELECT * FROM eword WHERE cword_id IN (:wordIds)")
+    suspend fun getTranslationsForWordIds(wordIds: List<Long>): List<EnglishTranslationEntity>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTranslation(entity: EnglishTranslationEntity): Long

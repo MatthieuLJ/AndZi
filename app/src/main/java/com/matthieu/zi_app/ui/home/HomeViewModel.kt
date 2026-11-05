@@ -44,7 +44,7 @@ class HomeViewModel(
     fun selectTimeRange(timeRange: TimeRange) {
         _uiState.update { it.copy(selectedTimeRange = timeRange) }
         chartJob?.cancel()
-        chartJob = viewModelScope.launch {
+        chartJob = viewModelScope.launch(dispatcher) {
             try {
                 val filtered = withContext(dispatcher) {
                     val now = System.currentTimeMillis()
@@ -63,7 +63,7 @@ class HomeViewModel(
     }
 
     fun loadDashboardData() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             _uiState.update { it.copy(isLoading = true, isAnalyticsLoading = true) }
             try {
                 val now = System.currentTimeMillis()
@@ -118,7 +118,7 @@ class HomeViewModel(
         now: Long
     ) {
         analyticsJob?.cancel()
-        analyticsJob = viewModelScope.launch {
+        analyticsJob = viewModelScope.launch(dispatcher) {
             try {
                 val analyticsData = withContext(dispatcher) {
                     val allRecords: List<LeitnerRecordEntity> = leitnerDao?.getAllStudyRecords()
@@ -327,6 +327,12 @@ class HomeViewModel(
             return listOf(records.last())
         }
         return filtered
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        analyticsJob?.cancel()
+        chartJob?.cancel()
     }
 
     companion object {

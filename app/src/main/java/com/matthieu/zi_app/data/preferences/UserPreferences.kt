@@ -27,6 +27,9 @@ class UserPreferences(context: Context) {
     private val _writingQuizEnabled = MutableStateFlow(prefs.getBoolean(KEY_WRITING_QUIZ_ENABLED, true))
     val writingQuizEnabled: StateFlow<Boolean> = _writingQuizEnabled.asStateFlow()
 
+    private val _audioStoriesEnabled = MutableStateFlow(prefs.getBoolean(KEY_AUDIO_STORIES_ENABLED, false))
+    val audioStoriesEnabled: StateFlow<Boolean> = _audioStoriesEnabled.asStateFlow()
+
     private val _streakDays = MutableStateFlow(getStreakDays())
     val streakDays: StateFlow<Int> = _streakDays.asStateFlow()
 
@@ -48,6 +51,11 @@ class UserPreferences(context: Context) {
     fun setWritingQuizEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_WRITING_QUIZ_ENABLED, enabled).apply()
         _writingQuizEnabled.value = enabled
+    }
+
+    fun setAudioStoriesEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUDIO_STORIES_ENABLED, enabled).apply()
+        _audioStoriesEnabled.value = enabled
     }
 
     fun hasNoRecordedStudy(): Boolean = !prefs.contains(KEY_LAST_STUDY_DATE)
@@ -132,6 +140,7 @@ class UserPreferences(context: Context) {
         const val KEY_COLOR_PINYIN = "color_pinyin"
         const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
         const val KEY_WRITING_QUIZ_ENABLED = "writing_quiz_enabled"
+        const val KEY_AUDIO_STORIES_ENABLED = "audio_stories_enabled"
         const val KEY_STREAK_DAYS = "streak_days"
         const val KEY_LAST_STUDY_DATE = "last_study_date"
     }

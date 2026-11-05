@@ -3,9 +3,11 @@ package com.matthieu.zi_app.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.outlined.AutoGraph
 import androidx.compose.material.icons.outlined.Book
+import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -66,6 +68,22 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.School
     ) {
         fun createRoute(level: Int = 1) = "hsk_browser?level=$level"
+    }
+
+    data object PodcastCatalog : Screen(
+        route = "podcast_catalog",
+        title = "Stories",
+        selectedIcon = Icons.Filled.Headphones,
+        unselectedIcon = Icons.Outlined.Headphones
+    )
+
+    data object PodcastPlayer : Screen(
+        route = "podcast_player/{episodeId}",
+        title = "Story Player",
+        selectedIcon = Icons.Filled.Headphones,
+        unselectedIcon = Icons.Outlined.Headphones
+    ) {
+        fun createRoute(episodeId: Int) = "podcast_player/$episodeId"
     }
 
     companion object {
