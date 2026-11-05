@@ -1,0 +1,1634 @@
+{
+  "1": {
+    "title": "1 - 端午节",
+    "total_dur_s": 276.85,
+    "intro_offset_ms": 28200,
+    "outro_offset_ms": 42320,
+    "story_start_s": 28.2,
+    "story_end_s": 234.53
+  },
+  "2": {
+    "title": "2 - 今天，你Q了吗？",
+    "total_dur_s": 215.85,
+    "intro_offset_ms": 29600,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.6,
+    "story_end_s": 205.85
+  },
+  "3": {
+    "title": "3 - 在饭店吃饭",
+    "total_dur_s": 254.67,
+    "intro_offset_ms": 27740,
+    "outro_offset_ms": 43860,
+    "story_start_s": 27.74,
+    "story_end_s": 210.81
+  },
+  "4": {
+    "title": "4 - 中国人准时吗？",
+    "total_dur_s": 250.64,
+    "intro_offset_ms": 28200,
+    "outro_offset_ms": 43680,
+    "story_start_s": 28.2,
+    "story_end_s": 206.96
+  },
+  "5": {
+    "title": "5 - 数字手势",
+    "total_dur_s": 248.27,
+    "intro_offset_ms": 27780,
+    "outro_offset_ms": 47100,
+    "story_start_s": 27.78,
+    "story_end_s": 201.17
+  },
+  "6": {
+    "title": "6 - 国庆节",
+    "total_dur_s": 351.16,
+    "intro_offset_ms": 27260,
+    "outro_offset_ms": 10000,
+    "story_start_s": 27.26,
+    "story_end_s": 341.16
+  },
+  "7": {
+    "title": "7 - “死”的用法",
+    "total_dur_s": 213.5,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 40660,
+    "story_start_s": 25.0,
+    "story_end_s": 172.84
+  },
+  "8": {
+    "title": "8 - 普通话的意义",
+    "total_dur_s": 212.69,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 41440,
+    "story_start_s": 25.0,
+    "story_end_s": 171.25
+  },
+  "9": {
+    "title": "9 - 王府井",
+    "total_dur_s": 287.84,
+    "intro_offset_ms": 29320,
+    "outro_offset_ms": 42380,
+    "story_start_s": 29.32,
+    "story_end_s": 245.46
+  },
+  "10": {
+    "title": "10 - 中国人喝什么？",
+    "total_dur_s": 220.71,
+    "intro_offset_ms": 27740,
+    "outro_offset_ms": 43640,
+    "story_start_s": 27.74,
+    "story_end_s": 177.07
+  },
+  "11": {
+    "title": "11 - 中文输入法",
+    "total_dur_s": 345.21,
+    "intro_offset_ms": 28920,
+    "outro_offset_ms": 43320,
+    "story_start_s": 28.92,
+    "story_end_s": 301.89
+  },
+  "12": {
+    "title": "12 - 宅",
+    "total_dur_s": 297.95,
+    "intro_offset_ms": 27240,
+    "outro_offset_ms": 44240,
+    "story_start_s": 27.24,
+    "story_end_s": 253.71
+  },
+  "13": {
+    "title": "13 - 春秋乐队",
+    "total_dur_s": 468.92,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 458.92
+  },
+  "14": {
+    "title": "14 - 杭州西湖",
+    "total_dur_s": 454.58,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 46900,
+    "story_start_s": 25.0,
+    "story_end_s": 407.68
+  },
+  "15": {
+    "title": "15 - 学习雷锋好榜样",
+    "total_dur_s": 333.27,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 44220,
+    "story_start_s": 25.0,
+    "story_end_s": 289.05
+  },
+  "16": {
+    "title": "16 - 说曹操，曹操到",
+    "total_dur_s": 189.15,
+    "intro_offset_ms": 27740,
+    "outro_offset_ms": 41780,
+    "story_start_s": 27.74,
+    "story_end_s": 147.37
+  },
+  "17": {
+    "title": "17 - 盘古开天辟地",
+    "total_dur_s": 221.96,
+    "intro_offset_ms": 27920,
+    "outro_offset_ms": 43680,
+    "story_start_s": 27.92,
+    "story_end_s": 178.28
+  },
+  "18": {
+    "title": "18 - 七夕——东方的情人节",
+    "total_dur_s": 568.27,
+    "intro_offset_ms": 30920,
+    "outro_offset_ms": 40880,
+    "story_start_s": 30.92,
+    "story_end_s": 527.39
+  },
+  "19": {
+    "title": "19 - 很囧的“囧”字",
+    "total_dur_s": 258.82,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 45080,
+    "story_start_s": 25.0,
+    "story_end_s": 213.74
+  },
+  "20": {
+    "title": "20 - 数字“九”的魔力",
+    "total_dur_s": 249.13,
+    "intro_offset_ms": 29660,
+    "outro_offset_ms": 41780,
+    "story_start_s": 29.66,
+    "story_end_s": 207.35
+  },
+  "21": {
+    "title": "21 - 中秋节",
+    "total_dur_s": 298.27,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 40540,
+    "story_start_s": 25.0,
+    "story_end_s": 257.73
+  },
+  "22": {
+    "title": "22 - 南京！南京！",
+    "total_dur_s": 432.95,
+    "intro_offset_ms": 31520,
+    "outro_offset_ms": 42480,
+    "story_start_s": 31.52,
+    "story_end_s": 390.47
+  },
+  "23": {
+    "title": "23 - 同一个世界，同一个梦想（一）：百年缘分",
+    "total_dur_s": 384.44,
+    "intro_offset_ms": 34160,
+    "outro_offset_ms": 43100,
+    "story_start_s": 34.16,
+    "story_end_s": 341.34
+  },
+  "24": {
+    "title": "24 - 同一个世界，同一个梦想（二）：期待辉煌",
+    "total_dur_s": 455.76,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 445.76
+  },
+  "25": {
+    "title": "25 - 同一个世界，同一个梦想（三）：见证奇迹",
+    "total_dur_s": 600.61,
+    "intro_offset_ms": 25160,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.16,
+    "story_end_s": 590.61
+  },
+  "26": {
+    "title": "26 - 痛苦的信仰",
+    "total_dur_s": 418.27,
+    "intro_offset_ms": 26180,
+    "outro_offset_ms": 288000,
+    "story_start_s": 26.18,
+    "story_end_s": 130.27
+  },
+  "27": {
+    "title": "27 - 吴语",
+    "total_dur_s": 401.79,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 41020,
+    "story_start_s": 25.0,
+    "story_end_s": 360.77
+  },
+  "28": {
+    "title": "28 - 风声",
+    "total_dur_s": 317.73,
+    "intro_offset_ms": 28620,
+    "outro_offset_ms": 42000,
+    "story_start_s": 28.62,
+    "story_end_s": 275.73
+  },
+  "29": {
+    "title": "29 - 光棍节",
+    "total_dur_s": 248.63,
+    "intro_offset_ms": 28220,
+    "outro_offset_ms": 42180,
+    "story_start_s": 28.22,
+    "story_end_s": 206.45
+  },
+  "30": {
+    "title": "30 - 中国的教育系统",
+    "total_dur_s": 420.23,
+    "intro_offset_ms": 28820,
+    "outro_offset_ms": 45560,
+    "story_start_s": 28.82,
+    "story_end_s": 374.67
+  },
+  "31": {
+    "title": "31 - 粉丝爱好者",
+    "total_dur_s": 338.02,
+    "intro_offset_ms": 27820,
+    "outro_offset_ms": 41040,
+    "story_start_s": 27.82,
+    "story_end_s": 296.98
+  },
+  "32": {
+    "title": "32 - 圣诞节在中国",
+    "total_dur_s": 327.92,
+    "intro_offset_ms": 30540,
+    "outro_offset_ms": 40300,
+    "story_start_s": 30.54,
+    "story_end_s": 287.62
+  },
+  "33": {
+    "title": "33 - 蚁族",
+    "total_dur_s": 347.51,
+    "intro_offset_ms": 26960,
+    "outro_offset_ms": 45460,
+    "story_start_s": 26.96,
+    "story_end_s": 302.05
+  },
+  "34": {
+    "title": "34 - 中国的人口",
+    "total_dur_s": 494.16,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 43220,
+    "story_start_s": 25.0,
+    "story_end_s": 450.94
+  },
+  "35": {
+    "title": "35 - “冰城”哈尔滨",
+    "total_dur_s": 460.64,
+    "intro_offset_ms": 29120,
+    "outro_offset_ms": 66240,
+    "story_start_s": 29.12,
+    "story_end_s": 394.4
+  },
+  "36": {
+    "title": "36 - 新春快乐，虎年大吉！",
+    "total_dur_s": 462.89,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 52680,
+    "story_start_s": 25.0,
+    "story_end_s": 410.21
+  },
+  "37": {
+    "title": "37 - 永远的邓丽君",
+    "total_dur_s": 500.11,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 253360,
+    "story_start_s": 25.0,
+    "story_end_s": 246.75
+  },
+  "38": {
+    "title": "38 - 熊猫不是猫",
+    "total_dur_s": 289.1,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 46780,
+    "story_start_s": 29.98,
+    "story_end_s": 242.32
+  },
+  "39": {
+    "title": "39 - 中国人的数字崇拜",
+    "total_dur_s": 416.94,
+    "intro_offset_ms": 25180,
+    "outro_offset_ms": 71380,
+    "story_start_s": 25.18,
+    "story_end_s": 345.56
+  },
+  "40": {
+    "title": "40 - 中国的环境问题",
+    "total_dur_s": 676.86,
+    "intro_offset_ms": 33360,
+    "outro_offset_ms": 10000,
+    "story_start_s": 33.36,
+    "story_end_s": 666.86
+  },
+  "41": {
+    "title": "41 - 鲁迅和他笔下的人",
+    "total_dur_s": 459.52,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 52980,
+    "story_start_s": 29.98,
+    "story_end_s": 406.54
+  },
+  "42": {
+    "title": "42 - 出去吃饭",
+    "total_dur_s": 531.88,
+    "intro_offset_ms": 27760,
+    "outro_offset_ms": 10000,
+    "story_start_s": 27.76,
+    "story_end_s": 521.88
+  },
+  "43": {
+    "title": "43 - 老王和小王",
+    "total_dur_s": 415.03,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 192520,
+    "story_start_s": 29.98,
+    "story_end_s": 222.51
+  },
+  "44": {
+    "title": "44 - 地下北京",
+    "total_dur_s": 675.45,
+    "intro_offset_ms": 28380,
+    "outro_offset_ms": 139760,
+    "story_start_s": 28.38,
+    "story_end_s": 535.69
+  },
+  "45": {
+    "title": "45 - 靠谱和离谱",
+    "total_dur_s": 281.81,
+    "intro_offset_ms": 30080,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.08,
+    "story_end_s": 271.81
+  },
+  "46": {
+    "title": "46 - 足球在中国",
+    "total_dur_s": 353.65,
+    "intro_offset_ms": 29020,
+    "outro_offset_ms": 45380,
+    "story_start_s": 29.02,
+    "story_end_s": 308.27
+  },
+  "47": {
+    "title": "47 - 山寨文化",
+    "total_dur_s": 421.22,
+    "intro_offset_ms": 29100,
+    "outro_offset_ms": 67200,
+    "story_start_s": 29.1,
+    "story_end_s": 354.02
+  },
+  "48": {
+    "title": "48 - 泰山",
+    "total_dur_s": 344.11,
+    "intro_offset_ms": 27300,
+    "outro_offset_ms": 62500,
+    "story_start_s": 27.3,
+    "story_end_s": 281.61
+  },
+  "49": {
+    "title": "49 - 放鸽子",
+    "total_dur_s": 198.53,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 99700,
+    "story_start_s": 25.0,
+    "story_end_s": 98.83
+  },
+  "50": {
+    "title": "50 - 扭曲的机器",
+    "total_dur_s": 688.27,
+    "intro_offset_ms": 29220,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.22,
+    "story_end_s": 678.27
+  },
+  "51": {
+    "title": "51 - 青岛和青岛啤酒",
+    "total_dur_s": 398.26,
+    "intro_offset_ms": 31540,
+    "outro_offset_ms": 66120,
+    "story_start_s": 31.54,
+    "story_end_s": 332.14
+  },
+  "52": {
+    "title": "52 - 台湾腔",
+    "total_dur_s": 337.63,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 39440,
+    "story_start_s": 25.0,
+    "story_end_s": 298.19
+  },
+  "53": {
+    "title": "53 - 上海世博会",
+    "total_dur_s": 391.55,
+    "intro_offset_ms": 28620,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.62,
+    "story_end_s": 381.55
+  },
+  "54": {
+    "title": "54 - 台州——我的家乡",
+    "total_dur_s": 436.79,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 38980,
+    "story_start_s": 25.0,
+    "story_end_s": 397.81
+  },
+  "55": {
+    "title": "55 - 中国古代四大名著",
+    "total_dur_s": 361.46,
+    "intro_offset_ms": 29500,
+    "outro_offset_ms": 39480,
+    "story_start_s": 29.5,
+    "story_end_s": 321.98
+  },
+  "56": {
+    "title": "56 -  筷子",
+    "total_dur_s": 427.6,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 417.6
+  },
+  "57": {
+    "title": "57 - 老百姓的百家姓",
+    "total_dur_s": 260.68,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 39860,
+    "story_start_s": 25.0,
+    "story_end_s": 220.82
+  },
+  "58": {
+    "title": "58 - 春运",
+    "total_dur_s": 292.28,
+    "intro_offset_ms": 28360,
+    "outro_offset_ms": 39820,
+    "story_start_s": 28.36,
+    "story_end_s": 252.46
+  },
+  "59": {
+    "title": "59 - 汪峰",
+    "total_dur_s": 486.84,
+    "intro_offset_ms": 28440,
+    "outro_offset_ms": 178980,
+    "story_start_s": 28.44,
+    "story_end_s": 307.86
+  },
+  "60": {
+    "title": "60 - “福”倒，福到！",
+    "total_dur_s": 189.97,
+    "intro_offset_ms": 30560,
+    "outro_offset_ms": 40600,
+    "story_start_s": 30.56,
+    "story_end_s": 149.37
+  },
+  "61": {
+    "title": "61 - 马可·波罗",
+    "total_dur_s": 283.66,
+    "intro_offset_ms": 28040,
+    "outro_offset_ms": 43120,
+    "story_start_s": 28.04,
+    "story_end_s": 240.54
+  },
+  "62": {
+    "title": "62 - 给力",
+    "total_dur_s": 240.67,
+    "intro_offset_ms": 27860,
+    "outro_offset_ms": 52900,
+    "story_start_s": 27.86,
+    "story_end_s": 187.77
+  },
+  "63": {
+    "title": "63 - 让子弹飞",
+    "total_dur_s": 380.68,
+    "intro_offset_ms": 29180,
+    "outro_offset_ms": 48480,
+    "story_start_s": 29.18,
+    "story_end_s": 332.2
+  },
+  "64": {
+    "title": "64 - 歌神陈奕迅",
+    "total_dur_s": 396.85,
+    "intro_offset_ms": 29260,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.26,
+    "story_end_s": 386.85
+  },
+  "65": {
+    "title": "65 - 南京人和他们的大树",
+    "total_dur_s": 344.69,
+    "intro_offset_ms": 30000,
+    "outro_offset_ms": 39140,
+    "story_start_s": 30.0,
+    "story_end_s": 305.55
+  },
+  "66": {
+    "title": "66 - 温州动车事故",
+    "total_dur_s": 544.47,
+    "intro_offset_ms": 28740,
+    "outro_offset_ms": 39320,
+    "story_start_s": 28.74,
+    "story_end_s": 505.15
+  },
+  "67": {
+    "title": "67 - 土豪",
+    "total_dur_s": 400.27,
+    "intro_offset_ms": 27400,
+    "outro_offset_ms": 8100,
+    "story_start_s": 27.4,
+    "story_end_s": 392.17
+  },
+  "68": {
+    "title": "68 - 微博的力量",
+    "total_dur_s": 277.08,
+    "intro_offset_ms": 29240,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.24,
+    "story_end_s": 267.08
+  },
+  "69": {
+    "title": "69 - 长寿面",
+    "total_dur_s": 222.51,
+    "intro_offset_ms": 27780,
+    "outro_offset_ms": 8200,
+    "story_start_s": 27.78,
+    "story_end_s": 214.31
+  },
+  "70": {
+    "title": "70 - 古筝",
+    "total_dur_s": 488.67,
+    "intro_offset_ms": 34420,
+    "outro_offset_ms": 10000,
+    "story_start_s": 34.42,
+    "story_end_s": 478.67
+  },
+  "71": {
+    "title": "71 - 逃跑计划",
+    "total_dur_s": 348.06,
+    "intro_offset_ms": 27700,
+    "outro_offset_ms": 40920,
+    "story_start_s": 27.7,
+    "story_end_s": 307.14
+  },
+  "72": {
+    "title": "72 - 嫦娥和玉兔",
+    "total_dur_s": 334.85,
+    "intro_offset_ms": 30720,
+    "outro_offset_ms": 6780,
+    "story_start_s": 30.72,
+    "story_end_s": 328.07
+  },
+  "73": {
+    "title": "73 - 锵锵三人行",
+    "total_dur_s": 272.85,
+    "intro_offset_ms": 28760,
+    "outro_offset_ms": 7340,
+    "story_start_s": 28.76,
+    "story_end_s": 265.51
+  },
+  "74": {
+    "title": "74 - 舌尖上的中国",
+    "total_dur_s": 351.65,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 6880,
+    "story_start_s": 29.98,
+    "story_end_s": 344.77
+  },
+  "75": {
+    "title": "75 - 中国好声音",
+    "total_dur_s": 405.68,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 34960,
+    "story_start_s": 25.0,
+    "story_end_s": 370.72
+  },
+  "76": {
+    "title": "76 - 豆浆和油条",
+    "total_dur_s": 224.57,
+    "intro_offset_ms": 27760,
+    "outro_offset_ms": 6740,
+    "story_start_s": 27.76,
+    "story_end_s": 217.83
+  },
+  "77": {
+    "title": "77 - 中国的“第一夫人”",
+    "total_dur_s": 240.43,
+    "intro_offset_ms": 31300,
+    "outro_offset_ms": 12220,
+    "story_start_s": 31.3,
+    "story_end_s": 228.21
+  },
+  "78": {
+    "title": "78 - 在中国谈恋爱有多贵",
+    "total_dur_s": 310.36,
+    "intro_offset_ms": 31360,
+    "outro_offset_ms": 10000,
+    "story_start_s": 31.36,
+    "story_end_s": 300.36
+  },
+  "79": {
+    "title": "79 - 李志",
+    "total_dur_s": 345.44,
+    "intro_offset_ms": 27200,
+    "outro_offset_ms": 263400,
+    "story_start_s": 27.2,
+    "story_end_s": 82.04
+  },
+  "80": {
+    "title": "80 - 丁克一族",
+    "total_dur_s": 275.3,
+    "intro_offset_ms": 28440,
+    "outro_offset_ms": 22880,
+    "story_start_s": 28.44,
+    "story_end_s": 252.42
+  },
+  "81": {
+    "title": "81 - 剩女恐婚",
+    "total_dur_s": 253.07,
+    "intro_offset_ms": 28140,
+    "outro_offset_ms": 7240,
+    "story_start_s": 28.14,
+    "story_end_s": 245.83
+  },
+  "82": {
+    "title": "82 - 女作家三毛",
+    "total_dur_s": 697.82,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.98,
+    "story_end_s": 687.82
+  },
+  "83": {
+    "title": "83 - 雾霾中的中国",
+    "total_dur_s": 219.01,
+    "intro_offset_ms": 29400,
+    "outro_offset_ms": 6980,
+    "story_start_s": 29.4,
+    "story_end_s": 212.03
+  },
+  "84": {
+    "title": "84 - 砍价的艺术",
+    "total_dur_s": 289.23,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 279.23
+  },
+  "85": {
+    "title": "85 - 北漂的生活",
+    "total_dur_s": 241.97,
+    "intro_offset_ms": 27340,
+    "outro_offset_ms": 7540,
+    "story_start_s": 27.34,
+    "story_end_s": 234.43
+  },
+  "86": {
+    "title": "86 - 何伟和他的中国三部曲",
+    "total_dur_s": 305.62,
+    "intro_offset_ms": 6140,
+    "outro_offset_ms": 6720,
+    "story_start_s": 6.14,
+    "story_end_s": 298.9
+  },
+  "87": {
+    "title": "87 - 女汉子",
+    "total_dur_s": 226.25,
+    "intro_offset_ms": 27040,
+    "outro_offset_ms": 7000,
+    "story_start_s": 27.04,
+    "story_end_s": 219.25
+  },
+  "88": {
+    "title": "88 - 微信时代",
+    "total_dur_s": 272.82,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 6880,
+    "story_start_s": 25.0,
+    "story_end_s": 265.94
+  },
+  "89": {
+    "title": "89 - 崔健",
+    "total_dur_s": 473.18,
+    "intro_offset_ms": 27280,
+    "outro_offset_ms": 258080,
+    "story_start_s": 27.28,
+    "story_end_s": 215.1
+  },
+  "90": {
+    "title": "90 - 全民娱乐",
+    "total_dur_s": 314.57,
+    "intro_offset_ms": 28300,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.3,
+    "story_end_s": 304.57
+  },
+  "91": {
+    "title": "91 - 屌丝",
+    "total_dur_s": 178.42,
+    "intro_offset_ms": 27700,
+    "outro_offset_ms": 5900,
+    "story_start_s": 27.7,
+    "story_end_s": 172.52
+  },
+  "92": {
+    "title": "92 - 马云和他的阿里巴巴",
+    "total_dur_s": 303.2,
+    "intro_offset_ms": 31340,
+    "outro_offset_ms": 7740,
+    "story_start_s": 31.34,
+    "story_end_s": 295.46
+  },
+  "93": {
+    "title": "93 - 中国大妈的广场舞",
+    "total_dur_s": 241.92,
+    "intro_offset_ms": 29100,
+    "outro_offset_ms": 7320,
+    "story_start_s": 29.1,
+    "story_end_s": 234.6
+  },
+  "94": {
+    "title": "94 - 旗袍",
+    "total_dur_s": 276.38,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7740,
+    "story_start_s": 25.0,
+    "story_end_s": 268.64
+  },
+  "95": {
+    "title": "95 - 归来",
+    "total_dur_s": 203.43,
+    "intro_offset_ms": 4120,
+    "outro_offset_ms": 5700,
+    "story_start_s": 4.12,
+    "story_end_s": 197.73
+  },
+  "96": {
+    "title": "96 - 钉子户",
+    "total_dur_s": 238.55,
+    "intro_offset_ms": 28360,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.36,
+    "story_end_s": 228.55
+  },
+  "97": {
+    "title": "97 - 好妹妹乐队",
+    "total_dur_s": 391.99,
+    "intro_offset_ms": 27940,
+    "outro_offset_ms": 10000,
+    "story_start_s": 27.94,
+    "story_end_s": 381.99
+  },
+  "98": {
+    "title": "98 - 利玛窦和钢琴",
+    "total_dur_s": 470.0,
+    "intro_offset_ms": 30640,
+    "outro_offset_ms": 6940,
+    "story_start_s": 30.64,
+    "story_end_s": 463.06
+  },
+  "99": {
+    "title": "99 - 高考",
+    "total_dur_s": 344.61,
+    "intro_offset_ms": 28480,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.48,
+    "story_end_s": 334.61
+  },
+  "100": {
+    "title": "100 - 温州人",
+    "total_dur_s": 418.93,
+    "intro_offset_ms": 28360,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.36,
+    "story_end_s": 408.93
+  },
+  "101": {
+    "title": "101 - 韩寒",
+    "total_dur_s": 234.21,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7380,
+    "story_start_s": 25.0,
+    "story_end_s": 226.83
+  },
+  "102": {
+    "title": "102 - 南锣鼓巷",
+    "total_dur_s": 284.53,
+    "intro_offset_ms": 29200,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.2,
+    "story_end_s": 274.53
+  },
+  "103": {
+    "title": "103 - 高富帅和白富美",
+    "total_dur_s": 171.66,
+    "intro_offset_ms": 5420,
+    "outro_offset_ms": 10000,
+    "story_start_s": 5.42,
+    "story_end_s": 161.66
+  },
+  "104": {
+    "title": "104 - 在中国找工作",
+    "total_dur_s": 383.51,
+    "intro_offset_ms": 30860,
+    "outro_offset_ms": 8000,
+    "story_start_s": 30.86,
+    "story_end_s": 375.51
+  },
+  "105": {
+    "title": "105 - 海子",
+    "total_dur_s": 220.6,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 210.6
+  },
+  "106": {
+    "title": "106 - 中国的少数民族",
+    "total_dur_s": 377.8,
+    "intro_offset_ms": 29700,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.7,
+    "story_end_s": 367.8
+  },
+  "107": {
+    "title": "107 - 胖子艾未未",
+    "total_dur_s": 254.43,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7320,
+    "story_start_s": 25.0,
+    "story_end_s": 247.11
+  },
+  "108": {
+    "title": "108 - 裸婚",
+    "total_dur_s": 264.39,
+    "intro_offset_ms": 29440,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.44,
+    "story_end_s": 254.39
+  },
+  "109": {
+    "title": "109 - 十二星座",
+    "total_dur_s": 495.04,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 205360,
+    "story_start_s": 25.0,
+    "story_end_s": 289.68
+  },
+  "110": {
+    "title": "110 - 周杰伦",
+    "total_dur_s": 330.45,
+    "intro_offset_ms": 27260,
+    "outro_offset_ms": 209240,
+    "story_start_s": 27.26,
+    "story_end_s": 121.21
+  },
+  "111": {
+    "title": "111 - 面子",
+    "total_dur_s": 367.26,
+    "intro_offset_ms": 26860,
+    "outro_offset_ms": 6760,
+    "story_start_s": 26.86,
+    "story_end_s": 360.5
+  },
+  "112": {
+    "title": "112 - 国产动画",
+    "total_dur_s": 299.1,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 6600,
+    "story_start_s": 25.0,
+    "story_end_s": 292.5
+  },
+  "113": {
+    "title": "113 - 在中国买火车票",
+    "total_dur_s": 259.69,
+    "intro_offset_ms": 30980,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.98,
+    "story_end_s": 249.69
+  },
+  "114": {
+    "title": "114 - 流行音乐女王－王菲",
+    "total_dur_s": 461.78,
+    "intro_offset_ms": 30280,
+    "outro_offset_ms": 264340,
+    "story_start_s": 30.28,
+    "story_end_s": 197.44
+  },
+  "115": {
+    "title": "115 - 吴恒和他的“掷出窗外”",
+    "total_dur_s": 233.74,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 2020,
+    "story_start_s": 25.0,
+    "story_end_s": 231.72
+  },
+  "116": {
+    "title": "116 - 双十一",
+    "total_dur_s": 247.64,
+    "intro_offset_ms": 29540,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.54,
+    "story_end_s": 237.64
+  },
+  "117": {
+    "title": "117 - 海峡的两岸",
+    "total_dur_s": 469.56,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 7780,
+    "story_start_s": 29.98,
+    "story_end_s": 461.78
+  },
+  "118": {
+    "title": "118 - 百度",
+    "total_dur_s": 229.07,
+    "intro_offset_ms": 27900,
+    "outro_offset_ms": 10000,
+    "story_start_s": 27.9,
+    "story_end_s": 219.07
+  },
+  "119": {
+    "title": "119 - 艳照门",
+    "total_dur_s": 270.7,
+    "intro_offset_ms": 29120,
+    "outro_offset_ms": 6240,
+    "story_start_s": 29.12,
+    "story_end_s": 264.46
+  },
+  "120": {
+    "title": "120 - 学霸和学渣",
+    "total_dur_s": 235.51,
+    "intro_offset_ms": 29000,
+    "outro_offset_ms": 7020,
+    "story_start_s": 29.0,
+    "story_end_s": 228.49
+  },
+  "121": {
+    "title": "121 - 城管",
+    "total_dur_s": 216.47,
+    "intro_offset_ms": 27300,
+    "outro_offset_ms": 6740,
+    "story_start_s": 27.3,
+    "story_end_s": 209.73
+  },
+  "122": {
+    "title": "122 - 中国人去美国前没想到的三件事",
+    "total_dur_s": 369.53,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 359.53
+  },
+  "123": {
+    "title": "123 - 网络神曲",
+    "total_dur_s": 169.23,
+    "intro_offset_ms": 28120,
+    "outro_offset_ms": 6880,
+    "story_start_s": 28.12,
+    "story_end_s": 162.35
+  },
+  "124": {
+    "title": "124 - 中国人的红与白",
+    "total_dur_s": 242.78,
+    "intro_offset_ms": 29740,
+    "outro_offset_ms": 6920,
+    "story_start_s": 29.74,
+    "story_end_s": 235.86
+  },
+  "125": {
+    "title": "125 - 茶叶蛋、咸鸭蛋和松花蛋",
+    "total_dur_s": 208.85,
+    "intro_offset_ms": 31140,
+    "outro_offset_ms": 6700,
+    "story_start_s": 31.14,
+    "story_end_s": 202.15
+  },
+  "126": {
+    "title": "126 - 请客吃饭",
+    "total_dur_s": 264.8,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 254.8
+  },
+  "127": {
+    "title": "127 - 火锅",
+    "total_dur_s": 249.89,
+    "intro_offset_ms": 27180,
+    "outro_offset_ms": 6700,
+    "story_start_s": 27.18,
+    "story_end_s": 243.19
+  },
+  "128": {
+    "title": "128 - 中国的交通问题",
+    "total_dur_s": 243.52,
+    "intro_offset_ms": 29620,
+    "outro_offset_ms": 7080,
+    "story_start_s": 29.62,
+    "story_end_s": 236.44
+  },
+  "129": {
+    "title": "129 - 春晚",
+    "total_dur_s": 385.41,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 375.41
+  },
+  "130": {
+    "title": "130 - Made in China好不好",
+    "total_dur_s": 206.85,
+    "intro_offset_ms": 28400,
+    "outro_offset_ms": 6680,
+    "story_start_s": 28.4,
+    "story_end_s": 200.17
+  },
+  "131": {
+    "title": "131 小心！中国人会谈论的话题",
+    "total_dur_s": 256.61,
+    "intro_offset_ms": 31800,
+    "outro_offset_ms": 10000,
+    "story_start_s": 31.8,
+    "story_end_s": 246.61
+  },
+  "132": {
+    "title": "132 - 中国人吃狗吗",
+    "total_dur_s": 195.5,
+    "intro_offset_ms": 31740,
+    "outro_offset_ms": 7940,
+    "story_start_s": 31.74,
+    "story_end_s": 187.56
+  },
+  "133": {
+    "title": "133 - 过年的尴尬",
+    "total_dur_s": 305.34,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 6660,
+    "story_start_s": 25.0,
+    "story_end_s": 298.68
+  },
+  "134": {
+    "title": "134 - 你是文青吗？",
+    "total_dur_s": 295.5,
+    "intro_offset_ms": 28360,
+    "outro_offset_ms": 32880,
+    "story_start_s": 28.36,
+    "story_end_s": 262.62
+  },
+  "135": {
+    "title": "135 - 同性恋在中国",
+    "total_dur_s": 332.41,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 7480,
+    "story_start_s": 29.98,
+    "story_end_s": 324.93
+  },
+  "136": {
+    "title": "136 - 和“吃”有关的表达",
+    "total_dur_s": 244.21,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 6600,
+    "story_start_s": 25.0,
+    "story_end_s": 237.61
+  },
+  "137": {
+    "title": "137 - 你有直男癌吗？",
+    "total_dur_s": 235.43,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 6880,
+    "story_start_s": 25.0,
+    "story_end_s": 228.55
+  },
+  "138": {
+    "title": "138 - 最有中国味道的词语",
+    "total_dur_s": 298.08,
+    "intro_offset_ms": 29260,
+    "outro_offset_ms": 6860,
+    "story_start_s": 29.26,
+    "story_end_s": 291.22
+  },
+  "139": {
+    "title": "139 - 孝",
+    "total_dur_s": 250.49,
+    "intro_offset_ms": 27660,
+    "outro_offset_ms": 6600,
+    "story_start_s": 27.66,
+    "story_end_s": 243.89
+  },
+  "140": {
+    "title": "140 - 青春片",
+    "total_dur_s": 493.32,
+    "intro_offset_ms": 30400,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.4,
+    "story_end_s": 483.32
+  },
+  "141": {
+    "title": "141 - 高考的记忆",
+    "total_dur_s": 312.4,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7060,
+    "story_start_s": 25.0,
+    "story_end_s": 305.34
+  },
+  "142": {
+    "title": "142 - 年龄和生肖",
+    "total_dur_s": 367.41,
+    "intro_offset_ms": 28680,
+    "outro_offset_ms": 8140,
+    "story_start_s": 28.68,
+    "story_end_s": 359.27
+  },
+  "143": {
+    "title": "143 - 泡面",
+    "total_dur_s": 280.32,
+    "intro_offset_ms": 27060,
+    "outro_offset_ms": 10000,
+    "story_start_s": 27.06,
+    "story_end_s": 270.32
+  },
+  "144": {
+    "title": "144 - 唐人街",
+    "total_dur_s": 308.27,
+    "intro_offset_ms": 27280,
+    "outro_offset_ms": 7900,
+    "story_start_s": 27.28,
+    "story_end_s": 300.37
+  },
+  "145": {
+    "title": "145 - 李小龙与中国功夫",
+    "total_dur_s": 262.45,
+    "intro_offset_ms": 31280,
+    "outro_offset_ms": 7000,
+    "story_start_s": 31.28,
+    "story_end_s": 255.45
+  },
+  "146": {
+    "title": "146 - 留守儿童",
+    "total_dur_s": 423.65,
+    "intro_offset_ms": 28600,
+    "outro_offset_ms": 7180,
+    "story_start_s": 28.6,
+    "story_end_s": 416.47
+  },
+  "147": {
+    "title": "147 - 手机依赖症",
+    "total_dur_s": 308.99,
+    "intro_offset_ms": 30480,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.48,
+    "story_end_s": 298.99
+  },
+  "148": {
+    "title": "148 - 武则天",
+    "total_dur_s": 317.73,
+    "intro_offset_ms": 26000,
+    "outro_offset_ms": 6940,
+    "story_start_s": 26.0,
+    "story_end_s": 310.79
+  },
+  "149": {
+    "title": "149 - “羊年”的“羊”",
+    "total_dur_s": 246.05,
+    "intro_offset_ms": 27940,
+    "outro_offset_ms": 7680,
+    "story_start_s": 27.94,
+    "story_end_s": 238.37
+  },
+  "150": {
+    "title": "150 - 恶搞的尺度",
+    "total_dur_s": 208.38,
+    "intro_offset_ms": 27720,
+    "outro_offset_ms": 10000,
+    "story_start_s": 27.72,
+    "story_end_s": 198.38
+  },
+  "151": {
+    "title": "151 - 中式教育",
+    "total_dur_s": 300.75,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 290.75
+  },
+  "152": {
+    "title": "152 - 户口",
+    "total_dur_s": 336.48,
+    "intro_offset_ms": 27460,
+    "outro_offset_ms": 6640,
+    "story_start_s": 27.46,
+    "story_end_s": 329.84
+  },
+  "153": {
+    "title": "153 - 习大大的美国行",
+    "total_dur_s": 333.17,
+    "intro_offset_ms": 30900,
+    "outro_offset_ms": 7120,
+    "story_start_s": 30.9,
+    "story_end_s": 326.05
+  },
+  "154": {
+    "title": "154 计划生育和开放二胎",
+    "total_dur_s": 440.74,
+    "intro_offset_ms": 31600,
+    "outro_offset_ms": 7460,
+    "story_start_s": 31.6,
+    "story_end_s": 433.28
+  },
+  "155": {
+    "title": "155 - 萌",
+    "total_dur_s": 411.44,
+    "intro_offset_ms": 28080,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.08,
+    "story_end_s": 401.44
+  },
+  "156": {
+    "title": "156 - 说说习马会",
+    "total_dur_s": 413.37,
+    "intro_offset_ms": 30260,
+    "outro_offset_ms": 7200,
+    "story_start_s": 30.26,
+    "story_end_s": 406.17
+  },
+  "157": {
+    "title": "157 - 版权问题",
+    "total_dur_s": 343.76,
+    "intro_offset_ms": 30740,
+    "outro_offset_ms": 6060,
+    "story_start_s": 30.74,
+    "story_end_s": 337.7
+  },
+  "158": {
+    "title": "158 - 闻",
+    "total_dur_s": 343.37,
+    "intro_offset_ms": 28700,
+    "outro_offset_ms": 6800,
+    "story_start_s": 28.7,
+    "story_end_s": 336.57
+  },
+  "159": {
+    "title": "159 - 猴年说猴",
+    "total_dur_s": 390.21,
+    "intro_offset_ms": 29040,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.04,
+    "story_end_s": 380.21
+  },
+  "160": {
+    "title": "160 - 风水",
+    "total_dur_s": 394.84,
+    "intro_offset_ms": 30000,
+    "outro_offset_ms": 7080,
+    "story_start_s": 30.0,
+    "story_end_s": 387.76
+  },
+  "161": {
+    "title": "161 - 漫画家钱海燕",
+    "total_dur_s": 385.8,
+    "intro_offset_ms": 29380,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.38,
+    "story_end_s": 375.8
+  },
+  "162": {
+    "title": "162 - 北京的四合院",
+    "total_dur_s": 405.86,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 7240,
+    "story_start_s": 29.98,
+    "story_end_s": 398.62
+  },
+  "163": {
+    "title": "163 - 疫苗事件",
+    "total_dur_s": 308.55,
+    "intro_offset_ms": 28920,
+    "outro_offset_ms": 6480,
+    "story_start_s": 28.92,
+    "story_end_s": 302.07
+  },
+  "164": {
+    "title": "164 - 《琅琊榜》与中国美",
+    "total_dur_s": 328.67,
+    "intro_offset_ms": 29560,
+    "outro_offset_ms": 7940,
+    "story_start_s": 29.56,
+    "story_end_s": 320.73
+  },
+  "165": {
+    "title": "165 - 球迷和伪球迷",
+    "total_dur_s": 322.81,
+    "intro_offset_ms": 29140,
+    "outro_offset_ms": 8500,
+    "story_start_s": 29.14,
+    "story_end_s": 314.31
+  },
+  "166": {
+    "title": "166 - 单身是一种选择",
+    "total_dur_s": 376.07,
+    "intro_offset_ms": 30520,
+    "outro_offset_ms": 6280,
+    "story_start_s": 30.52,
+    "story_end_s": 369.79
+  },
+  "167": {
+    "title": "167 - 中国孕妇的传统生活禁忌",
+    "total_dur_s": 405.86,
+    "intro_offset_ms": 28840,
+    "outro_offset_ms": 6400,
+    "story_start_s": 28.84,
+    "story_end_s": 399.46
+  },
+  "168": {
+    "title": "168 - 中国年轻人的职业“间隔年”",
+    "total_dur_s": 266.32,
+    "intro_offset_ms": 32200,
+    "outro_offset_ms": 7040,
+    "story_start_s": 32.2,
+    "story_end_s": 259.28
+  },
+  "169": {
+    "title": "169 - 我最不喜欢的词语——“国外”",
+    "total_dur_s": 320.55,
+    "intro_offset_ms": 24660,
+    "outro_offset_ms": 6560,
+    "story_start_s": 24.66,
+    "story_end_s": 313.99
+  },
+  "170": {
+    "title": "170 - 电子书《真实语料学中文》",
+    "total_dur_s": 416.44,
+    "intro_offset_ms": 32560,
+    "outro_offset_ms": 7720,
+    "story_start_s": 32.56,
+    "story_end_s": 408.72
+  },
+  "171": {
+    "title": "171 - 和“日”相关的字词",
+    "total_dur_s": 257.4,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 6600,
+    "story_start_s": 25.0,
+    "story_end_s": 250.8
+  },
+  "172": {
+    "title": "172 - 英美电视剧在中国",
+    "total_dur_s": 220.23,
+    "intro_offset_ms": 30480,
+    "outro_offset_ms": 6820,
+    "story_start_s": 30.48,
+    "story_end_s": 213.41
+  },
+  "173": {
+    "title": "173 - 校园霸凌",
+    "total_dur_s": 204.62,
+    "intro_offset_ms": 30660,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.66,
+    "story_end_s": 194.62
+  },
+  "174": {
+    "title": "174 - 在中国当老师",
+    "total_dur_s": 271.31,
+    "intro_offset_ms": 30980,
+    "outro_offset_ms": 7500,
+    "story_start_s": 30.98,
+    "story_end_s": 263.81
+  },
+  "175": {
+    "title": "175 - 中国妈妈看美国",
+    "total_dur_s": 327.12,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 8480,
+    "story_start_s": 25.0,
+    "story_end_s": 318.64
+  },
+  "176": {
+    "title": "176 - 北京的房价（一）",
+    "total_dur_s": 256.69,
+    "intro_offset_ms": 28600,
+    "outro_offset_ms": 10000,
+    "story_start_s": 28.6,
+    "story_end_s": 246.69
+  },
+  "177": {
+    "title": "177 - 北京的房价（二）",
+    "total_dur_s": 326.95,
+    "intro_offset_ms": 32260,
+    "outro_offset_ms": 7660,
+    "story_start_s": 32.26,
+    "story_end_s": 319.29
+  },
+  "178": {
+    "title": "178 - TFboys 组合",
+    "total_dur_s": 226.51,
+    "intro_offset_ms": 30720,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.72,
+    "story_end_s": 216.51
+  },
+  "179": {
+    "title": "179 - 民谣歌手赵雷",
+    "total_dur_s": 434.05,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 9700,
+    "story_start_s": 29.98,
+    "story_end_s": 424.35
+  },
+  "180": {
+    "title": "180 - 翻译的趣味",
+    "total_dur_s": 274.34,
+    "intro_offset_ms": 15760,
+    "outro_offset_ms": 10000,
+    "story_start_s": 15.76,
+    "story_end_s": 264.34
+  },
+  "181": {
+    "title": "181 - 爱上一座城——香港",
+    "total_dur_s": 234.14,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7160,
+    "story_start_s": 25.0,
+    "story_end_s": 226.98
+  },
+  "182": {
+    "title": "182 - 你喜欢巧克力吗？",
+    "total_dur_s": 233.48,
+    "intro_offset_ms": 28620,
+    "outro_offset_ms": 7340,
+    "story_start_s": 28.62,
+    "story_end_s": 226.14
+  },
+  "183": {
+    "title": "183：魏老爸和他的“老爸实验室”",
+    "total_dur_s": 311.8,
+    "intro_offset_ms": 32820,
+    "outro_offset_ms": 8880,
+    "story_start_s": 32.82,
+    "story_end_s": 302.92
+  },
+  "184": {
+    "title": "184 - 说说中国菜",
+    "total_dur_s": 250.78,
+    "intro_offset_ms": 30260,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.26,
+    "story_end_s": 240.78
+  },
+  "185": {
+    "title": "185 - 星巴克在中国",
+    "total_dur_s": 191.66,
+    "intro_offset_ms": 26740,
+    "outro_offset_ms": 8080,
+    "story_start_s": 26.74,
+    "story_end_s": 183.58
+  },
+  "186": {
+    "title": "186 - 穿越剧",
+    "total_dur_s": 280.35,
+    "intro_offset_ms": 29740,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.74,
+    "story_end_s": 270.35
+  },
+  "187": {
+    "title": "187 - 歌手许巍",
+    "total_dur_s": 204.54,
+    "intro_offset_ms": 30000,
+    "outro_offset_ms": 7740,
+    "story_start_s": 30.0,
+    "story_end_s": 196.8
+  },
+  "188": {
+    "title": "188 - 东西的由来",
+    "total_dur_s": 248.53,
+    "intro_offset_ms": 26560,
+    "outro_offset_ms": 10000,
+    "story_start_s": 26.56,
+    "story_end_s": 238.53
+  },
+  "189": {
+    "title": "189 - 少年围棋手柯洁",
+    "total_dur_s": 333.24,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 8580,
+    "story_start_s": 25.0,
+    "story_end_s": 324.66
+  },
+  "190": {
+    "title": "190 - 爱上一座城——上海",
+    "total_dur_s": 189.47,
+    "intro_offset_ms": 31860,
+    "outro_offset_ms": 10000,
+    "story_start_s": 31.86,
+    "story_end_s": 179.47
+  },
+  "191": {
+    "title": "191 - 颜真卿",
+    "total_dur_s": 208.8,
+    "intro_offset_ms": 29980,
+    "outro_offset_ms": 10000,
+    "story_start_s": 29.98,
+    "story_end_s": 198.8
+  },
+  "192": {
+    "title": "192 - 移动支付在中国",
+    "total_dur_s": 379.3,
+    "intro_offset_ms": 31320,
+    "outro_offset_ms": 7640,
+    "story_start_s": 31.32,
+    "story_end_s": 371.66
+  },
+  "193": {
+    "title": "193 - 中国有嘻哈",
+    "total_dur_s": 540.24,
+    "intro_offset_ms": 30280,
+    "outro_offset_ms": 10000,
+    "story_start_s": 30.28,
+    "story_end_s": 530.24
+  },
+  "194": {
+    "title": "194 共享经济时代",
+    "total_dur_s": 238.55,
+    "intro_offset_ms": 26180,
+    "outro_offset_ms": 10000,
+    "story_start_s": 26.18,
+    "story_end_s": 228.55
+  },
+  "195": {
+    "title": "195 - 从台湾回到德国：戴上台湾的“眼镜”看德国（上）",
+    "total_dur_s": 385.33,
+    "intro_offset_ms": 37680,
+    "outro_offset_ms": 8740,
+    "story_start_s": 37.68,
+    "story_end_s": 376.59
+  },
+  "196": {
+    "title": "196 - 从台湾回到德国 ：戴上台湾的“眼镜”看德国（下）",
+    "total_dur_s": 312.71,
+    "intro_offset_ms": 37800,
+    "outro_offset_ms": 6780,
+    "story_start_s": 37.8,
+    "story_end_s": 305.93
+  },
+  "197": {
+    "title": "197 - 出轨和出柜",
+    "total_dur_s": 249.18,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 10000,
+    "story_start_s": 25.0,
+    "story_end_s": 239.18
+  },
+  "198": {
+    "title": "198：和“手”有关的表达",
+    "total_dur_s": 247.33,
+    "intro_offset_ms": 30940,
+    "outro_offset_ms": 7040,
+    "story_start_s": 30.94,
+    "story_end_s": 240.29
+  },
+  "199": {
+    "title": "199 - 北航教授性侵女学生事件",
+    "total_dur_s": 314.28,
+    "intro_offset_ms": 31460,
+    "outro_offset_ms": 7660,
+    "story_start_s": 31.46,
+    "story_end_s": 306.62
+  },
+  "200": {
+    "title": "200 - 花木兰",
+    "total_dur_s": 219.77,
+    "intro_offset_ms": 27220,
+    "outro_offset_ms": 6760,
+    "story_start_s": 27.22,
+    "story_end_s": 213.01
+  },
+  "201": {
+    "title": "201 - 知识型网红",
+    "total_dur_s": 297.38,
+    "intro_offset_ms": 28060,
+    "outro_offset_ms": 7540,
+    "story_start_s": 28.06,
+    "story_end_s": 289.84
+  },
+  "202": {
+    "title": "202 - 视频网站的弹幕",
+    "total_dur_s": 299.86,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7660,
+    "story_start_s": 25.0,
+    "story_end_s": 292.2
+  },
+  "203": {
+    "title": "203 - 政治正确",
+    "total_dur_s": 373.29,
+    "intro_offset_ms": 25000,
+    "outro_offset_ms": 7640,
+    "story_start_s": 25.0,
+    "story_end_s": 365.65
+  },
+  "204": {
+    "title": "204 - 美图秀秀",
+    "total_dur_s": 283.43,
+    "intro_offset_ms": 29400,
+    "outro_offset_ms": 7360,
+    "story_start_s": 29.4,
+    "story_end_s": 276.07
+  }
+}

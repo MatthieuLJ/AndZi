@@ -39,3 +39,9 @@ captures/
 .externalNativeBuild/
 .cxx/
 .idea/
+
+# Slow Chinese offline archive
+audio/
+
+# Python virtual environments
+.venv/
