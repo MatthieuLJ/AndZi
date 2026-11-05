@@ -68,6 +68,12 @@ android {
     }
 }
 
+androidComponents {
+    beforeVariants(selector().withBuildType("release")) { variant ->
+        variant.hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = false
+    }
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
