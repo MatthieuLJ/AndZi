@@ -7,6 +7,7 @@ import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
 import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
 import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
 import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
+import com.matthieu.zi_app.data.podcast.PacedSpeechRateEngine
 import com.matthieu.zi_app.data.podcast.PodcastRssParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -70,6 +71,41 @@ class PodcastRepository(
 
     suspend fun getSentencesForEpisodeSync(episodeId: Int): List<PodcastSentenceEntity> =
         podcastDao.getSentencesForEpisodeSync(episodeId)
+
+    suspend fun extractAndSaveSentencesForEpisode(
+        episode: PodcastEpisodeEntity,
+        channel: PodcastChannelEntity? = null
+    ): List<PodcastSentenceEntity> = withContext(Dispatchers.IO) {
+        val existing = podcastDao.getSentencesForEpisodeSync(episode.episodeId)
+        if (existing.isNotEmpty()) {
+            return@withContext existing
+        }
+
+        if (episode.transcript.isBlank()) {
+            return@withContext emptyList()
+        }
+
+        val offsets = PacedSpeechRateEngine.resolveOffsets(
+            channelId = episode.channelId,
+            episodeNum = episode.episodeNum,
+            channelFallbackIntroMs = channel?.introOffsetMs ?: 0,
+            channelFallbackOutroMs = channel?.outroOffsetMs ?: 0
+        )
+
+        val sentences = PacedSpeechRateEngine.computeSentenceTimestamps(
+            episodeId = episode.episodeId,
+            transcript = episode.transcript,
+            totalDurationMs = episode.durationMs,
+            introOffsetMs = offsets.introOffsetMs,
+            outroOffsetMs = offsets.outroOffsetMs
+        )
+
+        if (sentences.isNotEmpty()) {
+            podcastDao.insertSentences(sentences)
+        }
+
+        sentences
+    }
 
     fun getVocabForEpisode(episodeId: Int): Flow<List<PodcastVocabEntity>> =
         podcastDao.getVocabForEpisode(episodeId)

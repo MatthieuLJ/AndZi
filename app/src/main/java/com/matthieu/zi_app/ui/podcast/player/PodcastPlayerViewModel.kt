@@ -43,7 +43,10 @@ class PodcastPlayerViewModel(
             }
 
             val channel = podcastRepository.getChannelById(ep.channelId)
-            val sentences = podcastRepository.getSentencesForEpisodeSync(episodeId)
+            var sentences = podcastRepository.getSentencesForEpisodeSync(episodeId)
+            if (sentences.isEmpty() && ep.transcript.isNotBlank()) {
+                sentences = podcastRepository.extractAndSaveSentencesForEpisode(ep, channel)
+            }
             var rawVocab = podcastRepository.getVocabForEpisodeSync(episodeId)
 
             if (rawVocab.isEmpty() && ep.transcript.isNotBlank()) {
