@@ -817,9 +817,8 @@ fun PairMatchQuizView(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = pair.pinyin,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    text = buildPinyinToneAnnotatedString(pair.pinyin, AndZiThemeCustom.toneColors),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                                 )
                             }
                             Text(

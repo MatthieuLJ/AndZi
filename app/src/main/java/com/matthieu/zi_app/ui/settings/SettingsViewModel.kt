@@ -28,7 +28,6 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(
         SettingsUiState(
             themeMode = userPreferences.themeMode.value,
-            coloredPinyin = userPreferences.coloredPinyin.value,
             notificationsEnabled = userPreferences.notificationEnabled.value,
             writingQuizEnabled = userPreferences.writingQuizEnabled.value,
             audioStoriesEnabled = userPreferences.audioStoriesEnabled.value,
@@ -41,11 +40,6 @@ class SettingsViewModel(
         viewModelScope.launch {
             userPreferences.themeMode.collect { mode ->
                 _uiState.update { it.copy(themeMode = mode) }
-            }
-        }
-        viewModelScope.launch {
-            userPreferences.coloredPinyin.collect { colored ->
-                _uiState.update { it.copy(coloredPinyin = colored) }
             }
         }
         viewModelScope.launch {
@@ -67,10 +61,6 @@ class SettingsViewModel(
 
     fun setThemeMode(mode: AppThemeMode) {
         userPreferences.setThemeMode(mode)
-    }
-
-    fun setColoredPinyin(enabled: Boolean) {
-        userPreferences.setColoredPinyin(enabled)
     }
 
     fun setNotificationEnabled(enabled: Boolean) {

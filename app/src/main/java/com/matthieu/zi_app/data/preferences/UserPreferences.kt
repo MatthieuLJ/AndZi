@@ -18,9 +18,6 @@ class UserPreferences(context: Context) {
     private val _themeMode = MutableStateFlow(getSavedThemeMode())
     val themeMode: StateFlow<AppThemeMode> = _themeMode.asStateFlow()
 
-    private val _coloredPinyin = MutableStateFlow(prefs.getBoolean(KEY_COLOR_PINYIN, true))
-    val coloredPinyin: StateFlow<Boolean> = _coloredPinyin.asStateFlow()
-
     private val _notificationEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATION_ENABLED, true))
     val notificationEnabled: StateFlow<Boolean> = _notificationEnabled.asStateFlow()
 
@@ -36,11 +33,6 @@ class UserPreferences(context: Context) {
     fun setThemeMode(mode: AppThemeMode) {
         prefs.edit().putString(KEY_THEME_MODE, mode.name).apply()
         _themeMode.value = mode
-    }
-
-    fun setColoredPinyin(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_COLOR_PINYIN, enabled).apply()
-        _coloredPinyin.value = enabled
     }
 
     fun setNotificationEnabled(enabled: Boolean) {
@@ -137,7 +129,6 @@ class UserPreferences(context: Context) {
     companion object {
         const val PREFS_NAME = "andzi_user_preferences"
         const val KEY_THEME_MODE = "app_theme_mode"
-        const val KEY_COLOR_PINYIN = "color_pinyin"
         const val KEY_NOTIFICATION_ENABLED = "notification_enabled"
         const val KEY_WRITING_QUIZ_ENABLED = "writing_quiz_enabled"
         const val KEY_AUDIO_STORIES_ENABLED = "audio_stories_enabled"

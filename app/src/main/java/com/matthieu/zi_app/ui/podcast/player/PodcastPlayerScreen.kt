@@ -74,6 +74,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.ui.dictionary.WordDetailSheetContent
+import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
+import com.matthieu.zi_app.ui.theme.buildPinyinToneAnnotatedString
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -585,9 +587,8 @@ fun EpisodeVocabSheetContent(
                                     if (item.vocab.pinyin.isNotEmpty()) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = item.vocab.pinyin,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary
+                                            text = buildPinyinToneAnnotatedString(item.vocab.pinyin, AndZiThemeCustom.toneColors),
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                         )
                                     }
                                 }

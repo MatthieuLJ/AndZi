@@ -10,7 +10,6 @@ enum class AppThemeMode(val title: String) {
 
 data class SettingsUiState(
     val themeMode: AppThemeMode = AppThemeMode.SYSTEM,
-    val coloredPinyin: Boolean = true,
     val notificationsEnabled: Boolean = true,
     val writingQuizEnabled: Boolean = true,
     val audioStoriesEnabled: Boolean = false,
