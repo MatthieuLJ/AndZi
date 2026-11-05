@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.matthieu.zi_app.ui.podcast.components.PodcastAttributionDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,6 +92,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    var showPodcastAttributions by remember { mutableStateOf(false) }
 
     val exportStudyLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream")
@@ -350,7 +352,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Cultural audio stories (Slow Chinese, Reading China) with full transcripts and study vocabulary",
+                                text = "Cultural audio stories with full transcripts and study vocabulary",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -360,6 +362,25 @@ fun SettingsScreen(
                         checked = uiState.audioStoriesEnabled,
                         onCheckedChange = { viewModel.setAudioStoriesEnabled(it) }
                     )
+                }
+
+                if (uiState.audioStoriesEnabled) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(
+                        onClick = { showPodcastAttributions = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Podcast Sources & Attributions")
+                    }
                 }
             }
 
@@ -495,7 +516,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "• Includes CC-CEDICT Chinese-English Dictionary under Creative Commons Attribution-Share Alike 4.0 license.\n• Includes Hanzi Writer stroke animations & matching engine (David Chanin, MIT License).\n• Includes Make Me a Hanzi & Arphic PL font glyph data (Arphic Technology Co., Ltd. & Shaunak Kishore, Arphic Public License).\n• Includes SUBTLEX-CH frequency corpus (Ghent University / Cai & Brysbaert, PLoS ONE, CC BY 4.0).\n• Includes HSK 3.0 curriculum vocabulary under MIT License.",
+                        text = "• Includes CC-CEDICT Chinese-English Dictionary under Creative Commons Attribution-Share Alike 4.0 license.\n• Includes audio stories from Slow Chinese & Reading China (Creative Commons CC BY-NC-SA), MaoMi Chinese (maomichinese.com), and TeaTime Chinese (teatimechinese.com).\n• Includes Hanzi Writer stroke animations & matching engine (David Chanin, MIT License).\n• Includes Make Me a Hanzi & Arphic PL font glyph data (Arphic Technology Co., Ltd. & Shaunak Kishore, Arphic Public License).\n• Includes SUBTLEX-CH frequency corpus (Ghent University / Cai & Brysbaert, PLoS ONE, CC BY 4.0).\n• Includes HSK 3.0 curriculum vocabulary under MIT License.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp
@@ -813,6 +834,10 @@ fun SettingsScreen(
                     }
                 }
             )
+        }
+
+        if (showPodcastAttributions) {
+            PodcastAttributionDialog(onDismissRequest = { showPodcastAttributions = false })
         }
     }
 }

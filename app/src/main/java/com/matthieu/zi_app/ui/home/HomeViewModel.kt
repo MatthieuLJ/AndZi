@@ -329,10 +329,19 @@ class HomeViewModel(
         return filtered
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    fun cancelBackgroundJobs() {
         analyticsJob?.cancel()
         chartJob?.cancel()
+    }
+
+    suspend fun awaitBackgroundJobs() {
+        analyticsJob?.join()
+        chartJob?.join()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelBackgroundJobs()
     }
 
     companion object {

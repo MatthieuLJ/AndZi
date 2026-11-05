@@ -55,7 +55,9 @@ class HomeViewModelTest {
     }
 
     @After
-    fun teardown() {
+    fun teardown() = runBlocking {
+        viewModel?.cancelBackgroundJobs()
+        viewModel?.awaitBackgroundJobs()
         viewModel?.viewModelScope?.cancel()
         viewModel = null
         Dispatchers.resetMain()
@@ -78,7 +80,7 @@ class HomeViewModelTest {
         viewModel = vm
 
         val state = withTimeout(3000) {
-            vm.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading && !it.isAnalyticsLoading }.first()
         }
 
         assertNotNull(state)
@@ -100,7 +102,7 @@ class HomeViewModelTest {
         val vm = HomeViewModel(studyRepo, progressRepo, dispatcher = testDispatcher)
         viewModel = vm
         var state = withTimeout(3000) {
-            vm.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading && !it.isAnalyticsLoading }.first()
         }
 
         assertEquals(2, state.totalLearned)
@@ -112,7 +114,7 @@ class HomeViewModelTest {
         vm.loadDashboardData()
 
         state = withTimeout(3000) {
-            vm.uiState.filter { !it.isLoading && (it.boxDistribution[0] ?: 0) == 2 }.first()
+            vm.uiState.filter { !it.isLoading && !it.isAnalyticsLoading && (it.boxDistribution[0] ?: 0) == 2 }.first()
         }
 
         assertEquals(2, state.totalLearned)
@@ -126,7 +128,7 @@ class HomeViewModelTest {
         viewModel = vm
 
         val state = withTimeout(3000) {
-            vm.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading && !it.isAnalyticsLoading }.first()
         }
 
         assertNotNull(state)
@@ -150,7 +152,7 @@ class HomeViewModelTest {
         viewModel = vm
 
         val state = withTimeout(3000) {
-            vm.uiState.filter { !it.isLoading }.first()
+            vm.uiState.filter { !it.isLoading && !it.isAnalyticsLoading }.first()
         }
 
         assertEquals(2, state.streakDays)

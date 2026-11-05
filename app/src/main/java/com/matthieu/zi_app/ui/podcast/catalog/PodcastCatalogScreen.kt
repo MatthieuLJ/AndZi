@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -46,6 +47,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
+import com.matthieu.zi_app.ui.podcast.components.PodcastAttributionDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -66,6 +71,7 @@ fun PodcastCatalogScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showAttributionsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -89,6 +95,12 @@ fun PodcastCatalogScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
                 actions = {
+                    IconButton(onClick = { showAttributionsDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Podcast Sources & Attributions"
+                        )
+                    }
                     IconButton(
                         onClick = { viewModel.refreshCurrentChannel() },
                         enabled = !uiState.isRefreshing
@@ -269,6 +281,14 @@ fun PodcastCatalogScreen(
                     }
                 }
             }
+        }
+
+        if (showAttributionsDialog) {
+            val selectedChannel = uiState.channels.find { it.channelId == uiState.selectedChannelId }
+            PodcastAttributionDialog(
+                onDismissRequest = { showAttributionsDialog = false },
+                targetChannelTitle = selectedChannel?.title
+            )
         }
     }
 }

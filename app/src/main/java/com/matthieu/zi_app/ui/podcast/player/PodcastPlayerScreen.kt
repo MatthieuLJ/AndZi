@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -43,6 +44,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -73,7 +75,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
 import com.matthieu.zi_app.ui.dictionary.WordDetailSheetContent
+import com.matthieu.zi_app.ui.podcast.components.PodcastAttributionDialog
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
 import com.matthieu.zi_app.ui.theme.buildPinyinToneAnnotatedString
 import java.util.Locale
@@ -88,6 +92,7 @@ fun PodcastPlayerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val wordSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val vocabSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var showAttributionDialog by remember { mutableStateOf(false) }
 
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
@@ -124,6 +129,13 @@ fun PodcastPlayerScreen(
                     }
                 },
                 actions = {
+                    // Podcast Source & Attribution Info Trigger
+                    IconButton(onClick = { showAttributionDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Podcast Attribution"
+                        )
+                    }
                     // Vocabulary Sheet Trigger with Badge
                     IconButton(onClick = { viewModel.setShowVocabSheet(true) }) {
                         BadgedBox(
@@ -202,7 +214,9 @@ fun PodcastPlayerScreen(
                     } else {
                         TranscriptReaderView(
                             transcript = uiState.episode?.transcript ?: "",
-                            onWordClick = { word -> viewModel.selectWordForDetail(word) }
+                            channel = uiState.channel,
+                            onWordClick = { word -> viewModel.selectWordForDetail(word) },
+                            onAttributionClick = { showAttributionDialog = true }
                         )
                     }
                 }
@@ -248,6 +262,13 @@ fun PodcastPlayerScreen(
                     onSelectCompound = { compound -> viewModel.selectWordForDetail(compound.chinese) }
                 )
             }
+        }
+
+        if (showAttributionDialog) {
+            PodcastAttributionDialog(
+                onDismissRequest = { showAttributionDialog = false },
+                targetChannelTitle = uiState.channel?.title
+            )
         }
     }
 }
@@ -455,7 +476,9 @@ fun BlindListeningView(
 fun TranscriptReaderView(
     transcript: String,
     onWordClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    channel: PodcastChannelEntity? = null,
+    onAttributionClick: () -> Unit = {}
 ) {
     val paragraphs = remember(transcript) {
         transcript.split("\n\n").filter { it.isNotBlank() }
@@ -479,6 +502,34 @@ fun TranscriptReaderView(
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { onAttributionClick() }
+                .padding(vertical = 6.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            val channelLabel = channel?.let { "${it.chineseTitle} (${it.title})" } ?: "Podcast Source"
+            Text(
+                text = "Story source: $channelLabel • View Attribution & License",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
