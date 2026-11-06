@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,6 +63,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +79,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
+import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
 import com.matthieu.zi_app.ui.dictionary.WordDetailSheetContent
 import com.matthieu.zi_app.ui.podcast.components.PodcastAttributionDialog
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
@@ -213,8 +217,12 @@ fun PodcastPlayerScreen(
                         )
                     } else {
                         TranscriptReaderView(
-                            transcript = uiState.episode?.transcript ?: "",
+                            sentences = uiState.sentences,
+                            rawTranscript = uiState.episode?.transcript ?: "",
+                            currentPositionMs = uiState.playerState.currentPositionMs,
+                            isPlaying = uiState.playerState.isPlaying,
                             channel = uiState.channel,
+                            onSeekTo = { viewModel.seekTo(it) },
                             onWordClick = { word -> viewModel.selectWordForDetail(word) },
                             onAttributionClick = { showAttributionDialog = true }
                         )
@@ -474,63 +482,172 @@ fun BlindListeningView(
 
 @Composable
 fun TranscriptReaderView(
-    transcript: String,
+    sentences: List<PodcastSentenceEntity>,
+    rawTranscript: String,
+    currentPositionMs: Int,
+    isPlaying: Boolean,
+    onSeekTo: (Int) -> Unit,
     onWordClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     channel: PodcastChannelEntity? = null,
     onAttributionClick: () -> Unit = {}
 ) {
-    val paragraphs = remember(transcript) {
-        transcript.split("\n\n").filter { it.isNotBlank() }
+    if (sentences.isEmpty()) {
+        // Fallback to paragraph view if sentences are not yet available
+        val paragraphs = remember(rawTranscript) {
+            rawTranscript.split("\n\n").filter { it.isNotBlank() }
+        }
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
+            paragraphs.forEach { para ->
+                Text(
+                    text = para.trim(),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 19.sp,
+                        lineHeight = 32.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            TranscriptAttributionFooter(
+                channel = channel,
+                onAttributionClick = onAttributionClick
+            )
+        }
+        return
     }
 
-    Column(
+    // Active sentence index based on audio player position
+    val activeSentenceIndex = remember(sentences, currentPositionMs) {
+        sentences.indexOfFirst { currentPositionMs in it.startMs..it.endMs }
+    }
+
+    val listState = rememberLazyListState()
+
+    // Smoothly scroll active sentence into view when playing, unless user is actively dragging
+    LaunchedEffect(activeSentenceIndex, isPlaying) {
+        if (isPlaying && activeSentenceIndex >= 0 && !listState.isScrollInProgress) {
+            listState.animateScrollToItem(
+                index = activeSentenceIndex,
+                scrollOffset = -100 // Center slightly from top
+            )
+        }
+    }
+
+    LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 32.dp)
     ) {
-        paragraphs.forEach { para ->
-            Text(
-                text = para.trim(),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 19.sp,
-                    lineHeight = 32.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.fillMaxWidth()
-            )
+        itemsIndexed(
+            items = sentences,
+            key = { _, item -> item.sentenceId.takeIf { it != 0 } ?: item.sentenceIdx }
+        ) { index, sentence ->
+            val isActive = index == activeSentenceIndex
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isActive) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                } else {
+                    MaterialTheme.colorScheme.surface
+                },
+                tonalElevation = if (isActive) 2.dp else 0.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onSeekTo(sentence.startMs) }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left indicator bar for active sentence
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                if (isActive) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = sentence.chineseText,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 19.sp,
+                            lineHeight = 32.sp,
+                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
+                        ),
+                        color = if (isActive) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        item {
             Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .clickable { onAttributionClick() }
-                .padding(vertical = 6.dp, horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            val channelLabel = channel?.let { "${it.chineseTitle} (${it.title})" } ?: "Podcast Source"
-            Text(
-                text = "Story source: $channelLabel • View Attribution & License",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            TranscriptAttributionFooter(
+                channel = channel,
+                onAttributionClick = onAttributionClick
             )
         }
-        Spacer(modifier = Modifier.height(24.dp))
     }
+}
+
+@Composable
+private fun TranscriptAttributionFooter(
+    channel: PodcastChannelEntity?,
+    onAttributionClick: () -> Unit
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+    Spacer(modifier = Modifier.height(12.dp))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onAttributionClick() }
+            .padding(vertical = 6.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        val channelLabel = channel?.let { "${it.chineseTitle} (${it.title})" } ?: "Podcast Source"
+        Text(
+            text = "Story source: $channelLabel • View Attribution & License",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @Composable

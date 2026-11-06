@@ -88,7 +88,12 @@ object PodcastRssParser {
 
                         // Clean transcript (prefer itunes:summary which contains the Chinese text)
                         val rawText = if (!itunesSummary.isNullOrBlank()) itunesSummary else description ?: ""
-                        val cleanTranscript = cleanTranscript(rawText)
+                        var cleanTranscript = cleanTranscript(rawText)
+                        if (cleanTranscript.isBlank()) {
+                            SlowChineseTranscripts.getPatchedTranscript(channelId, episodeNum)?.let {
+                                cleanTranscript = it
+                            }
+                        }
 
                         episodes.add(
                             PodcastEpisodeEntity(

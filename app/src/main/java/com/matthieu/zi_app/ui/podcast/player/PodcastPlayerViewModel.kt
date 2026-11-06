@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
 import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
+import com.matthieu.zi_app.data.podcast.SlowChineseOffsets
+import com.matthieu.zi_app.data.podcast.SlowChineseTranscripts
 import com.matthieu.zi_app.data.repository.PodcastRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
@@ -36,16 +38,29 @@ class PodcastPlayerViewModel(
 
     private fun loadEpisodeData() {
         viewModelScope.launch {
-            val ep = podcastRepository.getEpisodeById(episodeId)
+            var ep = podcastRepository.getEpisodeById(episodeId)
             if (ep == null) {
                 _uiState.update { it.copy(isLoading = false) }
                 return@launch
             }
 
+            if (ep.transcript.isBlank()) {
+                val patched = SlowChineseTranscripts.getPatchedTranscript(ep.channelId, ep.episodeNum)
+                if (!patched.isNullOrBlank()) {
+                    ep = ep.copy(transcript = patched)
+                }
+            }
+
             val channel = podcastRepository.getChannelById(ep.channelId)
+            val timing = SlowChineseOffsets.getOffset(ep.episodeNum)
             var sentences = podcastRepository.getSentencesForEpisodeSync(episodeId)
-            if (sentences.isEmpty() && ep.transcript.isNotBlank()) {
-                sentences = podcastRepository.extractAndSaveSentencesForEpisode(ep, channel)
+            val lastEnd = sentences.lastOrNull()?.endMs ?: 0
+            val expectedEnd = if (timing.durationMs > 0) timing.durationMs - timing.outroOffsetMs else 0
+
+            // If sentences are empty or were computed with corrupted/truncated RSS duration, recalculate
+            val needsRecalculation = sentences.isEmpty() || (expectedEnd > 0 && lastEnd < (expectedEnd - 15_000))
+            if (needsRecalculation && ep.transcript.isNotBlank()) {
+                sentences = podcastRepository.extractAndSaveSentencesForEpisode(ep, channel, forceRefresh = true)
             }
             var rawVocab = podcastRepository.getVocabForEpisodeSync(episodeId)
 

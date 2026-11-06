@@ -93,6 +93,9 @@ interface PodcastDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChannels(channels: List<PodcastChannelEntity>)
 
+    @Query("DELETE FROM podcast_sentence WHERE episode_id = :episodeId")
+    suspend fun deleteSentencesForEpisode(episodeId: Int)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEpisodes(episodes: List<PodcastEpisodeEntity>): List<Long>
 

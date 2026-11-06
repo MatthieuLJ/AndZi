@@ -9,6 +9,7 @@ import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
 import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
 import com.matthieu.zi_app.data.podcast.PacedSpeechRateEngine
 import com.matthieu.zi_app.data.podcast.PodcastRssParser
+import com.matthieu.zi_app.data.podcast.SlowChineseTranscripts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -74,15 +75,23 @@ class PodcastRepository(
 
     suspend fun extractAndSaveSentencesForEpisode(
         episode: PodcastEpisodeEntity,
-        channel: PodcastChannelEntity? = null
+        channel: PodcastChannelEntity? = null,
+        forceRefresh: Boolean = false
     ): List<PodcastSentenceEntity> = withContext(Dispatchers.IO) {
         val existing = podcastDao.getSentencesForEpisodeSync(episode.episodeId)
-        if (existing.isNotEmpty()) {
+        if (existing.isNotEmpty() && !forceRefresh) {
             return@withContext existing
         }
 
-        if (episode.transcript.isBlank()) {
-            return@withContext emptyList()
+        var effectiveTranscript = episode.transcript
+        if (effectiveTranscript.isBlank()) {
+            val patched = SlowChineseTranscripts.getPatchedTranscript(episode.channelId, episode.episodeNum)
+            if (!patched.isNullOrBlank()) {
+                effectiveTranscript = patched
+                podcastDao.updateEpisode(episode.copy(transcript = patched))
+            } else {
+                return@withContext emptyList()
+            }
         }
 
         val offsets = PacedSpeechRateEngine.resolveOffsets(
@@ -92,15 +101,26 @@ class PodcastRepository(
             channelFallbackOutroMs = channel?.outroOffsetMs ?: 0
         )
 
+        // If offsets contain exact measured duration (e.g. Slow Chinese where RSS itunes:duration is inaccurate),
+        // prioritize it over episode.durationMs.
+        val effectiveTotalDurationMs = if (offsets.durationMs > 0) {
+            offsets.durationMs
+        } else {
+            episode.durationMs
+        }
+
         val sentences = PacedSpeechRateEngine.computeSentenceTimestamps(
             episodeId = episode.episodeId,
-            transcript = episode.transcript,
-            totalDurationMs = episode.durationMs,
+            transcript = effectiveTranscript,
+            totalDurationMs = effectiveTotalDurationMs,
             introOffsetMs = offsets.introOffsetMs,
             outroOffsetMs = offsets.outroOffsetMs
         )
 
         if (sentences.isNotEmpty()) {
+            if (forceRefresh) {
+                podcastDao.deleteSentencesForEpisode(episode.episodeId)
+            }
             podcastDao.insertSentences(sentences)
         }
 
