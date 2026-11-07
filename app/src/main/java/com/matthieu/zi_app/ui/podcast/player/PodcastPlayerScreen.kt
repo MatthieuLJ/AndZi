@@ -3,6 +3,7 @@ package com.matthieu.zi_app.ui.podcast.player
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,6 +73,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -80,6 +85,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
 import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
+import com.matthieu.zi_app.data.podcast.ChineseSentenceTokenizer
+import com.matthieu.zi_app.data.podcast.SentenceToken
 import com.matthieu.zi_app.ui.dictionary.WordDetailSheetContent
 import com.matthieu.zi_app.ui.podcast.components.PodcastAttributionDialog
 import com.matthieu.zi_app.ui.theme.AndZiThemeCustom
@@ -222,6 +229,8 @@ fun PodcastPlayerScreen(
                             currentPositionMs = uiState.playerState.currentPositionMs,
                             isPlaying = uiState.playerState.isPlaying,
                             channel = uiState.channel,
+                            vocabItems = uiState.vocabItems,
+                            selectedWord = uiState.selectedWord?.chinese,
                             onSeekTo = { viewModel.seekTo(it) },
                             onWordClick = { word -> viewModel.selectWordForDetail(word) },
                             onAttributionClick = { showAttributionDialog = true }
@@ -490,8 +499,14 @@ fun TranscriptReaderView(
     onWordClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     channel: PodcastChannelEntity? = null,
+    vocabItems: List<PodcastVocabItemUiState> = emptyList(),
+    selectedWord: String? = null,
     onAttributionClick: () -> Unit = {}
 ) {
+    val knownWords = remember(vocabItems) {
+        vocabItems.map { it.vocab.chinese }.toSet()
+    }
+
     if (sentences.isEmpty()) {
         // Fallback to paragraph view if sentences are not yet available
         val paragraphs = remember(rawTranscript) {
@@ -505,13 +520,16 @@ fun TranscriptReaderView(
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             paragraphs.forEach { para ->
-                Text(
+                val paraTokens = remember(para, knownWords) {
+                    ChineseSentenceTokenizer.tokenize(para.trim(), knownWords)
+                }
+                InteractiveSentenceText(
                     text = para.trim(),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 19.sp,
-                        lineHeight = 32.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    tokens = paraTokens,
+                    isActive = false,
+                    selectedWord = selectedWord,
+                    onWordClick = onWordClick,
+                    onSentenceClick = {},
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -554,6 +572,9 @@ fun TranscriptReaderView(
             key = { _, item -> item.sentenceId.takeIf { it != 0 } ?: item.sentenceIdx }
         ) { index, sentence ->
             val isActive = index == activeSentenceIndex
+            val tokens = remember(sentence.chineseText, knownWords) {
+                ChineseSentenceTokenizer.tokenize(sentence.chineseText, knownWords)
+            }
 
             Surface(
                 shape = RoundedCornerShape(12.dp),
@@ -572,35 +593,46 @@ fun TranscriptReaderView(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    // Left indicator bar for active sentence
-                    Box(
+                    // Left Play / Timestamp Button
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .width(4.dp)
-                            .height(28.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(
-                                if (isActive) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
-                            )
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onSeekTo(sentence.startMs) }
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isActive && isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = "Play from this sentence",
+                            tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        val totalSec = sentence.startMs / 1000
+                        val min = totalSec / 60
+                        val sec = totalSec % 60
+                        Text(
+                            text = String.format(Locale.getDefault(), "%02d:%02d", min, sec),
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
 
-                    Text(
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    InteractiveSentenceText(
                         text = sentence.chineseText,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 19.sp,
-                            lineHeight = 32.sp,
-                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
-                        ),
-                        color = if (isActive) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                        modifier = Modifier.weight(1f)
+                        tokens = tokens,
+                        isActive = isActive,
+                        selectedWord = selectedWord,
+                        onWordClick = onWordClick,
+                        onSentenceClick = { onSeekTo(sentence.startMs) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(top = 2.dp)
                     )
                 }
             }
@@ -614,6 +646,80 @@ fun TranscriptReaderView(
             )
         }
     }
+}
+
+@Composable
+private fun InteractiveSentenceText(
+    text: String,
+    tokens: List<SentenceToken>,
+    isActive: Boolean,
+    selectedWord: String?,
+    onWordClick: (String) -> Unit,
+    onSentenceClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+
+    val annotatedString = remember(text, tokens, isActive, selectedWord, highlightColor) {
+        buildAnnotatedString {
+            tokens.forEach { token ->
+                val isSelected = selectedWord != null && token.text == selectedWord
+                if (isSelected) {
+                    pushStyle(
+                        SpanStyle(
+                            background = highlightColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+                append(token.text)
+                if (isSelected) {
+                    pop()
+                }
+            }
+        }
+    }
+
+    Text(
+        text = annotatedString,
+        style = MaterialTheme.typography.bodyLarge.copy(
+            fontSize = 19.sp,
+            lineHeight = 32.sp,
+            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal
+        ),
+        color = if (isActive) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        onTextLayout = { layoutResult = it },
+        modifier = modifier.pointerInput(text, tokens) {
+            detectTapGestures { pos ->
+                val layout = layoutResult ?: run {
+                    onSentenceClick()
+                    return@detectTapGestures
+                }
+                val line = layout.getLineForVerticalPosition(pos.y)
+                val lineLeft = layout.getLineLeft(line)
+                val lineRight = layout.getLineRight(line)
+
+                // If tapped on empty margin on this line, trigger sentence seek
+                if (pos.x < lineLeft || pos.x > lineRight) {
+                    onSentenceClick()
+                    return@detectTapGestures
+                }
+
+                val charOffset = layout.getOffsetForPosition(pos)
+                val token = tokens.find { charOffset >= it.startIndex && charOffset < it.endIndex }
+                if (token != null && token.isHanzi) {
+                    onWordClick(token.text)
+                } else {
+                    onSentenceClick()
+                }
+            }
+        }
+    )
 }
 
 @Composable
