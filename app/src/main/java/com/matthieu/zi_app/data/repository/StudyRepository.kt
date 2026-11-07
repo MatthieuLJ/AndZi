@@ -1,5 +1,6 @@
 package com.matthieu.zi_app.data.repository
 
+import com.matthieu.zi_app.LeitnerScheduler
 import com.matthieu.zi_app.LeitnerState
 import com.matthieu.zi_app.data.local.dao.BoxCount
 import com.matthieu.zi_app.data.local.dao.LeitnerDao
@@ -8,6 +9,7 @@ import com.matthieu.zi_app.domain.srs.EbisuSpacedRepetitionEngine
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.domain.srs.ReviewState
 import com.matthieu.zi_app.domain.srs.SpacedRepetitionEngine
+import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -107,6 +109,51 @@ class StudyRepository(
         val scheduleResult = srsEngine.resetCard(hanzi, currentState, now)
         leitnerDao.insertOrUpdateRecord(toEntity(scheduleResult.updatedState))
         toLeitnerState(scheduleResult.updatedState)
+    }
+
+    /**
+     * Resets the expiry timer for an exposed character or word without modifying its mastery box.
+     * This ensures recently encountered items are postponed according to their current mastery level
+     * without artificially promoting them as if they passed a direct active test.
+     */
+    suspend fun refreshCardTimer(
+        hanzi: String,
+        now: Long = System.currentTimeMillis()
+    ): LeitnerState = withContext(Dispatchers.IO) {
+        val currentRecord = leitnerDao.getRecord(hanzi)
+        val box = currentRecord?.box ?: 0
+        val delay = if (box > 0) {
+            LeitnerScheduler.calculateAdaptiveExpiryDelay(
+                box = box,
+                numTested = currentRecord?.numTested ?: 0,
+                numWrong = currentRecord?.numWrong ?: 0,
+                lastExpiration = currentRecord?.expTime ?: now,
+                now = now
+            )
+        } else {
+            LeitnerScheduler.BASE_DELAY_MS
+        }
+        val updatedRecord = LeitnerRecordEntity(
+            hanzi = hanzi,
+            box = box,
+            expTime = now + delay,
+            numTested = currentRecord?.numTested ?: 0,
+            numWrong = currentRecord?.numWrong ?: 0,
+            streak = currentRecord?.streak ?: 0,
+            dateAdded = currentRecord?.dateAdded ?: now
+        )
+        leitnerDao.insertOrUpdateRecord(updatedRecord)
+        toDomainState(updatedRecord)
+    }
+
+    suspend fun refreshCardTimers(
+        hanziList: Collection<String>,
+        now: Long = System.currentTimeMillis()
+    ) = withContext(Dispatchers.IO) {
+        val distinct = hanziList.distinct()
+        for (hanzi in distinct) {
+            refreshCardTimer(hanzi, now)
+        }
     }
 
     suspend fun getLeitnerState(hanzi: String): LeitnerState? = withContext(Dispatchers.IO) {

@@ -379,9 +379,12 @@ class StudyViewModel(
         val currentTone = _uiState.value.selectedPinyinTone
         if (currentTone != null) {
             _uiState.update { it.copy(selectedOption = syllable) }
-            val isCorrect = syllable.equals(card.syllable, ignoreCase = true) && currentTone == card.tone
+            val isSyllableCorrect = syllable.equals(card.syllable, ignoreCase = true)
+            val isToneCorrect = currentTone == card.tone
+            val isCorrect = isSyllableCorrect && isToneCorrect
             val combined = PinyinParser.convert_to_pretty_version("$syllable$currentTone")
-            processAnswer(card, isCorrect, combined)
+            val gradeOverride = if (isSyllableCorrect && !isToneCorrect) ReviewGrade.HARD else null
+            processAnswer(card, isCorrect, combined, gradeOverride)
         } else {
             _uiState.update { it.copy(selectedOption = syllable) }
         }
@@ -394,9 +397,12 @@ class StudyViewModel(
         val currentSyllable = _uiState.value.selectedOption
         if (currentSyllable != null) {
             _uiState.update { it.copy(selectedPinyinTone = tone) }
-            val isCorrect = currentSyllable.equals(card.syllable, ignoreCase = true) && tone == card.tone
+            val isSyllableCorrect = currentSyllable.equals(card.syllable, ignoreCase = true)
+            val isToneCorrect = tone == card.tone
+            val isCorrect = isSyllableCorrect && isToneCorrect
             val combined = PinyinParser.convert_to_pretty_version("$currentSyllable$tone")
-            processAnswer(card, isCorrect, combined)
+            val gradeOverride = if (isSyllableCorrect && !isToneCorrect) ReviewGrade.HARD else null
+            processAnswer(card, isCorrect, combined, gradeOverride)
         } else {
             _uiState.update { it.copy(selectedPinyinTone = tone) }
         }
@@ -411,11 +417,11 @@ class StudyViewModel(
         val parsedTone = if (p != null && p.tone in 1..4) p.tone else null
 
         val hasTone = card.tone in 1..4
-        val isCorrect = if (hasTone) {
-            parsedSyllable.equals(card.syllable, ignoreCase = true) && parsedTone == card.tone
-        } else {
-            parsedSyllable.equals(card.syllable, ignoreCase = true)
-        }
+        val isSyllableCorrect = parsedSyllable.equals(card.syllable, ignoreCase = true)
+        val isToneCorrect = if (hasTone) parsedTone == card.tone else true
+        val isCorrect = isSyllableCorrect && isToneCorrect
+
+        val gradeOverride = if (isSyllableCorrect && !isToneCorrect) ReviewGrade.HARD else null
 
         _uiState.update {
             it.copy(
@@ -423,7 +429,7 @@ class StudyViewModel(
                 selectedPinyinTone = parsedTone
             )
         }
-        processAnswer(card, isCorrect, selectedPinyin)
+        processAnswer(card, isCorrect, selectedPinyin, gradeOverride)
     }
 
     fun submitPinyinAnswer(syllable: String, tone: Int?) {
@@ -584,22 +590,38 @@ class StudyViewModel(
             lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
             val isPrimaryFailed = _uiState.value.failedMatchWords.contains(card.hanzi)
 
-            // 1. Update scores for ALL words composed
-            for (pair in card.matchPairs) {
+            // 1. Primary word: active test -> update SRS score (GOOD or AGAIN)
+            val primaryGrade = if (!isPrimaryFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
+            studyRepository.recordReviewGrade(card.hanzi, primaryGrade, now)
+
+            // 2. Companion words:
+            for (pair in card.matchPairs.filter { it.word != card.hanzi }) {
                 val isFailed = _uiState.value.failedMatchWords.contains(pair.word)
-                val grade = if (!isFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
-                studyRepository.recordReviewGrade(pair.word, grade, now)
+                if (isFailed) {
+                    studyRepository.recordReviewGrade(pair.word, ReviewGrade.AGAIN, now)
+                } else {
+                    val state = studyRepository.getLeitnerState(pair.word)
+                    if (state != null && (state.expTime <= now || state.box == 0)) {
+                        // Due companion word matched cleanly -> promote
+                        studyRepository.recordReviewGrade(pair.word, ReviewGrade.GOOD, now)
+                    } else {
+                        // Non-due companion word matched cleanly -> refresh timer without updating box
+                        studyRepository.refreshCardTimer(pair.word, now)
+                    }
+                }
             }
 
-            // 2. Update scores for ALL characters used or displayed
-            val charsToUpdate = card.matchPairs.flatMap { pair ->
-                val isFailed = _uiState.value.failedMatchWords.contains(pair.word)
-                val grade = if (!isFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
-                listOf(pair.firstChar to grade, pair.secondChar to grade)
-            }
-
-            for ((char, grade) in charsToUpdate) {
-                studyRepository.recordReviewGrade(char, grade, now)
+            // 3. Characters displayed & used:
+            // "for the other characters displayed, we can reset the timer without updating the box"
+            val allChars = card.matchPairs.flatMap { listOf(it.firstChar to it.word, it.secondChar to it.word) }
+            for ((char, word) in allChars) {
+                val isFailed = _uiState.value.failedMatchWords.contains(word)
+                if (isFailed) {
+                    studyRepository.recordReviewGrade(char, ReviewGrade.AGAIN, now)
+                } else {
+                    // Cleanly matched character -> refresh timer without updating box
+                    studyRepository.refreshCardTimer(char, now)
+                }
             }
 
             userPreferences?.recordStudySession(now)
@@ -711,6 +733,14 @@ class StudyViewModel(
             val now = System.currentTimeMillis()
             lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
             studyRepository.recordGuidedWritingResult(card.hanzi, strokeCount, now)
+
+            if (card.wordSlots.isNotEmpty()) {
+                val contextWord = card.wordSlots.joinToString("")
+                studyRepository.refreshCardTimer(contextWord, now)
+                val companionChars = card.wordSlots.filter { it != card.hanzi }
+                studyRepository.refreshCardTimers(companionChars, now)
+            }
+
             userPreferences?.recordStudySession(now)
             val dueCount = studyRepository.getNumExpired(now)
 
@@ -736,7 +766,12 @@ class StudyViewModel(
         _uiState.update { it.copy(isContextWordsRevealed = true) }
     }
 
-    private fun processAnswer(card: StudyCard, isCorrect: Boolean, selectedInput: String) {
+    private fun processAnswer(
+        card: StudyCard,
+        isCorrect: Boolean,
+        selectedInput: String,
+        gradeOverride: ReviewGrade? = null
+    ) {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
@@ -747,20 +782,59 @@ class StudyViewModel(
                 !_uiState.value.isContextWordsRevealed
 
             val grade = when {
+                gradeOverride != null -> gradeOverride
                 !isCorrect -> ReviewGrade.AGAIN
                 isBonusToneOrPinyin -> ReviewGrade.EASY
                 else -> ReviewGrade.GOOD
             }
             studyRepository.recordReviewGrade(card.hanzi, grade, now)
+
+            // Reset timers without updating box for auxiliary characters/words displayed in test
+            if (isCorrect || grade == ReviewGrade.HARD) {
+                when (card.quizType) {
+                    QuizType.WORD_ASSEMBLY -> {
+                        // Refresh constituent characters without updating their box
+                        val constituentChars = card.wordSlots.filter { it != card.hanzi }
+                        studyRepository.refreshCardTimers(constituentChars, now)
+                    }
+                    QuizType.CLOZE -> {
+                        // Refresh visible (non-target) constituent characters without updating their box
+                        val visibleChars = card.wordSlots.filterIndexed { index, char ->
+                            index != card.clozeTargetIndex && char != card.hanzi
+                        }
+                        studyRepository.refreshCardTimers(visibleChars, now)
+                        val missingChar = card.wordSlots.getOrNull(card.clozeTargetIndex)
+                        if (missingChar != null && missingChar != card.hanzi) {
+                            studyRepository.refreshCardTimer(missingChar, now)
+                        }
+                    }
+                    QuizType.WRITING -> {
+                        if (card.wordSlots.isNotEmpty()) {
+                            val contextWord = card.wordSlots.joinToString("")
+                            studyRepository.refreshCardTimer(contextWord, now)
+                            val companionChars = card.wordSlots.filter { it != card.hanzi }
+                            studyRepository.refreshCardTimers(companionChars, now)
+                        }
+                    }
+                    QuizType.TONE, QuizType.PINYIN -> {
+                        if (_uiState.value.isContextWordsRevealed && card.contextWords.isNotEmpty()) {
+                            studyRepository.refreshCardTimers(card.contextWords, now)
+                        }
+                    }
+                    else -> {}
+                }
+            }
+
             userPreferences?.recordStudySession(now)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { state ->
                 val prevStats = state.sessionStats
+                val isSuccess = isCorrect || grade == ReviewGrade.HARD
                 val newStats = prevStats.copy(
                     totalReviewed = prevStats.totalReviewed + 1,
-                    correctCount = prevStats.correctCount + if (isCorrect) 1 else 0,
-                    lapseCount = prevStats.lapseCount + if (!isCorrect) 1 else 0
+                    correctCount = prevStats.correctCount + if (isSuccess) 1 else 0,
+                    lapseCount = prevStats.lapseCount + if (grade == ReviewGrade.AGAIN) 1 else 0
                 )
                 state.copy(
                     remainingDueCount = dueCount,

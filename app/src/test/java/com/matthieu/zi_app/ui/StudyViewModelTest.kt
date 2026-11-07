@@ -1879,18 +1879,173 @@ class StudyViewModelTest {
         assertTrue(revealedState.isAnswerRevealed)
         assertEquals(true, revealedState.isCorrect)
 
-        // Promoted to Box 2
+        // Primary word in test is promoted to Box 2
         val updated = studyRepo.getLeitnerState("飞机")!!
         assertEquals(2, updated.box)
 
-        // All companion words composed also have scores updated
-        assertEquals(2, studyRepo.getLeitnerState("苹果")?.box)
-        assertEquals(2, studyRepo.getLeitnerState("汽车")?.box)
+        // Non-due companion words have their timer refreshed without updating box
+        assertEquals(1, studyRepo.getLeitnerState("苹果")?.box)
+        assertTrue(studyRepo.getLeitnerState("苹果")!!.expTime > now)
+        assertEquals(1, studyRepo.getLeitnerState("汽车")?.box)
+        assertTrue(studyRepo.getLeitnerState("汽车")!!.expTime > now)
 
-        // All characters used or displayed also have scores updated
+        // All characters used or displayed have their timer refreshed without updating box
         for (char in listOf("飞", "机", "苹", "果", "汽", "车")) {
-            assertEquals(2, studyRepo.getLeitnerState(char)?.box)
+            assertEquals(1, studyRepo.getLeitnerState(char)?.box)
+            assertTrue(studyRepo.getLeitnerState(char)!!.expTime > now)
         }
+    }
+
+    @Test
+    fun testPinyinQuiz_toneOnlyMistake_appliesReviewGradeHard_preservesBox() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("学", "xue2", arrayListOf("to learn")))
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "学",
+                box = 3,
+                expTime = now - 1000L,
+                numTested = 3,
+                numWrong = 0,
+                streak = 3,
+                dateAdded = now
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var card = state.currentCard!!
+
+        var steps = 0
+        while (card.quizType != QuizType.PINYIN && steps < 10) {
+            viewModel.nextCard()
+            state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            card = state.currentCard!!
+            steps++
+        }
+        assertEquals(QuizType.PINYIN, card.quizType)
+
+        // Correct syllable "xue", but WRONG tone 3 instead of tone 2
+        viewModel.selectPinyinSyllable("xue")
+        viewModel.selectPinyinTone(3)
+
+        val answeredState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(answeredState.isAnswerRevealed)
+
+        val updatedRecord = studyRepo.getLeitnerState("学")!!
+        // Box must be preserved at Box 3 (NOT demoted to Box 0!)
+        assertEquals(3, updatedRecord.box)
+        // Next review timer should be refreshed and in future
+        assertTrue(updatedRecord.expTime > now)
+    }
+
+    @Test
+    fun testPinyinQuiz_syllableMistake_appliesReviewGradeAgain_demotesBox() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("学", "xue2", arrayListOf("to learn")))
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "学",
+                box = 4,
+                expTime = now - 1000L,
+                numTested = 4,
+                numWrong = 0,
+                streak = 4,
+                dateAdded = now
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var card = state.currentCard!!
+
+        var steps = 0
+        while (card.quizType != QuizType.PINYIN && steps < 10) {
+            viewModel.nextCard()
+            state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            card = state.currentCard!!
+            steps++
+        }
+        assertEquals(QuizType.PINYIN, card.quizType)
+
+        // WRONG syllable "shang" (completely incorrect base radical)
+        viewModel.selectPinyinSyllable("shang")
+        viewModel.selectPinyinTone(2)
+
+        val answeredState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(answeredState.isAnswerRevealed)
+
+        val updatedRecord = studyRepo.getLeitnerState("学")!!
+        // Full demotion applied for wrong syllable
+        assertTrue(updatedRecord.box < 4)
+    }
+
+    @Test
+    fun testWordAssemblyQuiz_refreshesConstituentCharacterTimersWithoutUpdatingBox() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("学习", "xue2xi2", arrayListOf("to study")))
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "学习", box = 1, expTime = now - 1000L)
+        )
+        // Constituent characters at Box 2 with unexpired expTime so only 学习 is queued for test
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "学", box = 2, expTime = now + 100_000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "习", box = 2, expTime = now + 100_000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var card = state.currentCard!!
+
+        var steps = 0
+        while (card.quizType != QuizType.WORD_ASSEMBLY && steps < 10) {
+            viewModel.nextCard()
+            state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            card = state.currentCard!!
+            steps++
+        }
+        assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
+
+        // Correctly assemble "学习"
+        val xueIdx = card.scrambledTiles.indexOf("学")
+        val xiIdx = card.scrambledTiles.indexOf("习")
+        viewModel.selectAssemblyTile(xueIdx, "学")
+        viewModel.selectAssemblyTile(xiIdx, "习")
+
+        val answeredState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+        assertTrue(answeredState.isAnswerRevealed)
+
+        // Compound word promoted from Box 1 to Box 2
+        assertEquals(2, studyRepo.getLeitnerState("学习")!!.box)
+
+        // Constituent characters MUST preserve Box 2, while having expTime refreshed into the future
+        val xueRecord = studyRepo.getLeitnerState("学")!!
+        assertEquals(2, xueRecord.box)
+        assertTrue(xueRecord.expTime > now)
+
+        val xiRecord = studyRepo.getLeitnerState("习")!!
+        assertEquals(2, xiRecord.box)
+        assertTrue(xiRecord.expTime > now)
     }
 
     @Test
@@ -1906,18 +2061,18 @@ class StudyViewModelTest {
         andZiDb.leitnerDao().insertOrUpdateRecord(
             com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "飞机", box = 6, expTime = now - 1000L)
         )
-        // Mark 苹果, 牛奶, 游泳, 米饭 as due words (expTime <= now)
+        // Companion candidate words in active vocabulary
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "苹果", box = 2, expTime = now - 500L)
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "苹果", box = 2, expTime = now + 100_000L)
         )
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "牛奶", box = 1, expTime = now - 400L)
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "牛奶", box = 1, expTime = now + 100_000L)
         )
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "游泳", box = 3, expTime = now - 300L)
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "游泳", box = 3, expTime = now + 100_000L)
         )
         andZiDb.leitnerDao().insertOrUpdateRecord(
-            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "米饭", box = 1, expTime = now - 200L)
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "米饭", box = 1, expTime = now + 100_000L)
         )
         for (char in listOf("飞", "机", "苹", "果", "牛", "奶", "游", "泳", "米", "饭")) {
             andZiDb.leitnerDao().insertOrUpdateRecord(
