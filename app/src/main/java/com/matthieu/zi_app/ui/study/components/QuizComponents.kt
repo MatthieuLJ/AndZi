@@ -941,14 +941,30 @@ fun RevealedFeedbackCard(
                 }
             }
 
-            if (isCorrect == false && card.quizType == QuizType.ENGLISH && !selectedOption.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Your answer: $selectedOption",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+            if (isCorrect == false && !selectedOption.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    val isChineseText = card.quizType == QuizType.WORD_ASSEMBLY || card.quizType == QuizType.CLOZE
+                    val baseStyle = if (isChineseText) {
+                        AndZiThemeCustom.chineseTypography.hanziMedium.copy(
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    Text(
+                        text = "Your answer: $selectedOption",
+                        style = baseStyle,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))

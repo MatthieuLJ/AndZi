@@ -617,6 +617,43 @@ class StudyScreenTest {
     }
 
     @Test
+    fun testWordAssemblyQuiz_whenIncorrect_displaysEnteredWrongAnswerOnResultPage() {
+        val card = StudyCard(
+            hanzi = "学习",
+            pinyin = "xue2xi2",
+            english = listOf("to study", "to learn"),
+            quizType = QuizType.WORD_ASSEMBLY,
+            wordSlots = listOf("学", "习"),
+            scrambledTiles = listOf("学", "校", "习")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = true,
+            isCorrect = false,
+            selectedOption = "学校"
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onAcceptAnswer = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Needs Review").assertExists()
+        composeTestRule.onNodeWithText("Your answer: 学校").assertExists()
+    }
+
+    @Test
     fun testStudyFinishedView_backToDashboardButtonCallsOnReturnHome() {
         val state = StudyUiState(
             queue = emptyList(),
