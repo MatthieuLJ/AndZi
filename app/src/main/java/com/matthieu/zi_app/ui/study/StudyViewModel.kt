@@ -257,11 +257,27 @@ class StudyViewModel(
         val hasValidNonNeutralTone = isSingleChar && (firstPinyin != null && tone in 1..4)
 
         val matchCompanions = if (isTwoChar && box >= 1) {
+            val targetPairCount = when {
+                box >= 6 -> 5
+                box >= 4 -> 4
+                else -> 3
+            }
             val allUserVoc = vocabularyRepository.getAllVocabulary()
+            val now = System.currentTimeMillis()
+            val dueQueue = studyRepository.getStudyQueue(limit = 200, now = now).toSet()
+
+            // Prioritize 2-character words that need to be studied (in study queue / expired / box 0)
+            val (dueCandidates, nonDueCandidates) = allUserVoc
+                .filter { it.chinese != hanzi && it.chinese.codePointCount(0, it.chinese.length) == 2 }
+                .partition { it.chinese in dueQueue }
+
+            val prioritizedCandidates = dueCandidates.shuffled() + nonDueCandidates.shuffled()
+
             QuizDistractorGenerator.findMatchCompanions(
                 primaryWord = hanzi,
-                targetPairCount = 3,
-                candidates = allUserVoc,
+                targetPairCount = targetPairCount,
+                minPairCount = 3,
+                candidates = prioritizedCandidates,
                 vocabularyRepository = vocabularyRepository,
                 dictionaryRepository = dictionaryRepository
             )
@@ -567,16 +583,23 @@ class StudyViewModel(
             val now = System.currentTimeMillis()
             lastPreReviewState = studyRepository.getLeitnerState(card.hanzi)
             val isPrimaryFailed = _uiState.value.failedMatchWords.contains(card.hanzi)
-            val primaryGrade = if (!isPrimaryFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
-            studyRepository.recordReviewGrade(card.hanzi, primaryGrade, now)
 
-            // Companion words: if any companion word was due in the queue, record review too
-            for (pair in card.matchPairs.filter { it.word != card.hanzi }) {
-                val state = studyRepository.getLeitnerState(pair.word)
-                if (state != null && (state.expTime <= now || state.box == 0)) {
-                    val compGrade = if (!_uiState.value.failedMatchWords.contains(pair.word)) ReviewGrade.GOOD else ReviewGrade.AGAIN
-                    studyRepository.recordReviewGrade(pair.word, compGrade, now)
-                }
+            // 1. Update scores for ALL words composed
+            for (pair in card.matchPairs) {
+                val isFailed = _uiState.value.failedMatchWords.contains(pair.word)
+                val grade = if (!isFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
+                studyRepository.recordReviewGrade(pair.word, grade, now)
+            }
+
+            // 2. Update scores for ALL characters used or displayed
+            val charsToUpdate = card.matchPairs.flatMap { pair ->
+                val isFailed = _uiState.value.failedMatchWords.contains(pair.word)
+                val grade = if (!isFailed) ReviewGrade.GOOD else ReviewGrade.AGAIN
+                listOf(pair.firstChar to grade, pair.secondChar to grade)
+            }
+
+            for ((char, grade) in charsToUpdate) {
+                studyRepository.recordReviewGrade(char, grade, now)
             }
 
             userPreferences?.recordStudySession(now)

@@ -670,6 +670,14 @@ fun PairMatchQuizView(
             .offset(x = shakeOffset.value.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val tileHeight = when {
+            leftTiles.size >= 5 -> 50.dp
+            leftTiles.size == 4 -> 56.dp
+            else -> 64.dp
+        }
+        val tileSpacing = if (leftTiles.size >= 5) 8.dp else 12.dp
+        val tileTextStyle = if (leftTiles.size >= 5) AndZiThemeCustom.chineseTypography.hanziMedium else AndZiThemeCustom.chineseTypography.hanziLarge
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
@@ -677,7 +685,7 @@ fun PairMatchQuizView(
             // Left Column (1st characters)
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(tileSpacing)
             ) {
                 leftTiles.forEachIndexed { index, char ->
                     val isMatched = matchedWords.any { it.startsWith(char) }
@@ -698,7 +706,7 @@ fun PairMatchQuizView(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp)
+                            .height(tileHeight)
                             .clip(RoundedCornerShape(16.dp))
                             .clickable(enabled = !isMatched) { onSelectLeft(index) },
                         shape = RoundedCornerShape(16.dp),
@@ -711,7 +719,7 @@ fun PairMatchQuizView(
                         ) {
                             Text(
                                 text = char,
-                                style = AndZiThemeCustom.chineseTypography.hanziLarge,
+                                style = tileTextStyle,
                                 color = when {
                                     isMatched -> Color(0xFF10B981)
                                     isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
@@ -726,7 +734,7 @@ fun PairMatchQuizView(
             // Right Column (2nd characters)
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(tileSpacing)
             ) {
                 rightTiles.forEachIndexed { index, char ->
                     val isMatched = matchedWords.any { it.endsWith(char) }
@@ -747,7 +755,7 @@ fun PairMatchQuizView(
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp)
+                            .height(tileHeight)
                             .clip(RoundedCornerShape(16.dp))
                             .clickable(enabled = !isMatched) { onSelectRight(index) },
                         shape = RoundedCornerShape(16.dp),
@@ -760,7 +768,7 @@ fun PairMatchQuizView(
                         ) {
                             Text(
                                 text = char,
-                                style = AndZiThemeCustom.chineseTypography.hanziLarge,
+                                style = tileTextStyle,
                                 color = when {
                                     isMatched -> Color(0xFF10B981)
                                     isSelected -> MaterialTheme.colorScheme.onPrimaryContainer

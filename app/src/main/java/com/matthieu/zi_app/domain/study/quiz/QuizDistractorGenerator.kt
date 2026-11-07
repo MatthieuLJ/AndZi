@@ -94,6 +94,7 @@ object QuizDistractorGenerator {
     suspend fun findMatchCompanions(
         primaryWord: String,
         targetPairCount: Int = 3,
+        minPairCount: Int = 3,
         candidates: List<Vocabulary>,
         vocabularyRepository: VocabularyRepository,
         dictionaryRepository: VocabularyRepository?
@@ -102,14 +103,13 @@ object QuizDistractorGenerator {
         val chosen = mutableListOf<Vocabulary>()
         val chosenFirstChars = mutableSetOf(primarySplit.first)
         val chosenSecondChars = mutableSetOf(primarySplit.second)
+        val allChosenChars = mutableSetOf(primarySplit.first, primarySplit.second)
 
-        val shuffled = candidates.shuffled()
-
-        for (cand in shuffled) {
+        for (cand in candidates) {
             if (chosen.size >= targetPairCount - 1) break
             val candSplit = splitTwoCharWord(cand.chinese) ?: continue
-            // Bijection guarantee: no duplicate 1st or 2nd character
-            if (candSplit.first in chosenFirstChars || candSplit.second in chosenSecondChars) continue
+            // Bijection guarantee: no duplicate 1st or 2nd character, and no duplicate across columns
+            if (candSplit.first in allChosenChars || candSplit.second in allChosenChars) continue
 
             // CC-CEDICT anti-collision check: ensure cross-pairs do not form valid words
             var hasCrossCollision = false
@@ -132,9 +132,11 @@ object QuizDistractorGenerator {
             chosen.add(cand)
             chosenFirstChars.add(candSplit.first)
             chosenSecondChars.add(candSplit.second)
+            allChosenChars.add(candSplit.first)
+            allChosenChars.add(candSplit.second)
         }
 
-        return if (chosen.size == targetPairCount - 1) chosen else emptyList()
+        return if (chosen.size >= minPairCount - 1) chosen else emptyList()
     }
 
     suspend fun generatePinyinDistractors(

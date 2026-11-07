@@ -624,6 +624,19 @@ class StudyViewModelTest {
                 )
             )
         }
+        for (char in listOf("苹", "果", "香", "蕉", "橘", "子", "西", "瓜", "葡", "萄")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                    hanzi = char,
+                    box = 1,
+                    expTime = now + 100_000L,
+                    numTested = 0,
+                    numWrong = 0,
+                    streak = 0,
+                    dateAdded = now
+                )
+            )
+        }
 
         val viewModel = StudyViewModel(studyRepo, vocRepo)
         val presentedCards = collectPresentedCards(viewModel, maxSteps = 15)
@@ -1869,6 +1882,78 @@ class StudyViewModelTest {
         // Promoted to Box 2
         val updated = studyRepo.getLeitnerState("飞机")!!
         assertEquals(2, updated.box)
+
+        // All companion words composed also have scores updated
+        assertEquals(2, studyRepo.getLeitnerState("苹果")?.box)
+        assertEquals(2, studyRepo.getLeitnerState("汽车")?.box)
+
+        // All characters used or displayed also have scores updated
+        for (char in listOf("飞", "机", "苹", "果", "汽", "车")) {
+            assertEquals(2, studyRepo.getLeitnerState(char)?.box)
+        }
+    }
+
+    @Test
+    fun testPairMatchQuiz_highBox_scalesTargetPairsAndPrioritizesDueWords() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("飞机", "fei1ji1", arrayListOf("airplane")))
+        vocRepo.addVocabulary(Vocabulary("苹果", "ping2guo3", arrayListOf("apple")))
+        vocRepo.addVocabulary(Vocabulary("牛奶", "niu2nai3", arrayListOf("milk")))
+        vocRepo.addVocabulary(Vocabulary("游泳", "you2yong3", arrayListOf("swimming")))
+        vocRepo.addVocabulary(Vocabulary("米饭", "mi3fan4", arrayListOf("cooked rice")))
+
+        val now = System.currentTimeMillis()
+        // Primary word at Box 6 (Mastery / High box tier -> target 5 pairs)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "飞机", box = 6, expTime = now - 1000L)
+        )
+        // Mark 苹果, 牛奶, 游泳, 米饭 as due words (expTime <= now)
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "苹果", box = 2, expTime = now - 500L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "牛奶", box = 1, expTime = now - 400L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "游泳", box = 3, expTime = now - 300L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "米饭", box = 1, expTime = now - 200L)
+        )
+        for (char in listOf("飞", "机", "苹", "果", "牛", "奶", "游", "泳", "米", "饭")) {
+            andZiDb.leitnerDao().insertOrUpdateRecord(
+                com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = char, box = 1, expTime = now + 100_000L)
+            )
+        }
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var state = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }
+        var card = state.currentCard!!
+
+        var steps = 0
+        while ((card.quizType != QuizType.PAIR_MATCH || card.hanzi != "飞机") && steps < 15) {
+            viewModel.nextCard()
+            state = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }
+            card = state.currentCard!!
+            steps++
+        }
+
+        assertEquals(QuizType.PAIR_MATCH, card.quizType)
+        // High box card scaled up to 5 pairs (10 tiles)
+        assertEquals(5, card.matchPairs.size)
+        assertEquals(5, card.leftMatchTiles.size)
+        assertEquals(5, card.rightMatchTiles.size)
+
+        // Verify due companion words were prioritized and included
+        val companionWords = card.matchPairs.map { it.word }.toSet()
+        assertTrue(companionWords.contains("飞机"))
+        assertTrue(companionWords.contains("苹果"))
+        assertTrue(companionWords.contains("牛奶"))
+        assertTrue(companionWords.contains("游泳"))
+        assertTrue(companionWords.contains("米饭"))
     }
 }
 
