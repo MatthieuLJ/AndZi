@@ -321,7 +321,7 @@ object PinyinParser {
         val result = SpannableStringBuilder(resultBuilder.toString())
         var offset = 0
         for (p in parsed) {
-            val size = p.radical.length
+            val size = p.print.length
             val colorRes = when (p.get_tone()) {
                 1 -> R.color.first_tone
                 2 -> R.color.second_tone

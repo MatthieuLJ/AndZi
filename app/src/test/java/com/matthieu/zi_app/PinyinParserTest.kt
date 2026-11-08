@@ -120,4 +120,124 @@ class PinyinParserTest {
         val invalidPinyin = PinyinParser.parse_mixed_string("hello")
         assertNull(invalidPinyin)
     }
+
+    @Test
+    fun testPinyinToneListsInvariants() {
+        val lists = listOf(
+            Pinyin.pinyin_list_notone,
+            Pinyin.pinyin_list_tone1,
+            Pinyin.pinyin_list_tone2,
+            Pinyin.pinyin_list_tone3,
+            Pinyin.pinyin_list_tone4,
+            Pinyin.pinyin_list_tone5
+        )
+        val expectedSize = Pinyin.pinyin_list_notone.size
+        for (list in lists) {
+            assertEquals("All pinyin lists must match size", expectedSize, list.size)
+        }
+
+        val tone1Marks = setOf('ā', 'ē', 'ī', 'ō', 'ū', 'ǖ')
+        val tone2Marks = setOf('á', 'é', 'í', 'ó', 'ú', 'ǘ')
+        val tone3Marks = setOf('ǎ', 'ě', 'ǐ', 'ǒ', 'ǔ', 'ǚ')
+        val tone4Marks = setOf('à', 'è', 'ì', 'ò', 'ù', 'ǜ')
+
+        // Tone 1
+        for (syll in Pinyin.pinyin_list_tone1) {
+            if (syll == "r") continue
+            val hasTone1 = syll.any { it in tone1Marks }
+            val hasOtherTone = syll.any { it in tone2Marks || it in tone3Marks || it in tone4Marks }
+            assertTrue("Tone 1 syllable '$syll' must have tone 1 mark", hasTone1)
+            assertTrue("Tone 1 syllable '$syll' must not have other tone marks", !hasOtherTone)
+        }
+
+        // Tone 2
+        for (syll in Pinyin.pinyin_list_tone2) {
+            if (syll == "r") continue
+            val hasTone2 = syll.any { it in tone2Marks }
+            val hasOtherTone = syll.any { it in tone1Marks || it in tone3Marks || it in tone4Marks }
+            assertTrue("Tone 2 syllable '$syll' must have tone 2 mark", hasTone2)
+            assertTrue("Tone 2 syllable '$syll' must not have other tone marks", !hasOtherTone)
+        }
+
+        // Tone 3
+        for (syll in Pinyin.pinyin_list_tone3) {
+            if (syll == "r") continue
+            val hasTone3 = syll.any { it in tone3Marks }
+            val hasOtherTone = syll.any { it in tone1Marks || it in tone2Marks || it in tone4Marks }
+            assertTrue("Tone 3 syllable '$syll' must have tone 3 mark", hasTone3)
+            assertTrue("Tone 3 syllable '$syll' must not have other tone marks", !hasOtherTone)
+        }
+
+        // Tone 4
+        for (syll in Pinyin.pinyin_list_tone4) {
+            if (syll == "r") continue
+            val hasTone4 = syll.any { it in tone4Marks }
+            val hasOtherTone = syll.any { it in tone1Marks || it in tone2Marks || it in tone3Marks }
+            assertTrue("Tone 4 syllable '$syll' must have tone 4 mark", hasTone4)
+            assertTrue("Tone 4 syllable '$syll' must not have other tone marks", !hasOtherTone)
+        }
+
+        // Orthography: after j, q, x, y, ü is written without umlauts in standard Hanyu Pinyin
+        val jqxyPrefixes = listOf("j", "q", "x", "y")
+        for (t in 1..4) {
+            val list = when (t) {
+                1 -> Pinyin.pinyin_list_tone1
+                2 -> Pinyin.pinyin_list_tone2
+                3 -> Pinyin.pinyin_list_tone3
+                else -> Pinyin.pinyin_list_tone4
+            }
+            for (syll in list) {
+                if (jqxyPrefixes.any { syll.startsWith(it) }) {
+                    val hasUmlaut = syll.any { it in setOf('ǖ', 'ǘ', 'ǚ', 'ǜ', 'ü') }
+                    assertTrue("Syllable '$syll' starting with j/q/x/y must not contain umlauts", !hasUmlaut)
+                }
+            }
+        }
+
+        // Specific regression checks for the previously corrupted syllables
+        assertTrue(Pinyin.pinyin_list_tone2.contains("ruí"))
+        assertTrue(!Pinyin.pinyin_list_tone2.contains("ruī"))
+        assertTrue(Pinyin.pinyin_list_tone2.contains("shuán"))
+        assertTrue(!Pinyin.pinyin_list_tone2.contains("shuān"))
+
+        assertTrue(Pinyin.pinyin_list_tone3.contains("liǎn"))
+        assertTrue(!Pinyin.pinyin_list_tone3.contains("liān"))
+
+        assertTrue(Pinyin.pinyin_list_tone4.contains("shuàn"))
+        assertTrue(Pinyin.pinyin_list_tone4.contains("yù"))
+        assertTrue(Pinyin.pinyin_list_tone4.contains("jù"))
+        assertTrue(Pinyin.pinyin_list_tone4.contains("yùn"))
+        assertTrue(Pinyin.pinyin_list_tone4.contains("jùn"))
+        assertTrue(Pinyin.pinyin_list_tone4.contains("qùn"))
+        assertTrue(Pinyin.pinyin_list_tone4.contains("xùn"))
+        assertTrue(!Pinyin.pinyin_list_tone4.contains("yǜ"))
+        assertTrue(!Pinyin.pinyin_list_tone4.contains("jǜ"))
+        assertTrue(!Pinyin.pinyin_list_tone4.contains("yǜn"))
+        assertTrue(!Pinyin.pinyin_list_tone4.contains("jǜn"))
+        assertTrue(!Pinyin.pinyin_list_tone4.contains("qǜn"))
+        assertTrue(!Pinyin.pinyin_list_tone4.contains("xǜn"))
+    }
+
+    @Test
+    fun testToCodePointStrings() {
+        val empty = "".toCodePointStrings()
+        assertTrue(empty.isEmpty())
+
+        val ascii = "hello".toCodePointStrings()
+        assertEquals(listOf("h", "e", "l", "l", "o"), ascii)
+
+        val bmp = "你好".toCodePointStrings()
+        assertEquals(listOf("你", "好"), bmp)
+
+        // Surrogate pair: 𠮷 (U+20BB7) has 2 chars (surrogate pair) in UTF-16
+        val surrogateStr = "𠮷野家"
+        assertEquals(3, surrogateStr.codePointCount(0, surrogateStr.length))
+        assertEquals(4, surrogateStr.length) // 2 for 𠮷, 1 for 野, 1 for 家
+
+        val codepoints = surrogateStr.toCodePointStrings()
+        assertEquals(3, codepoints.size)
+        assertEquals("𠮷", codepoints[0])
+        assertEquals("野", codepoints[1])
+        assertEquals("家", codepoints[2])
+    }
 }

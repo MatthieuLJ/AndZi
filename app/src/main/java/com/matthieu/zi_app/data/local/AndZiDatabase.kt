@@ -35,7 +35,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         CharSimilarityEntity::class,
         CharacterStrokeEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 abstract class AndZiDatabase : RoomDatabase() {
@@ -46,8 +46,8 @@ abstract class AndZiDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "HANZI_DB"
         const val CEDICT_DATABASE_NAME = "cedict_db"
-        const val DATABASE_VERSION = 10
-        const val ROOM_IDENTITY_HASH = "6f1b0c0409fc7612c232a3cfaae51f63"
+        const val DATABASE_VERSION = 11
+        const val ROOM_IDENTITY_HASH = "02c7ff0cb38f6ed515f68acbc113f675"
 
         @Volatile
         private var INSTANCE: AndZiDatabase? = null
@@ -86,7 +86,7 @@ abstract class AndZiDatabase : RoomDatabase() {
                     )
                     val currentVer = sdb.version
                     if (currentVer >= DATABASE_VERSION) {
-                        sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, PRIMARY KEY(`hanzi`));")
+                        sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, `custom_data` TEXT NOT NULL DEFAULT '{}', PRIMARY KEY(`hanzi`));")
                         sdb.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT);")
                         sdb.execSQL("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, '$ROOM_IDENTITY_HASH');")
                         sdb.close()
@@ -141,7 +141,7 @@ abstract class AndZiDatabase : RoomDatabase() {
                         try {
                             val sdb = android.database.sqlite.SQLiteDatabase.openDatabase(dbFile.path, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE)
                             sdb.version = DATABASE_VERSION
-                            sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, PRIMARY KEY(`hanzi`));")
+                            sdb.execSQL("CREATE TABLE IF NOT EXISTS `leitner` (`hanzi` TEXT NOT NULL, `box` INTEGER NOT NULL, `exp_time` INTEGER NOT NULL, `num_tested` INTEGER NOT NULL DEFAULT 0, `num_wrong` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `date_added` INTEGER NOT NULL, `custom_data` TEXT NOT NULL DEFAULT '{}', PRIMARY KEY(`hanzi`));")
                             sdb.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT);")
                             sdb.execSQL("INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, '$ROOM_IDENTITY_HASH');")
                             sdb.close()
@@ -328,11 +328,18 @@ abstract class AndZiDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `leitner` ADD COLUMN `custom_data` TEXT NOT NULL DEFAULT '{}'")
+            }
+        }
+
         val ALL_MIGRATIONS: Array<Migration> = arrayOf(
             MIGRATION_6_7,
             MIGRATION_7_8,
             MIGRATION_8_9,
-            MIGRATION_9_10
+            MIGRATION_9_10,
+            MIGRATION_10_11
         )
 
         fun createInMemory(context: Context): AndZiDatabase {

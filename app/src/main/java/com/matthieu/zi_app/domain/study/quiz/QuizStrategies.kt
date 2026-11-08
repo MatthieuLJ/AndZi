@@ -2,6 +2,7 @@ package com.matthieu.zi_app.domain.study.quiz
 
 import com.matthieu.zi_app.PinyinParser
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.toCodePointStrings
 import com.matthieu.zi_app.domain.study.AdaptiveQuizPolicy
 import com.matthieu.zi_app.ui.study.CollocationPair
 import com.matthieu.zi_app.ui.study.QuizType
@@ -114,12 +115,7 @@ object ClozeQuizStrategy : QuizStrategy {
         if (isSingleChar && context.containingWords.isNotEmpty()) {
             val comp = context.containingWords[context.index % context.containingWords.size]
             val compHanzi = comp.chinese
-            var charIdx = 0
-            while (charIdx < compHanzi.length) {
-                val cp = compHanzi.codePointAt(charIdx)
-                wordSlots.add(String(Character.toChars(cp)))
-                charIdx += Character.charCount(cp)
-            }
+            wordSlots.addAll(compHanzi.toCodePointStrings())
             val idxInWord = wordSlots.indexOf(hanzi)
             targetIdx = if (idxInWord >= 0) idxInWord else 0
             val correctChar = wordSlots[targetIdx]
@@ -130,7 +126,8 @@ object ClozeQuizStrategy : QuizStrategy {
                     missingCharBox,
                     distractorCount,
                     context.studyChars,
-                    context.vocabularyRepository
+                    context.vocabularyRepository,
+                    context.dictionaryRepository
                 )
             )
             if (comp.english.isNotEmpty()) {
@@ -140,11 +137,7 @@ object ClozeQuizStrategy : QuizStrategy {
                 displayPinyin = comp.pinyin
             }
         } else {
-            for (i in 0 until charCount) {
-                val codePoint = hanzi.codePointAt(i)
-                val ch = String(Character.toChars(codePoint))
-                wordSlots.add(ch)
-            }
+            wordSlots.addAll(hanzi.toCodePointStrings())
             if (wordSlots.isNotEmpty()) {
                 targetIdx = (0 until wordSlots.size).random()
                 val correctChar = wordSlots[targetIdx]
@@ -155,7 +148,8 @@ object ClozeQuizStrategy : QuizStrategy {
                         missingCharBox,
                         distractorCount,
                         context.studyChars,
-                        context.vocabularyRepository
+                        context.vocabularyRepository,
+                        context.dictionaryRepository
                     )
                 )
             }

@@ -79,10 +79,6 @@ fun StudyScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.startStudySession()
-    }
-
     StudyScreenContent(
         uiState = uiState,
         onNavigateBack = onNavigateBack,

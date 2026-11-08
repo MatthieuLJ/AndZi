@@ -349,8 +349,8 @@ class Pinyin {
             "wá", "zhuá", "chuá", "shuá", "ruá", "guá", "kuá", "huá",
             "wó", "duó", "tuó", "nuó", "luó", "zuó", "cuó", "suó", "zhuó", "chuó", "shuó", "ruó", "guó", "kuó", "huó",
             "wái", "zhuái", "chuái", "shuái", "guái", "kuái", "huái",
-            "wéi", "duí", "tuí", "zuí", "cuí", "suí", "zhuí", "chuí", "shuí", "ruī", "guí", "kuí", "huí",
-            "wán", "duán", "tuán", "nuán", "luán", "zuán", "cuán", "suán", "zhuán", "chuán", "shuān", "ruán", "guán", "kuán", "huán",
+            "wéi", "duí", "tuí", "zuí", "cuí", "suí", "zhuí", "chuí", "shuí", "ruí", "guí", "kuí", "huí",
+            "wán", "duán", "tuán", "nuán", "luán", "zuán", "cuán", "suán", "zhuán", "chuán", "shuán", "ruán", "guán", "kuán", "huán",
             "wén", "dún", "tún", "lún", "zún", "cún", "sún", "zhún", "chún", "shún", "rún", "gún", "kún", "hún",
             "wáng", "zhuáng", "chuáng", "shuáng", "guáng", "kuáng", "huáng", "wéng",
             "yú", "nǘ", "lǘ", "jú", "qú", "xú",
@@ -381,7 +381,7 @@ class Pinyin {
             "yǎo", "biǎo", "piǎo", "miǎo", "diǎo", "tiǎo", "niǎo", "liǎo", "jiǎo", "qiǎo", "xiǎo",
             "yě", "biě", "piě", "miě", "diě", "tiě", "niě", "liě", "jiě", "qiě", "xiě",
             "yǒu", "miǔ", "diǔ", "niǔ", "liǔ", "jiǔ", "qiǔ", "xiǔ",
-            "yǎn", "biǎn", "piǎn", "miǎn", "diǎn", "tiǎn", "niǎn", "liān", "jiǎn", "qiǎn", "xiǎn",
+            "yǎn", "biǎn", "piǎn", "miǎn", "diǎn", "tiǎn", "niǎn", "liǎn", "jiǎn", "qiǎn", "xiǎn",
             "yǐn", "bǐn", "pǐn", "mǐn", "nǐn", "lǐn", "jǐn", "qǐn", "xǐn",
             "yǎng", "niǎng", "liǎng", "jiǎng", "qiǎng", "xiǎng",
             "yǐng", "bǐng", "pǐng", "mǐng", "dǐng", "tǐng", "nǐng", "lǐng", "jǐng", "qǐng", "xǐng",
@@ -432,13 +432,13 @@ class Pinyin {
             "wò", "duò", "tuò", "nuò", "luò", "zuò", "cuò", "suò", "zhuò", "chuò", "shuò", "ruò", "guò", "kuò", "huò",
             "wài", "zhuài", "chuài", "shuài", "guài", "kuài", "huài",
             "wèi", "duì", "tuì", "zuì", "cuì", "suì", "zhuì", "chuì", "shuì", "ruì", "guì", "kuì", "huì",
-            "wàn", "duàn", "tuàn", "nuàn", "luàn", "zuàn", "cuàn", "suàn", "zhuàn", "chuàn", "shuān", "ruàn", "guàn", "kuàn", "huàn",
+            "wàn", "duàn", "tuàn", "nuàn", "luàn", "zuàn", "cuàn", "suàn", "zhuàn", "chuàn", "shuàn", "ruàn", "guàn", "kuàn", "huàn",
             "wèn", "dùn", "tùn", "lùn", "zùn", "cùn", "sùn", "zhùn", "chùn", "shùn", "rùn", "gùn", "kùn", "hùn",
             "wàng", "zhuàng", "chuàng", "shuàng", "guàng", "kuàng", "huàng", "wèng",
-            "yǜ", "nǜ", "lǜ", "jǜ", "qù", "xù",
+            "yù", "nǜ", "lǜ", "jù", "qù", "xù",
             "yuè", "nüè", "lüè", "juè", "què", "xuè",
             "yuàn", "juàn", "quàn", "xuàn",
-            "yǜn", "jǜn", "qǜn", "xǜn"
+            "yùn", "jùn", "qùn", "xùn"
         )
 
         @JvmField
@@ -482,4 +482,20 @@ class Pinyin {
             "yun", "jun", "qun", "xun"
         )
     }
+}
+
+/**
+ * Splits a string into individual Unicode code-point characters as 1- or 2-char Strings.
+ * Correctly preserves supplementary plane characters (surrogate pairs like CJK Extension B+).
+ */
+fun String.toCodePointStrings(): List<String> {
+    if (isEmpty()) return emptyList()
+    val result = ArrayList<String>(length)
+    var idx = 0
+    while (idx < length) {
+        val cp = codePointAt(idx)
+        result.add(String(Character.toChars(cp)))
+        idx += Character.charCount(cp)
+    }
+    return result
 }

@@ -341,6 +341,69 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun testMigration10To11AddsCustomDataColumnToLeitnerTable() {
+        val dbFile = context.getDatabasePath(testDbName)
+        dbFile.parentFile?.mkdirs()
+
+        // 1. Create v10 database with leitner table without custom_data
+        val sqliteDb = SQLiteDatabase.openOrCreateDatabase(dbFile, null)
+        sqliteDb.version = 10
+        sqliteDb.execSQL(
+            """
+            CREATE TABLE leitner (
+                hanzi TEXT NOT NULL,
+                box INTEGER NOT NULL,
+                exp_time INTEGER NOT NULL,
+                num_tested INTEGER NOT NULL DEFAULT 0,
+                num_wrong INTEGER NOT NULL DEFAULT 0,
+                streak INTEGER NOT NULL DEFAULT 0,
+                date_added INTEGER NOT NULL,
+                PRIMARY KEY(hanzi)
+            )
+            """.trimIndent()
+        )
+        sqliteDb.execSQL(
+            """
+            INSERT INTO leitner (hanzi, box, exp_time, num_tested, num_wrong, streak, date_added)
+            VALUES ('学', 3, 1700000000000, 5, 1, 3, 1690000000000)
+            """.trimIndent()
+        )
+        sqliteDb.close()
+
+        // 2. Run MIGRATION_10_11
+        val factory = FrameworkSQLiteOpenHelperFactory()
+        val helper = factory.create(
+            androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(testDbName)
+                .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(11) {
+                    override fun onCreate(db: SupportSQLiteDatabase) {}
+                    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                        AndZiDatabase.MIGRATION_10_11.migrate(db)
+                    }
+                })
+                .build()
+        )
+        val migratedDb = helper.writableDatabase
+
+        // 3. Verify existing row has default custom_data '{}'
+        val cursor = migratedDb.query("SELECT hanzi, box, custom_data FROM leitner WHERE hanzi = '学'")
+        assertTrue(cursor.moveToFirst())
+        assertEquals("学", cursor.getString(0))
+        assertEquals(3, cursor.getInt(1))
+        assertEquals("{}", cursor.getString(2))
+        cursor.close()
+
+        // 4. Verify insert with custom_data works
+        migratedDb.execSQL("INSERT INTO leitner (hanzi, box, exp_time, date_added, custom_data) VALUES ('好', 1, 1710000000000, 1710000000000, '{\"ebisu_a\":\"4.0\",\"ebisu_b\":\"4.0\"}')")
+        val cursor2 = migratedDb.query("SELECT custom_data FROM leitner WHERE hanzi = '好'")
+        assertTrue(cursor2.moveToFirst())
+        assertEquals("{\"ebisu_a\":\"4.0\",\"ebisu_b\":\"4.0\"}", cursor2.getString(0))
+        cursor2.close()
+
+        migratedDb.close()
+    }
+
+    @Test
     fun testProgressDatabaseMigration1To2() = runBlocking {
         val dbFile = context.getDatabasePath(testProgressDbName)
         dbFile.parentFile?.mkdirs()

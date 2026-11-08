@@ -146,9 +146,25 @@ object EbisuMath {
             safeT0
         }
 
+        // Moment match posterior alpha and beta from moments (mu1, mu2)
+        val variance = mu2 - mu1 * mu1
+        val (postAlpha, postBeta) = if (variance > 1e-7 && mu1 in 0.001..0.999) {
+            val meanFactor = (mu1 * (1.0 - mu1) / variance) - 1.0
+            if (meanFactor > 0.01) {
+                Pair(
+                    (mu1 * meanFactor).coerceIn(0.1, 100.0),
+                    ((1.0 - mu1) * meanFactor).coerceIn(0.1, 100.0)
+                )
+            } else {
+                Pair(DEFAULT_ALPHA, DEFAULT_BETA)
+            }
+        } else {
+            Pair(DEFAULT_ALPHA, DEFAULT_BETA)
+        }
+
         return EbisuState(
-            alpha = DEFAULT_ALPHA,
-            beta = DEFAULT_BETA,
+            alpha = postAlpha,
+            beta = postBeta,
             t0 = newT0
         )
     }

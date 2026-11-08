@@ -263,10 +263,13 @@ object QuizDistractorGenerator {
         missingCharBox: Int,
         count: Int = 3,
         studyChars: Set<String> = emptySet(),
-        vocabularyRepository: VocabularyRepository
+        vocabularyRepository: VocabularyRepository,
+        dictionaryRepository: VocabularyRepository? = null
     ): List<String> {
-        val similarFromCedict = vocabularyRepository.getSimilarCharacters(correct, limit = 20)
-            .filter { it != correct }
+        val similarFromCedict = (
+            vocabularyRepository.getSimilarCharacters(correct, limit = 20) +
+            (dictionaryRepository?.getSimilarCharacters(correct, limit = 20) ?: emptyList())
+        ).filter { it != correct }.distinct()
 
         val knownSimilar = similarFromCedict.filter { it in studyChars }
         val unstudiedSimilar = similarFromCedict.filter { it !in studyChars }

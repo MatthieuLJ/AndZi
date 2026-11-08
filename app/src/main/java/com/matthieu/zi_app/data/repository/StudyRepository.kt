@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class StudyRepository(
     private val leitnerDao: LeitnerDao,
@@ -43,6 +44,7 @@ class StudyRepository(
         grade: ReviewGrade,
         now: Long = System.currentTimeMillis()
     ): ReviewState = withContext(Dispatchers.IO) {
+        val currentRecord = leitnerDao.getRecord(hanzi)
         val baseState = previousState?.let {
             ReviewState(
                 cardId = it.hanzi,
@@ -51,7 +53,8 @@ class StudyRepository(
                 reviewCount = it.numTested,
                 lapseCount = it.numWrong,
                 streak = it.streak,
-                dateAdded = it.dateAdded
+                dateAdded = it.dateAdded,
+                customData = currentRecord?.let { rec -> deserializeCustomData(rec.customData) } ?: emptyMap()
             )
         }
         val scheduleResult = srsEngine.calculateNextReview(hanzi, baseState, grade, now)
@@ -94,7 +97,8 @@ class StudyRepository(
             numTested = numTested,
             numWrong = newNumWrong,
             streak = newStreak,
-            dateAdded = currentRecord?.dateAdded ?: now
+            dateAdded = currentRecord?.dateAdded ?: now,
+            customData = currentRecord?.customData ?: "{}"
         )
         leitnerDao.insertOrUpdateRecord(updatedRecord)
         toDomainState(updatedRecord)
@@ -140,7 +144,8 @@ class StudyRepository(
             numTested = currentRecord?.numTested ?: 0,
             numWrong = currentRecord?.numWrong ?: 0,
             streak = currentRecord?.streak ?: 0,
-            dateAdded = currentRecord?.dateAdded ?: now
+            dateAdded = currentRecord?.dateAdded ?: now,
+            customData = currentRecord?.customData ?: "{}"
         )
         leitnerDao.insertOrUpdateRecord(updatedRecord)
         toDomainState(updatedRecord)
@@ -202,7 +207,8 @@ class StudyRepository(
             reviewCount = entity.numTested,
             lapseCount = entity.numWrong,
             streak = entity.streak,
-            dateAdded = entity.dateAdded
+            dateAdded = entity.dateAdded,
+            customData = deserializeCustomData(entity.customData)
         )
     }
 
@@ -226,7 +232,8 @@ class StudyRepository(
             numTested = state.reviewCount,
             numWrong = state.lapseCount,
             streak = state.streak,
-            dateAdded = state.dateAdded
+            dateAdded = state.dateAdded,
+            customData = serializeCustomData(state.customData)
         )
     }
 
@@ -240,5 +247,30 @@ class StudyRepository(
             streak = entity.streak,
             dateAdded = entity.dateAdded
         )
+    }
+
+    private fun serializeCustomData(map: Map<String, String>): String {
+        if (map.isEmpty()) return "{}"
+        val json = JSONObject()
+        for ((k, v) in map) {
+            json.put(k, v)
+        }
+        return json.toString()
+    }
+
+    private fun deserializeCustomData(jsonString: String?): Map<String, String> {
+        if (jsonString.isNullOrBlank() || jsonString == "{}") return emptyMap()
+        return try {
+            val json = JSONObject(jsonString)
+            val map = mutableMapOf<String, String>()
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                map[key] = json.getString(key)
+            }
+            map
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 }

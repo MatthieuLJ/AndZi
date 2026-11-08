@@ -108,7 +108,7 @@ data class ProgressRecordEntity(
             1 -> b2
             2 -> b3
             3 -> b4
-            4 -> if (hasGranularUpperBoxes) b5 else b5
+            4 -> b5
             5 -> b6
             6 -> b7
             7 -> b8

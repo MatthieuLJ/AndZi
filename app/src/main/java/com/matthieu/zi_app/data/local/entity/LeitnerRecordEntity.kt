@@ -26,5 +26,8 @@ data class LeitnerRecordEntity(
     val streak: Int = 0,
 
     @ColumnInfo(name = "date_added")
-    val dateAdded: Long = 0L
+    val dateAdded: Long = 0L,
+
+    @ColumnInfo(name = "custom_data", defaultValue = "{}")
+    val customData: String = "{}"
 )

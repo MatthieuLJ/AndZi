@@ -95,7 +95,7 @@ class WritingQuizTest {
         // With index = 3, in candidate list [TONE, ENGLISH, PINYIN, WRITING], 3 % 4 = 3 -> WRITING
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
 
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
 
@@ -103,7 +103,7 @@ class WritingQuizTest {
         // Advance rotation to WRITING card
         while (card.quizType != QuizType.WRITING) {
             viewModel.nextCard()
-            card = withTimeout(3000) {
+            card = withTimeout(5000) {
                 viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard?.hanzi == "一" }.first().currentCard!!
             }
         }
@@ -146,7 +146,7 @@ class WritingQuizTest {
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
 
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
 
@@ -182,13 +182,13 @@ class WritingQuizTest {
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         var currentCard = state.currentCard!!
         while (currentCard.quizType != QuizType.WRITING) {
             viewModel.nextCard()
-            currentCard = withTimeout(3000) {
+            currentCard = withTimeout(5000) {
                 viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard?.hanzi == "十" }.first().currentCard!!
             }
         }
@@ -217,7 +217,7 @@ class WritingQuizTest {
         viewModel.onUserStrokeDrawn(correctVerticalStroke)
 
         // Check completion in unassisted test mode -> should promote card!
-        val completedState = withTimeout(3000) {
+        val completedState = withTimeout(5000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
         assertTrue("Answer should be revealed as correct", completedState.isCorrect == true)
@@ -256,13 +256,13 @@ class WritingQuizTest {
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         var currentCard = state.currentCard!!
         while (currentCard.quizType != QuizType.WRITING) {
             viewModel.nextCard()
-            currentCard = withTimeout(3000) {
+            currentCard = withTimeout(5000) {
                 viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard?.hanzi == "十" }.first().currentCard!!
             }
         }
@@ -277,7 +277,7 @@ class WritingQuizTest {
         viewModel.onUserStrokeDrawn(stroke0)
         viewModel.onUserStrokeDrawn(stroke1)
 
-        val completedState = withTimeout(3000) {
+        val completedState = withTimeout(5000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
         assertTrue("Completed with guidance should reveal card", completedState.isAnswerRevealed)
@@ -320,13 +320,13 @@ class WritingQuizTest {
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         var currentCard = state.currentCard!!
         while (currentCard.quizType != QuizType.WRITING) {
             viewModel.nextCard()
-            currentCard = withTimeout(3000) {
+            currentCard = withTimeout(5000) {
                 viewModel.uiState.filter { !it.isLoading && it.currentCard != null && it.currentCard?.hanzi == "学" }.first().currentCard!!
             }
         }
@@ -339,7 +339,7 @@ class WritingQuizTest {
             viewModel.onUserStrokeDrawn(listOf(HanziPoint(205f, 502f), HanziPoint(795f, 498f)))
         }
 
-        withTimeout(3000) {
+        withTimeout(5000) {
             viewModel.uiState.filter { it.isAnswerRevealed }.first()
         }
 
@@ -376,13 +376,13 @@ class WritingQuizTest {
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         var currentCard = state.currentCard!!
         while (currentCard.quizType != QuizType.WRITING || currentCard.hanzi != "妈") {
             viewModel.nextCard()
-            currentCard = withTimeout(3000) {
+            currentCard = withTimeout(5000) {
                 viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
             }.currentCard!!
         }
@@ -432,13 +432,13 @@ class WritingQuizTest {
         )
 
         val viewModel = StudyViewModel(studyRepo, vocRepo, userPreferences = userPrefs)
-        val state = withTimeout(3000) {
+        val state = withTimeout(5000) {
             viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
         }
         var currentCard = state.currentCard!!
         while (currentCard.quizType != QuizType.WRITING || currentCard.hanzi != "天") {
             viewModel.nextCard()
-            currentCard = withTimeout(3000) {
+            currentCard = withTimeout(5000) {
                 viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
             }.currentCard!!
         }

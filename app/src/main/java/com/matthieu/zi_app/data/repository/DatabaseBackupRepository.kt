@@ -432,7 +432,7 @@ class DatabaseBackupRepository(
                 val currentRecords = leitnerDao.getAllRecords().associateBy { it.hanzi }
 
                 sdb.rawQuery(
-                    "SELECT hanzi, box, exp_time, num_tested, num_wrong, streak, date_added FROM leitner",
+                    "SELECT * FROM leitner",
                     null
                 ).use { cursor ->
                     val hanziCol = cursor.getColumnIndex("hanzi")
@@ -442,6 +442,7 @@ class DatabaseBackupRepository(
                     val wrongCol = cursor.getColumnIndex("num_wrong")
                     val streakCol = cursor.getColumnIndex("streak")
                     val addedCol = cursor.getColumnIndex("date_added")
+                    val customCol = cursor.getColumnIndex("custom_data")
 
                     val recordsToInsert = mutableListOf<LeitnerRecordEntity>()
 
@@ -453,6 +454,7 @@ class DatabaseBackupRepository(
                         val wrong = if (wrongCol >= 0) cursor.getInt(wrongCol) else 0
                         val streak = if (streakCol >= 0) cursor.getInt(streakCol) else 0
                         val dateAdded = if (addedCol >= 0) cursor.getLong(addedCol) else System.currentTimeMillis()
+                        val customData = if (customCol >= 0 && !cursor.isNull(customCol)) cursor.getString(customCol) else "{}"
 
                         val record = LeitnerRecordEntity(
                             hanzi = hanzi,
@@ -461,7 +463,8 @@ class DatabaseBackupRepository(
                             numTested = tested,
                             numWrong = wrong,
                             streak = streak,
-                            dateAdded = dateAdded
+                            dateAdded = dateAdded,
+                            customData = customData
                         )
 
                         val existing = currentRecords[hanzi]
@@ -528,10 +531,20 @@ class DatabaseBackupRepository(
                 val b3Col = cursor.getColumnIndex("total_box_3")
                 val b4Col = cursor.getColumnIndex("total_box_4")
                 val b5Col = cursor.getColumnIndex("total_box_5")
+                val b6Col = cursor.getColumnIndex("total_box_6")
+                val b7Col = cursor.getColumnIndex("total_box_7")
+                val b8Col = cursor.getColumnIndex("total_box_8")
+                val b9Col = cursor.getColumnIndex("total_box_9")
+                val b10Col = cursor.getColumnIndex("total_box_10")
                 val exp2Col = cursor.getColumnIndex("expired_box_2")
                 val exp3Col = cursor.getColumnIndex("expired_box_3")
                 val exp4Col = cursor.getColumnIndex("expired_box_4")
                 val exp5Col = cursor.getColumnIndex("expired_box_5")
+                val exp6Col = cursor.getColumnIndex("expired_box_6")
+                val exp7Col = cursor.getColumnIndex("expired_box_7")
+                val exp8Col = cursor.getColumnIndex("expired_box_8")
+                val exp9Col = cursor.getColumnIndex("expired_box_9")
+                val exp10Col = cursor.getColumnIndex("expired_box_10")
                 val zoomCol = cursor.getColumnIndex("zoom")
 
                 while (cursor.moveToNext()) {
@@ -541,10 +554,20 @@ class DatabaseBackupRepository(
                     val b3 = if (b3Col >= 0) cursor.getInt(b3Col) else 0
                     val b4 = if (b4Col >= 0) cursor.getInt(b4Col) else 0
                     val b5 = if (b5Col >= 0) cursor.getInt(b5Col) else 0
+                    val b6 = if (b6Col >= 0) cursor.getInt(b6Col) else 0
+                    val b7 = if (b7Col >= 0) cursor.getInt(b7Col) else 0
+                    val b8 = if (b8Col >= 0) cursor.getInt(b8Col) else 0
+                    val b9 = if (b9Col >= 0) cursor.getInt(b9Col) else 0
+                    val b10 = if (b10Col >= 0) cursor.getInt(b10Col) else 0
                     val exp2 = if (exp2Col >= 0) cursor.getInt(exp2Col) else 0
                     val exp3 = if (exp3Col >= 0) cursor.getInt(exp3Col) else 0
                     val exp4 = if (exp4Col >= 0) cursor.getInt(exp4Col) else 0
                     val exp5 = if (exp5Col >= 0) cursor.getInt(exp5Col) else 0
+                    val exp6 = if (exp6Col >= 0) cursor.getInt(exp6Col) else 0
+                    val exp7 = if (exp7Col >= 0) cursor.getInt(exp7Col) else 0
+                    val exp8 = if (exp8Col >= 0) cursor.getInt(exp8Col) else 0
+                    val exp9 = if (exp9Col >= 0) cursor.getInt(exp9Col) else 0
+                    val exp10 = if (exp10Col >= 0) cursor.getInt(exp10Col) else 0
                     val zoom = if (zoomCol >= 0) cursor.getInt(zoomCol) else 0
 
                     records.add(
@@ -555,10 +578,20 @@ class DatabaseBackupRepository(
                             totalBox3 = b3,
                             totalBox4 = b4,
                             totalBox5 = b5,
+                            totalBox6 = b6,
+                            totalBox7 = b7,
+                            totalBox8 = b8,
+                            totalBox9 = b9,
+                            totalBox10 = b10,
                             expiredBox2 = exp2,
                             expiredBox3 = exp3,
                             expiredBox4 = exp4,
                             expiredBox5 = exp5,
+                            expiredBox6 = exp6,
+                            expiredBox7 = exp7,
+                            expiredBox8 = exp8,
+                            expiredBox9 = exp9,
+                            expiredBox10 = exp10,
                             zoom = zoom
                         )
                     )

@@ -34,7 +34,8 @@ interface LeitnerDao {
                IFNULL(leitner.num_tested, 0) AS num_tested,
                IFNULL(leitner.num_wrong, 0) AS num_wrong,
                IFNULL(leitner.streak, 0) AS streak,
-               IFNULL(leitner.date_added, 0) AS date_added
+               IFNULL(leitner.date_added, 0) AS date_added,
+               IFNULL(leitner.custom_data, '{}') AS custom_data
         FROM (
             SELECT leitner.hanzi AS chinese FROM leitner
             UNION

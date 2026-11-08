@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.matthieu.zi_app.Vocabulary
+import com.matthieu.zi_app.toCodePointStrings
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
 import com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine
@@ -203,13 +204,7 @@ class DictionaryViewModel(
             } else emptyList()
 
             // Constituent single characters if compound word
-            val constituents = mutableListOf<String>()
-            if (charCount > 1) {
-                for (i in 0 until charCount) {
-                    val codePoint = hanzi.codePointAt(i)
-                    constituents.add(String(Character.toChars(codePoint)))
-                }
-            }
+            val constituents = if (charCount > 1) hanzi.toCodePointStrings() else emptyList()
 
             // Check if word is already tracked in Leitner study
             val leitnerState = studyRepository.getLeitnerState(hanzi)
