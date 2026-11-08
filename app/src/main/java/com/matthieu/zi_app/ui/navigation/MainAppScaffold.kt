@@ -315,7 +315,10 @@ fun MainAppScaffold(
 
             composable(Screen.PodcastCatalog.route) {
                 val catalogViewModel: PodcastCatalogViewModel = viewModel(
-                    factory = PodcastCatalogViewModel.provideFactory(appContainer.podcastRepository)
+                    factory = PodcastCatalogViewModel.provideFactory(
+                        podcastRepository = appContainer.podcastRepository,
+                        studyRepository = appContainer.studyRepository
+                    )
                 )
                 PodcastCatalogScreen(
                     viewModel = catalogViewModel,

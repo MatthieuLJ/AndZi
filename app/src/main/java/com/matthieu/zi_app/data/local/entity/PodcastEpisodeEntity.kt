@@ -44,6 +44,8 @@ data class PodcastEpisodeEntity(
     @ColumnInfo(name = "is_completed")
     val isCompleted: Boolean = false,
     @ColumnInfo(name = "downloaded_path")
-    val downloadedPath: String? = null
+    val downloadedPath: String? = null,
+    @ColumnInfo(name = "target_hsk_level")
+    val targetHskLevel: Int = 0
 )
 

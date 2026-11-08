@@ -175,4 +175,44 @@ class PodcastDatabaseTest {
         val fromDb = podcastDb.podcastDao().getVocabForEpisodeSync(epId)
         assertEquals(3, fromDb.size)
     }
+
+    @Test
+    fun testTargetHskLevelAndMasteryFlow() = runBlocking {
+        andZiDb.vocabularyDao().insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "中国", hskLevel = 1, freqRank = 10),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "节日", hskLevel = 2, freqRank = 20),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "粽子", hskLevel = 3, freqRank = 30)
+            )
+        )
+        andZiDb.vocabularyDao().insertWords(
+            listOf(
+                ChineseWordEntity(chinese = "中国", pinyin = "zhong1 guo2", length = 2),
+                ChineseWordEntity(chinese = "节日", pinyin = "jie2 ri4", length = 2),
+                ChineseWordEntity(chinese = "粽子", pinyin = "zong4 zi5", length = 2)
+            )
+        )
+
+        val epId = podcastDb.podcastDao().insertEpisodes(
+            listOf(
+                PodcastEpisodeEntity(
+                    channelId = 1,
+                    episodeNum = 1,
+                    title = "Test Episode",
+                    audioUrl = "http://example.com/audio.mp3",
+                    transcript = "中国节日人们吃粽子。"
+                )
+            )
+        ).first().toInt()
+
+        repository.extractAndSaveVocabForEpisode(epId, "中国节日人们吃粽子。")
+
+        val ep = podcastDb.podcastDao().getEpisodeById(epId)
+        assertNotNull(ep)
+        assertTrue("Target HSK level should be graded (> 0)", ep!!.targetHskLevel > 0)
+
+        val allWords = repository.getAllVocabWordsSync()
+        assertEquals(3, allWords.size)
+        assertEquals(epId, allWords[0].episodeId)
+    }
 }

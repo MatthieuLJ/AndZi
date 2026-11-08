@@ -127,4 +127,30 @@ class PodcastCatalogViewModelTest {
         assertEquals(1, state.episodes.size)
         assertTrue(state.episodes.first().episode.title.contains("端午节"))
     }
+
+    @Test
+    fun testHskLevelFilter() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val allEpisodes = database.podcastDao().getAllEpisodesSync()
+        assertTrue(allEpisodes.size >= 2)
+        val ep1 = allEpisodes[0]
+        val ep2 = allEpisodes[1]
+
+        database.podcastDao().updateTargetHskLevel(ep1.episodeId, 2)
+        database.podcastDao().updateTargetHskLevel(ep2.episodeId, 3)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.selectHskLevel(2)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.first { it.selectedHskLevel == 2 && it.episodes.isNotEmpty() }
+        assertEquals(1, state.episodes.size)
+        assertEquals(2, state.episodes.first().targetHskLevel)
+
+        viewModel.selectHskLevel(null)
+        testDispatcher.scheduler.advanceUntilIdle()
+        val allState = viewModel.uiState.first { it.selectedHskLevel == null }
+        assertEquals(3, allState.episodes.size)
+    }
 }

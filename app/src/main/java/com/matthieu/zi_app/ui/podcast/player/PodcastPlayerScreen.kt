@@ -116,12 +116,30 @@ fun PodcastPlayerScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(
-                            text = uiState.episode?.title ?: "Story Player",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = uiState.episode?.title ?: "Story Player",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            val epHsk = uiState.episode?.targetHskLevel ?: 0
+                            if (epHsk in 1..6) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer
+                                ) {
+                                    Text(
+                                        text = "HSK $epHsk",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
                         uiState.channel?.let { ch ->
                             Text(
                                 text = ch.chineseTitle,
@@ -858,6 +876,20 @@ fun EpisodeVocabSheetContent(
                                         text = item.vocab.chinese,
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                     )
+                                    if (item.vocab.hskLevel in 1..6) {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
+                                        ) {
+                                            Text(
+                                                text = "HSK ${item.vocab.hskLevel}",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
                                     if (item.vocab.pinyin.isNotEmpty()) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(

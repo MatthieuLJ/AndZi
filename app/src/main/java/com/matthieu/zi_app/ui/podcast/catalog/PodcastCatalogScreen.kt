@@ -38,6 +38,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -53,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -202,6 +204,30 @@ fun PodcastCatalogScreen(
                 )
             }
 
+            // HSK Level Filter Chips
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    FilterChip(
+                        selected = uiState.selectedHskLevel == null,
+                        onClick = { viewModel.selectHskLevel(null) },
+                        label = { Text("All HSK") }
+                    )
+                }
+                items((1..6).toList()) { level ->
+                    FilterChip(
+                        selected = uiState.selectedHskLevel == level,
+                        onClick = {
+                            viewModel.selectHskLevel(if (uiState.selectedHskLevel == level) null else level)
+                        },
+                        label = { Text("HSK $level") }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(4.dp))
 
             // Episodes List
@@ -344,12 +370,33 @@ fun EpisodeCard(
 
             // Title & Metadata Column
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = episode.title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = episode.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (item.targetHskLevel in 1..6) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            tonalElevation = 1.dp
+                        ) {
+                            Text(
+                                text = "HSK ${item.targetHskLevel}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -373,6 +420,37 @@ fun EpisodeCard(
                             modifier = Modifier.size(14.dp)
                         )
                     }
+                }
+
+                // Deck Mastery Indicator
+                if (item.totalWords > 0) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    val percent = (item.masteryRatio * 100).toInt()
+                    val masteryColor = when {
+                        item.masteryRatio >= 0.80f -> Color(0xFF2E7D32) // Green
+                        item.masteryRatio >= 0.60f -> Color(0xFFE65100) // Amber / Orange
+                        else -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Deck: ${item.knownWords} / ${item.totalWords} ($percent% learned)",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                            color = masteryColor
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(3.dp))
+                    LinearProgressIndicator(
+                        progress = { item.masteryRatio.coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = masteryColor,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 }
             }
 

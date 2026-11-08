@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.matthieu.zi_app.data.local.dao.PodcastDao
 import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
@@ -18,7 +19,7 @@ import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
         PodcastSentenceEntity::class,
         PodcastVocabEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class PodcastDatabase : RoomDatabase() {
@@ -27,7 +28,13 @@ abstract class PodcastDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "podcast_db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE podcast_episode ADD COLUMN target_hsk_level INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         @Volatile
         private var instance: PodcastDatabase? = null
@@ -49,6 +56,7 @@ abstract class PodcastDatabase : RoomDatabase() {
                 PodcastDatabase::class.java,
                 DATABASE_NAME
             )
+            .addMigrations(MIGRATION_2_3)
             .addCallback(object : Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)

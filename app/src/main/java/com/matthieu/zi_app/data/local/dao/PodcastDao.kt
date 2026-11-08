@@ -1,5 +1,6 @@
 package com.matthieu.zi_app.data.local.dao
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -10,6 +11,11 @@ import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
 import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
 import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
 import kotlinx.coroutines.flow.Flow
+
+data class EpisodeVocabWord(
+    @ColumnInfo(name = "episode_id") val episodeId: Int,
+    @ColumnInfo(name = "chinese") val chinese: String
+)
 
 @Dao
 interface PodcastDao {
@@ -72,6 +78,9 @@ interface PodcastDao {
     @Query("UPDATE podcast_episode SET downloaded_path = :path WHERE episode_id = :episodeId")
     suspend fun updateDownloadedPath(episodeId: Int, path: String?)
 
+    @Query("UPDATE podcast_episode SET target_hsk_level = :hskLevel WHERE episode_id = :episodeId")
+    suspend fun updateTargetHskLevel(episodeId: Int, hskLevel: Int)
+
     @Query("UPDATE podcast_episode SET downloaded_path = NULL")
     suspend fun clearAllDownloadedPaths()
 
@@ -88,6 +97,12 @@ interface PodcastDao {
 
     @Query("SELECT * FROM podcast_vocab WHERE episode_id = :episodeId ORDER BY vocab_id ASC")
     suspend fun getVocabForEpisodeSync(episodeId: Int): List<PodcastVocabEntity>
+
+    @Query("SELECT episode_id, chinese FROM podcast_vocab")
+    fun getAllVocabWordsFlow(): Flow<List<EpisodeVocabWord>>
+
+    @Query("SELECT episode_id, chinese FROM podcast_vocab")
+    suspend fun getAllVocabWordsSync(): List<EpisodeVocabWord>
 
     // Inserts
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -195,6 +195,18 @@ class StudyRepository(
         leitnerDao.getAllStudyRecords().map { toDomainState(it) }
     }
 
+    fun getAllRecordsFlow(): Flow<List<LeitnerState>> {
+        return leitnerDao.getAllRecordsFlow().map { records ->
+            records.map { toDomainState(it) }
+        }
+    }
+
+    fun getStudiedHanziFlow(): Flow<Set<String>> {
+        return leitnerDao.getAllRecordsFlow().map { records ->
+            records.map { it.hanzi }.toSet()
+        }
+    }
+
     suspend fun getAllReviewStates(): List<ReviewState> = withContext(Dispatchers.IO) {
         leitnerDao.getAllStudyRecords().map { toReviewState(it) }
     }

@@ -1,6 +1,7 @@
 package com.matthieu.zi_app.data.repository
 
 import android.content.Context
+import com.matthieu.zi_app.data.local.dao.EpisodeVocabWord
 import com.matthieu.zi_app.data.local.dao.PodcastDao
 import com.matthieu.zi_app.data.local.dao.VocabularyDao
 import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
@@ -8,6 +9,7 @@ import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
 import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
 import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
 import com.matthieu.zi_app.data.podcast.PacedSpeechRateEngine
+import com.matthieu.zi_app.data.podcast.PodcastHskGrader
 import com.matthieu.zi_app.data.podcast.PodcastRssParser
 import com.matthieu.zi_app.data.podcast.SlowChineseTranscripts
 import kotlinx.coroutines.Dispatchers
@@ -224,6 +226,10 @@ class PodcastRepository(
     suspend fun extractAndSaveVocabForEpisode(episodeId: Int, transcript: String): List<PodcastVocabEntity> = withContext(Dispatchers.IO) {
         val existing = podcastDao.getVocabForEpisodeSync(episodeId)
         if (existing.isNotEmpty()) {
+            val targetHsk = PodcastHskGrader.computeTargetHskLevel(existing.map { it.hskLevel })
+            if (targetHsk > 0) {
+                podcastDao.updateTargetHskLevel(episodeId, targetHsk)
+            }
             return@withContext existing
         }
 
@@ -315,7 +321,8 @@ class PodcastRepository(
                     ?.take(3)
                     ?: emptyList()
                 val formattedTrans = transList.joinToString("; ")
-                val hsk = hskLevels[chinese] ?: 0
+                val rawHsk = hskLevels[chinese] ?: 0
+                val hsk = if (rawHsk in 1..6) rawHsk else 0
 
                 PodcastVocabEntity(
                     episodeId = episodeId,
@@ -328,6 +335,10 @@ class PodcastRepository(
 
             if (vocabEntities.isNotEmpty()) {
                 podcastDao.insertVocab(vocabEntities)
+                val targetHsk = PodcastHskGrader.computeTargetHskLevel(vocabEntities.map { it.hskLevel })
+                if (targetHsk > 0) {
+                    podcastDao.updateTargetHskLevel(episodeId, targetHsk)
+                }
             }
 
             vocabEntities
@@ -335,6 +346,44 @@ class PodcastRepository(
             e.printStackTrace()
             emptyList()
         }
+    }
+
+    fun getAllVocabWordsFlow(): Flow<List<EpisodeVocabWord>> = podcastDao.getAllVocabWordsFlow()
+
+    suspend fun getAllVocabWordsSync(): List<EpisodeVocabWord> = podcastDao.getAllVocabWordsSync()
+
+    /**
+     * Checks all stored episodes and ensures their vocabulary is extracted and target HSK levels are graded.
+     */
+    suspend fun ensureEpisodesGraded(): Int = withContext(Dispatchers.IO) {
+        val episodes = podcastDao.getAllEpisodesSync()
+        var gradedCount = 0
+        for (ep in episodes) {
+            if (ep.targetHskLevel == 0) {
+                var vocab = podcastDao.getVocabForEpisodeSync(ep.episodeId)
+                if (vocab.isEmpty()) {
+                    var effectiveTranscript = ep.transcript
+                    if (effectiveTranscript.isBlank()) {
+                        val patched = SlowChineseTranscripts.getPatchedTranscript(ep.channelId, ep.episodeNum)
+                        if (!patched.isNullOrBlank()) {
+                            effectiveTranscript = patched
+                            podcastDao.updateEpisode(ep.copy(transcript = patched))
+                        }
+                    }
+                    if (effectiveTranscript.isNotBlank()) {
+                        vocab = extractAndSaveVocabForEpisode(ep.episodeId, effectiveTranscript)
+                    }
+                }
+                if (vocab.isNotEmpty()) {
+                    val targetLevel = PodcastHskGrader.computeTargetHskLevel(vocab.map { it.hskLevel })
+                    if (targetLevel > 0) {
+                        podcastDao.updateTargetHskLevel(ep.episodeId, targetLevel)
+                        gradedCount++
+                    }
+                }
+            }
+        }
+        gradedCount
     }
 
     // Audio file and cache helpers
