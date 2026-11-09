@@ -77,11 +77,21 @@ class PodcastRepository(
     suspend fun getSentencesForEpisodeSync(episodeId: Int): List<PodcastSentenceEntity> =
         podcastDao.getSentencesForEpisodeSync(episodeId)
 
+    suspend fun deleteSentencesForEpisode(episodeId: Int) = withContext(Dispatchers.IO) {
+        podcastDao.deleteSentencesForEpisode(episodeId)
+    }
+
     suspend fun extractAndSaveSentencesForEpisode(
         episode: PodcastEpisodeEntity,
         channel: PodcastChannelEntity? = null,
         forceRefresh: Boolean = false
     ): List<PodcastSentenceEntity> = withContext(Dispatchers.IO) {
+        val effectiveChannel = channel ?: podcastDao.getChannelById(episode.channelId)
+        if (effectiveChannel?.supportsPacedHighlighting == false) {
+            podcastDao.deleteSentencesForEpisode(episode.episodeId)
+            return@withContext emptyList()
+        }
+
         var effectiveTranscript = episode.transcript
 
         // Auto-clean Reading China (channel 2) dirty RSS transcripts containing vocabulary/grammar notes
@@ -207,13 +217,16 @@ class PodcastRepository(
     }
 
     /**
-     * Seeds MaoMi Chinese (channel 3) episodes from bundled maomi_transcripts.json asset
-     * for instant offline availability.
+     * Seeds MaoMi Chinese (channel 3) episodes and precomputed CC-CEDICT vocabulary from bundled
+     * maomi_transcripts.json asset for instant offline availability and mastery tracking.
      */
     suspend fun seedMaoMiEpisodesFromAssets(): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val count = podcastDao.getEpisodeCountForChannel(MaoMiPodcastAdapter.CHANNEL_ID)
-            if (count > 0) {
+            val vocabCount = podcastDao.getVocabCountForChannel(MaoMiPodcastAdapter.CHANNEL_ID)
+            val ep1 = podcastDao.getEpisodesForChannelSync(MaoMiPodcastAdapter.CHANNEL_ID).firstOrNull { it.episodeNum == 1 }
+            val ep1NeedsUpdate = ep1 != null && !ep1.transcript.contains("广东省")
+            if (count >= 270 && vocabCount >= 30_000 && !ep1NeedsUpdate) {
                 return@withContext Result.success(count)
             }
 
@@ -228,6 +241,8 @@ class PodcastRepository(
                 .associateBy { it.episodeNum }
 
             val episodesToInsert = mutableListOf<PodcastEpisodeEntity>()
+            val vocabByEpisodeNum = mutableMapOf<Int, MutableList<PodcastVocabEntity>>()
+
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 val epNum = obj.getInt("episodeNum")
@@ -236,16 +251,23 @@ class PodcastRepository(
                 val durationMs = obj.optInt("durationMs", 0)
                 val pubDate = obj.optLong("pubDate", 0L)
                 val transcript = obj.optString("transcript", "")
+                val targetHsk = obj.optInt("targetHskLevel", 0)
 
                 val existing = existingByAudioUrl[audioUrl] ?: existingByNum[epNum]
                 if (existing != null) {
+                    val transcriptChanged = existing.transcript != transcript && transcript.isNotBlank()
+                    if (transcriptChanged) {
+                        podcastDao.deleteSentencesForEpisode(existing.episodeId)
+                        podcastDao.deleteVocabForEpisode(existing.episodeId)
+                    }
                     episodesToInsert.add(
                         existing.copy(
                             title = title,
                             audioUrl = audioUrl,
                             durationMs = if (existing.durationMs > 0) existing.durationMs else durationMs,
                             pubDate = if (existing.pubDate > 0L) existing.pubDate else pubDate,
-                            transcript = if (existing.transcript.isNotBlank()) existing.transcript else transcript
+                            transcript = if (transcript.isNotBlank()) transcript else existing.transcript,
+                            targetHskLevel = if (existing.targetHskLevel > 0 && !transcriptChanged) existing.targetHskLevel else targetHsk
                         )
                     )
                 } else {
@@ -262,21 +284,61 @@ class PodcastRepository(
                             playbackPositionMs = 0,
                             isCompleted = false,
                             downloadedPath = null,
-                            targetHskLevel = 0
+                            targetHskLevel = targetHsk
                         )
                     )
+                }
+
+                val vocabArr = obj.optJSONArray("vocab")
+                if (vocabArr != null && vocabArr.length() > 0) {
+                    val list = mutableListOf<PodcastVocabEntity>()
+                    for (j in 0 until vocabArr.length()) {
+                        val vObj = vocabArr.getJSONObject(j)
+                        list.add(
+                            PodcastVocabEntity(
+                                episodeId = 0,
+                                chinese = vObj.getString("c"),
+                                pinyin = vObj.optString("p", ""),
+                                translation = vObj.optString("t", ""),
+                                hskLevel = vObj.optInt("h", 0)
+                            )
+                        )
+                    }
+                    vocabByEpisodeNum[epNum] = list
                 }
             }
 
             if (episodesToInsert.isNotEmpty()) {
-                podcastDao.insertEpisodes(episodesToInsert)
+                podcastDao.insertEpisodesInChunks(episodesToInsert, chunkSize = 50)
             }
-            android.util.Log.d("PodcastRepository", "Seeded ${episodesToInsert.size} MaoMi episodes from assets")
+
+            // Map vocab items to the persisted episode IDs and insert in bulk
+            val savedEpisodes = podcastDao.getEpisodesForChannelSync(MaoMiPodcastAdapter.CHANNEL_ID)
+            val epIdByNum = savedEpisodes.associate { it.episodeNum to it.episodeId }
+
+            val allVocabToInsert = mutableListOf<PodcastVocabEntity>()
+            for ((epNum, vocabList) in vocabByEpisodeNum) {
+                val epId = epIdByNum[epNum] ?: continue
+                for (v in vocabList) {
+                    allVocabToInsert.add(v.copy(episodeId = epId))
+                }
+            }
+
+            if (allVocabToInsert.isNotEmpty()) {
+                podcastDao.deleteVocabForChannel(MaoMiPodcastAdapter.CHANNEL_ID)
+                podcastDao.insertVocabInChunks(allVocabToInsert, chunkSize = 150)
+            }
+
+            android.util.Log.d("PodcastRepository", "Seeded ${episodesToInsert.size} MaoMi episodes and ${allVocabToInsert.size} vocab words from assets")
             Result.success(episodesToInsert.size)
         } catch (e: Exception) {
             android.util.Log.e("PodcastRepository", "Failed to seed MaoMi episodes from assets", e)
             Result.failure(e)
         }
+    }
+
+    suspend fun getVocabCountForChannel(channelId: Int): Int = withContext(Dispatchers.IO) {
+        podcastDao.getVocabCountForChannel(channelId)
     }
 
     suspend fun syncChannelEpisodes(channelId: Int): Result<Int> = withContext(Dispatchers.IO) {

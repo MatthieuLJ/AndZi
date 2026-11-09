@@ -88,13 +88,17 @@ class PodcastDatabaseTest {
         assertEquals("Expected 4 seeded channels", 4, channels.size)
         assertEquals("Slow Chinese", channels[0].title)
         assertEquals("慢速中文", channels[0].chineseTitle)
+        assertTrue(channels[0].supportsPacedHighlighting)
         assertEquals("Reading China", channels[1].title)
         assertEquals("中文天天读", channels[1].chineseTitle)
+        assertTrue(channels[1].supportsPacedHighlighting)
         assertEquals("MaoMi Chinese", channels[2].title)
         assertEquals(12000, channels[2].introOffsetMs)
         assertEquals(16000, channels[2].outroOffsetMs)
         assertTrue(channels[2].isEnabled)
+        org.junit.Assert.assertFalse(channels[2].supportsPacedHighlighting)
         assertEquals("TeaTime Chinese", channels[3].title)
+        org.junit.Assert.assertFalse(channels[3].supportsPacedHighlighting)
     }
 
     @Test
@@ -232,9 +236,30 @@ class PodcastDatabaseTest {
         assertNotNull(ep1)
         assertTrue(ep1!!.title.contains("Louie"))
         assertTrue(ep1.transcript.isNotBlank())
+        assertTrue("Episode 1 should contain verbatim transcript with Guangdong intro", ep1.transcript.contains("广东省"))
+        assertEquals("Episode 1 should have targetHskLevel == 3", 3, ep1.targetHskLevel)
+
+        val vocabCount = repository.getVocabCountForChannel(3)
+        assertTrue("MaoMi vocabulary should be seeded (>= 30000 items, got $vocabCount)", vocabCount >= 30000)
+
+        val ep1Vocab = podcastDb.podcastDao().getVocabForEpisodeSync(ep1.episodeId)
+        assertTrue("Episode 1 should have vocabulary items", ep1Vocab.size >= 100)
+
+        val ep5 = podcastDb.podcastDao().getEpisodesForChannelSync(3).firstOrNull { it.episodeNum == 5 }
+        assertNotNull(ep5)
+        val ep5Vocab = podcastDb.podcastDao().getVocabForEpisodeSync(ep5!!.episodeId)
+        assertTrue("Episode 5 should have precomputed vocabulary (got ${ep5Vocab.size})", ep5Vocab.size >= 50)
 
         val ep134 = podcastDb.podcastDao().getEpisodesForChannelSync(3).firstOrNull { it.episodeNum == 134 }
         assertNotNull(ep134)
         assertTrue(ep134!!.transcript.contains("脸"))
+        assertTrue("Episode 134 should have targetHskLevel > 0", ep134.targetHskLevel > 0)
+        val ep134Vocab = podcastDb.podcastDao().getVocabForEpisodeSync(ep134.episodeId)
+        assertTrue("Episode 134 should have precomputed vocabulary (got ${ep134Vocab.size})", ep134Vocab.size >= 50)
+
+        // Verify that extracting sentences for MaoMi returns empty list because supportsPacedHighlighting is false
+        val channel3 = podcastDb.podcastDao().getChannelById(3)
+        val sentences = repository.extractAndSaveSentencesForEpisode(ep1, channel3)
+        assertTrue("MaoMi Chinese should have no synthetic sentence timestamps", sentences.isEmpty())
     }
 }

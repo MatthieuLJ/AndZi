@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
 import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
@@ -104,6 +105,9 @@ interface PodcastDao {
     @Query("SELECT episode_id, chinese FROM podcast_vocab")
     suspend fun getAllVocabWordsSync(): List<EpisodeVocabWord>
 
+    @Query("SELECT COUNT(*) FROM podcast_vocab pv INNER JOIN podcast_episode pe ON pv.episode_id = pe.episode_id WHERE pe.channel_id = :channelId")
+    suspend fun getVocabCountForChannel(channelId: Int): Int
+
     // Inserts
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChannels(channels: List<PodcastChannelEntity>)
@@ -111,12 +115,32 @@ interface PodcastDao {
     @Query("DELETE FROM podcast_sentence WHERE episode_id = :episodeId")
     suspend fun deleteSentencesForEpisode(episodeId: Int)
 
+    @Query("DELETE FROM podcast_vocab WHERE episode_id = :episodeId")
+    suspend fun deleteVocabForEpisode(episodeId: Int)
+
+    @Query("DELETE FROM podcast_vocab WHERE episode_id IN (SELECT episode_id FROM podcast_episode WHERE channel_id = :channelId)")
+    suspend fun deleteVocabForChannel(channelId: Int)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEpisodes(episodes: List<PodcastEpisodeEntity>): List<Long>
+
+    @Transaction
+    suspend fun insertEpisodesInChunks(episodes: List<PodcastEpisodeEntity>, chunkSize: Int = 50) {
+        episodes.chunked(chunkSize).forEach { chunk ->
+            insertEpisodes(chunk)
+        }
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSentences(sentences: List<PodcastSentenceEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVocab(vocab: List<PodcastVocabEntity>)
+
+    @Transaction
+    suspend fun insertVocabInChunks(vocab: List<PodcastVocabEntity>, chunkSize: Int = 150) {
+        vocab.chunked(chunkSize).forEach { chunk ->
+            insertVocab(chunk)
+        }
+    }
 }

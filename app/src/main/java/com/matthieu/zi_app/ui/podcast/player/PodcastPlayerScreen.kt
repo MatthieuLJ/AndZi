@@ -36,6 +36,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncDisabled
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Badge
@@ -159,6 +161,16 @@ fun PodcastPlayerScreen(
                             contentDescription = "Podcast Attribution"
                         )
                     }
+                    // Auto-scroll toggle (only shown when sentence sync is active)
+                    if (uiState.sentences.isNotEmpty() && uiState.channel?.supportsPacedHighlighting != false) {
+                        IconButton(onClick = { viewModel.toggleAutoScroll() }) {
+                            Icon(
+                                imageVector = if (uiState.isAutoScrollEnabled) Icons.Default.Sync else Icons.Default.SyncDisabled,
+                                contentDescription = if (uiState.isAutoScrollEnabled) "Disable auto-scroll" else "Enable auto-scroll",
+                                tint = if (uiState.isAutoScrollEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
                     // Vocabulary Sheet Trigger with Badge
                     IconButton(onClick = { viewModel.setShowVocabSheet(true) }) {
                         BadgedBox(
@@ -222,7 +234,9 @@ fun PodcastPlayerScreen(
                     onSeekBy = { viewModel.seekBy(it) },
                     onSetSpeed = { viewModel.setPlaybackSpeed(it) },
                     syncOffsetMs = uiState.syncOffsetMs,
-                    showSyncNudge = uiState.listeningMode == ListeningMode.READ_AND_LISTEN,
+                    showSyncNudge = uiState.listeningMode == ListeningMode.READ_AND_LISTEN &&
+                            uiState.sentences.isNotEmpty() &&
+                            (uiState.channel?.supportsPacedHighlighting ?: true),
                     onNudgeSync = { viewModel.nudgeSync(it) },
                     onResetSync = { viewModel.resetSync() },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
@@ -244,6 +258,7 @@ fun PodcastPlayerScreen(
                             rawTranscript = uiState.episode?.transcript ?: "",
                             currentPositionMs = uiState.playerState.currentPositionMs,
                             syncOffsetMs = uiState.syncOffsetMs,
+                            isAutoScrollEnabled = uiState.isAutoScrollEnabled,
                             isPlaying = uiState.playerState.isPlaying,
                             channel = uiState.channel,
                             vocabItems = uiState.vocabItems,
@@ -612,6 +627,7 @@ fun TranscriptReaderView(
     onWordClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     syncOffsetMs: Int = 0,
+    isAutoScrollEnabled: Boolean = true,
     channel: PodcastChannelEntity? = null,
     vocabItems: List<PodcastVocabItemUiState> = emptyList(),
     selectedWord: String? = null,
@@ -622,9 +638,14 @@ fun TranscriptReaderView(
     }
 
     if (sentences.isEmpty()) {
-        // Fallback to paragraph view if sentences are not yet available
+        // Fallback to paragraph view if sentences are not yet available or channel doesn't use paced highlighting
         val paragraphs = remember(rawTranscript) {
-            rawTranscript.split("\n\n").filter { it.isNotBlank() }
+            val doubleSplit = rawTranscript.split("\n\n").map { it.trim() }.filter { it.isNotBlank() }
+            if (doubleSplit.size > 1) {
+                doubleSplit
+            } else {
+                rawTranscript.split("\n").map { it.trim() }.filter { it.isNotBlank() }
+            }
         }
 
         Column(
@@ -667,9 +688,9 @@ fun TranscriptReaderView(
 
     val listState = rememberLazyListState()
 
-    // Smoothly scroll active sentence into view when playing, unless user is actively dragging
-    LaunchedEffect(activeSentenceIndex, isPlaying) {
-        if (isPlaying && activeSentenceIndex >= 0 && !listState.isScrollInProgress) {
+    // Smoothly scroll active sentence into view when playing, unless auto-scroll is disabled or user is dragging
+    LaunchedEffect(activeSentenceIndex, isPlaying, isAutoScrollEnabled) {
+        if (isPlaying && isAutoScrollEnabled && activeSentenceIndex >= 0 && !listState.isScrollInProgress) {
             listState.animateScrollToItem(
                 index = activeSentenceIndex,
                 scrollOffset = -100 // Center slightly from top

@@ -22,6 +22,8 @@ data class PodcastChannelEntity(
     @ColumnInfo(name = "outro_offset_ms")
     val outroOffsetMs: Int = 0,
     @ColumnInfo(name = "is_enabled")
-    val isEnabled: Boolean = true
+    val isEnabled: Boolean = true,
+    @ColumnInfo(name = "supports_paced_highlighting", defaultValue = "1")
+    val supportsPacedHighlighting: Boolean = true
 )
 

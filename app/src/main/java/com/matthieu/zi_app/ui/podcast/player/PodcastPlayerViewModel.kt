@@ -53,12 +53,20 @@ class PodcastPlayerViewModel(
 
             val channel = podcastRepository.getChannelById(ep.channelId)
             val timing = SlowChineseOffsets.getOffset(ep.episodeNum)
-            var sentences = podcastRepository.getSentencesForEpisodeSync(episodeId)
+            val supportsHighlighting = channel?.supportsPacedHighlighting ?: true
+            var sentences = if (supportsHighlighting) {
+                podcastRepository.getSentencesForEpisodeSync(episodeId)
+            } else {
+                if (podcastRepository.getSentencesForEpisodeSync(episodeId).isNotEmpty()) {
+                    podcastRepository.deleteSentencesForEpisode(episodeId)
+                }
+                emptyList()
+            }
             val lastEnd = sentences.lastOrNull()?.endMs ?: 0
             val expectedEnd = if (timing.durationMs > 0) timing.durationMs - timing.outroOffsetMs else 0
 
-            // If sentences are empty or were computed with corrupted/truncated RSS duration, recalculate
-            val needsRecalculation = sentences.isEmpty() || (expectedEnd > 0 && lastEnd < (expectedEnd - 15_000))
+            // If sentences are empty or were computed with corrupted/truncated RSS duration, recalculate (only for channels that support highlighting)
+            val needsRecalculation = supportsHighlighting && (sentences.isEmpty() || (expectedEnd > 0 && lastEnd < (expectedEnd - 15_000)))
             if (needsRecalculation && ep.transcript.isNotBlank()) {
                 sentences = podcastRepository.extractAndSaveSentencesForEpisode(ep, channel, forceRefresh = true)
             }
@@ -444,6 +452,10 @@ class PodcastPlayerViewModel(
 
     fun resetSync() {
         _uiState.update { it.copy(syncOffsetMs = 0) }
+    }
+
+    fun toggleAutoScroll() {
+        _uiState.update { it.copy(isAutoScrollEnabled = !it.isAutoScrollEnabled) }
     }
 
     override fun onCleared() {

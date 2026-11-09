@@ -35,6 +35,7 @@ data class PodcastPlayerUiState(
     val isDownloading: Boolean = false,
     val downloadProgress: Float = 0f,
     val syncOffsetMs: Int = 0,
+    val isAutoScrollEnabled: Boolean = true,
     // Word Detail Sheet
     val selectedWord: Vocabulary? = null,
     val polyReadings: List<Vocabulary> = emptyList(),

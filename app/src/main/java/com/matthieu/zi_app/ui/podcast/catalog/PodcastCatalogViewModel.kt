@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
+import com.matthieu.zi_app.data.podcast.MaoMiPodcastAdapter
 import com.matthieu.zi_app.data.repository.PodcastRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import kotlinx.coroutines.Dispatchers
@@ -68,15 +69,15 @@ class PodcastCatalogViewModel(
                     if (res.isFailure) {
                         _errorMessage.value = res.exceptionOrNull()?.localizedMessage
                     }
-                    val maomiCount = podcastRepository.getEpisodeCountForChannel(3)
-                    if (maomiCount == 0) {
-                        try {
-                            podcastRepository.seedMaoMiEpisodesFromAssets()
-                        } catch (_: Exception) {}
-                    }
                     _isRefreshing.value = false
-                    gradeEpisodesInBackground()
                 }
+
+                // Ensure MaoMi Chinese (channel 3) is seeded on launch if missing, unpopulated, or outdated
+                try {
+                    podcastRepository.seedMaoMiEpisodesFromAssets()
+                } catch (_: Exception) {}
+
+                gradeEpisodesInBackground()
             } catch (e: Exception) {
                 _errorMessage.value = e.localizedMessage
                 _isRefreshing.value = false
@@ -178,6 +179,13 @@ class PodcastCatalogViewModel(
 
     fun selectChannel(channelId: Int?) {
         _selectedChannelId.value = channelId
+        if (channelId == MaoMiPodcastAdapter.CHANNEL_ID) {
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    podcastRepository.seedMaoMiEpisodesFromAssets()
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     fun selectHskLevel(level: Int?) {
