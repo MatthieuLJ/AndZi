@@ -88,7 +88,11 @@ object PodcastRssParser {
 
                         // Clean transcript (prefer itunes:summary which contains the Chinese text)
                         val rawText = if (!itunesSummary.isNullOrBlank()) itunesSummary else description ?: ""
-                        var cleanTranscript = cleanTranscript(rawText)
+                        var cleanTranscript = if (channelId == 2) {
+                            cleanReadingChinaTranscript(rawText, finalTitle)
+                        } else {
+                            cleanTranscript(rawText)
+                        }
                         if (cleanTranscript.isBlank()) {
                             SlowChineseTranscripts.getPatchedTranscript(channelId, episodeNum)?.let {
                                 cleanTranscript = it
@@ -170,6 +174,67 @@ object PodcastRssParser {
             .replace("&apos;", "'")
             .replace("&quot;", "\"")
         val lines = text.split("\n").map { it.trim() }.filter { it.isNotBlank() }
+        return lines.joinToString("\n\n")
+    }
+
+    /**
+     * Cleans transcripts for Reading China (中文天天读, Channel 2).
+     *
+     * The RSS feed descriptions for Reading China contain:
+     * 1. An optional leading lesson title line (which is already read during the intro audio).
+     * 2. The spoken story dialogue.
+     * 3. Vocabulary notes ("词语 Words and Expressions") and grammar explanations ("语言点 Language Points").
+     *
+     * In the audio, the speaker only reads the story text (150-250 chars) over 40-80 seconds.
+     * This function cuts off vocabulary/grammar notes and strips leading title duplicates,
+     * restoring natural pacing (~4.2-4.8 chars/sec) and matching spoken audio.
+     */
+    fun cleanReadingChinaTranscript(rawHtml: String, title: String): String {
+        var text = htmlTagPattern.matcher(rawHtml).replaceAll(" ")
+        text = text.replace("&nbsp;", " ")
+            .replace("&amp;", "&")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&apos;", "'")
+            .replace("&quot;", "\"")
+
+        // Truncate at vocabulary and grammar notes
+        val vocabMatcher = Pattern.compile(
+            "(?i)(?:\\n|\\r|\\A)\\s*(?:词语(?:\\s*Words and Expressions)?|生词|语言点(?:\\s*Language Points)?|Words and Expressions|Language Points|注释\\s*Notes)",
+            Pattern.CASE_INSENSITIVE
+        ).matcher(text)
+        if (vocabMatcher.find()) {
+            text = text.substring(0, vocabMatcher.start())
+        }
+
+        // Extract lesson title (e.g. from "中文天天读 1 - “安”的意思是什么？" -> "“安”的意思是什么？")
+        var lessonTitle = title
+        if (title.contains("-")) {
+            lessonTitle = title.substringAfter("-").trim()
+        } else if (title.contains("中文天天读")) {
+            lessonTitle = title.replace(Regex("中文天天读\\s*\\d*\\s*"), "").trim()
+        }
+
+        var trimmedText = text.trim()
+        val cleanLt = lessonTitle.trim('“', '”', '"', '\'', '‘', '’', '!', '！', '?', '？')
+        val candidates = mutableListOf<String>()
+        if (lessonTitle.isNotBlank()) candidates.add(lessonTitle)
+        if (cleanLt.isNotBlank()) candidates.add(cleanLt)
+        if (cleanLt.startsWith("你")) candidates.add(cleanLt.substring(1))
+
+        for (cand in candidates) {
+            val pat = Pattern.compile("^[“\"‘’]?${Pattern.quote(cand)}[”\"‘’]?[\\s!！?？:：]*")
+            val m = pat.matcher(trimmedText)
+            if (m.find()) {
+                trimmedText = trimmedText.substring(m.end()).trim()
+                break
+            }
+        }
+
+        // Strip any remaining leading punctuation
+        trimmedText = trimmedText.replace(Regex("^[\\s!！?？:：,，。]+"), "").trim()
+
+        val lines = trimmedText.split("\n").map { it.trim() }.filter { it.isNotBlank() }
         return lines.joinToString("\n\n")
     }
 

@@ -75,7 +75,12 @@ abstract class PodcastDatabase : RoomDatabase() {
                     """)
                     db.execSQL("""
                         INSERT OR IGNORE INTO podcast_channel (channel_id, title, chinese_title, provider_type, feed_url, intro_offset_ms, outro_offset_ms, is_enabled)
-                        VALUES (2, 'Reading China', '中文天天读', 'RSS', 'https://kitchenknif.github.io/SlowChinese/podcast.rss', 2000, 2000, 1)
+                        VALUES (2, 'Reading China', '中文天天读', 'RSS', 'https://kitchenknif.github.io/SlowChinese/podcast.rss', 5000, 6000, 1)
+                    """)
+                    db.execSQL("""
+                        UPDATE podcast_channel 
+                        SET intro_offset_ms = 5000, outro_offset_ms = 6000
+                        WHERE channel_id = 2 AND (intro_offset_ms != 5000 OR outro_offset_ms != 6000)
                     """)
                     db.execSQL("""
                         INSERT OR IGNORE INTO podcast_channel (channel_id, title, chinese_title, provider_type, feed_url, intro_offset_ms, outro_offset_ms, is_enabled)

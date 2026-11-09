@@ -60,6 +60,16 @@ class PacedSpeechRateEngineTest {
     }
 
     @Test
+    fun testSplitTranscriptPreservesTrailingQuotes() {
+        val transcript = "他说：“我们一起去吧！”她回答：“好啊。”"
+        val sentences = PacedSpeechRateEngine.splitTranscriptIntoSentences(transcript)
+
+        assertEquals(2, sentences.size)
+        assertEquals("他说：“我们一起去吧！”", sentences[0])
+        assertEquals("她回答：“好啊。”", sentences[1])
+    }
+
+    @Test
     fun testResolveOffsetsForSlowChinese() {
         val ep1 = PacedSpeechRateEngine.resolveOffsets(
             channelId = 1,
@@ -70,16 +80,49 @@ class PacedSpeechRateEngineTest {
         // Ep 1 measured intro is 28200ms
         assertEquals(28200, ep1.introOffsetMs)
         assertEquals(42320, ep1.outroOffsetMs)
+    }
 
-        // Other channel fallback
-        val other = PacedSpeechRateEngine.resolveOffsets(
+    @Test
+    fun testResolveOffsetsForReadingChina() {
+        val ep1 = PacedSpeechRateEngine.resolveOffsets(
             channelId = 2,
+            episodeNum = 1,
+            channelFallbackIntroMs = 5000,
+            channelFallbackOutroMs = 6000
+        )
+        assertEquals(12800, ep1.introOffsetMs)
+        assertEquals(5900, ep1.outroOffsetMs)
+        assertEquals(68000, ep1.durationMs)
+
+        val ep2 = PacedSpeechRateEngine.resolveOffsets(
+            channelId = 2,
+            episodeNum = 2,
+            channelFallbackIntroMs = 5000,
+            channelFallbackOutroMs = 6000
+        )
+        assertEquals(4000, ep2.introOffsetMs)
+        assertEquals(5900, ep2.outroOffsetMs)
+    }
+
+    @Test
+    fun testResolveOffsetsForMaoMiAndFallback() {
+        val maomi = PacedSpeechRateEngine.resolveOffsets(
+            channelId = 3,
+            episodeNum = 1,
+            channelFallbackIntroMs = 12000,
+            channelFallbackOutroMs = 16000
+        )
+        assertEquals(12000, maomi.introOffsetMs)
+        assertEquals(16000, maomi.outroOffsetMs)
+
+        val unknown = PacedSpeechRateEngine.resolveOffsets(
+            channelId = 99,
             episodeNum = 1,
             channelFallbackIntroMs = 3000,
             channelFallbackOutroMs = 4000
         )
-        assertEquals(3000, other.introOffsetMs)
-        assertEquals(4000, other.outroOffsetMs)
+        assertEquals(3000, unknown.introOffsetMs)
+        assertEquals(4000, unknown.outroOffsetMs)
     }
 }
 

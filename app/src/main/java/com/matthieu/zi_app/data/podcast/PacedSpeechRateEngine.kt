@@ -17,27 +17,36 @@ object PacedSpeechRateEngine {
     const val WEIGHT_PERIOD = 3.0  // 。 ！ ？ \n
 
     private val TERMINATORS = setOf('。', '！', '？', '!', '?', '\n')
+    private val CLOSING_QUOTES = setOf('”', '’', '"', '\'', ')', '）', '》', '」', '』')
     private val PAUSE_MARKS = setOf('，', ',', '、', '；', ';', '：', ':')
 
     /**
      * Splits raw transcript text into natural sentence units.
-     * Preserves sentence-ending punctuation.
+     * Preserves sentence-ending punctuation and trailing quotation marks/brackets.
      */
     fun splitTranscriptIntoSentences(transcript: String): List<String> {
         if (transcript.isBlank()) return emptyList()
 
         val sentences = mutableListOf<String>()
         val current = StringBuilder()
+        var i = 0
 
-        for (char in transcript) {
+        while (i < transcript.length) {
+            val char = transcript[i]
             current.append(char)
             if (char in TERMINATORS) {
+                // Attach any immediately following closing quotes or brackets to the sentence
+                while (i + 1 < transcript.length && transcript[i + 1] in CLOSING_QUOTES) {
+                    i++
+                    current.append(transcript[i])
+                }
                 val trimmed = current.toString().trim()
                 if (trimmed.isNotBlank()) {
                     sentences.add(trimmed)
                 }
                 current.clear()
             }
+            i++
         }
 
         val remaining = current.toString().trim()
@@ -148,6 +157,7 @@ object PacedSpeechRateEngine {
     ): EpisodeTimingOffset {
         return when (channelId) {
             1 -> SlowChineseOffsets.getOffset(episodeNum)
+            2 -> ReadingChinaOffsets.getOffset(episodeNum)
             3 -> EpisodeTimingOffset(
                 introOffsetMs = if (channelFallbackIntroMs > 0) channelFallbackIntroMs else 12000,
                 outroOffsetMs = if (channelFallbackOutroMs > 0) channelFallbackOutroMs else 16000

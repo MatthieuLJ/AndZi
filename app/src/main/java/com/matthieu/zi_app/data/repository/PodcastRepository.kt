@@ -82,12 +82,25 @@ class PodcastRepository(
         channel: PodcastChannelEntity? = null,
         forceRefresh: Boolean = false
     ): List<PodcastSentenceEntity> = withContext(Dispatchers.IO) {
+        var effectiveTranscript = episode.transcript
+
+        // Auto-clean Reading China (channel 2) dirty RSS transcripts containing vocabulary/grammar notes
+        if (episode.channelId == 2 && (effectiveTranscript.contains("Words and Expressions") ||
+                effectiveTranscript.contains("词语") || effectiveTranscript.contains("语言点") ||
+                effectiveTranscript.contains("Language Points"))) {
+            val cleaned = PodcastRssParser.cleanReadingChinaTranscript(effectiveTranscript, episode.title)
+            if (cleaned.isNotBlank()) {
+                effectiveTranscript = cleaned
+                podcastDao.updateEpisode(episode.copy(transcript = cleaned))
+                podcastDao.deleteSentencesForEpisode(episode.episodeId)
+            }
+        }
+
         val existing = podcastDao.getSentencesForEpisodeSync(episode.episodeId)
         if (existing.isNotEmpty() && !forceRefresh) {
             return@withContext existing
         }
 
-        var effectiveTranscript = episode.transcript
         if (effectiveTranscript.isBlank()) {
             val patched = SlowChineseTranscripts.getPatchedTranscript(episode.channelId, episode.episodeNum)
             if (!patched.isNullOrBlank()) {

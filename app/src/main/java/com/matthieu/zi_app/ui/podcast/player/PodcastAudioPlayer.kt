@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,13 +63,13 @@ class PodcastAudioPlayer(
         if (Looper.myLooper() == Looper.getMainLooper()) {
             block()
         } else {
-            scope.launch(Dispatchers.Main) {
+            scope.launch {
                 block()
             }
         }
     }
 
-    private fun ensurePlayerInitialized(): ExoPlayer {
+    private fun ensurePlayerInitialized(): ExoPlayer? {
         val existing = exoPlayer
         if (existing != null) return existing
 
@@ -83,11 +84,15 @@ class PodcastAudioPlayer(
                 .setHandleAudioBecomingNoisy(true)
                 .build()
         } catch (_: Throwable) {
-            ExoPlayer.Builder(context)
-                .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
-                .setHandleAudioBecomingNoisy(false)
-                .build()
-        }
+            try {
+                ExoPlayer.Builder(context)
+                    .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
+                    .setHandleAudioBecomingNoisy(false)
+                    .build()
+            } catch (_: Throwable) {
+                null
+            }
+        } ?: return null
 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -174,7 +179,7 @@ class PodcastAudioPlayer(
         title: String?,
         channelTitle: String?
     ) {
-        val player = ensurePlayerInitialized()
+        val player = ensurePlayerInitialized() ?: return
 
         if (currentSource == source) {
             _playerState.value = _playerState.value.copy(
@@ -247,7 +252,7 @@ class PodcastAudioPlayer(
     }
 
     private fun playInternal() {
-        val player = exoPlayer ?: ensurePlayerInitialized()
+        val player = exoPlayer ?: ensurePlayerInitialized() ?: return
         try {
             if (_playerState.value.speed != 1.0f) {
                 player.playbackParameters = PlaybackParameters(_playerState.value.speed)
@@ -351,6 +356,7 @@ class PodcastAudioPlayer(
     }
 
     fun release() {
+        scope.coroutineContext.cancelChildren()
         runOnMain { releaseInternal() }
     }
 
