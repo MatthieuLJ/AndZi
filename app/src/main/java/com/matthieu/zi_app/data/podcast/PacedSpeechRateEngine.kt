@@ -148,6 +148,10 @@ object PacedSpeechRateEngine {
     ): EpisodeTimingOffset {
         return when (channelId) {
             1 -> SlowChineseOffsets.getOffset(episodeNum)
+            3 -> EpisodeTimingOffset(
+                introOffsetMs = if (channelFallbackIntroMs > 0) channelFallbackIntroMs else 12000,
+                outroOffsetMs = if (channelFallbackOutroMs > 0) channelFallbackOutroMs else 16000
+            )
             else -> EpisodeTimingOffset(
                 introOffsetMs = channelFallbackIntroMs,
                 outroOffsetMs = channelFallbackOutroMs

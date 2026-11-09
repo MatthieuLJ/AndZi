@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.DatabaseBackupRepository
+import com.matthieu.zi_app.data.repository.PodcastRepository
 import com.matthieu.zi_app.data.repository.ProgressRepository
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.work.ProgressSyncWorker
@@ -22,7 +23,8 @@ class SettingsViewModel(
     private val studyRepository: StudyRepository,
     private val progressRepository: ProgressRepository,
     private val databaseBackupRepository: DatabaseBackupRepository,
-    private val context: Context
+    private val context: Context,
+    private val podcastRepository: PodcastRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -57,6 +59,13 @@ class SettingsViewModel(
                 _uiState.update { it.copy(audioStoriesEnabled = enabled) }
             }
         }
+        if (podcastRepository != null) {
+            viewModelScope.launch {
+                podcastRepository.getAllChannels().collect { channels ->
+                    _uiState.update { it.copy(podcastChannels = channels) }
+                }
+            }
+        }
     }
 
     fun setThemeMode(mode: AppThemeMode) {
@@ -79,6 +88,21 @@ class SettingsViewModel(
 
     fun setAudioStoriesEnabled(enabled: Boolean) {
         userPreferences.setAudioStoriesEnabled(enabled)
+    }
+
+    fun togglePodcastChannel(channelId: Int, isEnabled: Boolean) {
+        val repo = podcastRepository ?: return
+        viewModelScope.launch {
+            val channel = repo.getChannelById(channelId) ?: return@launch
+            repo.updateChannel(channel.copy(isEnabled = isEnabled))
+            if (isEnabled && channelId == 3) {
+                val count = repo.getEpisodeCountForChannel(3)
+                if (count == 0) {
+                    repo.seedMaoMiEpisodesFromAssets()
+                    repo.ensureEpisodesGraded()
+                }
+            }
+        }
     }
 
     fun showFeedbackMessage(message: String) {
@@ -397,7 +421,8 @@ class SettingsViewModel(
             studyRepository: StudyRepository,
             progressRepository: ProgressRepository,
             databaseBackupRepository: DatabaseBackupRepository,
-            context: Context
+            context: Context,
+            podcastRepository: PodcastRepository? = null
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -406,7 +431,8 @@ class SettingsViewModel(
                     studyRepository,
                     progressRepository,
                     databaseBackupRepository,
-                    context.applicationContext
+                    context.applicationContext,
+                    podcastRepository
                 ) as T
             }
         }

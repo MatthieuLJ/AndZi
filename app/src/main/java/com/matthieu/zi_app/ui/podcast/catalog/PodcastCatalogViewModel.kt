@@ -68,6 +68,12 @@ class PodcastCatalogViewModel(
                     if (res.isFailure) {
                         _errorMessage.value = res.exceptionOrNull()?.localizedMessage
                     }
+                    val maomiCount = podcastRepository.getEpisodeCountForChannel(3)
+                    if (maomiCount == 0) {
+                        try {
+                            podcastRepository.seedMaoMiEpisodesFromAssets()
+                        } catch (_: Exception) {}
+                    }
                     _isRefreshing.value = false
                     gradeEpisodesInBackground()
                 }
@@ -128,13 +134,15 @@ class PodcastCatalogViewModel(
         filterParams,
         syncParams
     ) { channels, allEpisodes, masteryMap, filter, sync ->
+        val enabledChannelIds = channels.filter { it.isEnabled }.map { it.channelId }.toSet()
         val filtered = allEpisodes.filter { ep ->
+            val isChannelEnabled = ep.channelId in enabledChannelIds
             val matchesChannel = filter.selectedChannelId == null || ep.channelId == filter.selectedChannelId
             val matchesQuery = filter.query.isBlank() || ep.title.contains(filter.query, ignoreCase = true)
             val isDownloaded = ep.downloadedPath != null && File(ep.downloadedPath).exists()
             val matchesDownloaded = !filter.onlyDownloaded || isDownloaded
             val matchesHsk = filter.selectedHskLevel == null || ep.targetHskLevel == filter.selectedHskLevel
-            matchesChannel && matchesQuery && matchesDownloaded && matchesHsk
+            isChannelEnabled && matchesChannel && matchesQuery && matchesDownloaded && matchesHsk
         }.map { ep ->
             val isDownloaded = ep.downloadedPath != null && File(ep.downloadedPath).exists()
             val progress = sync.downloading[ep.episodeId]

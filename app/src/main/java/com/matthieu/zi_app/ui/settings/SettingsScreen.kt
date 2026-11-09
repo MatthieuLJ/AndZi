@@ -368,6 +368,40 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Podcast Feeds",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+
+                    val activeChannels = uiState.podcastChannels.filter { it.channelId in 1..3 }
+                    activeChannels.forEach { channel ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${channel.chineseTitle} (${channel.title})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Switch(
+                                checked = channel.isEnabled,
+                                onCheckedChange = { isChecked ->
+                                    viewModel.togglePodcastChannel(channel.channelId, isChecked)
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedButton(
                         onClick = { showPodcastAttributions = true },
                         modifier = Modifier.fillMaxWidth(),

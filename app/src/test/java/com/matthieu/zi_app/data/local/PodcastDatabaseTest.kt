@@ -91,6 +91,9 @@ class PodcastDatabaseTest {
         assertEquals("Reading China", channels[1].title)
         assertEquals("中文天天读", channels[1].chineseTitle)
         assertEquals("MaoMi Chinese", channels[2].title)
+        assertEquals(12000, channels[2].introOffsetMs)
+        assertEquals(16000, channels[2].outroOffsetMs)
+        assertTrue(channels[2].isEnabled)
         assertEquals("TeaTime Chinese", channels[3].title)
     }
 
@@ -214,5 +217,24 @@ class PodcastDatabaseTest {
         val allWords = repository.getAllVocabWordsSync()
         assertEquals(3, allWords.size)
         assertEquals(epId, allWords[0].episodeId)
+    }
+
+    @Test
+    fun testSeedMaoMiEpisodesFromAssets() = runBlocking {
+        val seedResult = repository.seedMaoMiEpisodesFromAssets()
+        assertTrue("MaoMi seed should succeed", seedResult.isSuccess)
+        assertEquals(271, seedResult.getOrNull())
+
+        val maomiCount = repository.getEpisodeCountForChannel(3)
+        assertEquals(271, maomiCount)
+
+        val ep1 = podcastDb.podcastDao().getEpisodesForChannelSync(3).firstOrNull { it.episodeNum == 1 }
+        assertNotNull(ep1)
+        assertTrue(ep1!!.title.contains("Louie"))
+        assertTrue(ep1.transcript.isNotBlank())
+
+        val ep134 = podcastDb.podcastDao().getEpisodesForChannelSync(3).firstOrNull { it.episodeNum == 134 }
+        assertNotNull(ep134)
+        assertTrue(ep134!!.transcript.contains("脸"))
     }
 }

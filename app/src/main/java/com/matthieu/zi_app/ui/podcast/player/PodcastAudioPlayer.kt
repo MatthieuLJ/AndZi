@@ -77,10 +77,17 @@ class PodcastAudioPlayer(
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        val player = ExoPlayer.Builder(context)
-            .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
-            .setHandleAudioBecomingNoisy(true)
-            .build()
+        val player = try {
+            ExoPlayer.Builder(context)
+                .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
+                .setHandleAudioBecomingNoisy(true)
+                .build()
+        } catch (_: Throwable) {
+            ExoPlayer.Builder(context)
+                .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
+                .setHandleAudioBecomingNoisy(false)
+                .build()
+        }
 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {

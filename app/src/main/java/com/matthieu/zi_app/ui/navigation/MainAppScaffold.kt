@@ -312,7 +312,8 @@ fun MainAppScaffold(
                         studyRepository = appContainer.studyRepository,
                         progressRepository = appContainer.progressRepository,
                         databaseBackupRepository = appContainer.databaseBackupRepository,
-                        context = context
+                        context = context,
+                        podcastRepository = appContainer.podcastRepository
                     )
                 )
                 SettingsScreen(

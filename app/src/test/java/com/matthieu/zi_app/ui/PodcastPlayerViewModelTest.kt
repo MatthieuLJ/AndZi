@@ -108,7 +108,9 @@ class PodcastPlayerViewModelTest {
 
     @After
     fun teardown() {
+        testDispatcher.scheduler.advanceUntilIdle()
         audioPlayer.release()
+        testDispatcher.scheduler.advanceUntilIdle()
         PodcastDatabase.resetInstanceForTesting()
         Dispatchers.resetMain()
         dictDb.close()

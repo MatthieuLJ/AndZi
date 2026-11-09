@@ -8,6 +8,7 @@ import com.matthieu.zi_app.data.local.entity.PodcastChannelEntity
 import com.matthieu.zi_app.data.local.entity.PodcastEpisodeEntity
 import com.matthieu.zi_app.data.local.entity.PodcastSentenceEntity
 import com.matthieu.zi_app.data.local.entity.PodcastVocabEntity
+import com.matthieu.zi_app.data.podcast.MaoMiPodcastAdapter
 import com.matthieu.zi_app.data.podcast.PacedSpeechRateEngine
 import com.matthieu.zi_app.data.podcast.PodcastHskGrader
 import com.matthieu.zi_app.data.podcast.PodcastRssParser
@@ -15,6 +16,7 @@ import com.matthieu.zi_app.data.podcast.SlowChineseTranscripts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -155,15 +157,32 @@ class PodcastRepository(
                     ?: existingByNum["${parsed.channelId}_${parsed.episodeNum}"]
                     ?: existingByTitle["${parsed.channelId}_${parsed.title}"]
 
+                var effectiveTranscript = parsed.transcript
+                if (effectiveTranscript.isBlank()) {
+                    if (match != null && match.transcript.isNotBlank()) {
+                        effectiveTranscript = match.transcript
+                    } else if (parsed.channelId == MaoMiPodcastAdapter.CHANNEL_ID) {
+                        // Dynamically fetch from WordPress for new MaoMi episodes
+                        val fetched = MaoMiPodcastAdapter.fetchTranscript(parsed.episodeNum)
+                        if (!fetched.isNullOrBlank()) {
+                            effectiveTranscript = fetched
+                        }
+                    }
+                }
+
                 if (match != null) {
                     parsed.copy(
                         episodeId = match.episodeId,
+                        transcript = effectiveTranscript,
                         playbackPositionMs = match.playbackPositionMs,
                         isCompleted = match.isCompleted,
                         downloadedPath = match.downloadedPath
                     )
                 } else {
-                    parsed.copy(episodeId = 0)
+                    parsed.copy(
+                        episodeId = 0,
+                        transcript = effectiveTranscript
+                    )
                 }
             }
 
@@ -174,8 +193,84 @@ class PodcastRepository(
         }
     }
 
+    /**
+     * Seeds MaoMi Chinese (channel 3) episodes from bundled maomi_transcripts.json asset
+     * for instant offline availability.
+     */
+    suspend fun seedMaoMiEpisodesFromAssets(): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val count = podcastDao.getEpisodeCountForChannel(MaoMiPodcastAdapter.CHANNEL_ID)
+            if (count > 0) {
+                return@withContext Result.success(count)
+            }
+
+            val inputStream = context.assets.open("maomi_transcripts.json")
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            val jsonArray = JSONArray(jsonString)
+
+            val existingEpisodes = podcastDao.getAllEpisodesSync()
+            val existingByAudioUrl = existingEpisodes.filter { it.audioUrl.isNotBlank() }
+                .associateBy { it.audioUrl }
+            val existingByNum = existingEpisodes.filter { it.channelId == MaoMiPodcastAdapter.CHANNEL_ID && it.episodeNum > 0 }
+                .associateBy { it.episodeNum }
+
+            val episodesToInsert = mutableListOf<PodcastEpisodeEntity>()
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val epNum = obj.getInt("episodeNum")
+                val title = obj.getString("title")
+                val audioUrl = obj.getString("audioUrl")
+                val durationMs = obj.optInt("durationMs", 0)
+                val pubDate = obj.optLong("pubDate", 0L)
+                val transcript = obj.optString("transcript", "")
+
+                val existing = existingByAudioUrl[audioUrl] ?: existingByNum[epNum]
+                if (existing != null) {
+                    episodesToInsert.add(
+                        existing.copy(
+                            title = title,
+                            audioUrl = audioUrl,
+                            durationMs = if (existing.durationMs > 0) existing.durationMs else durationMs,
+                            pubDate = if (existing.pubDate > 0L) existing.pubDate else pubDate,
+                            transcript = if (existing.transcript.isNotBlank()) existing.transcript else transcript
+                        )
+                    )
+                } else {
+                    episodesToInsert.add(
+                        PodcastEpisodeEntity(
+                            episodeId = 0,
+                            channelId = MaoMiPodcastAdapter.CHANNEL_ID,
+                            episodeNum = epNum,
+                            title = title,
+                            audioUrl = audioUrl,
+                            durationMs = durationMs,
+                            transcript = transcript,
+                            pubDate = pubDate,
+                            playbackPositionMs = 0,
+                            isCompleted = false,
+                            downloadedPath = null,
+                            targetHskLevel = 0
+                        )
+                    )
+                }
+            }
+
+            if (episodesToInsert.isNotEmpty()) {
+                podcastDao.insertEpisodes(episodesToInsert)
+            }
+            android.util.Log.d("PodcastRepository", "Seeded ${episodesToInsert.size} MaoMi episodes from assets")
+            Result.success(episodesToInsert.size)
+        } catch (e: Exception) {
+            android.util.Log.e("PodcastRepository", "Failed to seed MaoMi episodes from assets", e)
+            Result.failure(e)
+        }
+    }
+
     suspend fun syncChannelEpisodes(channelId: Int): Result<Int> = withContext(Dispatchers.IO) {
         try {
+            if (channelId == MaoMiPodcastAdapter.CHANNEL_ID) {
+                seedMaoMiEpisodesFromAssets()
+            }
             val channel = podcastDao.getChannelById(channelId)
                 ?: return@withContext Result.failure(IllegalArgumentException("Channel $channelId not found"))
             val feedUrl = channel.feedUrl

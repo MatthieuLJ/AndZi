@@ -13,6 +13,7 @@ data class SettingsUiState(
     val notificationsEnabled: Boolean = true,
     val writingQuizEnabled: Boolean = true,
     val audioStoriesEnabled: Boolean = false,
+    val podcastChannels: List<com.matthieu.zi_app.data.local.entity.PodcastChannelEntity> = emptyList(),
     val appVersion: String = "1.0",
     val showResetConfirmation: Boolean = false,
     val showClearConfirmation: Boolean = false,

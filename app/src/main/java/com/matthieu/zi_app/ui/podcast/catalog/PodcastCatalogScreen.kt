@@ -145,7 +145,7 @@ fun PodcastCatalogScreen(
                         colors = FilterChipDefaults.filterChipColors()
                     )
                 }
-                items(uiState.channels) { channel ->
+                items(uiState.channels.filter { it.isEnabled }) { channel ->
                     FilterChip(
                         selected = uiState.selectedChannelId == channel.channelId,
                         onClick = { viewModel.selectChannel(channel.channelId) },
