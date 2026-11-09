@@ -105,12 +105,6 @@ fun PodcastPlayerScreen(
     val vocabSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showAttributionDialog by remember { mutableStateOf(false) }
 
-    androidx.compose.runtime.DisposableEffect(Unit) {
-        onDispose {
-            viewModel.pauseAudio()
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -227,6 +221,10 @@ fun PodcastPlayerScreen(
                     onSeekTo = { viewModel.seekTo(it) },
                     onSeekBy = { viewModel.seekBy(it) },
                     onSetSpeed = { viewModel.setPlaybackSpeed(it) },
+                    syncOffsetMs = uiState.syncOffsetMs,
+                    showSyncNudge = uiState.listeningMode == ListeningMode.READ_AND_LISTEN,
+                    onNudgeSync = { viewModel.nudgeSync(it) },
+                    onResetSync = { viewModel.resetSync() },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
 
@@ -245,6 +243,7 @@ fun PodcastPlayerScreen(
                             sentences = uiState.sentences,
                             rawTranscript = uiState.episode?.transcript ?: "",
                             currentPositionMs = uiState.playerState.currentPositionMs,
+                            syncOffsetMs = uiState.syncOffsetMs,
                             isPlaying = uiState.playerState.isPlaying,
                             channel = uiState.channel,
                             vocabItems = uiState.vocabItems,
@@ -315,7 +314,11 @@ fun AudioPlayerCard(
     onSeekTo: (Int) -> Unit,
     onSeekBy: (Int) -> Unit,
     onSetSpeed: (Float) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    syncOffsetMs: Int = 0,
+    showSyncNudge: Boolean = false,
+    onNudgeSync: (Int) -> Unit = {},
+    onResetSync: () -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -447,6 +450,98 @@ fun AudioPlayerCard(
                     }
                 }
             }
+
+            if (showSyncNudge) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+                SyncNudgeBar(
+                    syncOffsetMs = syncOffsetMs,
+                    onNudgeSync = onNudgeSync,
+                    onResetSync = onResetSync
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SyncNudgeBar(
+    syncOffsetMs: Int,
+    onNudgeSync: (Int) -> Unit,
+    onResetSync: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Sync nudge:",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable { onNudgeSync(-1000) }
+            ) {
+                Text(
+                    text = "-1s",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            val offsetSec = syncOffsetMs / 1000f
+            val offsetLabel = if (syncOffsetMs == 0) {
+                "0s"
+            } else if (syncOffsetMs > 0) {
+                "+${String.format(Locale.US, "%.1f", offsetSec)}s"
+            } else {
+                "${String.format(Locale.US, "%.1f", offsetSec)}s"
+            }
+
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = if (syncOffsetMs != 0) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable { onResetSync() }
+            ) {
+                Text(
+                    text = if (syncOffsetMs != 0) "$offsetLabel (Reset)" else offsetLabel,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    color = if (syncOffsetMs != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable { onNudgeSync(1000) }
+            ) {
+                Text(
+                    text = "+1s",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -516,6 +611,7 @@ fun TranscriptReaderView(
     onSeekTo: (Int) -> Unit,
     onWordClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    syncOffsetMs: Int = 0,
     channel: PodcastChannelEntity? = null,
     vocabItems: List<PodcastVocabItemUiState> = emptyList(),
     selectedWord: String? = null,
@@ -561,9 +657,12 @@ fun TranscriptReaderView(
         return
     }
 
-    // Active sentence index based on audio player position
-    val activeSentenceIndex = remember(sentences, currentPositionMs) {
-        sentences.indexOfFirst { currentPositionMs in it.startMs..it.endMs }
+    // Active sentence index based on audio player position + user sync nudge offset
+    val effectivePositionMs = remember(currentPositionMs, syncOffsetMs) {
+        (currentPositionMs + syncOffsetMs).coerceAtLeast(0)
+    }
+    val activeSentenceIndex = remember(sentences, effectivePositionMs) {
+        sentences.indexOfFirst { effectivePositionMs in it.startMs..it.endMs }
     }
 
     val listState = rememberLazyListState()

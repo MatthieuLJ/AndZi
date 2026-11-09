@@ -3,6 +3,7 @@ package com.matthieu.zi_app.ui.navigation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -16,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +35,7 @@ import com.matthieu.zi_app.ui.home.HomeScreen
 import com.matthieu.zi_app.ui.home.HomeViewModel
 import com.matthieu.zi_app.ui.podcast.catalog.PodcastCatalogScreen
 import com.matthieu.zi_app.ui.podcast.catalog.PodcastCatalogViewModel
+import com.matthieu.zi_app.ui.podcast.components.PodcastMiniPlayer
 import com.matthieu.zi_app.ui.podcast.player.PodcastAudioPlayer
 import com.matthieu.zi_app.ui.podcast.player.PodcastPlayerScreen
 import com.matthieu.zi_app.ui.podcast.player.PodcastPlayerViewModel
@@ -82,50 +83,67 @@ fun MainAppScaffold(
 
     Scaffold(
         bottomBar = {
-            AnimatedVisibility(
-                visible = isBottomBarVisible,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
-            ) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+            Column {
+                if (audioStoriesEnabled && currentRoute != Screen.PodcastPlayer.route) {
+                    val playerState by appContainer.podcastAudioPlayer.playerState.collectAsStateWithLifecycle()
+                    PodcastMiniPlayer(
+                        playerState = playerState,
+                        onTogglePlay = { appContainer.podcastAudioPlayer.togglePlayPause() },
+                        onRewind = { appContainer.podcastAudioPlayer.seekBy(-5000) },
+                        onDismiss = { appContainer.podcastAudioPlayer.dismissMiniPlayer() },
+                        onExpand = { epId ->
+                            navController.navigate(Screen.PodcastPlayer.createRoute(epId)) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = isBottomBarVisible,
+                    enter = slideInVertically(initialOffsetY = { it }),
+                    exit = slideOutVertically(targetOffsetY = { it })
                 ) {
-                    bottomNavItems.forEach { screen ->
-                        val isSelected = currentRoute == screen.route
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                if (currentRoute != screen.route) {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ) {
+                        bottomNavItems.forEach { screen ->
+                            val isSelected = currentRoute == screen.route
+                            NavigationBarItem(
+                                selected = isSelected,
+                                onClick = {
+                                    if (currentRoute != screen.route) {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                                    contentDescription = screen.title
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
+                                        contentDescription = screen.title
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = screen.title,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            },
-                            label = {
-                                Text(
-                                    text = screen.title,
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -333,8 +351,7 @@ fun MainAppScaffold(
                 arguments = listOf(navArgument("episodeId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val epId = backStackEntry.arguments?.getInt("episodeId") ?: 1
-                val coroutineScope = rememberCoroutineScope()
-                val audioPlayer = remember(epId) { PodcastAudioPlayer(context, coroutineScope) }
+                val audioPlayer = appContainer.podcastAudioPlayer
                 val playerViewModel: PodcastPlayerViewModel = viewModel(
                     key = "podcast_player_$epId",
                     factory = PodcastPlayerViewModel.provideFactory(

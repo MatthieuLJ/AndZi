@@ -93,7 +93,10 @@ class PodcastPlayerViewModel(
             audioPlayer.loadAudio(
                 source = audioSource,
                 initialPositionMs = ep.playbackPositionMs,
-                autoPlay = false
+                autoPlay = false,
+                episodeId = ep.episodeId,
+                title = ep.title,
+                channelTitle = channel?.chineseTitle ?: ""
             )
         }
     }
@@ -435,6 +438,14 @@ class PodcastPlayerViewModel(
         }
     }
 
+    fun nudgeSync(deltaMs: Int) {
+        _uiState.update { it.copy(syncOffsetMs = it.syncOffsetMs + deltaMs) }
+    }
+
+    fun resetSync() {
+        _uiState.update { it.copy(syncOffsetMs = 0) }
+    }
+
     override fun onCleared() {
         super.onCleared()
         val currentPos = audioPlayer.playerState.value.currentPositionMs
@@ -444,7 +455,8 @@ class PodcastPlayerViewModel(
         viewModelScope.launch {
             podcastRepository.updatePlaybackPosition(episodeId, currentPos, isCompleted)
         }
-        audioPlayer.release()
+        // Do not release audioPlayer here so playback can persist seamlessly
+        // across app navigation and into the mini-player.
     }
 
     companion object {

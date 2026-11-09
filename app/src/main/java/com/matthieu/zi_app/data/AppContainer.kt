@@ -14,6 +14,7 @@ interface AppContainer {
     val progressRepository: ProgressRepository
     val databaseBackupRepository: com.matthieu.zi_app.data.repository.DatabaseBackupRepository
     val podcastRepository: com.matthieu.zi_app.data.repository.PodcastRepository
+    val podcastAudioPlayer: com.matthieu.zi_app.ui.podcast.player.PodcastAudioPlayer
     val userPreferences: com.matthieu.zi_app.data.preferences.UserPreferences
     val leitnerDao: com.matthieu.zi_app.data.local.dao.LeitnerDao
     val wordRecommendationEngine: com.matthieu.zi_app.domain.recommendation.WordRecommendationEngine
@@ -55,6 +56,10 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
             context = context,
             dictionaryDao = cedictDb.vocabularyDao()
         )
+    }
+
+    override val podcastAudioPlayer: com.matthieu.zi_app.ui.podcast.player.PodcastAudioPlayer by lazy {
+        com.matthieu.zi_app.ui.podcast.player.PodcastAudioPlayer(context.applicationContext)
     }
 
     override val databaseBackupRepository: com.matthieu.zi_app.data.repository.DatabaseBackupRepository by lazy {

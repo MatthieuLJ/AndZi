@@ -114,6 +114,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
+    // Media3 Playback & Session
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.ui)
+
     // Testing
     testImplementation(composeBom)
     testImplementation(libs.androidx.compose.ui.test.junit4)

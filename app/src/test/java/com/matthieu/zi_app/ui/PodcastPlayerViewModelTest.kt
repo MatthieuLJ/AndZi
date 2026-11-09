@@ -108,6 +108,7 @@ class PodcastPlayerViewModelTest {
 
     @After
     fun teardown() {
+        audioPlayer.release()
         PodcastDatabase.resetInstanceForTesting()
         Dispatchers.resetMain()
         dictDb.close()
@@ -253,5 +254,38 @@ class PodcastPlayerViewModelTest {
         }.vocabItems
         assertFalse(revertedList.first { it.vocab.chinese == "你好" }.isStudied)
         assertNull(studyRepo.getLeitnerState("你好"))
+    }
+
+    @Test
+    fun testSyncNudgeAndReset() = runBlocking {
+        assertEquals(0, viewModel.uiState.value.syncOffsetMs)
+
+        viewModel.nudgeSync(1000)
+        assertEquals(1000, viewModel.uiState.value.syncOffsetMs)
+
+        viewModel.nudgeSync(1000)
+        assertEquals(2000, viewModel.uiState.value.syncOffsetMs)
+
+        viewModel.nudgeSync(-3000)
+        assertEquals(-1000, viewModel.uiState.value.syncOffsetMs)
+
+        viewModel.resetSync()
+        assertEquals(0, viewModel.uiState.value.syncOffsetMs)
+    }
+
+    @Test
+    fun testMiniPlayerStateTracking() = runBlocking {
+        val playerState = withTimeout(3000) {
+            audioPlayer.playerState.filter { it.episodeId != null }.first()
+        }
+        assertEquals(testEpisodeId, playerState.episodeId)
+        assertEquals("Episode 1", playerState.title)
+        assertTrue(playerState.isMiniPlayerVisible)
+
+        audioPlayer.dismissMiniPlayer()
+        val dismissedState = withTimeout(3000) {
+            audioPlayer.playerState.filter { !it.isMiniPlayerVisible }.first()
+        }
+        assertFalse(dismissedState.isMiniPlayerVisible)
     }
 }
