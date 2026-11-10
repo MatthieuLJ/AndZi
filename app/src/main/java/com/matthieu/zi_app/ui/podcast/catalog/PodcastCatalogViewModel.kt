@@ -77,6 +77,11 @@ class PodcastCatalogViewModel(
                     podcastRepository.seedMaoMiEpisodesFromAssets()
                 } catch (_: Exception) {}
 
+                // Ensure TeaTime Chinese (channel 4) is seeded on launch if missing, unpopulated, or outdated
+                try {
+                    podcastRepository.seedTeaTimeEpisodesFromAssets()
+                } catch (_: Exception) {}
+
                 gradeEpisodesInBackground()
             } catch (e: Exception) {
                 _errorMessage.value = e.localizedMessage

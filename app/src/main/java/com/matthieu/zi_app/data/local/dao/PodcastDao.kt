@@ -105,6 +105,9 @@ interface PodcastDao {
     @Query("SELECT episode_id, chinese FROM podcast_vocab")
     suspend fun getAllVocabWordsSync(): List<EpisodeVocabWord>
 
+    @Query("SELECT COUNT(*) FROM podcast_sentence ps INNER JOIN podcast_episode pe ON ps.episode_id = pe.episode_id WHERE pe.channel_id = :channelId")
+    suspend fun getSentenceCountForChannel(channelId: Int): Int
+
     @Query("SELECT COUNT(*) FROM podcast_vocab pv INNER JOIN podcast_episode pe ON pv.episode_id = pe.episode_id WHERE pe.channel_id = :channelId")
     suspend fun getVocabCountForChannel(channelId: Int): Int
 
@@ -114,6 +117,9 @@ interface PodcastDao {
 
     @Query("DELETE FROM podcast_sentence WHERE episode_id = :episodeId")
     suspend fun deleteSentencesForEpisode(episodeId: Int)
+
+    @Query("DELETE FROM podcast_sentence WHERE episode_id IN (SELECT episode_id FROM podcast_episode WHERE channel_id = :channelId)")
+    suspend fun deleteSentencesForChannel(channelId: Int)
 
     @Query("DELETE FROM podcast_vocab WHERE episode_id = :episodeId")
     suspend fun deleteVocabForEpisode(episodeId: Int)
@@ -133,6 +139,13 @@ interface PodcastDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSentences(sentences: List<PodcastSentenceEntity>)
+
+    @Transaction
+    suspend fun insertSentencesInChunks(sentences: List<PodcastSentenceEntity>, chunkSize: Int = 100) {
+        sentences.chunked(chunkSize).forEach { chunk ->
+            insertSentences(chunk)
+        }
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVocab(vocab: List<PodcastVocabEntity>)

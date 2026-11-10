@@ -98,7 +98,8 @@ class PodcastDatabaseTest {
         assertTrue(channels[2].isEnabled)
         org.junit.Assert.assertFalse(channels[2].supportsPacedHighlighting)
         assertEquals("TeaTime Chinese", channels[3].title)
-        org.junit.Assert.assertFalse(channels[3].supportsPacedHighlighting)
+        assertTrue(channels[3].isEnabled)
+        assertTrue(channels[3].supportsPacedHighlighting)
     }
 
     @Test
@@ -261,5 +262,40 @@ class PodcastDatabaseTest {
         val channel3 = podcastDb.podcastDao().getChannelById(3)
         val sentences = repository.extractAndSaveSentencesForEpisode(ep1, channel3)
         assertTrue("MaoMi Chinese should have no synthetic sentence timestamps", sentences.isEmpty())
+    }
+
+    @Test
+    fun testTeaTimeSeedFromAssets() = runBlocking {
+        val seedResult = repository.seedTeaTimeEpisodesFromAssets()
+        assertTrue("TeaTime seeding should succeed: ${seedResult.exceptionOrNull()?.message}", seedResult.isSuccess)
+        assertEquals(100, seedResult.getOrNull())
+
+        val teaTimeCount = repository.getEpisodeCountForChannel(4)
+        assertEquals(100, teaTimeCount)
+
+        val ep1 = podcastDb.podcastDao().getEpisodesForChannelSync(4).firstOrNull { it.episodeNum == 1 }
+        assertNotNull(ep1)
+        assertTrue(ep1!!.title.contains("茶歇中文"))
+        assertTrue(ep1.transcript.isNotBlank())
+        assertEquals(3, ep1.targetHskLevel)
+
+        val sentenceCount = repository.getSentenceCountForChannel(4)
+        assertTrue("TeaTime sentences should be seeded (>= 15000 items, got $sentenceCount)", sentenceCount >= 15000)
+
+        val ep1Sentences = podcastDb.podcastDao().getSentencesForEpisodeSync(ep1.episodeId)
+        assertTrue("Episode 1 should have sentences (got ${ep1Sentences.size})", ep1Sentences.size >= 80)
+        assertTrue("Episode 1 sentence 2 should have endMs > 0", ep1Sentences[1].endMs > 0)
+
+        val vocabCount = repository.getVocabCountForChannel(4)
+        assertTrue("TeaTime vocabulary should be seeded (>= 20000 items, got $vocabCount)", vocabCount >= 20000)
+
+        val ep1Vocab = podcastDb.podcastDao().getVocabForEpisodeSync(ep1.episodeId)
+        assertTrue("Episode 1 should have vocabulary items (got ${ep1Vocab.size})", ep1Vocab.size >= 100)
+
+        // Verify that extractAndSaveSentencesForEpisode returns existing SRT sentences without overwriting
+        val channel4 = podcastDb.podcastDao().getChannelById(4)
+        val extractedSentences = repository.extractAndSaveSentencesForEpisode(ep1, channel4)
+        assertEquals(ep1Sentences.size, extractedSentences.size)
+        assertEquals(ep1Sentences[0].chineseText, extractedSentences[0].chineseText)
     }
 }

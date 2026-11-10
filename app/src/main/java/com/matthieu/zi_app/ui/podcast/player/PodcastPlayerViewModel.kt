@@ -63,7 +63,7 @@ class PodcastPlayerViewModel(
                 emptyList()
             }
             val lastEnd = sentences.lastOrNull()?.endMs ?: 0
-            val expectedEnd = if (timing.durationMs > 0) timing.durationMs - timing.outroOffsetMs else 0
+            val expectedEnd = if (ep.channelId == 1 && timing.durationMs > 0) timing.durationMs - timing.outroOffsetMs else 0
 
             // If sentences are empty or were computed with corrupted/truncated RSS duration, recalculate (only for channels that support highlighting)
             val needsRecalculation = supportsHighlighting && (sentences.isEmpty() || (expectedEnd > 0 && lastEnd < (expectedEnd - 15_000)))

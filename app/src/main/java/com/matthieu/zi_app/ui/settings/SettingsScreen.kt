@@ -378,7 +378,7 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
 
-                    val activeChannels = uiState.podcastChannels.filter { it.channelId in 1..3 }
+                    val activeChannels = uiState.podcastChannels.filter { it.channelId in 1..4 }
                     activeChannels.forEach { channel ->
                         Row(
                             modifier = Modifier

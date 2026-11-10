@@ -39,7 +39,7 @@ abstract class PodcastDatabase : RoomDatabase() {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE podcast_channel ADD COLUMN supports_paced_highlighting INTEGER NOT NULL DEFAULT 1")
-                db.execSQL("UPDATE podcast_channel SET supports_paced_highlighting = 0 WHERE channel_id IN (3, 4)")
+                db.execSQL("UPDATE podcast_channel SET supports_paced_highlighting = 0 WHERE channel_id IN (3)")
             }
         }
 
@@ -100,12 +100,12 @@ abstract class PodcastDatabase : RoomDatabase() {
                     """)
                     db.execSQL("""
                         INSERT OR IGNORE INTO podcast_channel (channel_id, title, chinese_title, provider_type, feed_url, intro_offset_ms, outro_offset_ms, is_enabled, supports_paced_highlighting)
-                        VALUES (4, 'TeaTime Chinese', '茶歇中文', 'RSS', 'https://teatimechinese.libsyn.com/rss', 8000, 10000, 0, 0)
+                        VALUES (4, 'TeaTime Chinese', '茶歇中文', 'RSS', 'https://teatimechinese.libsyn.com/rss', 8000, 10000, 1, 1)
                     """)
                     db.execSQL("""
                         UPDATE podcast_channel 
-                        SET supports_paced_highlighting = 0
-                        WHERE channel_id = 4 AND supports_paced_highlighting != 0
+                        SET is_enabled = 1, supports_paced_highlighting = 1
+                        WHERE channel_id = 4 AND (is_enabled != 1 OR supports_paced_highlighting != 1)
                     """)
                 }
             })

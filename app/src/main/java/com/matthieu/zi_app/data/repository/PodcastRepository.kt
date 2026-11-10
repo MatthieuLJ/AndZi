@@ -13,6 +13,7 @@ import com.matthieu.zi_app.data.podcast.PacedSpeechRateEngine
 import com.matthieu.zi_app.data.podcast.PodcastHskGrader
 import com.matthieu.zi_app.data.podcast.PodcastRssParser
 import com.matthieu.zi_app.data.podcast.SlowChineseTranscripts
+import com.matthieu.zi_app.data.podcast.TeaTimePodcastAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -109,6 +110,31 @@ class PodcastRepository(
         val existing = podcastDao.getSentencesForEpisodeSync(episode.episodeId)
         if (existing.isNotEmpty() && !forceRefresh) {
             return@withContext existing
+        }
+
+        if (episode.channelId == TeaTimePodcastAdapter.CHANNEL_ID && episode.episodeNum > 0) {
+            val srtUrl = TeaTimePodcastAdapter.getSrtUrlForEpisode(episode.episodeNum)
+            val srtContent = TeaTimePodcastAdapter.fetchSrt(srtUrl)
+            if (!srtContent.isNullOrBlank()) {
+                val cues = TeaTimePodcastAdapter.parseSrt(srtContent)
+                if (cues.isNotEmpty()) {
+                    val srtSentences = cues.map { cue ->
+                        PodcastSentenceEntity(
+                            sentenceId = 0,
+                            episodeId = episode.episodeId,
+                            sentenceIdx = cue.index,
+                            chineseText = cue.text,
+                            startMs = cue.startMs,
+                            endMs = cue.endMs
+                        )
+                    }
+                    if (forceRefresh) {
+                        podcastDao.deleteSentencesForEpisode(episode.episodeId)
+                    }
+                    podcastDao.insertSentences(srtSentences)
+                    return@withContext srtSentences
+                }
+            }
         }
 
         if (effectiveTranscript.isBlank()) {
@@ -337,14 +363,173 @@ class PodcastRepository(
         }
     }
 
+    /**
+     * Seeds TeaTime Chinese (channel 4) episodes, official SRT sentences with exact timestamps,
+     * and CC-CEDICT vocabulary from bundled teatime_transcripts.json asset.
+     */
+    suspend fun seedTeaTimeEpisodesFromAssets(): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val count = podcastDao.getEpisodeCountForChannel(TeaTimePodcastAdapter.CHANNEL_ID)
+            val vocabCount = podcastDao.getVocabCountForChannel(TeaTimePodcastAdapter.CHANNEL_ID)
+            val sentenceCount = podcastDao.getSentenceCountForChannel(TeaTimePodcastAdapter.CHANNEL_ID)
+            if (count >= 100 && vocabCount >= 20_000 && sentenceCount >= 15_000) {
+                return@withContext Result.success(count)
+            }
+
+            val inputStream = context.assets.open("teatime_transcripts.json")
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            val jsonArray = JSONArray(jsonString)
+
+            val existingEpisodes = podcastDao.getAllEpisodesSync()
+            val existingByAudioUrl = existingEpisodes.filter { it.audioUrl.isNotBlank() }
+                .associateBy { it.audioUrl }
+            val existingByNum = existingEpisodes.filter { it.channelId == TeaTimePodcastAdapter.CHANNEL_ID && it.episodeNum > 0 }
+                .associateBy { it.episodeNum }
+
+            val episodesToInsert = mutableListOf<PodcastEpisodeEntity>()
+            val vocabByEpisodeNum = mutableMapOf<Int, MutableList<PodcastVocabEntity>>()
+            val sentencesByEpisodeNum = mutableMapOf<Int, MutableList<PodcastSentenceEntity>>()
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val epNum = obj.getInt("episodeNum")
+                val title = obj.getString("title")
+                val audioUrl = obj.getString("audioUrl")
+                val durationMs = obj.optInt("durationMs", 0)
+                val pubDate = obj.optLong("pubDate", 0L)
+                val transcript = obj.optString("transcript", "")
+                val targetHsk = obj.optInt("targetHskLevel", 0)
+
+                val existing = existingByAudioUrl[audioUrl] ?: existingByNum[epNum]
+                if (existing != null) {
+                    val transcriptChanged = existing.transcript != transcript && transcript.isNotBlank()
+                    if (transcriptChanged) {
+                        podcastDao.deleteSentencesForEpisode(existing.episodeId)
+                        podcastDao.deleteVocabForEpisode(existing.episodeId)
+                    }
+                    episodesToInsert.add(
+                        existing.copy(
+                            title = title,
+                            audioUrl = audioUrl,
+                            durationMs = if (existing.durationMs > 0) existing.durationMs else durationMs,
+                            pubDate = if (existing.pubDate > 0L) existing.pubDate else pubDate,
+                            transcript = if (transcript.isNotBlank()) transcript else existing.transcript,
+                            targetHskLevel = if (existing.targetHskLevel > 0 && !transcriptChanged) existing.targetHskLevel else targetHsk
+                        )
+                    )
+                } else {
+                    episodesToInsert.add(
+                        PodcastEpisodeEntity(
+                            episodeId = 0,
+                            channelId = TeaTimePodcastAdapter.CHANNEL_ID,
+                            episodeNum = epNum,
+                            title = title,
+                            audioUrl = audioUrl,
+                            durationMs = durationMs,
+                            transcript = transcript,
+                            pubDate = pubDate,
+                            playbackPositionMs = 0,
+                            isCompleted = false,
+                            downloadedPath = null,
+                            targetHskLevel = targetHsk
+                        )
+                    )
+                }
+
+                val sentencesArr = obj.optJSONArray("sentences")
+                if (sentencesArr != null && sentencesArr.length() > 0) {
+                    val sList = mutableListOf<PodcastSentenceEntity>()
+                    for (j in 0 until sentencesArr.length()) {
+                        val sObj = sentencesArr.getJSONObject(j)
+                        sList.add(
+                            PodcastSentenceEntity(
+                                sentenceId = 0,
+                                episodeId = 0,
+                                sentenceIdx = sObj.optInt("idx", j + 1),
+                                chineseText = sObj.getString("t"),
+                                startMs = sObj.getInt("s"),
+                                endMs = sObj.getInt("e")
+                            )
+                        )
+                    }
+                    sentencesByEpisodeNum[epNum] = sList
+                }
+
+                val vocabArr = obj.optJSONArray("vocab")
+                if (vocabArr != null && vocabArr.length() > 0) {
+                    val list = mutableListOf<PodcastVocabEntity>()
+                    for (j in 0 until vocabArr.length()) {
+                        val vObj = vocabArr.getJSONObject(j)
+                        list.add(
+                            PodcastVocabEntity(
+                                episodeId = 0,
+                                chinese = vObj.getString("c"),
+                                pinyin = vObj.optString("p", ""),
+                                translation = vObj.optString("t", ""),
+                                hskLevel = vObj.optInt("h", 0)
+                            )
+                        )
+                    }
+                    vocabByEpisodeNum[epNum] = list
+                }
+            }
+
+            if (episodesToInsert.isNotEmpty()) {
+                podcastDao.insertEpisodesInChunks(episodesToInsert, chunkSize = 50)
+            }
+
+            // Map saved episodes to episode IDs
+            val savedEpisodes = podcastDao.getEpisodesForChannelSync(TeaTimePodcastAdapter.CHANNEL_ID)
+            val epIdByNum = savedEpisodes.associate { it.episodeNum to it.episodeId }
+
+            // Insert sentences
+            val allSentencesToInsert = mutableListOf<PodcastSentenceEntity>()
+            for ((epNum, sentenceList) in sentencesByEpisodeNum) {
+                val epId = epIdByNum[epNum] ?: continue
+                for (s in sentenceList) {
+                    allSentencesToInsert.add(s.copy(episodeId = epId))
+                }
+            }
+            if (allSentencesToInsert.isNotEmpty()) {
+                podcastDao.deleteSentencesForChannel(TeaTimePodcastAdapter.CHANNEL_ID)
+                podcastDao.insertSentencesInChunks(allSentencesToInsert, chunkSize = 100)
+            }
+
+            // Insert vocabulary
+            val allVocabToInsert = mutableListOf<PodcastVocabEntity>()
+            for ((epNum, vocabList) in vocabByEpisodeNum) {
+                val epId = epIdByNum[epNum] ?: continue
+                for (v in vocabList) {
+                    allVocabToInsert.add(v.copy(episodeId = epId))
+                }
+            }
+            if (allVocabToInsert.isNotEmpty()) {
+                podcastDao.deleteVocabForChannel(TeaTimePodcastAdapter.CHANNEL_ID)
+                podcastDao.insertVocabInChunks(allVocabToInsert, chunkSize = 150)
+            }
+
+            android.util.Log.d("PodcastRepository", "Seeded ${episodesToInsert.size} TeaTime episodes, ${allSentencesToInsert.size} sentences, and ${allVocabToInsert.size} vocab words from assets")
+            Result.success(episodesToInsert.size)
+        } catch (e: Exception) {
+            android.util.Log.e("PodcastRepository", "Failed to seed TeaTime episodes from assets", e)
+            Result.failure(e)
+        }
+    }
+
     suspend fun getVocabCountForChannel(channelId: Int): Int = withContext(Dispatchers.IO) {
         podcastDao.getVocabCountForChannel(channelId)
+    }
+
+    suspend fun getSentenceCountForChannel(channelId: Int): Int = withContext(Dispatchers.IO) {
+        podcastDao.getSentenceCountForChannel(channelId)
     }
 
     suspend fun syncChannelEpisodes(channelId: Int): Result<Int> = withContext(Dispatchers.IO) {
         try {
             if (channelId == MaoMiPodcastAdapter.CHANNEL_ID) {
                 seedMaoMiEpisodesFromAssets()
+            } else if (channelId == TeaTimePodcastAdapter.CHANNEL_ID) {
+                seedTeaTimeEpisodesFromAssets()
             }
             val channel = podcastDao.getChannelById(channelId)
                 ?: return@withContext Result.failure(IllegalArgumentException("Channel $channelId not found"))

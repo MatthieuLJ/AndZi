@@ -101,6 +101,12 @@ class SettingsViewModel(
                     repo.seedMaoMiEpisodesFromAssets()
                     repo.ensureEpisodesGraded()
                 }
+            } else if (isEnabled && channelId == 4) {
+                val count = repo.getEpisodeCountForChannel(4)
+                if (count == 0) {
+                    repo.seedTeaTimeEpisodesFromAssets()
+                    repo.ensureEpisodesGraded()
+                }
             }
         }
     }
