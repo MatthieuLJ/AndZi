@@ -91,7 +91,12 @@ class PodcastCatalogViewModelTest {
 
         val state = viewModel.uiState.first { it.channels.isNotEmpty() && it.episodes.isNotEmpty() }
         assertEquals(4, state.channels.size)
-        assertEquals(3, state.episodes.size)
+        // Default channel is Channel 1 (Slow Chinese, which has 2 episodes)
+        assertEquals(1, state.selectedChannelId)
+        assertEquals(2, state.episodes.size)
+        assertTrue(state.episodes.all { it.episode.channelId == 1 })
+        assertEquals(2, state.channelEpisodeCounts[1])
+        assertEquals(1, state.channelEpisodeCounts[2])
         assertFalse(state.isLoading)
     }
 
@@ -103,7 +108,7 @@ class PodcastCatalogViewModelTest {
         viewModel.selectChannel(1)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        val state = viewModel.uiState.first { it.selectedChannelId == 1 }
+        val state = viewModel.uiState.first { it.selectedChannelId == 1 && it.episodes.isNotEmpty() }
         assertEquals(2, state.episodes.size)
         assertTrue(state.episodes.all { it.episode.channelId == 1 })
 
@@ -111,25 +116,26 @@ class PodcastCatalogViewModelTest {
         viewModel.selectChannel(2)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        val state2 = viewModel.uiState.first { it.selectedChannelId == 2 }
+        val state2 = viewModel.uiState.first { it.selectedChannelId == 2 && it.episodes.isNotEmpty() }
         assertEquals(1, state2.episodes.size)
         assertTrue(state2.episodes.all { it.episode.channelId == 2 })
     }
 
     @Test
-    fun testSearchQueryFilter() = runTest {
+    fun testSelectDownloaded() = runTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.setSearchQuery("端午节")
+        viewModel.selectDownloaded()
         testDispatcher.scheduler.advanceUntilIdle()
 
-        val state = viewModel.uiState.first { it.searchQuery == "端午节" }
-        assertEquals(1, state.episodes.size)
-        assertTrue(state.episodes.first().episode.title.contains("端午节"))
+        val state = viewModel.uiState.first { it.onlyDownloaded }
+        assertTrue(state.onlyDownloaded)
+        // None are downloaded in test setup initially
+        assertEquals(0, state.episodes.size)
     }
 
     @Test
-    fun testHskLevelFilter() = runTest {
+    fun testHskLevelFilterAndCounts() = runTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         val allEpisodes = database.podcastDao().getAllEpisodesSync()
@@ -141,6 +147,11 @@ class PodcastCatalogViewModelTest {
         database.podcastDao().updateTargetHskLevel(ep2.episodeId, 3)
         testDispatcher.scheduler.advanceUntilIdle()
 
+        // Channel 1 has ep1 (HSK 2) and ep2 (HSK 3)
+        val currentState = viewModel.uiState.first { it.hskCounts.containsKey(2) && it.hskCounts.containsKey(3) }
+        assertEquals(1, currentState.hskCounts[2])
+        assertEquals(1, currentState.hskCounts[3])
+
         viewModel.selectHskLevel(2)
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -151,6 +162,6 @@ class PodcastCatalogViewModelTest {
         viewModel.selectHskLevel(null)
         testDispatcher.scheduler.advanceUntilIdle()
         val allState = viewModel.uiState.first { it.selectedHskLevel == null }
-        assertEquals(3, allState.episodes.size)
+        assertEquals(2, allState.episodes.size)
     }
 }

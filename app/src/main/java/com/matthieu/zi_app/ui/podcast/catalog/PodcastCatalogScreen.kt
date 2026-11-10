@@ -130,101 +130,71 @@ fun PodcastCatalogScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Channel Filter Chips
+            // Channel & Downloaded Selector
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Downloaded Filter Chip (replaces "All")
                 item {
                     FilterChip(
-                        selected = uiState.selectedChannelId == null,
-                        onClick = { viewModel.selectChannel(null) },
-                        label = { Text("All (${uiState.episodes.size})") },
+                        selected = uiState.onlyDownloaded,
+                        onClick = { viewModel.selectDownloaded() },
+                        label = { Text("Downloaded (${uiState.totalDownloadedCount})") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.DownloadDone,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors()
                     )
                 }
+
+                // Individual Channels (one at a time)
                 items(uiState.channels.filter { it.isEnabled }) { channel ->
+                    val epCount = uiState.channelEpisodeCounts[channel.channelId] ?: 0
+                    val isSelected = !uiState.onlyDownloaded && uiState.selectedChannelId == channel.channelId
                     FilterChip(
-                        selected = uiState.selectedChannelId == channel.channelId,
+                        selected = isSelected,
                         onClick = { viewModel.selectChannel(channel.channelId) },
-                        label = { Text(channel.chineseTitle) },
+                        label = { Text("${channel.chineseTitle} ($epCount)") },
                         colors = FilterChipDefaults.filterChipColors()
                     )
                 }
             }
 
-            // Search Bar & Download Filter
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = { Text("Search stories...") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                )
+            // HSK Level Filter Chips with Episode Counts
+            val totalInCurrentView = uiState.hskCounts.values.sum()
+            val availableLevels = (1..6).filter { (uiState.hskCounts[it] ?: 0) > 0 }
 
-                FilterChip(
-                    selected = uiState.onlyDownloaded,
-                    onClick = { viewModel.toggleOnlyDownloaded(!uiState.onlyDownloaded) },
-                    label = { Text("Downloaded") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.DownloadDone,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+            if (availableLevels.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        FilterChip(
+                            selected = uiState.selectedHskLevel == null,
+                            onClick = { viewModel.selectHskLevel(null) },
+                            label = { Text("All ($totalInCurrentView)") }
                         )
                     }
-                )
-            }
-
-            // HSK Level Filter Chips
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    FilterChip(
-                        selected = uiState.selectedHskLevel == null,
-                        onClick = { viewModel.selectHskLevel(null) },
-                        label = { Text("All HSK") }
-                    )
-                }
-                items((1..6).toList()) { level ->
-                    FilterChip(
-                        selected = uiState.selectedHskLevel == level,
-                        onClick = {
-                            viewModel.selectHskLevel(if (uiState.selectedHskLevel == level) null else level)
-                        },
-                        label = { Text("HSK $level") }
-                    )
+                    items(availableLevels) { level ->
+                        val count = uiState.hskCounts[level] ?: 0
+                        FilterChip(
+                            selected = uiState.selectedHskLevel == level,
+                            onClick = {
+                                viewModel.selectHskLevel(if (uiState.selectedHskLevel == level) null else level)
+                            },
+                            label = { Text("HSK $level ($count)") }
+                        )
+                    }
                 }
             }
 

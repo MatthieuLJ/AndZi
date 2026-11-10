@@ -73,9 +73,9 @@ fun MainAppScaffold(
     val audioStoriesEnabled by appContainer.userPreferences.audioStoriesEnabled.collectAsStateWithLifecycle()
     val bottomNavItems = remember(audioStoriesEnabled) {
         if (audioStoriesEnabled) {
-            listOf(Screen.Home, Screen.Dictionary, Screen.PodcastCatalog)
+            listOf(Screen.Home, Screen.Dictionary, Screen.PodcastCatalog, Screen.Settings)
         } else {
-            listOf(Screen.Home, Screen.Dictionary)
+            listOf(Screen.Home, Screen.Dictionary, Screen.Settings)
         }
     }
 
@@ -317,18 +317,7 @@ fun MainAppScaffold(
                     )
                 )
                 SettingsScreen(
-                    viewModel = settingsViewModel,
-                    onNavigateBack = {
-                        if (!navController.popBackStack()) {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    }
+                    viewModel = settingsViewModel
                 )
             }
 

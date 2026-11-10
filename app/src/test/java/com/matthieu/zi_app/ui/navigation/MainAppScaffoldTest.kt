@@ -34,6 +34,8 @@ class MainAppScaffoldTest {
         // Bottom navigation items are visible
         composeTestRule.onNodeWithText("Study").assertExists()
         composeTestRule.onNodeWithText("Dictionary").assertExists()
+        composeTestRule.onNodeWithText("Settings").assertExists()
+        composeTestRule.onNodeWithText("Settings").assertExists()
     }
 
     @Test
@@ -60,6 +62,7 @@ class MainAppScaffoldTest {
         composeTestRule.onNodeWithText("Daily Practice & SRS Review").assertExists()
         composeTestRule.onNodeWithText("Study").assertExists()
         composeTestRule.onNodeWithText("Dictionary").assertExists()
+        composeTestRule.onNodeWithText("Settings").assertExists()
 
         // Tapping another bottom nav item (e.g. Dictionary) works
         composeTestRule.onNodeWithText("Dictionary").performClick()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -172,11 +173,18 @@ fun PodcastPlayerScreen(
                         }
                     }
                     // Vocabulary Sheet Trigger with Badge
-                    IconButton(onClick = { viewModel.setShowVocabSheet(true) }) {
+                    IconButton(
+                        onClick = { viewModel.setShowVocabSheet(true) },
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
                         BadgedBox(
                             badge = {
                                 if (uiState.vocabItems.isNotEmpty()) {
-                                    Badge { Text(uiState.vocabItems.size.toString()) }
+                                    Badge(
+                                        modifier = Modifier.offset(x = (-4).dp, y = 2.dp)
+                                    ) {
+                                        Text(uiState.vocabItems.size.toString())
+                                    }
                                 }
                             }
                         ) {
@@ -186,6 +194,7 @@ fun PodcastPlayerScreen(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.width(6.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -209,20 +218,20 @@ fun PodcastPlayerScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Dual Listening Mode Tabs
+                // Dual Listening Mode Tabs: Blind Listening on left, Read & Listen on right
                 TabRow(
-                    selectedTabIndex = if (uiState.listeningMode == ListeningMode.READ_AND_LISTEN) 0 else 1,
+                    selectedTabIndex = if (uiState.listeningMode == ListeningMode.BLIND) 0 else 1,
                     containerColor = MaterialTheme.colorScheme.surface
                 ) {
-                    Tab(
-                        selected = uiState.listeningMode == ListeningMode.READ_AND_LISTEN,
-                        onClick = { viewModel.setListeningMode(ListeningMode.READ_AND_LISTEN) },
-                        text = { Text("Read & Listen") }
-                    )
                     Tab(
                         selected = uiState.listeningMode == ListeningMode.BLIND,
                         onClick = { viewModel.setListeningMode(ListeningMode.BLIND) },
                         text = { Text("Blind Listening") }
+                    )
+                    Tab(
+                        selected = uiState.listeningMode == ListeningMode.READ_AND_LISTEN,
+                        onClick = { viewModel.setListeningMode(ListeningMode.READ_AND_LISTEN) },
+                        text = { Text("Read & Listen") }
                     )
                 }
 

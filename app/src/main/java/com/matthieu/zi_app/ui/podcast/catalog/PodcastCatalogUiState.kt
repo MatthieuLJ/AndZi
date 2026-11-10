@@ -16,10 +16,13 @@ data class EpisodeItemUiState(
 
 data class PodcastCatalogUiState(
     val channels: List<PodcastChannelEntity> = emptyList(),
-    val selectedChannelId: Int? = null, // null means "All"
+    val selectedChannelId: Int? = 1,
     val searchQuery: String = "",
     val onlyDownloaded: Boolean = false,
-    val selectedHskLevel: Int? = null, // null means "All HSK"
+    val totalDownloadedCount: Int = 0,
+    val channelEpisodeCounts: Map<Int, Int> = emptyMap(),
+    val selectedHskLevel: Int? = null,
+    val hskCounts: Map<Int, Int> = emptyMap(),
     val episodes: List<EpisodeItemUiState> = emptyList(),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,

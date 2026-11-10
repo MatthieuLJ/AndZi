@@ -44,7 +44,7 @@ class PodcastCatalogViewModel(
     sharingStarted: SharingStarted = SharingStarted.WhileSubscribed(5000)
 ) : ViewModel() {
 
-    private val _selectedChannelId = MutableStateFlow<Int?>(null)
+    private val _selectedChannelId = MutableStateFlow<Int?>(1)
     private val _searchQuery = MutableStateFlow("")
     private val _onlyDownloaded = MutableStateFlow(false)
     private val _selectedHskLevel = MutableStateFlow<Int?>(null)
@@ -135,15 +135,48 @@ class PodcastCatalogViewModel(
         filterParams,
         syncParams
     ) { channels, allEpisodes, masteryMap, filter, sync ->
-        val enabledChannelIds = channels.filter { it.isEnabled }.map { it.channelId }.toSet()
-        val filtered = allEpisodes.filter { ep ->
-            val isChannelEnabled = ep.channelId in enabledChannelIds
-            val matchesChannel = filter.selectedChannelId == null || ep.channelId == filter.selectedChannelId
+        val enabledChannels = channels.filter { it.isEnabled }
+        val enabledChannelIds = enabledChannels.map { it.channelId }.toSet()
+
+        // Total downloaded episodes count across enabled channels
+        val allDownloadedEpisodes = allEpisodes.filter { ep ->
+            ep.channelId in enabledChannelIds && ep.downloadedPath != null && File(ep.downloadedPath).exists()
+        }
+        val totalDownloadedCount = allDownloadedEpisodes.size
+
+        // Episode counts per channel
+        val channelEpisodeCounts = allEpisodes
+            .filter { it.channelId in enabledChannelIds }
+            .groupBy { it.channelId }
+            .mapValues { it.value.size }
+
+        // Resolve active channel or downloaded mode
+        val effectiveChannelId = if (filter.onlyDownloaded) {
+            null
+        } else {
+            filter.selectedChannelId ?: enabledChannels.firstOrNull()?.channelId ?: 1
+        }
+
+        // Base episodes in the current view before HSK filter
+        val baseEpisodes = if (filter.onlyDownloaded) {
+            allDownloadedEpisodes
+        } else {
+            allEpisodes.filter { ep ->
+                ep.channelId == effectiveChannelId && ep.channelId in enabledChannelIds
+            }
+        }
+
+        // Compute HSK counts for this specific view
+        val hskCounts = baseEpisodes
+            .filter { it.targetHskLevel in 1..6 }
+            .groupBy { it.targetHskLevel }
+            .mapValues { it.value.size }
+
+        // Apply HSK filter
+        val filtered = baseEpisodes.filter { ep ->
             val matchesQuery = filter.query.isBlank() || ep.title.contains(filter.query, ignoreCase = true)
-            val isDownloaded = ep.downloadedPath != null && File(ep.downloadedPath).exists()
-            val matchesDownloaded = !filter.onlyDownloaded || isDownloaded
             val matchesHsk = filter.selectedHskLevel == null || ep.targetHskLevel == filter.selectedHskLevel
-            isChannelEnabled && matchesChannel && matchesQuery && matchesDownloaded && matchesHsk
+            matchesQuery && matchesHsk
         }.map { ep ->
             val isDownloaded = ep.downloadedPath != null && File(ep.downloadedPath).exists()
             val progress = sync.downloading[ep.episodeId]
@@ -162,10 +195,13 @@ class PodcastCatalogViewModel(
 
         PodcastCatalogUiState(
             channels = channels,
-            selectedChannelId = filter.selectedChannelId,
+            selectedChannelId = effectiveChannelId,
             searchQuery = filter.query,
             onlyDownloaded = filter.onlyDownloaded,
+            totalDownloadedCount = totalDownloadedCount,
+            channelEpisodeCounts = channelEpisodeCounts,
             selectedHskLevel = filter.selectedHskLevel,
+            hskCounts = hskCounts,
             episodes = filtered,
             isLoading = false,
             isRefreshing = sync.isRefreshing,
@@ -177,8 +213,10 @@ class PodcastCatalogViewModel(
         initialValue = PodcastCatalogUiState()
     )
 
-    fun selectChannel(channelId: Int?) {
+    fun selectChannel(channelId: Int) {
         _selectedChannelId.value = channelId
+        _onlyDownloaded.value = false
+        _selectedHskLevel.value = null
         if (channelId == MaoMiPodcastAdapter.CHANNEL_ID) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
@@ -186,6 +224,12 @@ class PodcastCatalogViewModel(
                 } catch (_: Exception) {}
             }
         }
+    }
+
+    fun selectDownloaded() {
+        _selectedChannelId.value = null
+        _onlyDownloaded.value = true
+        _selectedHskLevel.value = null
     }
 
     fun selectHskLevel(level: Int?) {
@@ -198,6 +242,10 @@ class PodcastCatalogViewModel(
 
     fun toggleOnlyDownloaded(enabled: Boolean) {
         _onlyDownloaded.value = enabled
+        if (enabled) {
+            _selectedChannelId.value = null
+        }
+        _selectedHskLevel.value = null
     }
 
     fun refreshCurrentChannel() {

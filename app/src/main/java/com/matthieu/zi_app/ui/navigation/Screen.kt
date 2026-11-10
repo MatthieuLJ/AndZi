@@ -5,10 +5,12 @@ import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AutoGraph
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(
@@ -48,8 +50,8 @@ sealed class Screen(
     data object Settings : Screen(
         route = "settings",
         title = "Settings",
-        selectedIcon = Icons.Filled.School,
-        unselectedIcon = Icons.Outlined.School
+        selectedIcon = Icons.Filled.Settings,
+        unselectedIcon = Icons.Outlined.Settings
     )
 
     data object Vocabulary : Screen(
