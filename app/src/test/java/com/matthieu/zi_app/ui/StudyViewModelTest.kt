@@ -2126,6 +2126,104 @@ class StudyViewModelTest {
         assertTrue(companionWords.contains("游泳"))
         assertTrue(companionWords.contains("米饭"))
     }
+
+    @Test
+    fun testStudySessionProgressPrioritizationWhenBadgeUnlocked() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences(com.matthieu.zi_app.data.preferences.UserPreferences.PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val userPrefs = com.matthieu.zi_app.data.preferences.UserPreferences(context)
+
+        val dictDb = AndZiDatabase.createInMemory(context)
+        val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
+
+        // Add 1 HSK 1 vocabulary word
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "水", hskLevel = 1, freqRank = 1)
+            )
+        )
+
+        // Add "水" to local study vocabulary at box 2
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        studyRepo.recordReviewGrade("水", ReviewGrade.GOOD, 1000L) // box 1
+        studyRepo.recordReviewGrade("水", ReviewGrade.GOOD, 2000L) // box 2
+
+        val viewModel = StudyViewModel(
+            studyRepository = studyRepo,
+            vocabularyRepository = vocRepo,
+            dictionaryRepository = dictRepo,
+            userPreferences = userPrefs
+        )
+
+        withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        viewModel.submitToneAnswer(3)
+        viewModel.rateCard(ReviewGrade.GOOD)
+
+        val finishedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isSessionFinished }.first()
+        }
+        assertTrue(finishedState.isSessionFinished)
+
+        // When a badge is acquired, ONLY the badge is shown (recordIncreases is empty)
+        assertEquals(1, finishedState.newlyUnlockedBadges.size)
+        assertEquals(com.matthieu.zi_app.domain.badges.BadgeId.HSK_1, finishedState.newlyUnlockedBadges.first())
+        assertTrue(finishedState.recordIncreases.isEmpty())
+        dictDb.close()
+    }
+
+    @Test
+    fun testStudySessionProgressPrioritizationWhenNoBadgeUnlocked() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences(com.matthieu.zi_app.data.preferences.UserPreferences.PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val userPrefs = com.matthieu.zi_app.data.preferences.UserPreferences(context)
+
+        val dictDb = AndZiDatabase.createInMemory(context)
+        val dictRepo = VocabularyRepository(dictDb.vocabularyDao())
+
+        // Add 2 words in HSK 1
+        dictRepo.insertHskVocab(
+            listOf(
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "水", hskLevel = 1, freqRank = 1),
+                com.matthieu.zi_app.data.local.entity.HskVocabEntity(hanzi = "火", hskLevel = 1, freqRank = 2)
+            )
+        )
+
+        // Add "水" at box 2
+        vocRepo.addVocabulary(Vocabulary("水", "shui3", arrayListOf("water")))
+        studyRepo.recordReviewGrade("水", ReviewGrade.GOOD, 1000L) // box 1
+        studyRepo.recordReviewGrade("水", ReviewGrade.GOOD, 2000L) // box 2
+
+        val viewModel = StudyViewModel(
+            studyRepository = studyRepo,
+            vocabularyRepository = vocRepo,
+            dictionaryRepository = dictRepo,
+            userPreferences = userPrefs
+        )
+
+        withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.queue.isNotEmpty() }.first()
+        }
+
+        viewModel.submitToneAnswer(3)
+        viewModel.rateCard(ReviewGrade.GOOD)
+
+        val finishedState = withTimeout(3000) {
+            viewModel.uiState.filter { it.isSessionFinished }.first()
+        }
+        assertTrue(finishedState.isSessionFinished)
+
+        // No badge unlocked
+        assertTrue(finishedState.newlyUnlockedBadges.isEmpty())
+        // Exactly ONE progress message shown: HSK progress is prioritized
+        assertEquals(1, finishedState.recordIncreases.size)
+        assertTrue(finishedState.recordIncreases.first().startsWith("HSK 1 progress:"))
+        dictDb.close()
+    }
 }
 
 

@@ -6,11 +6,13 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.outlined.AutoGraph
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Whatshot
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(
@@ -38,6 +40,13 @@ sealed class Screen(
         title = "Analytics",
         selectedIcon = Icons.Filled.AutoGraph,
         unselectedIcon = Icons.Outlined.AutoGraph
+    )
+
+    data object Badges : Screen(
+        route = "badges",
+        title = "Streaks & Badges",
+        selectedIcon = Icons.Filled.Whatshot,
+        unselectedIcon = Icons.Outlined.Whatshot
     )
 
     data object Study : Screen(

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -112,6 +113,67 @@ class UserPreferencesTest {
         userPreferences.resetStreak()
         assertEquals(0, userPreferences.getStreakDays(day1))
         assertTrue(userPreferences.hasNoRecordedStudy())
+    }
+
+    @Test
+    fun testCorrectStreakIncrementsAndResets() {
+        val now = 1000L
+        for (i in 1..9) {
+            val res = userPreferences.recordTestAnswer(isCorrect = true, now = now)
+            assertEquals(i, res.currentCorrectStreak)
+            assertEquals(i, res.longestCorrectStreak)
+            assertTrue(res.newlyUnlockedBadges.isEmpty())
+        }
+
+        // 10th correct test unlocks CORRECT_10 badge
+        val res10 = userPreferences.recordTestAnswer(isCorrect = true, now = now)
+        assertEquals(10, res10.currentCorrectStreak)
+        assertEquals(10, res10.longestCorrectStreak)
+        assertEquals(1, res10.newlyUnlockedBadges.size)
+        assertEquals(com.matthieu.zi_app.domain.badges.BadgeId.CORRECT_10, res10.newlyUnlockedBadges.first())
+
+        // Wrong test resets current streak to 0 but keeps longest at 10
+        val resWrong = userPreferences.recordTestAnswer(isCorrect = false, now = now)
+        assertEquals(0, resWrong.currentCorrectStreak)
+        assertEquals(10, resWrong.longestCorrectStreak)
+    }
+
+    @Test
+    fun testMostTestsInADayAndBadges() {
+        val baseDate = LocalDate.of(2026, 10, 20)
+        val day1 = dateToMillis(baseDate)
+
+        // Record 50 tests on day 1
+        var lastRes: com.matthieu.zi_app.domain.badges.TestAnswerRecordResult? = null
+        for (i in 1..50) {
+            lastRes = userPreferences.recordTestAnswer(isCorrect = true, now = day1 + i * 1000L)
+        }
+
+        assertNotNull(lastRes)
+        assertEquals(50, lastRes!!.testsToday)
+        assertEquals(50, lastRes.mostTestsInADay)
+        assertTrue(lastRes.newlyUnlockedBadges.contains(com.matthieu.zi_app.domain.badges.BadgeId.DAILY_TESTS_50))
+
+        val summary = userPreferences.getBadgesSummary(day1)
+        val badge50 = summary.badges.first { it.badge == com.matthieu.zi_app.domain.badges.BadgeId.DAILY_TESTS_50 }
+        assertTrue(badge50.isUnlocked)
+    }
+
+    @Test
+    fun testDailyStreakBadges() {
+        var baseDate = LocalDate.of(2026, 1, 1)
+        var lastRes: com.matthieu.zi_app.domain.badges.TestAnswerRecordResult? = null
+
+        // 7 consecutive days
+        for (i in 0..6) {
+            val day = dateToMillis(baseDate.plusDays(i.toLong()))
+            lastRes = userPreferences.recordTestAnswer(isCorrect = true, now = day)
+        }
+
+        assertNotNull(lastRes)
+        assertEquals(7, lastRes!!.currentDailyStreak)
+        assertEquals(7, lastRes.longestDailyStreak)
+        assertTrue(lastRes.newlyUnlockedBadges.contains(com.matthieu.zi_app.domain.badges.BadgeId.STREAK_7))
     }
 }
 

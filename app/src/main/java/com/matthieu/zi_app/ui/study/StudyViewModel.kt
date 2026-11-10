@@ -10,6 +10,9 @@ import com.matthieu.zi_app.Vocabulary
 import com.matthieu.zi_app.data.preferences.UserPreferences
 import com.matthieu.zi_app.data.repository.StudyRepository
 import com.matthieu.zi_app.data.repository.VocabularyRepository
+import com.matthieu.zi_app.domain.badges.BadgeId
+import com.matthieu.zi_app.domain.badges.HskBadgeTracker
+import com.matthieu.zi_app.domain.badges.TestAnswerRecordResult
 import com.matthieu.zi_app.domain.srs.ReviewGrade
 import com.matthieu.zi_app.domain.study.AdaptiveQuizPolicy
 import com.matthieu.zi_app.domain.study.quiz.QuizAction
@@ -42,9 +45,40 @@ class StudyViewModel(
     private var lastTestedWord: String? = null
     private var lastPreReviewState: LeitnerState? = null
     private val recentTestedWords = ArrayDeque<String>()
+    private val sessionNewlyUnlockedBadges = mutableListOf<BadgeId>()
+    private var isNewDailyStreakRecord = false
+    private var newDailyStreakRecordValue = 0
+    private var isNewCorrectStreakRecord = false
+    private var newCorrectStreakRecordValue = 0
+    private var isNewDailyTestsRecord = false
+    private var newDailyTestsRecordValue = 0
+    private var initialHskBox3Counts: Map<Int, Int> = emptyMap()
 
     init {
         startStudySession()
+    }
+
+    fun dismissCelebration() {
+        _uiState.update { it.copy(showCelebration = false) }
+    }
+
+    private fun processRecordResult(recordResult: TestAnswerRecordResult?) {
+        if (recordResult == null) return
+        if (recordResult.newlyUnlockedBadges.isNotEmpty()) {
+            sessionNewlyUnlockedBadges.addAll(recordResult.newlyUnlockedBadges)
+        }
+        if (recordResult.isNewDailyStreakRecord) {
+            isNewDailyStreakRecord = true
+            newDailyStreakRecordValue = maxOf(newDailyStreakRecordValue, recordResult.longestDailyStreak)
+        }
+        if (recordResult.isNewCorrectStreakRecord) {
+            isNewCorrectStreakRecord = true
+            newCorrectStreakRecordValue = maxOf(newCorrectStreakRecordValue, recordResult.longestCorrectStreak)
+        }
+        if (recordResult.isNewDailyTestsRecord) {
+            isNewDailyTestsRecord = true
+            newDailyTestsRecordValue = maxOf(newDailyTestsRecordValue, recordResult.mostTestsInADay)
+        }
     }
 
     fun startStudySession() {
@@ -54,6 +88,25 @@ class StudyViewModel(
             lastTestedWord = null
             lastPreReviewState = null
             recentTestedWords.clear()
+            sessionNewlyUnlockedBadges.clear()
+            isNewDailyStreakRecord = false
+            newDailyStreakRecordValue = 0
+            isNewCorrectStreakRecord = false
+            newCorrectStreakRecordValue = 0
+            isNewDailyTestsRecord = false
+            newDailyTestsRecordValue = 0
+
+            initialHskBox3Counts = if (dictionaryRepository != null && userPreferences != null) {
+                try {
+                    val tracker = HskBadgeTracker(studyRepository, dictionaryRepository, userPreferences)
+                    tracker.getHskProgress().mapValues { it.value.box3PlusWords }
+                } catch (e: Exception) {
+                    emptyMap()
+                }
+            } else {
+                emptyMap()
+            }
+
             _uiState.update {
                 it.copy(
                     isLoading = true,
@@ -120,6 +173,61 @@ class StudyViewModel(
             }
 
             if (nextHanzi == null) {
+                if (dictionaryRepository != null && userPreferences != null) {
+                    try {
+                        val hskTracker = HskBadgeTracker(
+                            studyRepository = studyRepository,
+                            dictionaryRepository = dictionaryRepository,
+                            userPreferences = userPreferences
+                        )
+                        val newlyUnlockedHsk = hskTracker.checkAndUnlockHskBadges()
+                        if (newlyUnlockedHsk.isNotEmpty()) {
+                            sessionNewlyUnlockedBadges.addAll(newlyUnlockedHsk)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+
+                val allUnlockedBadges = sessionNewlyUnlockedBadges.distinct()
+
+                // Progress display logic:
+                // 1. If a new badge is acquired, that's the only thing shown (all acquired badges shown).
+                // 2. If no new badge, show at most one progress update in priority order:
+                //    - HSK progress
+                //    - Streak of good tests (correct answers)
+                //    - Daily streak
+                //    - Most tests in a day
+                val finalRecordIncreases: List<String> = if (allUnlockedBadges.isNotEmpty()) {
+                    emptyList()
+                } else {
+                    val hskProgressUpdate = if (dictionaryRepository != null && userPreferences != null) {
+                        try {
+                            val tracker = HskBadgeTracker(studyRepository, dictionaryRepository, userPreferences)
+                            val currentHskProgress = tracker.getHskProgress()
+                            (1..6).firstNotNullOfOrNull { lvl ->
+                                val currentWords = currentHskProgress[lvl]?.box3PlusWords ?: 0
+                                val initialWords = initialHskBox3Counts[lvl] ?: 0
+                                val diff = currentWords - initialWords
+                                if (diff > 0) {
+                                    val total = currentHskProgress[lvl]?.totalWords ?: 0
+                                    "HSK $lvl progress: $currentWords / $total words reached Box 3+ (+$diff this session)"
+                                } else null
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else null
+
+                    when {
+                        hskProgressUpdate != null -> listOf(hskProgressUpdate)
+                        isNewCorrectStreakRecord -> listOf("Correct answers streak reached a new record of $newCorrectStreakRecordValue in a row!")
+                        isNewDailyStreakRecord -> listOf("Daily streak reached a new record of $newDailyStreakRecordValue days!")
+                        isNewDailyTestsRecord -> listOf("Most tests in a day reached a new record of $newDailyTestsRecordValue tests!")
+                        else -> emptyList()
+                    }
+                }
+
                 _uiState.update {
                     it.copy(
                         queue = emptyList(),
@@ -143,6 +251,9 @@ class StudyViewModel(
                         failedMatchWords = emptySet(),
                         matchErrorShakeTrigger = 0,
                         isSessionFinished = true,
+                        newlyUnlockedBadges = allUnlockedBadges,
+                        recordIncreases = finalRecordIncreases,
+                        showCelebration = allUnlockedBadges.isNotEmpty(),
                         isLoading = false
                     )
                 }
@@ -624,7 +735,9 @@ class StudyViewModel(
                 }
             }
 
-            userPreferences?.recordStudySession(now)
+            val isStrictlyCorrect = !isPrimaryFailed
+            val recordResult = userPreferences?.recordTestAnswer(isStrictlyCorrect, now)
+            processRecordResult(recordResult)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { state ->
@@ -741,7 +854,9 @@ class StudyViewModel(
                 studyRepository.refreshCardTimers(companionChars, now)
             }
 
-            userPreferences?.recordStudySession(now)
+            val isStrictlyCorrect = true
+            val recordResult = userPreferences?.recordTestAnswer(isStrictlyCorrect, now)
+            processRecordResult(recordResult)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { state ->
@@ -825,7 +940,9 @@ class StudyViewModel(
                 }
             }
 
-            userPreferences?.recordStudySession(now)
+            val isStrictlyCorrect = isCorrect && (grade == ReviewGrade.GOOD || grade == ReviewGrade.EASY)
+            val recordResult = userPreferences?.recordTestAnswer(isStrictlyCorrect, now)
+            processRecordResult(recordResult)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { state ->
@@ -855,7 +972,9 @@ class StudyViewModel(
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             studyRepository.overrideReviewGrade(card.hanzi, lastPreReviewState, ReviewGrade.GOOD, now)
-            userPreferences?.recordStudySession(now)
+            val isStrictlyCorrect = true
+            val recordResult = userPreferences?.recordTestAnswer(isStrictlyCorrect, now)
+            processRecordResult(recordResult)
             val dueCount = studyRepository.getNumExpired(now)
 
             _uiState.update { current ->
@@ -879,7 +998,9 @@ class StudyViewModel(
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             studyRepository.recordReviewGrade(card.hanzi, grade, now)
-            userPreferences?.recordStudySession(now)
+            val isStrictlyCorrect = (grade == ReviewGrade.GOOD || grade == ReviewGrade.EASY)
+            val recordResult = userPreferences?.recordTestAnswer(isStrictlyCorrect, now)
+            processRecordResult(recordResult)
             loadNextCard(isInitialLoad = false)
         }
     }

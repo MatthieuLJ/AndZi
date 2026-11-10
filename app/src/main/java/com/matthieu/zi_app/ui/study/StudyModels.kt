@@ -127,7 +127,10 @@ data class StudyUiState(
     val matchedWords: Set<String> = emptySet(),
     val failedMatchWords: Set<String> = emptySet(),
     val matchErrorShakeTrigger: Int = 0,
-    val sessionState: QuizSessionState = QuizSessionState.Idle()
+    val sessionState: QuizSessionState = QuizSessionState.Idle(),
+    val newlyUnlockedBadges: List<com.matthieu.zi_app.domain.badges.BadgeId> = emptyList(),
+    val recordIncreases: List<String> = emptyList(),
+    val showCelebration: Boolean = false
 ) {
     val currentCard: StudyCard?
         get() = queue.getOrNull(currentIndex)

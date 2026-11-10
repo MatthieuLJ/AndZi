@@ -32,6 +32,8 @@ import androidx.navigation.navArgument
 import com.matthieu.zi_app.AndZiApplication
 import com.matthieu.zi_app.ui.analytics.AnalyticsScreen
 import com.matthieu.zi_app.ui.analytics.AnalyticsViewModel
+import com.matthieu.zi_app.ui.badges.BadgesScreen
+import com.matthieu.zi_app.ui.badges.BadgesViewModel
 import com.matthieu.zi_app.ui.dictionary.DictionaryScreen
 import com.matthieu.zi_app.ui.home.HomeScreen
 import com.matthieu.zi_app.ui.home.HomeViewModel
@@ -173,9 +175,6 @@ fun MainAppScaffold(
                     onStartStudy = {
                         navController.navigate(Screen.Study.route)
                     },
-                    onOpenSettings = {
-                        navController.navigate(Screen.Settings.route)
-                    },
                     onOpenVocabulary = {
                         navController.navigate(Screen.Vocabulary.createRoute("words"))
                     },
@@ -187,6 +186,33 @@ fun MainAppScaffold(
                     },
                     onOpenAnalytics = {
                         navController.navigate(Screen.Analytics.route)
+                    },
+                    onOpenBadges = {
+                        navController.navigate(Screen.Badges.route)
+                    }
+                )
+            }
+
+            composable(Screen.Badges.route) {
+                val badgesViewModel: BadgesViewModel = viewModel(
+                    factory = BadgesViewModel.provideFactory(
+                        userPreferences = appContainer.userPreferences,
+                        studyRepository = appContainer.studyRepository,
+                        dictionaryRepository = appContainer.dictionaryRepository
+                    )
+                )
+                BadgesScreen(
+                    viewModel = badgesViewModel,
+                    onNavigateBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     }
                 )
             }
@@ -322,6 +348,9 @@ fun MainAppScaffold(
                                 restoreState = true
                             }
                         }
+                    },
+                    onOpenBadges = {
+                        navController.navigate(Screen.Badges.route)
                     },
                     onReturnHome = {
                         navController.navigate(Screen.Home.route) {

@@ -340,7 +340,7 @@ class VocabularyRepository(
     }
 
     suspend fun getHskVocabForWords(words: List<String>): List<HskVocabEntity> = withContext(Dispatchers.IO) {
-        if (words.isEmpty()) emptyList() else vocabularyDao.getHskVocabForWords(words)
+        if (words.isEmpty()) emptyList() else words.chunked(900).flatMap { vocabularyDao.getHskVocabForWords(it) }
     }
 
     suspend fun getHskVocabForWord(hanzi: String): HskVocabEntity? = withContext(Dispatchers.IO) {

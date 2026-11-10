@@ -64,6 +64,7 @@ import com.matthieu.zi_app.ui.study.components.PairMatchQuizView
 import com.matthieu.zi_app.ui.study.components.PinyinQuizView
 import com.matthieu.zi_app.ui.study.components.RevealedFeedbackCard
 import com.matthieu.zi_app.ui.study.components.StudyFinishedView
+import com.matthieu.zi_app.ui.study.components.FireworksCelebrationOverlay
 import com.matthieu.zi_app.ui.study.components.StudyWordsUsingCharacterSection
 import com.matthieu.zi_app.ui.study.components.ToneKeypad
 import com.matthieu.zi_app.ui.study.components.WritingQuizView
@@ -75,6 +76,7 @@ fun StudyScreen(
     viewModel: StudyViewModel,
     onNavigateBack: () -> Unit,
     onReturnHome: () -> Unit = onNavigateBack,
+    onOpenBadges: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +85,8 @@ fun StudyScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onReturnHome = onReturnHome,
+        onOpenBadges = onOpenBadges,
+        onDismissCelebration = { viewModel.dismissCelebration() },
         onQuizAction = { viewModel.onQuizAction(it) },
         onAcceptAnswer = { viewModel.markAnswerAsAcceptable() },
         onRateGrade = { viewModel.rateCard(it) },
@@ -96,6 +100,8 @@ fun StudyScreen(
 fun StudyScreenContent(
     uiState: StudyUiState,
     onNavigateBack: () -> Unit,
+    onOpenBadges: (() -> Unit)? = null,
+    onDismissCelebration: () -> Unit = {},
     onToneSelected: (Int) -> Unit = {},
     onEnglishSelected: (String) -> Unit = {},
     onClozeSelected: (String) -> Unit = {},
@@ -202,11 +208,23 @@ fun StudyScreenContent(
                 }
             }
             uiState.isSessionFinished || uiState.queue.isEmpty() -> {
-                StudyFinishedView(
-                    stats = uiState.sessionStats,
-                    onReturnHome = onReturnHome,
-                    modifier = Modifier.padding(innerPadding)
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    StudyFinishedView(
+                        stats = uiState.sessionStats,
+                        onReturnHome = onReturnHome,
+                        recordIncreases = uiState.recordIncreases,
+                        unlockedBadges = uiState.newlyUnlockedBadges,
+                        onViewBadges = onOpenBadges,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+
+                    if (uiState.showCelebration && uiState.newlyUnlockedBadges.isNotEmpty()) {
+                        FireworksCelebrationOverlay(
+                            unlockedBadges = uiState.newlyUnlockedBadges,
+                            onDismiss = onDismissCelebration
+                        )
+                    }
+                }
             }
             else -> {
                 val card = uiState.currentCard ?: return@Scaffold

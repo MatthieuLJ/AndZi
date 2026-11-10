@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,7 +25,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Button
@@ -63,11 +63,11 @@ import java.util.Locale
 fun HomeScreen(
     viewModel: HomeViewModel,
     onStartStudy: () -> Unit,
-    onOpenSettings: () -> Unit,
     onOpenVocabulary: () -> Unit = {},
     onOpenWords: () -> Unit = onOpenVocabulary,
     onOpenCharacters: () -> Unit = onOpenVocabulary,
     onOpenAnalytics: () -> Unit = {},
+    onOpenBadges: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -92,15 +92,6 @@ fun HomeScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -119,104 +110,98 @@ fun HomeScreen(
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Top Summary Row: Streak & Retention
-                item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    SummaryStatCard(
+                        title = "Daily Streak",
+                        value = "${uiState.streakDays} Days",
+                        icon = Icons.Default.Whatshot,
+                        iconTint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenBadges
+                    )
+                    SummaryStatCard(
+                        title = "Retention",
+                        value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
+                        icon = Icons.Default.CheckCircle,
+                        iconTint = Color(0xFF66BB6A),
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenAnalytics
+                    )
+                }
+
+                // Middle: Daily Review Action Card (Scales vertically to fill available screen height)
+                DailyReviewCard(
+                    dueCount = uiState.dueCount,
+                    onStartReview = onStartStudy,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+
+                // Bottom: Asynchronous Analytics Metrics Section
+                if (uiState.isAnalyticsLoading && uiState.totalWords == 0) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.5.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = "Loading study metrics...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    // Words Known & Characters Known (Clickable to open Active Word / Character Cards)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        SummaryStatCard(
-                            title = "Daily Streak",
-                            value = "${uiState.streakDays} Days",
-                            icon = Icons.Default.Whatshot,
-                            iconTint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SummaryStatCard(
-                            title = "Retention",
-                            value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
-                            icon = Icons.Default.CheckCircle,
-                            iconTint = Color(0xFF66BB6A),
+                        MetricSummaryCard(
+                            title = "Words Known",
+                            value = "${uiState.wordsKnown} / ${uiState.totalWords}",
+                            subtitle = "mastered in stack",
+                            icon = Icons.Default.School,
+                            iconTint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.weight(1f),
-                            onClick = onOpenAnalytics
+                            onClick = onOpenWords
+                        )
+                        MetricSummaryCard(
+                            title = "Characters Known",
+                            value = "${uiState.charactersKnown} / ${uiState.distinctCharactersCount}",
+                            subtitle = "mastered in stack",
+                            icon = Icons.Default.Translate,
+                            iconTint = Color(0xFF8E24AA),
+                            modifier = Modifier.weight(1f),
+                            onClick = onOpenCharacters
                         )
                     }
-                }
-
-                // Daily Review Action Card
-                item {
-                    DailyReviewCard(
-                        dueCount = uiState.dueCount,
-                        onStartReview = onStartStudy
-                    )
-                }
-
-                // Asynchronous Analytics Metrics Section
-                item {
-                    if (uiState.isAnalyticsLoading && uiState.totalWords == 0) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.5.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = "Loading study metrics...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    } else {
-                        // Words Known & Characters Known (Clickable to open Active Word / Character Cards)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            MetricSummaryCard(
-                                title = "Words Known",
-                                value = "${uiState.wordsKnown} / ${uiState.totalWords}",
-                                subtitle = "mastered in stack",
-                                icon = Icons.Default.School,
-                                iconTint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f),
-                                onClick = onOpenWords
-                            )
-                            MetricSummaryCard(
-                                title = "Characters Known",
-                                value = "${uiState.charactersKnown} / ${uiState.distinctCharactersCount}",
-                                subtitle = "mastered in stack",
-                                icon = Icons.Default.Translate,
-                                iconTint = Color(0xFF8E24AA),
-                                modifier = Modifier.weight(1f),
-                                onClick = onOpenCharacters
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
@@ -325,6 +310,7 @@ fun DailyReviewCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight()
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -333,36 +319,39 @@ fun DailyReviewCard(
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.weight(1f))
 
             // Circular progress indicator with due count
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .size(136.dp)
             ) {
                 CircularProgressIndicator(
                     progress = { if (dueCount > 0) 1f else 0f },
                     modifier = Modifier.fillMaxSize(),
                     color = if (dueCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    strokeWidth = 10.dp,
+                    strokeWidth = 11.dp,
                     strokeCap = StrokeCap.Round,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "$dueCount",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = if (dueCount == 1) "Card Due" else "Cards Due",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = onStartReview,
