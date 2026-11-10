@@ -33,8 +33,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -57,7 +55,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.matthieu.zi_app.ui.analytics.components.LeitnerProgressChart
 import com.matthieu.zi_app.ui.theme.colorForLeitnerBox
 import java.util.Locale
 
@@ -70,6 +67,7 @@ fun HomeScreen(
     onOpenVocabulary: () -> Unit = {},
     onOpenWords: () -> Unit = onOpenVocabulary,
     onOpenCharacters: () -> Unit = onOpenVocabulary,
+    onOpenAnalytics: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -146,7 +144,8 @@ fun HomeScreen(
                             value = String.format(Locale.getDefault(), "%.1f%%", uiState.overallAccuracy),
                             icon = Icons.Default.CheckCircle,
                             iconTint = Color(0xFF66BB6A),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            onClick = onOpenAnalytics
                         )
                     }
                 }
@@ -159,9 +158,9 @@ fun HomeScreen(
                     )
                 }
 
-                // Asynchronous Analytics & History Section
+                // Asynchronous Analytics Metrics Section
                 item {
-                    if (uiState.isAnalyticsLoading && uiState.totalWords == 0 && uiState.progressRecords.isEmpty()) {
+                    if (uiState.isAnalyticsLoading && uiState.totalWords == 0) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -182,108 +181,35 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
-                                    text = "Loading study analytics & history...",
+                                    text = "Loading study metrics...",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            // Words Known & Characters Known (Clickable to open Active Word / Character Cards)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                MetricSummaryCard(
-                                    title = "Words Known",
-                                    value = "${uiState.wordsKnown} / ${uiState.totalWords}",
-                                    subtitle = "mastered in stack",
-                                    icon = Icons.Default.School,
-                                    iconTint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = onOpenWords
-                                )
-                                MetricSummaryCard(
-                                    title = "Characters Known",
-                                    value = "${uiState.charactersKnown} / ${uiState.distinctCharactersCount}",
-                                    subtitle = "mastered in stack",
-                                    icon = Icons.Default.Translate,
-                                    iconTint = Color(0xFF8E24AA),
-                                    modifier = Modifier.weight(1f),
-                                    onClick = onOpenCharacters
-                                )
-                            }
-
-                            // Historical Growth Chart Card
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column {
-                                            Text(
-                                                text = "Historical Growth",
-                                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Text(
-                                                text = "Cumulative vocabulary over time",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(12.dp))
-
-                                    // Time Range Selection Tabs
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        TimeRange.values().forEach { range ->
-                                            val isSelected = uiState.selectedTimeRange == range
-                                            FilterChip(
-                                                selected = isSelected,
-                                                onClick = { viewModel.selectTimeRange(range) },
-                                                label = {
-                                                    Text(
-                                                        text = range.label,
-                                                        style = MaterialTheme.typography.labelMedium.copy(
-                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                                        )
-                                                    )
-                                                },
-                                                colors = FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                                ),
-                                                shape = RoundedCornerShape(10.dp)
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    LeitnerProgressChart(
-                                        records = uiState.progressRecords,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
-                            }
-
-                            // Leitner Box Distribution Card
-                            LeitnerDistributionCard(
-                                boxDistribution = uiState.boxDistribution,
-                                totalCards = uiState.totalLearned
+                        // Words Known & Characters Known (Clickable to open Active Word / Character Cards)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            MetricSummaryCard(
+                                title = "Words Known",
+                                value = "${uiState.wordsKnown} / ${uiState.totalWords}",
+                                subtitle = "mastered in stack",
+                                icon = Icons.Default.School,
+                                iconTint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f),
+                                onClick = onOpenWords
+                            )
+                            MetricSummaryCard(
+                                title = "Characters Known",
+                                value = "${uiState.charactersKnown} / ${uiState.distinctCharactersCount}",
+                                subtitle = "mastered in stack",
+                                icon = Icons.Default.Translate,
+                                iconTint = Color(0xFF8E24AA),
+                                modifier = Modifier.weight(1f),
+                                onClick = onOpenCharacters
                             )
                         }
                     }

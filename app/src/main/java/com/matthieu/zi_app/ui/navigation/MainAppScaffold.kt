@@ -30,6 +30,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.matthieu.zi_app.AndZiApplication
+import com.matthieu.zi_app.ui.analytics.AnalyticsScreen
+import com.matthieu.zi_app.ui.analytics.AnalyticsViewModel
 import com.matthieu.zi_app.ui.dictionary.DictionaryScreen
 import com.matthieu.zi_app.ui.home.HomeScreen
 import com.matthieu.zi_app.ui.home.HomeViewModel
@@ -182,6 +184,33 @@ fun MainAppScaffold(
                     },
                     onOpenCharacters = {
                         navController.navigate(Screen.Vocabulary.createRoute("characters"))
+                    },
+                    onOpenAnalytics = {
+                        navController.navigate(Screen.Analytics.route)
+                    }
+                )
+            }
+
+            composable(Screen.Analytics.route) {
+                val analyticsViewModel: AnalyticsViewModel = viewModel(
+                    factory = AnalyticsViewModel.provideFactory(
+                        studyRepository = appContainer.studyRepository,
+                        progressRepository = appContainer.progressRepository,
+                        leitnerDao = appContainer.leitnerDao
+                    )
+                )
+                AnalyticsScreen(
+                    viewModel = analyticsViewModel,
+                    onNavigateBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     }
                 )
             }
