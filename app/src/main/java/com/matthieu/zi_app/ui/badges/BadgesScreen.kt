@@ -2,6 +2,7 @@ package com.matthieu.zi_app.ui.badges
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -76,10 +77,9 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-enum class CategoryPersonality(
+enum class CategoryTheme(
     val category: BadgeCategory,
     val title: String,
-    val personalityName: String,
     val subtitle: String,
     val icon: ImageVector,
     val primaryColor: Color,
@@ -88,7 +88,6 @@ enum class CategoryPersonality(
     DAILY_STREAK(
         category = BadgeCategory.DAILY_STREAK,
         title = "Daily Streak",
-        personalityName = "The Eternal Flame",
         subtitle = "Consistency & daily momentum",
         icon = Icons.Default.Whatshot,
         primaryColor = Color(0xFFFF5722),
@@ -97,8 +96,7 @@ enum class CategoryPersonality(
     CORRECT_STREAK(
         category = BadgeCategory.CORRECT_STREAK,
         title = "Streak of Correct Tests",
-        personalityName = "The Jade Archer",
-        subtitle = "Razor-sharp precision without lapses",
+        subtitle = "Precision without lapses",
         icon = Icons.Default.CheckCircle,
         primaryColor = Color(0xFF10B981),
         secondaryColor = Color(0xFF06B6D4)
@@ -106,8 +104,7 @@ enum class CategoryPersonality(
     DAILY_TESTS(
         category = BadgeCategory.DAILY_TESTS,
         title = "Most Tests in a Day",
-        personalityName = "The Iron Dynamo",
-        subtitle = "Relentless stamina & peak volume",
+        subtitle = "Endurance & daily volume",
         icon = Icons.Default.Speed,
         primaryColor = Color(0xFF8B5CF6),
         secondaryColor = Color(0xFFEC4899)
@@ -115,7 +112,6 @@ enum class CategoryPersonality(
     HSK_LEVEL(
         category = BadgeCategory.HSK_LEVEL,
         title = "HSK Mastery",
-        personalityName = "The Imperial Scholar",
         subtitle = "Reach Box 3+ across classical HSK tiers",
         icon = Icons.Default.School,
         primaryColor = Color(0xFF2563EB),
@@ -123,10 +119,12 @@ enum class CategoryPersonality(
     );
 
     companion object {
-        fun forCategory(category: BadgeCategory): CategoryPersonality =
+        fun forCategory(category: BadgeCategory): CategoryTheme =
             entries.firstOrNull { it.category == category } ?: DAILY_STREAK
     }
 }
+
+typealias CategoryPersonality = CategoryTheme
 
 private fun getTierColors(tier: BadgeTier): List<Color> = when (tier) {
     BadgeTier.BRONZE -> listOf(Color(0xFFE6A76E), Color(0xFFCD7F32), Color(0xFF8D5B2A), Color(0xFFE6A76E))
@@ -220,7 +218,12 @@ fun BadgesScreenContent(
             }
         } else {
             val summary = uiState.summary!!
-            val allUnlockedBadges = summary.badges.filter { it.isUnlocked }
+            // Top showcase: Only the latest (highest achieved) unlocked badge per category (up to 4)
+            val latestBadges = BadgeCategory.entries.mapNotNull { cat ->
+                summary.badges
+                    .filter { it.badge.category == cat && it.isUnlocked }
+                    .maxByOrNull { it.badge.threshold }
+            }
 
             LazyColumn(
                 modifier = Modifier
@@ -229,20 +232,19 @@ fun BadgesScreenContent(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Top Trophy Showcase
+                // Top Trophy Showcase (2x2 grid when 4 items)
                 item {
                     TrophyShowcaseCard(
-                        unlockedBadges = allUnlockedBadges,
-                        totalBadgesCount = summary.badges.size,
+                        latestBadges = latestBadges,
                         onBadgeClick = { selectedBadgeForDetail = it }
                     )
                 }
 
-                // Category 1: Daily Streak (Flame Personality)
+                // Category 1: Daily Streak
                 item {
                     val dailyBadges = summary.badges.filter { it.badge.category == BadgeCategory.DAILY_STREAK }
                     PersonalityBadgeCategoryCard(
-                        personality = CategoryPersonality.DAILY_STREAK,
+                        personality = CategoryTheme.DAILY_STREAK,
                         primaryStatLabel = "Current Streak",
                         primaryStatValue = "${summary.currentDailyStreak} Days",
                         secondaryStatLabel = "All-Time Best",
@@ -252,11 +254,11 @@ fun BadgesScreenContent(
                     )
                 }
 
-                // Category 2: Streak of Correct Tests (Jade Archer Personality)
+                // Category 2: Streak of Correct Tests
                 item {
                     val correctBadges = summary.badges.filter { it.badge.category == BadgeCategory.CORRECT_STREAK }
                     PersonalityBadgeCategoryCard(
-                        personality = CategoryPersonality.CORRECT_STREAK,
+                        personality = CategoryTheme.CORRECT_STREAK,
                         primaryStatLabel = "Current Streak",
                         primaryStatValue = "${summary.currentCorrectStreak} Tests",
                         secondaryStatLabel = "All-Time Best",
@@ -266,11 +268,11 @@ fun BadgesScreenContent(
                     )
                 }
 
-                // Category 3: Most Tests in a Day (Iron Dynamo Personality)
+                // Category 3: Most Tests in a Day
                 item {
                     val dailyTestsBadges = summary.badges.filter { it.badge.category == BadgeCategory.DAILY_TESTS }
                     PersonalityBadgeCategoryCard(
-                        personality = CategoryPersonality.DAILY_TESTS,
+                        personality = CategoryTheme.DAILY_TESTS,
                         primaryStatLabel = "Tests Today",
                         primaryStatValue = "${summary.testsToday} Tests",
                         secondaryStatLabel = "All-Time Best",
@@ -280,11 +282,11 @@ fun BadgesScreenContent(
                     )
                 }
 
-                // Category 4: HSK Mastery (Imperial Scholar Personality)
+                // Category 4: HSK Mastery
                 item {
                     val hskBadges = summary.badges.filter { it.badge.category == BadgeCategory.HSK_LEVEL }
                     PersonalityBadgeCategoryCard(
-                        personality = CategoryPersonality.HSK_LEVEL,
+                        personality = CategoryTheme.HSK_LEVEL,
                         primaryStatLabel = "Mastered Levels",
                         primaryStatValue = "${summary.hskMasteredLevelsCount} / 6",
                         secondaryStatLabel = "Box 3+ Words",
@@ -311,8 +313,7 @@ fun BadgesScreenContent(
 
 @Composable
 private fun TrophyShowcaseCard(
-    unlockedBadges: List<BadgeItem>,
-    totalBadgesCount: Int,
+    latestBadges: List<BadgeItem>,
     onBadgeClick: (BadgeItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -334,71 +335,66 @@ private fun TrophyShowcaseCard(
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(Color(0xFFFFD700).copy(alpha = 0.35f), Color(0xFFF59E0B).copy(alpha = 0.15f))
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.EmojiEvents,
-                            contentDescription = null,
-                            tint = Color(0xFFFFB300),
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "Trophy Showcase",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Earned Medallions & Honors",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFFFD700).copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, Color(0xFFFFD700).copy(alpha = 0.4f))
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(0xFFFFD700).copy(alpha = 0.35f), Color(0xFFF59E0B).copy(alpha = 0.15f))
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = null,
+                        tint = Color(0xFFFFB300),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
                     Text(
-                        text = "${unlockedBadges.size} / $totalBadgesCount Unlocked",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFFD97706),
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        text = "Trophy Showcase",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Latest achievements by category",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (unlockedBadges.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+            if (latestBadges.isNotEmpty()) {
+                // Display in 2-column grid (up to 4 items, 2x2 grid when 4 items)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    unlockedBadges.forEach { badgeItem ->
-                        BadgeMedallionGraphic(
-                            badgeItem = badgeItem,
-                            onClick = { onBadgeClick(badgeItem) }
-                        )
+                    val chunked = latestBadges.chunked(2)
+                    chunked.forEach { rowBadges ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            rowBadges.forEach { badgeItem ->
+                                TrophyShowcaseTile(
+                                    badgeItem = badgeItem,
+                                    onClick = { onBadgeClick(badgeItem) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            if (rowBadges.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             } else {
@@ -433,7 +429,7 @@ private fun TrophyShowcaseCard(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Complete challenges below to unlock and display your medals here!",
+                                text = "Complete challenges below to unlock and display your trophies here!",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -441,6 +437,47 @@ private fun TrophyShowcaseCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TrophyShowcaseTile(
+    badgeItem: BadgeItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val tierColor = getTierPrimaryColor(badgeItem.badge.tier)
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.dp, tierColor.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TrophyGraphic(
+                badgeItem = badgeItem,
+                size = 58.dp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = badgeItem.badge.category.title,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = badgeItem.badge.title,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -472,7 +509,7 @@ private fun PersonalityBadgeCategoryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            // Category Header with Personality
+            // Category Header (without cheese names)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -497,25 +534,11 @@ private fun PersonalityBadgeCategoryCard(
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = personality.title,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = personality.primaryColor.copy(alpha = 0.12f)
-                        ) {
-                            Text(
-                                text = personality.personalityName,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                color = personality.primaryColor,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = personality.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Text(
                         text = personality.subtitle,
                         style = MaterialTheme.typography.bodySmall,
@@ -645,15 +668,14 @@ private fun PersonalityBadgeCategoryCard(
 }
 
 @Composable
-fun BadgeMedallionGraphic(
+fun TrophyGraphic(
     badgeItem: BadgeItem,
-    onClick: (() -> Unit)? = null,
-    size: Dp = 68.dp,
+    size: Dp = 64.dp,
     modifier: Modifier = Modifier
 ) {
-    val personality = CategoryPersonality.forCategory(badgeItem.badge.category)
     val tierColor = getTierPrimaryColor(badgeItem.badge.tier)
     val tierGradients = getTierColors(badgeItem.badge.tier)
+    val category = badgeItem.badge.category
     val starCount = when (badgeItem.badge.tier) {
         BadgeTier.BRONZE -> 1
         BadgeTier.SILVER -> 2
@@ -661,59 +683,338 @@ fun BadgeMedallionGraphic(
         BadgeTier.DIAMOND -> 4
     }
 
-    Column(
-        modifier = modifier
-            .widthIn(min = size + 16.dp, max = size + 36.dp)
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Medallion Disc
-        Box(
-            modifier = Modifier
-                .size(size)
-                .shadow(elevation = 6.dp, shape = CircleShape, spotColor = tierColor)
-                .clip(CircleShape)
-                .background(Brush.sweepGradient(tierGradients))
-                .padding(3.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(personality.primaryColor, personality.primaryColor.copy(alpha = 0.75f), Color(0xFF1E1E24))
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = personality.icon,
-                    contentDescription = badgeItem.badge.title,
-                    tint = Color.White,
-                    modifier = Modifier.size((size.value * 0.42f).dp)
-                )
+    val scale = (size.value / 64f)
+    val cupWidth = (34f * scale).dp
+    val cupHeight = (28f * scale).dp
+    val iconSize = (17f * scale).dp
+    val starSize = (7f * scale).dp
+    val stemWidth = (7f * scale).dp
+    val stemHeight = (4f * scale).dp
+    val pedestalTopWidth = (20f * scale).dp
+    val pedestalTopHeight = (3f * scale).dp
+    val pedestalBaseWidth = (36f * scale).dp
+    val pedestalBaseHeight = (5.5f * scale).dp
+    val handleWidth = (7f * scale).dp
+    val handleHeight = (18f * scale).dp
 
-                // Stars Ribbon
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    repeat(starCount) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Tier Stars
+        Row(
+            horizontalArrangement = Arrangement.spacedBy((2f * scale).dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(starCount) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = if (badgeItem.badge.tier == BadgeTier.DIAMOND) Color(0xFF00E5FF) else Color(0xFFFFD700),
+                    modifier = Modifier.size(starSize)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height((2f * scale).dp))
+
+        // Trophy Cup / Body according to Category
+        when (category) {
+            BadgeCategory.DAILY_STREAK -> {
+                // Torch Chalice: Flared top rim + tapered cup body
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .width(cupWidth + (6f * scale).dp)
+                            .height((3f * scale).dp)
+                            .clip(RoundedCornerShape((1.5f * scale).dp))
+                            .background(Brush.horizontalGradient(tierGradients))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(width = cupWidth, height = cupHeight)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(
+                                    bottomStart = (14f * scale).dp,
+                                    bottomEnd = (14f * scale).dp
+                                ),
+                                spotColor = Color(0xFFFF5722)
+                            )
+                            .clip(
+                                RoundedCornerShape(
+                                    bottomStart = (14f * scale).dp,
+                                    bottomEnd = (14f * scale).dp
+                                )
+                            )
+                            .background(Brush.verticalGradient(tierGradients))
+                            .padding((2f * scale).dp)
+                            .clip(
+                                RoundedCornerShape(
+                                    bottomStart = (12f * scale).dp,
+                                    bottomEnd = (12f * scale).dp
+                                )
+                            )
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(Color(0xFFFF7043), Color(0xFFFF5722), Color(0xFFBF360C))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(8.dp)
+                            imageVector = Icons.Default.Whatshot,
+                            contentDescription = badgeItem.badge.title,
+                            tint = Color.White,
+                            modifier = Modifier.size(iconSize)
+                        )
+                    }
+                }
+            }
+            BadgeCategory.CORRECT_STREAK -> {
+                // Precision Shield / Diamond Trophy: Octagonal/angled shield silhouette with emerald gradient
+                Box(
+                    modifier = Modifier
+                        .size(width = cupWidth + (4f * scale).dp, height = cupHeight + (2f * scale).dp)
+                        .shadow(
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(
+                                topStart = (10f * scale).dp,
+                                topEnd = (10f * scale).dp,
+                                bottomStart = (18f * scale).dp,
+                                bottomEnd = (18f * scale).dp
+                            ),
+                            spotColor = Color(0xFF10B981)
+                        )
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = (10f * scale).dp,
+                                topEnd = (10f * scale).dp,
+                                bottomStart = (18f * scale).dp,
+                                bottomEnd = (18f * scale).dp
+                            )
+                        )
+                        .background(Brush.sweepGradient(tierGradients))
+                        .padding((2f * scale).dp)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = (8f * scale).dp,
+                                topEnd = (8f * scale).dp,
+                                bottomStart = (16f * scale).dp,
+                                bottomEnd = (16f * scale).dp
+                            )
+                        )
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(0xFF34D399), Color(0xFF10B981), Color(0xFF064E3B))
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = badgeItem.badge.title,
+                        tint = Color.White,
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+            }
+            BadgeCategory.DAILY_TESTS -> {
+                // Classical Two-Handled Champion Cup: Flanked by twin looped handles
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Left Handle
+                    Box(
+                        modifier = Modifier
+                            .size(width = handleWidth, height = handleHeight)
+                            .border(
+                                BorderStroke((1.8f * scale).dp, Brush.verticalGradient(tierGradients)),
+                                RoundedCornerShape(
+                                    topStart = (9f * scale).dp,
+                                    bottomStart = (9f * scale).dp
+                                )
+                            )
+                    )
+                    // Center Cup
+                    Box(
+                        modifier = Modifier
+                            .size(width = cupWidth, height = cupHeight)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(
+                                    topStart = (3f * scale).dp,
+                                    topEnd = (3f * scale).dp,
+                                    bottomStart = (14f * scale).dp,
+                                    bottomEnd = (14f * scale).dp
+                                ),
+                                spotColor = Color(0xFF8B5CF6)
+                            )
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = (3f * scale).dp,
+                                    topEnd = (3f * scale).dp,
+                                    bottomStart = (14f * scale).dp,
+                                    bottomEnd = (14f * scale).dp
+                                )
+                            )
+                            .background(Brush.verticalGradient(tierGradients))
+                            .padding((2f * scale).dp)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = (2f * scale).dp,
+                                    topEnd = (2f * scale).dp,
+                                    bottomStart = (12f * scale).dp,
+                                    bottomEnd = (12f * scale).dp
+                                )
+                            )
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(Color(0xFFA78BFA), Color(0xFF7C3AED), Color(0xFF3B0764))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = badgeItem.badge.title,
+                            tint = Color.White,
+                            modifier = Modifier.size(iconSize)
+                        )
+                    }
+                    // Right Handle
+                    Box(
+                        modifier = Modifier
+                            .size(width = handleWidth, height = handleHeight)
+                            .border(
+                                BorderStroke((1.8f * scale).dp, Brush.verticalGradient(tierGradients)),
+                                RoundedCornerShape(
+                                    topEnd = (9f * scale).dp,
+                                    bottomEnd = (9f * scale).dp
+                                )
+                            )
+                    )
+                }
+            }
+            BadgeCategory.HSK_LEVEL -> {
+                // Imperial Laurel Urn: Golden crown lip + sapphire body
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .width(cupWidth + (4f * scale).dp)
+                            .height((2.5f * scale).dp)
+                            .clip(RoundedCornerShape((1f * scale).dp))
+                            .background(Brush.horizontalGradient(tierGradients))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(width = cupWidth, height = cupHeight)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(
+                                    bottomStart = (14f * scale).dp,
+                                    bottomEnd = (14f * scale).dp,
+                                    topStart = (4f * scale).dp,
+                                    topEnd = (4f * scale).dp
+                                ),
+                                spotColor = Color(0xFF2563EB)
+                            )
+                            .clip(
+                                RoundedCornerShape(
+                                    bottomStart = (14f * scale).dp,
+                                    bottomEnd = (14f * scale).dp,
+                                    topStart = (4f * scale).dp,
+                                    topEnd = (4f * scale).dp
+                                )
+                            )
+                            .background(Brush.verticalGradient(tierGradients))
+                            .padding((2f * scale).dp)
+                            .clip(
+                                RoundedCornerShape(
+                                    bottomStart = (12f * scale).dp,
+                                    bottomEnd = (12f * scale).dp,
+                                    topStart = (3f * scale).dp,
+                                    topEnd = (3f * scale).dp
+                                )
+                            )
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(Color(0xFF60A5FA), Color(0xFF2563EB), Color(0xFF1E3A8A))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.School,
+                            contentDescription = badgeItem.badge.title,
+                            tint = Color.White,
+                            modifier = Modifier.size(iconSize)
                         )
                     }
                 }
             }
         }
 
+        // Stem / Riser
+        Box(
+            modifier = Modifier
+                .width(stemWidth)
+                .height(stemHeight)
+                .background(Brush.verticalGradient(tierGradients))
+        )
+
+        // Upper Pedestal Step
+        Box(
+            modifier = Modifier
+                .width(pedestalTopWidth)
+                .height(pedestalTopHeight)
+                .clip(RoundedCornerShape((1f * scale).dp))
+                .background(Brush.horizontalGradient(tierGradients))
+        )
+
+        // Lower Base Plinth
+        Box(
+            modifier = Modifier
+                .width(pedestalBaseWidth)
+                .height(pedestalBaseHeight)
+                .shadow(
+                    elevation = 2.dp,
+                    shape = RoundedCornerShape((1.5f * scale).dp),
+                    spotColor = tierColor
+                )
+                .clip(RoundedCornerShape((1.5f * scale).dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(tierGradients.first(), tierColor, Color(0xFF1E1E24))
+                    )
+                )
+        )
+    }
+}
+
+@Composable
+fun BadgeMedallionGraphic(
+    badgeItem: BadgeItem,
+    onClick: (() -> Unit)? = null,
+    size: Dp = 60.dp,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .widthIn(min = size + 16.dp, max = size + 36.dp)
+            .clickable(enabled = onClick != null) { onClick?.invoke() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TrophyGraphic(
+            badgeItem = badgeItem,
+            size = size
+        )
+
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Badge Title
+        // Badge Title (No "Unlocked" pill)
         Text(
             text = badgeItem.badge.title,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
@@ -722,19 +1023,6 @@ fun BadgeMedallionGraphic(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-
-        // Unlocked pill
-        Surface(
-            shape = RoundedCornerShape(6.dp),
-            color = tierColor.copy(alpha = 0.15f)
-        ) {
-            Text(
-                text = "Unlocked",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
-                color = tierColor,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-            )
-        }
     }
 }
 
@@ -875,7 +1163,7 @@ private fun BadgeDetailDialog(
                     .padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                BadgeMedallionGraphic(
+                TrophyGraphic(
                     badgeItem = badgeItem,
                     size = 84.dp
                 )
