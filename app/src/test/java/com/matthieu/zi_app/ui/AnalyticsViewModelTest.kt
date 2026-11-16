@@ -111,4 +111,82 @@ class AnalyticsViewModelTest {
         assertEquals(TimeRange.DAYS_7, state.selectedTimeRange)
         assertTrue(state.progressRecords.isNotEmpty())
     }
+
+    @Test
+    fun testAvailableTimeRanges_whenSpanLessThan30Days_removes30DAnd90D() = runBlocking {
+        val now = System.currentTimeMillis()
+        // Record 10 days ago and today
+        val tenDaysAgo = now - 10L * 24 * 60 * 60 * 1000L
+        progressRepo.recordProgressSnapshot(
+            totalBox1 = 5, totalBox2 = 0, totalBox3 = 0, totalBox4 = 0, totalBox5 = 0,
+            expiredBox2 = 0, expiredBox3 = 0, expiredBox4 = 0, expiredBox5 = 0,
+            date = tenDaysAgo
+        )
+        progressRepo.recordProgressSnapshot(
+            totalBox1 = 6, totalBox2 = 0, totalBox3 = 0, totalBox4 = 0, totalBox5 = 0,
+            expiredBox2 = 0, expiredBox3 = 0, expiredBox4 = 0, expiredBox5 = 0,
+            date = now
+        )
+
+        val vm = AnalyticsViewModel(studyRepo, progressRepo, leitnerDao = andZiDb.leitnerDao(), dispatcher = testDispatcher)
+        viewModel = vm
+
+        val state = withTimeout(3000) {
+            vm.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertEquals(listOf(TimeRange.DAYS_7, TimeRange.ALL), state.availableTimeRanges)
+    }
+
+    @Test
+    fun testAvailableTimeRanges_whenSpanBetween30And90Days_includes30DButRemoves90D() = runBlocking {
+        val now = System.currentTimeMillis()
+        // Record 45 days ago and today
+        val fortyFiveDaysAgo = now - 45L * 24 * 60 * 60 * 1000L
+        progressRepo.recordProgressSnapshot(
+            totalBox1 = 5, totalBox2 = 0, totalBox3 = 0, totalBox4 = 0, totalBox5 = 0,
+            expiredBox2 = 0, expiredBox3 = 0, expiredBox4 = 0, expiredBox5 = 0,
+            date = fortyFiveDaysAgo
+        )
+        progressRepo.recordProgressSnapshot(
+            totalBox1 = 6, totalBox2 = 0, totalBox3 = 0, totalBox4 = 0, totalBox5 = 0,
+            expiredBox2 = 0, expiredBox3 = 0, expiredBox4 = 0, expiredBox5 = 0,
+            date = now
+        )
+
+        val vm = AnalyticsViewModel(studyRepo, progressRepo, leitnerDao = andZiDb.leitnerDao(), dispatcher = testDispatcher)
+        viewModel = vm
+
+        val state = withTimeout(3000) {
+            vm.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertEquals(listOf(TimeRange.DAYS_7, TimeRange.DAYS_30, TimeRange.ALL), state.availableTimeRanges)
+    }
+
+    @Test
+    fun testAvailableTimeRanges_whenSpan90DaysOrMore_includesAllOptions() = runBlocking {
+        val now = System.currentTimeMillis()
+        // Record 100 days ago and today
+        val hundredDaysAgo = now - 100L * 24 * 60 * 60 * 1000L
+        progressRepo.recordProgressSnapshot(
+            totalBox1 = 5, totalBox2 = 0, totalBox3 = 0, totalBox4 = 0, totalBox5 = 0,
+            expiredBox2 = 0, expiredBox3 = 0, expiredBox4 = 0, expiredBox5 = 0,
+            date = hundredDaysAgo
+        )
+        progressRepo.recordProgressSnapshot(
+            totalBox1 = 6, totalBox2 = 0, totalBox3 = 0, totalBox4 = 0, totalBox5 = 0,
+            expiredBox2 = 0, expiredBox3 = 0, expiredBox4 = 0, expiredBox5 = 0,
+            date = now
+        )
+
+        val vm = AnalyticsViewModel(studyRepo, progressRepo, leitnerDao = andZiDb.leitnerDao(), dispatcher = testDispatcher)
+        viewModel = vm
+
+        val state = withTimeout(3000) {
+            vm.uiState.filter { !it.isLoading }.first()
+        }
+
+        assertEquals(listOf(TimeRange.DAYS_7, TimeRange.DAYS_30, TimeRange.DAYS_90, TimeRange.ALL), state.availableTimeRanges)
+    }
 }

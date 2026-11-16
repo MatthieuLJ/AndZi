@@ -161,7 +161,7 @@ fun AnalyticsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                TimeRange.values().forEach { range ->
+                                uiState.availableTimeRanges.forEach { range ->
                                     val isSelected = uiState.selectedTimeRange == range
                                     FilterChip(
                                         selected = isSelected,
@@ -186,7 +186,8 @@ fun AnalyticsScreen(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             LeitnerProgressChart(
-                                records = uiState.progressRecords,
+                                records = uiState.allProgressRecords.ifEmpty { uiState.progressRecords },
+                                timeRange = uiState.selectedTimeRange,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }

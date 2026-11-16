@@ -11,6 +11,8 @@ data class AnalyticsUiState(
     val totalCards: Int = 0,
     val boxDistribution: Map<Int, Int> = emptyMap(),
     val progressRecords: List<ProgressRecordEntity> = emptyList(),
-    val selectedTimeRange: TimeRange = TimeRange.DAYS_30,
+    val allProgressRecords: List<ProgressRecordEntity> = emptyList(),
+    val selectedTimeRange: TimeRange = TimeRange.DAYS_7,
+    val availableTimeRanges: List<TimeRange> = listOf(TimeRange.DAYS_7, TimeRange.ALL),
     val errorMessage: String? = null
 )

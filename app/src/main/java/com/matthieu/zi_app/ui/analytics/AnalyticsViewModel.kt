@@ -46,12 +46,19 @@ class AnalyticsViewModel(
         chartJob?.cancel()
         chartJob = viewModelScope.launch(dispatcher) {
             try {
-                val filtered = withContext(dispatcher) {
+                val (allHistory, filtered) = withContext(dispatcher) {
                     val now = System.currentTimeMillis()
-                    val allHistory = progressRepository.getAllProgress()
-                    filterHistoryByRange(allHistory, timeRange, now)
+                    val history = _uiState.value.allProgressRecords.ifEmpty {
+                        progressRepository.getAllProgress()
+                    }
+                    history to filterHistoryByRange(history, timeRange, now)
                 }
-                _uiState.update { it.copy(progressRecords = filtered) }
+                _uiState.update {
+                    it.copy(
+                        allProgressRecords = allHistory,
+                        progressRecords = filtered
+                    )
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
             }
@@ -91,8 +98,23 @@ class AnalyticsViewModel(
                 } else 0f
 
                 val history = progressRepository.getAllProgress()
+                val oldestDate = history.minOfOrNull { it.date } ?: now
+                val newestDate = history.maxOfOrNull { it.date } ?: now
+                val totalSpanMillis = kotlin.math.max(now - oldestDate, newestDate - oldestDate)
+
+                val availableRanges = mutableListOf<TimeRange>()
+                availableRanges.add(TimeRange.DAYS_7)
+                if (totalSpanMillis >= TimeRange.DAYS_30.durationMillis) {
+                    availableRanges.add(TimeRange.DAYS_30)
+                }
+                if (totalSpanMillis >= TimeRange.DAYS_90.durationMillis) {
+                    availableRanges.add(TimeRange.DAYS_90)
+                }
+                availableRanges.add(TimeRange.ALL)
+
                 val currentRange = _uiState.value.selectedTimeRange
-                val filteredHistory = filterHistoryByRange(history, currentRange, now)
+                val effectiveRange = if (currentRange in availableRanges) currentRange else TimeRange.DAYS_7
+                val filteredHistory = filterHistoryByRange(history, effectiveRange, now)
 
                 _uiState.update {
                     it.copy(
@@ -103,6 +125,9 @@ class AnalyticsViewModel(
                         totalCards = totalCards,
                         boxDistribution = boxMap,
                         progressRecords = filteredHistory,
+                        allProgressRecords = history,
+                        selectedTimeRange = effectiveRange,
+                        availableTimeRanges = availableRanges,
                         errorMessage = null
                     )
                 }
