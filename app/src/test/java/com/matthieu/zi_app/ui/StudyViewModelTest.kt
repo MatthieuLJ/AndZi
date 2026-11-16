@@ -22,6 +22,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -1793,6 +1795,108 @@ class StudyViewModelTest {
             assertTrue("Related study words should contain '长'", relatedWords.contains("长"))
             assertTrue("Related study words for chang2 should contain '长城'", relatedWords.contains("长城"))
             assertFalse("Related study words for chang2 MUST NOT contain '长大' (zhang3)", relatedWords.contains("长大"))
+        }
+    }
+
+    @Test
+    fun testWordAssembly_whenWrongWordExistsInDictionary_marksAlternativeValidAndCanBeAccepted() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("外国", "wai4guo2", arrayListOf("foreign country", "foreign")))
+        vocRepo.addVocabulary(Vocabulary("国外", "guo2wai4", arrayListOf("abroad", "external")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "外国", box = 1, expTime = now - 1000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "国外", box = 1, expTime = now + 100000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val initialCard = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }.currentCard!!
+
+        var card = initialCard
+        var steps = 0
+        while ((card.quizType != QuizType.WORD_ASSEMBLY || card.hanzi != "外国") && steps < 10) {
+            viewModel.nextCard()
+            card = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }.currentCard!!
+            steps++
+        }
+
+        assertEquals("外国", card.hanzi)
+        assertEquals(QuizType.WORD_ASSEMBLY, card.quizType)
+
+        val guoIndex = card.scrambledTiles.indexOf("国")
+        val waiIndex = card.scrambledTiles.indexOf("外")
+        assertTrue(guoIndex >= 0 && waiIndex >= 0)
+
+        viewModel.selectAssemblyTile(guoIndex, "国")
+        viewModel.selectAssemblyTile(waiIndex, "外")
+
+        val stateAfter = withTimeout(3000) {
+            viewModel.uiState.filter { it.isAnswerRevealed }.first()
+        }
+
+        assertEquals(false, stateAfter.isCorrect)
+        assertEquals("国外", stateAfter.selectedOption)
+        assertTrue("Alternative word '国外' exists so isAlternativeWordValid must be true", stateAfter.isAlternativeWordValid)
+        assertNotNull(stateAfter.alternativeWordMeaning)
+        assertTrue(stateAfter.alternativeWordMeaning!!.contains("abroad") || stateAfter.alternativeWordMeaning!!.contains("external"))
+
+        viewModel.markAnswerAsAcceptable()
+
+        val stateAccepted = withTimeout(3000) {
+            viewModel.uiState.filter { it.isCorrect == true }.first()
+        }
+        assertEquals(true, stateAccepted.isCorrect)
+
+        val leitner = studyRepo.getLeitnerState("外国")!!
+        assertEquals(2, leitner.box)
+    }
+
+    @Test
+    fun testWordAssembly_whenWrongWordDoesNotExist_isAlternativeValidIsFalse() = runBlocking {
+        vocRepo.addVocabulary(Vocabulary("外国", "wai4guo2", arrayListOf("foreign country")))
+        vocRepo.addVocabulary(Vocabulary("吃饭", "chi1fan4", arrayListOf("eat food")))
+
+        val now = System.currentTimeMillis()
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "外国", box = 1, expTime = now - 1000L)
+        )
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(hanzi = "吃饭", box = 1, expTime = now + 100000L)
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        var card = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }.currentCard!!
+
+        var steps = 0
+        while ((card.quizType != QuizType.WORD_ASSEMBLY || card.hanzi != "外国") && steps < 10) {
+            viewModel.nextCard()
+            card = withTimeout(3000) {
+                viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+            }.currentCard!!
+            steps++
+        }
+
+        val waiIndex = card.scrambledTiles.indexOf("外")
+        val chiIndex = card.scrambledTiles.indexOf("吃")
+        if (chiIndex >= 0 && waiIndex >= 0) {
+            viewModel.selectAssemblyTile(chiIndex, "吃")
+            viewModel.selectAssemblyTile(waiIndex, "外")
+
+            val stateAfter = withTimeout(3000) {
+                viewModel.uiState.filter { it.isAnswerRevealed }.first()
+            }
+
+            assertEquals(false, stateAfter.isCorrect)
+            assertFalse("Nonsense word '吃外' does not exist so isAlternativeWordValid must be false", stateAfter.isAlternativeWordValid)
+            assertNull(stateAfter.alternativeWordMeaning)
         }
     }
 

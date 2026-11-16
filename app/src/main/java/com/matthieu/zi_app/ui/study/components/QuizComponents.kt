@@ -842,6 +842,8 @@ fun RevealedFeedbackCard(
     onNextCard: () -> Unit,
     modifier: Modifier = Modifier,
     selectedOption: String? = null,
+    isAlternativeWordValid: Boolean = false,
+    alternativeWordMeaning: String? = null,
     onAcceptAnswer: (() -> Unit)? = null,
     onRateGrade: ((ReviewGrade) -> Unit)? = null
 ) {
@@ -958,18 +960,35 @@ fun RevealedFeedbackCard(
                         )
                     }
 
-                    Text(
-                        text = "Your answer: $selectedOption",
-                        style = baseStyle,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Your answer: $selectedOption",
+                            style = baseStyle,
+                            textAlign = TextAlign.Center
+                        )
+                        if (isAlternativeWordValid && !alternativeWordMeaning.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Valid word: $alternativeWordMeaning",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            if (isCorrect == false && card.quizType == QuizType.ENGLISH && onAcceptAnswer != null) {
+            val canAcceptAnswer = isCorrect == false && onAcceptAnswer != null && (
+                card.quizType == QuizType.ENGLISH || (card.quizType == QuizType.WORD_ASSEMBLY && isAlternativeWordValid)
+            )
+
+            if (canAcceptAnswer) {
                 OutlinedButton(
                     onClick = onAcceptAnswer,
                     modifier = Modifier

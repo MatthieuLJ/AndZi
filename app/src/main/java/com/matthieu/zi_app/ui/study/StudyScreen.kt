@@ -397,6 +397,8 @@ fun StudyScreenContent(
                                     card = card,
                                     isCorrect = uiState.isCorrect,
                                     selectedOption = uiState.selectedOption,
+                                    isAlternativeWordValid = uiState.isAlternativeWordValid,
+                                    alternativeWordMeaning = uiState.alternativeWordMeaning,
                                     onAcceptAnswer = onAcceptAnswer,
                                     onNextCard = { onNextCard() }
                                 )

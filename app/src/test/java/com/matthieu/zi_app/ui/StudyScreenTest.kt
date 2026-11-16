@@ -613,6 +613,92 @@ class StudyScreenTest {
     }
 
     @Test
+    fun testWordAssemblyWrongAnswer_whenAlternativeValid_showsAcceptButtonAndMeaning() {
+        var acceptClicked = false
+        val card = StudyCard(
+            hanzi = "外国",
+            pinyin = "wai4guo2",
+            english = listOf("foreign country"),
+            quizType = QuizType.WORD_ASSEMBLY,
+            wordSlots = listOf("外", "国"),
+            scrambledTiles = listOf("国", "外")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = true,
+            isCorrect = false,
+            selectedOption = "国外",
+            isAlternativeWordValid = true,
+            alternativeWordMeaning = "abroad; external; overseas"
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onAssemblyTileSelected = { _, _ -> },
+                    onAcceptAnswer = { acceptClicked = true },
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Your answer: 国外").assertExists()
+        composeTestRule.onNodeWithText("Valid word: abroad; external; overseas").assertExists()
+        composeTestRule.onNodeWithText("My answer was acceptable")
+            .performScrollTo()
+            .assertExists()
+            .performClick()
+        assertTrue(acceptClicked)
+    }
+
+    @Test
+    fun testWordAssemblyWrongAnswer_whenAlternativeNotValid_doesNotShowAcceptButton() {
+        val card = StudyCard(
+            hanzi = "外国",
+            pinyin = "wai4guo2",
+            english = listOf("foreign country"),
+            quizType = QuizType.WORD_ASSEMBLY,
+            wordSlots = listOf("外", "国"),
+            scrambledTiles = listOf("外", "国", "吃")
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = true,
+            isCorrect = false,
+            selectedOption = "吃外",
+            isAlternativeWordValid = false,
+            alternativeWordMeaning = null
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onAssemblyTileSelected = { _, _ -> },
+                    onAcceptAnswer = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Your answer: 吃外").assertExists()
+        composeTestRule.onNodeWithText("My answer was acceptable").assertDoesNotExist()
+    }
+
+    @Test
     fun testEnglishQuizWrongAnswer_showsAcceptButtonAndInvokesCallback() {
         val card = StudyCard(
             hanzi = "高兴",

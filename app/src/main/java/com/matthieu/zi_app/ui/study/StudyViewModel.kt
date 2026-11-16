@@ -236,6 +236,8 @@ class StudyViewModel(
                         isAnswerRevealed = false,
                         isCorrect = null,
                         selectedOption = null,
+                        isAlternativeWordValid = false,
+                        alternativeWordMeaning = null,
                         selectedPinyinTone = null,
                         assembledChars = emptyList(),
                         usedTileIndices = emptyList(),
@@ -282,6 +284,8 @@ class StudyViewModel(
                     isAnswerRevealed = false,
                     isCorrect = null,
                     selectedOption = null,
+                    isAlternativeWordValid = false,
+                    alternativeWordMeaning = null,
                     selectedPinyinTone = null,
                     assembledChars = emptyList(),
                     usedTileIndices = emptyList(),
@@ -945,6 +949,23 @@ class StudyViewModel(
             processRecordResult(recordResult)
             val dueCount = studyRepository.getNumExpired(now)
 
+            val isAlternativeValid: Boolean
+            val alternativeMeaning: String?
+            if (!isCorrect && card.quizType == QuizType.WORD_ASSEMBLY && selectedInput.isNotBlank()) {
+                val altWord = dictionaryRepository?.getVocabularyForChinese(selectedInput)?.firstOrNull()
+                    ?: vocabularyRepository.getVocabularyForChinese(selectedInput).firstOrNull()
+                if (altWord != null) {
+                    isAlternativeValid = true
+                    alternativeMeaning = altWord.english.joinToString("; ").takeIf { it.isNotBlank() }
+                } else {
+                    isAlternativeValid = false
+                    alternativeMeaning = null
+                }
+            } else {
+                isAlternativeValid = false
+                alternativeMeaning = null
+            }
+
             _uiState.update { state ->
                 val prevStats = state.sessionStats
                 val isSuccess = isCorrect || grade == ReviewGrade.HARD
@@ -958,6 +979,8 @@ class StudyViewModel(
                     isAnswerRevealed = true,
                     isCorrect = isCorrect,
                     selectedOption = selectedInput,
+                    isAlternativeWordValid = isAlternativeValid,
+                    alternativeWordMeaning = alternativeMeaning,
                     sessionStats = newStats
                 )
             }
@@ -976,6 +999,11 @@ class StudyViewModel(
             val recordResult = userPreferences?.recordTestAnswer(isStrictlyCorrect, now)
             processRecordResult(recordResult)
             val dueCount = studyRepository.getNumExpired(now)
+
+            if (card.quizType == QuizType.WORD_ASSEMBLY) {
+                val constituentChars = card.wordSlots.filter { it != card.hanzi }
+                studyRepository.refreshCardTimers(constituentChars, now)
+            }
 
             _uiState.update { current ->
                 val prevStats = current.sessionStats
