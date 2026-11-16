@@ -572,6 +572,47 @@ class StudyScreenTest {
     }
 
     @Test
+    fun testPinyinQuizRevealed_showsStudyWordsUsingCharacter() {
+        val card = StudyCard(
+            hanzi = "长",
+            pinyin = "chang2",
+            syllable = "chang",
+            tone = 2,
+            english = listOf("long"),
+            quizType = QuizType.PINYIN,
+            mcqOptions = listOf("chang", "duan", "gao", "di"),
+            relatedStudyWords = listOf(
+                com.matthieu.zi_app.Vocabulary("长", "chang2", arrayListOf("long")),
+                com.matthieu.zi_app.Vocabulary("长城", "chang2cheng2", arrayListOf("Great Wall"))
+            )
+        )
+        val state = StudyUiState(
+            queue = listOf(card),
+            currentIndex = 0,
+            isLoading = false,
+            isAnswerRevealed = true,
+            isCorrect = true
+        )
+
+        composeTestRule.setContent {
+            AndZiTheme {
+                StudyScreenContent(
+                    uiState = state,
+                    onNavigateBack = {},
+                    onToneSelected = {},
+                    onEnglishSelected = {},
+                    onClozeSelected = {},
+                    onNextCard = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Study words using 长").performScrollTo().assertExists()
+        composeTestRule.onNodeWithText("长城").performScrollTo().assertExists()
+        composeTestRule.onNodeWithText("Great Wall").assertExists()
+    }
+
+    @Test
     fun testEnglishQuizWrongAnswer_showsAcceptButtonAndInvokesCallback() {
         val card = StudyCard(
             hanzi = "高兴",

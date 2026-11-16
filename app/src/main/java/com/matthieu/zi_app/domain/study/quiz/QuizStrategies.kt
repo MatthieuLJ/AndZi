@@ -56,11 +56,75 @@ object PinyinQuizStrategy : QuizStrategy {
             vocabularyRepository = context.vocabularyRepository,
             dictionaryRepository = context.dictionaryRepository
         )
-        return QuizPayload.Pinyin(syllable = syllable, tone = tone, options = options, contextWords = contextWords)
+
+        val matchingDirectWords = context.vocabularyRepository.getCompoundWordsForCharPinyin(hanzi, target.pinyin, limit = 50).toSet()
+
+        val matchingCompounds = context.containingWords.filter { word ->
+            word.chinese != hanzi && (word.chinese in matchingDirectWords || wordUsesPinyinForChar(word, hanzi, target.pinyin))
+        }
+
+        val enrichedCompounds = matchingCompounds.map { word ->
+            if (word.english.isEmpty() && context.dictionaryRepository != null) {
+                val dictVoc = context.dictionaryRepository.getVocabularyForChinese(word.chinese)
+                    .firstOrNull { it.pinyin == word.pinyin && it.english.isNotEmpty() }
+                    ?: context.dictionaryRepository.getVocabularyForChinese(word.chinese)
+                        .firstOrNull { it.english.isNotEmpty() }
+                if (dictVoc != null && dictVoc.english.isNotEmpty()) {
+                    word.copy(english = dictVoc.english)
+                } else word
+            } else word
+        }
+
+        val selfWords = context.vocabularyRepository.getVocabularyForChinese(hanzi)
+            .filter { it.english.isNotEmpty() && (it.pinyin == target.pinyin || wordUsesPinyinForChar(it, hanzi, target.pinyin)) }
+            .ifEmpty {
+                val dictEntry = if (target.english.isEmpty() && context.dictionaryRepository != null) {
+                    context.dictionaryRepository.getVocabularyForChinese(hanzi)
+                        .firstOrNull { it.pinyin == target.pinyin && it.english.isNotEmpty() }
+                } else null
+                val base = if (dictEntry != null) target.copy(english = dictEntry.english) else target
+                if (base.english.isNotEmpty()) listOf(base) else emptyList()
+            }
+
+        val relatedStudyWords = (selfWords + enrichedCompounds)
+            .distinctBy { "${it.chinese}_${it.pinyin}" }
+
+        return QuizPayload.Pinyin(
+            syllable = syllable,
+            tone = tone,
+            options = options,
+            contextWords = contextWords,
+            relatedStudyWords = relatedStudyWords
+        )
     }
 
     override fun getPromptText(card: StudyCard, isRevealed: Boolean): String {
         return if (card.tone in 1..4) "Select Pinyin and tone" else "Select the correct Pinyin"
+    }
+
+    private fun wordUsesPinyinForChar(word: Vocabulary, targetChar: String, targetPinyin: String): Boolean {
+        val parsedPinyins = PinyinParser.parse_string_to_pinyin(word.pinyin) ?: return false
+        val charList = word.chinese.toCodePointStrings()
+        if (charList.size != parsedPinyins.size) {
+            val cleanTarget = targetPinyin.trim().lowercase()
+            val radicalOnly = cleanTarget.filter { !it.isDigit() }
+            val cleanWordPinyin = word.pinyin.trim().lowercase()
+            return cleanWordPinyin.contains(cleanTarget) || cleanWordPinyin.contains(radicalOnly)
+        }
+
+        val targetParsed = PinyinParser.parse_string_to_pinyin(targetPinyin)?.firstOrNull()
+        val targetLame = targetParsed?.lame?.lowercase() ?: targetPinyin.trim().lowercase()
+        val targetRadical = targetParsed?.radical?.lowercase() ?: targetPinyin.filter { !it.isDigit() }.lowercase()
+        val targetTone = targetParsed?.tone ?: 0
+
+        for (i in charList.indices) {
+            if (charList[i] == targetChar) {
+                val syl = parsedPinyins[i]
+                if (syl.lame.equals(targetLame, ignoreCase = true)) return true
+                if (syl.radical.equals(targetRadical, ignoreCase = true) && (targetTone == 0 || syl.tone == targetTone)) return true
+            }
+        }
+        return false
     }
 }
 

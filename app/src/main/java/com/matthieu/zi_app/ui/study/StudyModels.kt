@@ -41,8 +41,10 @@ data class StudyCard(
     val clozeTargetIndex: Int = (payload as? QuizPayload.ClozeTargetProvider)?.targetIndex ?: -1,
     val contextWords: List<String> = (payload as? QuizPayload.ContextWordsProvider)?.contextWords ?: emptyList(),
     val displayPinyin: String = (payload as? QuizPayload.DisplayPinyinProvider)?.displayPinyin?.takeIf { it.isNotBlank() } ?: pinyin,
-    val relatedStudyWords: List<Vocabulary> = (payload as? QuizPayload.Cloze)?.relatedStudyWords
+    val relatedStudyWords: List<Vocabulary> = (payload as? QuizPayload.RelatedStudyWordsProvider)?.relatedStudyWords
+        ?: (payload as? QuizPayload.Cloze)?.relatedStudyWords
         ?: (payload as? QuizPayload.Writing)?.relatedStudyWords
+        ?: (payload as? QuizPayload.Pinyin)?.relatedStudyWords
         ?: emptyList(),
     val writingCharacter: HanziCharacter? = (payload as? QuizPayload.WritingProvider)?.character,
     val matchPairs: List<CollocationPair> = (payload as? QuizPayload.MatchPairsProvider)?.pairs ?: emptyList(),

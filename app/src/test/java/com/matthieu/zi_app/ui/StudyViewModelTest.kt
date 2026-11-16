@@ -1754,6 +1754,49 @@ class StudyViewModelTest {
     }
 
     @Test
+    fun testPinyinQuiz_relatedStudyWords_filtersForSpecificPinyin() = runBlocking {
+        // Setup polyphonic character "长" (chang2 / zhang3)
+        // Add "长" (chang2, "long"), compound "长城" (chang2cheng2, "Great Wall"), and compound "长大" (zhang3da4, "to grow up")
+        vocRepo.addVocabulary(Vocabulary("长", "chang2", arrayListOf("long")))
+        vocRepo.addVocabulary(Vocabulary("长城", "chang2cheng2", arrayListOf("Great Wall")))
+        vocRepo.addVocabulary(Vocabulary("长大", "zhang3da4", arrayListOf("to grow up")))
+
+        andZiDb.leitnerDao().insertOrUpdateRecord(
+            com.matthieu.zi_app.data.local.entity.LeitnerRecordEntity(
+                hanzi = "长",
+                box = 1,
+                expTime = 0L
+            )
+        )
+
+        val viewModel = StudyViewModel(studyRepo, vocRepo)
+        val card = withTimeout(3000) {
+            viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+        }.currentCard!!
+
+        val pinyinCard = if (card.quizType == QuizType.PINYIN) {
+            card
+        } else {
+            var current = card
+            for (i in 1..10) {
+                viewModel.nextCard()
+                current = withTimeout(3000) {
+                    viewModel.uiState.filter { !it.isLoading && it.currentCard != null }.first()
+                }.currentCard!!
+                if (current.quizType == QuizType.PINYIN && current.hanzi == "长") break
+            }
+            current
+        }
+
+        if (pinyinCard.quizType == QuizType.PINYIN && pinyinCard.hanzi == "长") {
+            val relatedWords = pinyinCard.relatedStudyWords.map { it.chinese }
+            assertTrue("Related study words should contain '长'", relatedWords.contains("长"))
+            assertTrue("Related study words for chang2 should contain '长城'", relatedWords.contains("长城"))
+            assertFalse("Related study words for chang2 MUST NOT contain '长大' (zhang3)", relatedWords.contains("长大"))
+        }
+    }
+
+    @Test
     fun testPairMatchQuiz_generatesDistinctTilesAndSupportsInteractiveMatching() = runBlocking {
         vocRepo.addVocabulary(Vocabulary("飞机", "fei1ji1", arrayListOf("airplane")))
         vocRepo.addVocabulary(Vocabulary("苹果", "ping2guo3", arrayListOf("apple")))

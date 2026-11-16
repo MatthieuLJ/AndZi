@@ -400,7 +400,7 @@ fun StudyScreenContent(
                                     onAcceptAnswer = onAcceptAnswer,
                                     onNextCard = { onNextCard() }
                                 )
-                                if ((card.quizType == QuizType.CLOZE || card.quizType == QuizType.WRITING) && card.relatedStudyWords.isNotEmpty()) {
+                                if ((card.quizType == QuizType.CLOZE || card.quizType == QuizType.WRITING || card.quizType == QuizType.PINYIN) && card.relatedStudyWords.isNotEmpty()) {
                                     StudyWordsUsingCharacterSection(
                                         character = card.missingCharacter,
                                         words = card.relatedStudyWords

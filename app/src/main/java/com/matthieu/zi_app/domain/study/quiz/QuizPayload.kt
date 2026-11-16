@@ -16,6 +16,7 @@ sealed interface QuizPayload {
     interface TilesProvider { val tiles: List<String> }
     interface ClozeTargetProvider { val targetIndex: Int }
     interface ContextWordsProvider { val contextWords: List<String> }
+    interface RelatedStudyWordsProvider { val relatedStudyWords: List<Vocabulary> }
     interface DisplayPinyinProvider { val displayPinyin: String }
     interface WritingProvider { val character: HanziCharacter? }
     interface MatchPairsProvider {
@@ -33,8 +34,9 @@ sealed interface QuizPayload {
         val syllable: String,
         val tone: Int,
         override val options: List<String>,
-        override val contextWords: List<String> = emptyList()
-    ) : QuizPayload, OptionsProvider, ContextWordsProvider
+        override val contextWords: List<String> = emptyList(),
+        override val relatedStudyWords: List<Vocabulary> = emptyList()
+    ) : QuizPayload, OptionsProvider, ContextWordsProvider, RelatedStudyWordsProvider
 
     data class EnglishMcq(
         override val options: List<String>,
@@ -47,8 +49,8 @@ sealed interface QuizPayload {
         override val tiles: List<String>,
         override val displayPinyin: String = "",
         val cardEnglish: List<String> = emptyList(),
-        val relatedStudyWords: List<Vocabulary> = emptyList()
-    ) : QuizPayload, SlotsProvider, ClozeTargetProvider, TilesProvider, DisplayPinyinProvider
+        override val relatedStudyWords: List<Vocabulary> = emptyList()
+    ) : QuizPayload, SlotsProvider, ClozeTargetProvider, TilesProvider, DisplayPinyinProvider, RelatedStudyWordsProvider
 
     data class WordAssembly(
         override val slots: List<String>,
@@ -63,8 +65,8 @@ sealed interface QuizPayload {
         override val targetIndex: Int = -1,
         override val displayPinyin: String = "",
         val cardEnglish: List<String> = emptyList(),
-        val relatedStudyWords: List<Vocabulary> = emptyList()
-    ) : QuizPayload, WritingProvider, SlotsProvider, ClozeTargetProvider, DisplayPinyinProvider
+        override val relatedStudyWords: List<Vocabulary> = emptyList()
+    ) : QuizPayload, WritingProvider, SlotsProvider, ClozeTargetProvider, DisplayPinyinProvider, RelatedStudyWordsProvider
 
     data class PairMatch(
         override val pairs: List<CollocationPair>,
